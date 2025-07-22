@@ -74,7 +74,7 @@ final class DatabaseFieldConstraints
     public static function getDatabaseDriver(): string
     {
         return Cache::remember(
-            self::CACHE_PREFIX . '_driver',
+            self::CACHE_PREFIX.'_driver',
             self::CACHE_TTL,
             fn () => DB::connection()->getDriverName()
         );
@@ -102,14 +102,14 @@ final class DatabaseFieldConstraints
     {
         $constraints = self::getConstraintsForColumn($columnName);
 
-        if (! $constraints) {
+        if ($constraints === null || $constraints === []) {
             return [];
         }
 
         $rules = $constraints['rules'] ?? [];
 
         if (isset($constraints['min'])) {
-            $rules[] = 'min:' . $constraints['min'];
+            $rules[] = 'min:'.$constraints['min'];
         }
 
         // Add size constraints as validation rules
@@ -120,7 +120,7 @@ final class DatabaseFieldConstraints
                 $maxValue = (int) ($maxValue * self::ENCRYPTION_SAFETY_MARGIN);
             }
 
-            $rules[] = 'max:' . $maxValue;
+            $rules[] = 'max:'.$maxValue;
         }
 
         return array_unique($rules);
@@ -138,7 +138,7 @@ final class DatabaseFieldConstraints
 
         return [
             'array',
-            'max:' . $maxItems,
+            'max:'.$maxItems,
         ];
     }
 
@@ -162,12 +162,12 @@ final class DatabaseFieldConstraints
 
         // Add constraint-based rules
         if (isset($dbConstraints['max'])) {
-            $dbRules[] = 'max:' . self::resolveMaxValue($dbConstraints['max']);
+            $dbRules[] = 'max:'.self::resolveMaxValue($dbConstraints['max']);
         }
 
         // Add min constraint if present
         if (isset($dbConstraints['min'])) {
-            $dbRules[] = 'min:' . $dbConstraints['min'];
+            $dbRules[] = 'min:'.$dbConstraints['min'];
         }
 
         // Merge each database rule with user rules
@@ -183,7 +183,7 @@ final class DatabaseFieldConstraints
      */
     public static function clearCache(): void
     {
-        Cache::forget(self::CACHE_PREFIX . '_driver');
+        Cache::forget(self::CACHE_PREFIX.'_driver');
         Log::info('Database field constraints cache cleared');
     }
 
@@ -204,7 +204,7 @@ final class DatabaseFieldConstraints
         $existingValue = null;
 
         foreach ($rules as $index => $rule) {
-            if (str_starts_with($rule, $ruleName . ':') || $rule === $ruleName) {
+            if (str_starts_with($rule, $ruleName.':') || $rule === $ruleName) {
                 $existingIndex = $index;
                 if (str_contains($rule, ':')) {
                     $existingValue = substr($rule, strlen($ruleName) + 1);
@@ -253,7 +253,7 @@ final class DatabaseFieldConstraints
                 if ($dbMax !== null && is_numeric($existingValue)) {
                     $dbMaxValue = self::resolveMaxValue($dbMax);
                     $stricterMax = min((int) $existingValue, $dbMaxValue);
-                    $rules[$existingIndex] = 'max:' . $stricterMax;
+                    $rules[$existingIndex] = 'max:'.$stricterMax;
                 }
 
                 break;
@@ -261,7 +261,7 @@ final class DatabaseFieldConstraints
             case 'min':
                 if (isset($dbConstraints['min']) && is_numeric($existingValue)) {
                     $stricterMin = max((int) $existingValue, $dbConstraints['min']);
-                    $rules[$existingIndex] = 'min:' . $stricterMin;
+                    $rules[$existingIndex] = 'min:'.$stricterMin;
                 }
 
                 break;
@@ -272,7 +272,7 @@ final class DatabaseFieldConstraints
                     $dbMaxValue = self::resolveMaxValue($dbConstraints['max']);
                     $stricterMin = max($userMin, $dbConstraints['min']);
                     $stricterMax = min($userMax, $dbMaxValue);
-                    $rules[$existingIndex] = 'between:' . $stricterMin . ',' . $stricterMax;
+                    $rules[$existingIndex] = 'between:'.$stricterMin.','.$stricterMax;
                 }
 
                 break;

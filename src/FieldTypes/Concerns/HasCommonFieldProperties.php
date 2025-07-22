@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypes\Concerns;
 
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
+use Relaticle\CustomFields\Enums\ValidationRule;
 
 /**
  * Provides default implementations for common field type properties.
@@ -67,7 +67,7 @@ trait HasCommonFieldProperties
      * Get allowed validation rules for this field type.
      * Default: empty array (no validation rules)
      *
-     * @return array<int, CustomFieldValidationRule>
+     * @return array<int, ValidationRule>
      */
     public function allowedValidationRules(): array
     {

@@ -14,7 +14,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\Data\FieldTypeData;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 
 final class CustomFieldValidationComponent extends Component
@@ -108,7 +108,7 @@ final class CustomFieldValidationComponent extends Component
             ->state(
                 fn (
                     Get $get
-                ): string => CustomFieldValidationRule::getDescriptionForRule(
+                ): string => ValidationRule::getDescriptionForRule(
                     $get('name')
                 )
             )
@@ -173,7 +173,7 @@ final class CustomFieldValidationComponent extends Component
             ->visible(
                 fn (
                     Get $get
-                ): bool => CustomFieldValidationRule::hasParameterForRule(
+                ): bool => ValidationRule::hasParameterForRule(
                     $get('name')
                 )
             )
@@ -208,14 +208,14 @@ final class CustomFieldValidationComponent extends Component
         return collect($allowedRules)
             ->reject(
                 fn (
-                    CustomFieldValidationRule $rule
+                    ValidationRule $rule
                 ): bool => $this->isRuleDuplicate(
                     $existingRules,
                     $rule->value
                 ) && $rule->value !== $currentRuleName
             )
             ->mapWithKeys(
-                fn (CustomFieldValidationRule $rule) => [
+                fn (ValidationRule $rule) => [
                     $rule->value => $rule->getLabel(),
                 ]
             )
@@ -253,7 +253,7 @@ final class CustomFieldValidationComponent extends Component
             return;
         }
 
-        $rule = CustomFieldValidationRule::tryFrom($state);
+        $rule = ValidationRule::tryFrom($state);
         if ($rule && $rule->allowedParameterCount() > 0) {
             $parameters = array_fill(0, $rule->allowedParameterCount(), [
                 'value' => '',
@@ -273,7 +273,7 @@ final class CustomFieldValidationComponent extends Component
         $ruleName = $get('../../name');
         $parameterIndex = $this->getParameterIndex($component);
 
-        return CustomFieldValidationRule::getParameterValidationRuleFor(
+        return ValidationRule::getParameterValidationRuleFor(
             $ruleName,
             $parameterIndex
         );
@@ -292,14 +292,14 @@ final class CustomFieldValidationComponent extends Component
         if ($component instanceof Component) {
             $parameterIndex = $this->getParameterIndex($component);
 
-            return CustomFieldValidationRule::getParameterHelpTextFor(
+            return ValidationRule::getParameterHelpTextFor(
                 $ruleName,
                 $parameterIndex
             );
         }
 
         // For repeater-level hints when parameters are insufficient
-        $rule = CustomFieldValidationRule::tryFrom($ruleName);
+        $rule = ValidationRule::tryFrom($ruleName);
         $parameters = $get('parameters') ?? [];
 
         if (
@@ -314,13 +314,13 @@ final class CustomFieldValidationComponent extends Component
 
         return match ($requiredCount) {
             2 => match ($rule) {
-                CustomFieldValidationRule::BETWEEN => __(
+                ValidationRule::BETWEEN => __(
                     'custom-fields::custom-fields.validation.between_validation_error'
                 ),
-                CustomFieldValidationRule::DIGITS_BETWEEN => __(
+                ValidationRule::DIGITS_BETWEEN => __(
                     'custom-fields::custom-fields.validation.digits_between_validation_error'
                 ),
-                CustomFieldValidationRule::DECIMAL => __(
+                ValidationRule::DECIMAL => __(
                     'custom-fields::custom-fields.validation.decimal_validation_error'
                 ),
                 default => __(
@@ -351,7 +351,7 @@ final class CustomFieldValidationComponent extends Component
         }
 
         $parameterIndex = $this->getParameterIndex($component);
-        $normalizedValue = CustomFieldValidationRule::normalizeParameterValue(
+        $normalizedValue = ValidationRule::normalizeParameterValue(
             $ruleName,
             (string) $state,
             $parameterIndex
@@ -376,7 +376,7 @@ final class CustomFieldValidationComponent extends Component
 
         $parameterIndex = $this->getParameterIndex($component);
 
-        return CustomFieldValidationRule::normalizeParameterValue(
+        return ValidationRule::normalizeParameterValue(
             $ruleName,
             (string) $state,
             $parameterIndex
@@ -390,7 +390,7 @@ final class CustomFieldValidationComponent extends Component
             return 1;
         }
 
-        $rule = CustomFieldValidationRule::tryFrom($ruleName);
+        $rule = ValidationRule::tryFrom($ruleName);
 
         return $rule && $rule->allowedParameterCount() > 0
             ? $rule->allowedParameterCount()
@@ -399,7 +399,7 @@ final class CustomFieldValidationComponent extends Component
 
     private function getMaxParameterCount(Get $get): int
     {
-        return CustomFieldValidationRule::getAllowedParametersCountForRule(
+        return ValidationRule::getAllowedParametersCountForRule(
             $get('name')
         );
     }
@@ -411,7 +411,7 @@ final class CustomFieldValidationComponent extends Component
             return true;
         }
 
-        $rule = CustomFieldValidationRule::tryFrom($ruleName);
+        $rule = ValidationRule::tryFrom($ruleName);
         $parameterCount = count($get('parameters') ?? []);
 
         return ! (
@@ -429,7 +429,7 @@ final class CustomFieldValidationComponent extends Component
         $ruleName = $state['name'] ?? '';
         $parameters = $state['parameters'] ?? [];
 
-        return CustomFieldValidationRule::getLabelForRule(
+        return ValidationRule::getLabelForRule(
             $ruleName,
             $parameters
         );
@@ -438,7 +438,7 @@ final class CustomFieldValidationComponent extends Component
     /**
      * Get allowed validation rules for a field type (built-in or custom).
      *
-     * @return array<int, CustomFieldValidationRule>
+     * @return array<int, ValidationRule>
      */
     private function getAllowedValidationRulesForFieldType(
         string $fieldTypeKey

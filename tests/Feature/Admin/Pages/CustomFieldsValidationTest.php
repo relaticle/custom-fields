@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -99,7 +99,7 @@ describe('CustomFieldsPage - Field Validation Testing', function (): void {
         foreach ($disallowedRules as $rule) {
             // This would depend on your validation logic implementation
             // For now, we'll test that the field type and rule combination is handled appropriately
-            expect(CustomFieldValidationRule::tryFrom($rule))->not->toBeNull();
+            expect(ValidationRule::tryFrom($rule))->not->toBeNull();
         }
     })->with('field_type_validation_compatibility');
 

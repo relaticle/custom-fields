@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Numeric;
 use InvalidArgumentException;
 
-enum CustomFieldValidationRule: string implements HasLabel
+enum ValidationRule: string implements HasLabel
 {
     case ACCEPTED = 'accepted';
     case ACCEPTED_IF = 'accepted_if';
@@ -426,7 +426,7 @@ enum CustomFieldValidationRule: string implements HasLabel
 
         $enum = self::tryFrom($rule);
 
-        if (! $enum instanceof CustomFieldValidationRule) {
+        if (! $enum instanceof ValidationRule) {
             return '';
         }
 

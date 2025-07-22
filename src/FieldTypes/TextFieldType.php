@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\FieldTypes;
 
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextInputComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
@@ -63,10 +63,10 @@ class TextFieldType implements FieldTypeDefinitionInterface
     public function allowedValidationRules(): array
     {
         return [
-            CustomFieldValidationRule::REQUIRED,
-            CustomFieldValidationRule::MIN,
-            CustomFieldValidationRule::MAX,
-            CustomFieldValidationRule::UNIQUE,
+            ValidationRule::REQUIRED,
+            ValidationRule::MIN,
+            ValidationRule::MAX,
+            ValidationRule::UNIQUE,
         ];
     }
 }

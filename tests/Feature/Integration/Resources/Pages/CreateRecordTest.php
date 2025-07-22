@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
@@ -327,5 +328,226 @@ describe('Form Field Visibility and State', function (): void {
         // Act & Assert
         livewire(CreatePost::class)
             ->assertDontSee('Post Custom Fields');
+    });
+});
+
+describe('Choice Field Validation with Option IDs', function (): void {
+    it('validates choice fields with IN/NOT_IN rules using option IDs', function (
+        string $fieldType,
+        string $fieldCode,
+        array $validationRules,
+        array $optionNames,
+        mixed $submitValue,
+        bool $shouldPass,
+        ?string $expectedError = null
+    ): void {
+        // Arrange
+        $section = CustomFieldSection::factory()->create([
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'code' => $fieldCode,
+            'type' => $fieldType,
+            'entity_type' => Post::class,
+            'validation_rules' => $validationRules,
+        ]);
+
+        // Create options and collect their IDs
+        $options = collect($optionNames)->map(function ($name, $index) use ($field) {
+            return CustomFieldOption::factory()->create([
+                'custom_field_id' => $field->id,
+                'name' => $name,
+                'sort_order' => $index + 1,
+            ]);
+        });
+
+        // Transform submit value to use option IDs (like Filament does)
+        $transformedValue = match (true) {
+            is_string($submitValue) && $submitValue === 'invalid' => 999999,
+            is_string($submitValue) => $options->firstWhere('name', $submitValue)?->id,
+            is_array($submitValue) => collect($submitValue)->map(fn ($name) => $name === 'invalid' ? 999999 : $options->firstWhere('name', $name)?->id
+            )->toArray(),
+            default => $submitValue,
+        };
+
+        $newData = Post::factory()->make();
+
+        // Act
+        $test = livewire(CreatePost::class)
+            ->fillForm([
+                'author_id' => $newData->author->getKey(),
+                'content' => $newData->content,
+                'tags' => $newData->tags,
+                'title' => $newData->title,
+                'rating' => $newData->rating,
+                'custom_fields' => [
+                    $fieldCode => $transformedValue,
+                ],
+            ])
+            ->call('create');
+
+        // Assert
+        if ($shouldPass) {
+            $test->assertHasNoFormErrors()->assertRedirect();
+
+            // Verify saved value
+            $post = Post::query()->firstWhere('title', $newData->title);
+            expect($post)->not->toBeNull();
+
+            $customValue = $post->customFieldValues()
+                ->whereHas('customField', fn ($q) => $q->where('code', $fieldCode))
+                ->first();
+
+            expect($customValue)->not->toBeNull();
+        } else {
+            $test->assertHasFormErrors(['custom_fields.'.$fieldCode => [$expectedError]]);
+        }
+    })->with([
+        // Single choice field tests
+        'select with valid IN rule' => [
+            'fieldType' => 'select',
+            'fieldCode' => 'priority',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'in', parameters: ['Low', 'Medium', 'High']),
+            ],
+            'optionNames' => ['Low', 'Medium', 'High'],
+            'submitValue' => 'Medium',
+            'shouldPass' => true,
+        ],
+        'select with invalid IN rule' => [
+            'fieldType' => 'select',
+            'fieldCode' => 'priority',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'in', parameters: ['Low', 'Medium', 'High']),
+            ],
+            'optionNames' => ['Low', 'Medium', 'High'],
+            'submitValue' => 'invalid',
+            'shouldPass' => false,
+            'expectedError' => 'in',
+        ],
+        'select with NOT_IN rule valid' => [
+            'fieldType' => 'select',
+            'fieldCode' => 'status',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'not_in', parameters: ['Deleted', 'Banned']),
+            ],
+            'optionNames' => ['Active', 'Deleted', 'Banned'],
+            'submitValue' => 'Active',
+            'shouldPass' => true,
+        ],
+        'select with NOT_IN rule invalid' => [
+            'fieldType' => 'select',
+            'fieldCode' => 'status',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'not_in', parameters: ['Deleted', 'Banned']),
+            ],
+            'optionNames' => ['Active', 'Deleted', 'Banned'],
+            'submitValue' => 'Deleted',
+            'shouldPass' => false,
+            'expectedError' => 'not_in',
+        ],
+        // Multi-choice field tests
+        'multi-select with valid values' => [
+            'fieldType' => 'multi-select',
+            'fieldCode' => 'categories',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'array'),
+                new ValidationRuleData(name: 'min', parameters: [1]),
+            ],
+            'optionNames' => ['Technology', 'Business', 'Design'],
+            'submitValue' => ['Technology', 'Design'],
+            'shouldPass' => true,
+        ],
+        'multi-select with empty array' => [
+            'fieldType' => 'multi-select',
+            'fieldCode' => 'categories',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'array'),
+                new ValidationRuleData(name: 'min', parameters: [1]),
+            ],
+            'optionNames' => ['Technology', 'Business', 'Design'],
+            'submitValue' => [],
+            'shouldPass' => false,
+            'expectedError' => 'required',
+        ],
+        'checkbox-list with IN validation' => [
+            'fieldType' => 'checkbox-list',
+            'fieldCode' => 'features',
+            'validationRules' => [
+                new ValidationRuleData(name: 'array'),
+                new ValidationRuleData(name: 'in', parameters: ['Feature A', 'Feature B', 'Feature C']),
+            ],
+            'optionNames' => ['Feature A', 'Feature B', 'Feature C'],
+            'submitValue' => ['Feature A', 'Feature C'],
+            'shouldPass' => true,
+        ],
+        'radio with required validation' => [
+            'fieldType' => 'radio',
+            'fieldCode' => 'subscription',
+            'validationRules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'in', parameters: ['Basic', 'Pro', 'Enterprise']),
+            ],
+            'optionNames' => ['Basic', 'Pro', 'Enterprise'],
+            'submitValue' => 'Pro',
+            'shouldPass' => true,
+        ],
+    ]);
+
+    it('handles edge cases for choice field validation', function (): void {
+        // Test with options that have special characters
+        $section = CustomFieldSection::factory()->create([
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'code' => 'special_field',
+            'type' => 'select',
+            'entity_type' => Post::class,
+            'validation_rules' => [
+                new ValidationRuleData(name: 'required'),
+                new ValidationRuleData(name: 'in', parameters: ['Option/1', 'Option,2', 'Option:3']),
+            ],
+        ]);
+
+        // Create options with special characters
+        $option1 = CustomFieldOption::factory()->create([
+            'custom_field_id' => $field->id,
+            'name' => 'Option/1',
+            'sort_order' => 1,
+        ]);
+
+        $option2 = CustomFieldOption::factory()->create([
+            'custom_field_id' => $field->id,
+            'name' => 'Option,2',
+            'sort_order' => 2,
+        ]);
+
+        $newData = Post::factory()->make();
+
+        // Test that special characters in option names work correctly
+        livewire(CreatePost::class)
+            ->fillForm([
+                'author_id' => $newData->author->getKey(),
+                'title' => $newData->title,
+                'rating' => $newData->rating,
+                'custom_fields' => [
+                    'special_field' => $option2->id,
+                ],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect();
     });
 });

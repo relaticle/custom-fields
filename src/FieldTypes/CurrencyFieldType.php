@@ -7,8 +7,8 @@ namespace Relaticle\CustomFields\FieldTypes;
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\Contracts\FieldImportExportInterface;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasImportExportDefaults;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
@@ -67,9 +67,9 @@ class CurrencyFieldType implements FieldImportExportInterface, FieldTypeDefiniti
     public function allowedValidationRules(): array
     {
         return [
-            CustomFieldValidationRule::REQUIRED,
-            CustomFieldValidationRule::MIN,
-            CustomFieldValidationRule::MAX,
+            ValidationRule::REQUIRED,
+            ValidationRule::MIN,
+            ValidationRule::MAX,
         ];
     }
 

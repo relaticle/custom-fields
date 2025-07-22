@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\FieldTypes;
 
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\SelectComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\SingleChoiceEntry;
@@ -74,16 +74,16 @@ class SelectFieldType implements FieldTypeDefinitionInterface
      * Get allowed validation rules for this field type.
      * Default: empty array (no validation rules)
      *
-     * @return array<int, CustomFieldValidationRule>
+     * @return array<int, ValidationRule>
      */
     public function allowedValidationRules(): array
     {
         return [
-            CustomFieldValidationRule::REQUIRED,
-            CustomFieldValidationRule::IN,
-            CustomFieldValidationRule::EXISTS,
-            CustomFieldValidationRule::NOT_IN,
-            CustomFieldValidationRule::ENUM,
+            ValidationRule::REQUIRED,
+            ValidationRule::IN,
+            ValidationRule::EXISTS,
+            ValidationRule::NOT_IN,
+            ValidationRule::ENUM,
         ];
     }
 }

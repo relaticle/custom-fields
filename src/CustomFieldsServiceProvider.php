@@ -84,7 +84,7 @@ class CustomFieldsServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->endWith(function (Command $command) {
+                    ->endWith(function (Command $command): void {
                         $command->newLine();
                         $command->warn('⚠️ Commercial/closed projects require a Commercial License');
                         $command->info('📄 Open source projects use AGPL-3.0');

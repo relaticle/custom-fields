@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Contracts;
 
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 
 /**
  * Contract for defining custom field types that can be registered dynamically.
@@ -94,7 +94,7 @@ interface FieldTypeDefinitionInterface
     /**
      * Get allowed validation rules for this field type.
      *
-     * @return array<int, CustomFieldValidationRule>
+     * @return array<int, ValidationRule>
      */
     public function allowedValidationRules(): array;
 }

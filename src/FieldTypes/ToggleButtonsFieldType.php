@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\FieldTypes;
 
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ToggleButtonsComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\SingleChoiceEntry;
@@ -63,9 +63,9 @@ class ToggleButtonsFieldType implements FieldTypeDefinitionInterface
     public function allowedValidationRules(): array
     {
         return [
-            CustomFieldValidationRule::REQUIRED,
-            CustomFieldValidationRule::IN,
-            CustomFieldValidationRule::NOT_IN,
+            ValidationRule::REQUIRED,
+            ValidationRule::IN,
+            ValidationRule::NOT_IN,
         ];
     }
 }

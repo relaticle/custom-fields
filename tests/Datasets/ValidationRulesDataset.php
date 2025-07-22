@@ -2,205 +2,205 @@
 
 declare(strict_types=1);
 
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
+use Relaticle\CustomFields\Enums\ValidationRule;
 
 // Comprehensive validation rules dataset with all 84 rules
 dataset('validation_rules_with_parameters', fn (): array => [
-    // No parameters rules
+    // No parameter rules
     'required' => [
-        'rule' => CustomFieldValidationRule::REQUIRED->value,
+        'rule' => ValidationRule::REQUIRED->value,
         'parameters' => [],
         'validValue' => 'some value',
         'invalidValue' => null,
     ],
     'accepted' => [
-        'rule' => CustomFieldValidationRule::ACCEPTED->value,
+        'rule' => ValidationRule::ACCEPTED->value,
         'parameters' => [],
         'validValue' => true,
         'invalidValue' => false,
     ],
     'active_url' => [
-        'rule' => CustomFieldValidationRule::ACTIVE_URL->value,
+        'rule' => ValidationRule::ACTIVE_URL->value,
         'parameters' => [],
         'validValue' => 'https://example.com',
         'invalidValue' => 'not-a-url',
     ],
     'alpha' => [
-        'rule' => CustomFieldValidationRule::ALPHA->value,
+        'rule' => ValidationRule::ALPHA->value,
         'parameters' => [],
         'validValue' => 'abcdef',
         'invalidValue' => 'abc123',
     ],
     'alpha_dash' => [
-        'rule' => CustomFieldValidationRule::ALPHA_DASH->value,
+        'rule' => ValidationRule::ALPHA_DASH->value,
         'parameters' => [],
         'validValue' => 'abc-def_123',
         'invalidValue' => 'abc def!',
     ],
     'alpha_num' => [
-        'rule' => CustomFieldValidationRule::ALPHA_NUM->value,
+        'rule' => ValidationRule::ALPHA_NUM->value,
         'parameters' => [],
         'validValue' => 'abc123',
         'invalidValue' => 'abc-123',
     ],
     'array' => [
-        'rule' => CustomFieldValidationRule::ARRAY->value,
+        'rule' => ValidationRule::ARRAY->value,
         'parameters' => [],
         'validValue' => ['item1', 'item2'],
         'invalidValue' => 'not-array',
     ],
     'ascii' => [
-        'rule' => CustomFieldValidationRule::ASCII->value,
+        'rule' => ValidationRule::ASCII->value,
         'parameters' => [],
         'validValue' => 'Hello World',
         'invalidValue' => 'Héllo Wörld',
     ],
     'boolean' => [
-        'rule' => CustomFieldValidationRule::BOOLEAN->value,
+        'rule' => ValidationRule::BOOLEAN->value,
         'parameters' => [],
         'validValue' => true,
         'invalidValue' => 'not-boolean',
     ],
     'confirmed' => [
-        'rule' => CustomFieldValidationRule::CONFIRMED->value,
+        'rule' => ValidationRule::CONFIRMED->value,
         'parameters' => [],
         'validValue' => 'password',
         'invalidValue' => 'password', // Note: needs password_confirmation field
     ],
     'current_password' => [
-        'rule' => CustomFieldValidationRule::CURRENT_PASSWORD->value,
+        'rule' => ValidationRule::CURRENT_PASSWORD->value,
         'parameters' => [],
         'validValue' => 'current-password',
         'invalidValue' => 'wrong-password',
     ],
     'date' => [
-        'rule' => CustomFieldValidationRule::DATE->value,
+        'rule' => ValidationRule::DATE->value,
         'parameters' => [],
         'validValue' => '2023-12-25',
         'invalidValue' => 'not-a-date',
     ],
     'declined' => [
-        'rule' => CustomFieldValidationRule::DECLINED->value,
+        'rule' => ValidationRule::DECLINED->value,
         'parameters' => [],
         'validValue' => false,
         'invalidValue' => true,
     ],
     'distinct' => [
-        'rule' => CustomFieldValidationRule::DISTINCT->value,
+        'rule' => ValidationRule::DISTINCT->value,
         'parameters' => [],
         'validValue' => ['a', 'b', 'c'],
         'invalidValue' => ['a', 'a', 'b'],
     ],
     'email' => [
-        'rule' => CustomFieldValidationRule::EMAIL->value,
+        'rule' => ValidationRule::EMAIL->value,
         'parameters' => [],
         'validValue' => 'test@example.com',
         'invalidValue' => 'not-an-email',
     ],
     'file' => [
-        'rule' => CustomFieldValidationRule::FILE->value,
+        'rule' => ValidationRule::FILE->value,
         'parameters' => [],
         'validValue' => null, // UploadedFile instance needed
         'invalidValue' => 'not-a-file',
     ],
     'filled' => [
-        'rule' => CustomFieldValidationRule::FILLED->value,
+        'rule' => ValidationRule::FILLED->value,
         'parameters' => [],
         'validValue' => 'some value',
         'invalidValue' => '',
     ],
     'image' => [
-        'rule' => CustomFieldValidationRule::IMAGE->value,
+        'rule' => ValidationRule::IMAGE->value,
         'parameters' => [],
         'validValue' => null, // UploadedFile image needed
         'invalidValue' => 'not-an-image',
     ],
     'integer' => [
-        'rule' => CustomFieldValidationRule::INTEGER->value,
+        'rule' => ValidationRule::INTEGER->value,
         'parameters' => [],
         'validValue' => 123,
         'invalidValue' => 12.3,
     ],
     'ip' => [
-        'rule' => CustomFieldValidationRule::IP->value,
+        'rule' => ValidationRule::IP->value,
         'parameters' => [],
         'validValue' => '192.168.1.1',
         'invalidValue' => 'not-an-ip',
     ],
     'ipv4' => [
-        'rule' => CustomFieldValidationRule::IPV4->value,
+        'rule' => ValidationRule::IPV4->value,
         'parameters' => [],
         'validValue' => '192.168.1.1',
         'invalidValue' => '2001:db8::1',
     ],
     'ipv6' => [
-        'rule' => CustomFieldValidationRule::IPV6->value,
+        'rule' => ValidationRule::IPV6->value,
         'parameters' => [],
         'validValue' => '2001:db8::1',
         'invalidValue' => '192.168.1.1',
     ],
     'json' => [
-        'rule' => CustomFieldValidationRule::JSON->value,
+        'rule' => ValidationRule::JSON->value,
         'parameters' => [],
         'validValue' => '{"key": "value"}',
         'invalidValue' => 'not-json',
     ],
     'mac_address' => [
-        'rule' => CustomFieldValidationRule::MAC_ADDRESS->value,
+        'rule' => ValidationRule::MAC_ADDRESS->value,
         'parameters' => [],
         'validValue' => '00:14:22:01:23:45',
         'invalidValue' => 'not-a-mac',
     ],
     'numeric' => [
-        'rule' => CustomFieldValidationRule::NUMERIC->value,
+        'rule' => ValidationRule::NUMERIC->value,
         'parameters' => [],
         'validValue' => '123.45',
         'invalidValue' => 'not-numeric',
     ],
     'password' => [
-        'rule' => CustomFieldValidationRule::PASSWORD->value,
+        'rule' => ValidationRule::PASSWORD->value,
         'parameters' => [],
         'validValue' => 'StrongPassword123!',
         'invalidValue' => 'weak',
     ],
     'present' => [
-        'rule' => CustomFieldValidationRule::PRESENT->value,
+        'rule' => ValidationRule::PRESENT->value,
         'parameters' => [],
         'validValue' => '',
         'invalidValue' => null, // Field must be present but can be empty
     ],
     'prohibited' => [
-        'rule' => CustomFieldValidationRule::PROHIBITED->value,
+        'rule' => ValidationRule::PROHIBITED->value,
         'parameters' => [],
         'validValue' => null,
         'invalidValue' => 'value',
     ],
     'string' => [
-        'rule' => CustomFieldValidationRule::STRING->value,
+        'rule' => ValidationRule::STRING->value,
         'parameters' => [],
         'validValue' => 'string value',
         'invalidValue' => 123,
     ],
     'timezone' => [
-        'rule' => CustomFieldValidationRule::TIMEZONE->value,
+        'rule' => ValidationRule::TIMEZONE->value,
         'parameters' => [],
         'validValue' => 'America/New_York',
         'invalidValue' => 'invalid-timezone',
     ],
     'uppercase' => [
-        'rule' => CustomFieldValidationRule::UPPERCASE->value,
+        'rule' => ValidationRule::UPPERCASE->value,
         'parameters' => [],
         'validValue' => 'UPPERCASE',
         'invalidValue' => 'lowercase',
     ],
     'url' => [
-        'rule' => CustomFieldValidationRule::URL->value,
+        'rule' => ValidationRule::URL->value,
         'parameters' => [],
         'validValue' => 'https://example.com',
         'invalidValue' => 'not-a-url',
     ],
     'uuid' => [
-        'rule' => CustomFieldValidationRule::UUID->value,
+        'rule' => ValidationRule::UUID->value,
         'parameters' => [],
         'validValue' => '550e8400-e29b-41d4-a716-446655440000',
         'invalidValue' => 'not-a-uuid',
@@ -208,103 +208,103 @@ dataset('validation_rules_with_parameters', fn (): array => [
 
     // Single parameter rules
     'min_length' => [
-        'rule' => CustomFieldValidationRule::MIN->value,
+        'rule' => ValidationRule::MIN->value,
         'parameters' => [3],
         'validValue' => 'abc',
         'invalidValue' => 'ab',
     ],
     'max_length' => [
-        'rule' => CustomFieldValidationRule::MAX->value,
+        'rule' => ValidationRule::MAX->value,
         'parameters' => [10],
         'validValue' => 'short',
         'invalidValue' => 'this is too long for max validation',
     ],
     'size' => [
-        'rule' => CustomFieldValidationRule::SIZE->value,
+        'rule' => ValidationRule::SIZE->value,
         'parameters' => [5],
         'validValue' => 'exact',
         'invalidValue' => 'wrong',
     ],
     'digits' => [
-        'rule' => CustomFieldValidationRule::DIGITS->value,
+        'rule' => ValidationRule::DIGITS->value,
         'parameters' => [4],
         'validValue' => '1234',
         'invalidValue' => '123',
     ],
     'max_digits' => [
-        'rule' => CustomFieldValidationRule::MAX_DIGITS->value,
+        'rule' => ValidationRule::MAX_DIGITS->value,
         'parameters' => [5],
         'validValue' => '12345',
         'invalidValue' => '123456',
     ],
     'min_digits' => [
-        'rule' => CustomFieldValidationRule::MIN_DIGITS->value,
+        'rule' => ValidationRule::MIN_DIGITS->value,
         'parameters' => [3],
         'validValue' => '123',
         'invalidValue' => '12',
     ],
     'multiple_of' => [
-        'rule' => CustomFieldValidationRule::MULTIPLE_OF->value,
+        'rule' => ValidationRule::MULTIPLE_OF->value,
         'parameters' => [5],
         'validValue' => 25,
         'invalidValue' => 23,
     ],
     'after' => [
-        'rule' => CustomFieldValidationRule::AFTER->value,
+        'rule' => ValidationRule::AFTER->value,
         'parameters' => ['2023-01-01'],
         'validValue' => '2023-06-01',
         'invalidValue' => '2022-12-31',
     ],
     'after_or_equal' => [
-        'rule' => CustomFieldValidationRule::AFTER_OR_EQUAL->value,
+        'rule' => ValidationRule::AFTER_OR_EQUAL->value,
         'parameters' => ['2023-01-01'],
         'validValue' => '2023-01-01',
         'invalidValue' => '2022-12-31',
     ],
     'before' => [
-        'rule' => CustomFieldValidationRule::BEFORE->value,
+        'rule' => ValidationRule::BEFORE->value,
         'parameters' => ['2023-12-31'],
         'validValue' => '2023-06-01',
         'invalidValue' => '2024-01-01',
     ],
     'before_or_equal' => [
-        'rule' => CustomFieldValidationRule::BEFORE_OR_EQUAL->value,
+        'rule' => ValidationRule::BEFORE_OR_EQUAL->value,
         'parameters' => ['2023-12-31'],
         'validValue' => '2023-12-31',
         'invalidValue' => '2024-01-01',
     ],
     'date_equals' => [
-        'rule' => CustomFieldValidationRule::DATE_EQUALS->value,
+        'rule' => ValidationRule::DATE_EQUALS->value,
         'parameters' => ['2023-06-15'],
         'validValue' => '2023-06-15',
         'invalidValue' => '2023-06-16',
     ],
     'date_format' => [
-        'rule' => CustomFieldValidationRule::DATE_FORMAT->value,
+        'rule' => ValidationRule::DATE_FORMAT->value,
         'parameters' => ['Y-m-d'],
         'validValue' => '2023-06-15',
         'invalidValue' => '15/06/2023',
     ],
     'gt' => [
-        'rule' => CustomFieldValidationRule::GT->value,
+        'rule' => ValidationRule::GT->value,
         'parameters' => ['10'],
         'validValue' => 15,
         'invalidValue' => 5,
     ],
     'gte' => [
-        'rule' => CustomFieldValidationRule::GTE->value,
+        'rule' => ValidationRule::GTE->value,
         'parameters' => ['10'],
         'validValue' => 10,
         'invalidValue' => 9,
     ],
     'lt' => [
-        'rule' => CustomFieldValidationRule::LT->value,
+        'rule' => ValidationRule::LT->value,
         'parameters' => ['10'],
         'validValue' => 5,
         'invalidValue' => 15,
     ],
     'lte' => [
-        'rule' => CustomFieldValidationRule::LTE->value,
+        'rule' => ValidationRule::LTE->value,
         'parameters' => ['10'],
         'validValue' => 10,
         'invalidValue' => 15,
@@ -312,25 +312,25 @@ dataset('validation_rules_with_parameters', fn (): array => [
 
     // Two parameter rules
     'between_numeric' => [
-        'rule' => CustomFieldValidationRule::BETWEEN->value,
+        'rule' => ValidationRule::BETWEEN->value,
         'parameters' => [5, 10],
         'validValue' => 7,
         'invalidValue' => 15,
     ],
     'between_string' => [
-        'rule' => CustomFieldValidationRule::BETWEEN->value,
+        'rule' => ValidationRule::BETWEEN->value,
         'parameters' => [3, 10],
         'validValue' => 'hello',
         'invalidValue' => 'hi',
     ],
     'digits_between' => [
-        'rule' => CustomFieldValidationRule::DIGITS_BETWEEN->value,
+        'rule' => ValidationRule::DIGITS_BETWEEN->value,
         'parameters' => [3, 5],
         'validValue' => '1234',
         'invalidValue' => '12',
     ],
     'decimal_precision' => [
-        'rule' => CustomFieldValidationRule::DECIMAL->value,
+        'rule' => ValidationRule::DECIMAL->value,
         'parameters' => [2, 4],
         'validValue' => '123.45',
         'invalidValue' => '123.456789',
@@ -338,49 +338,49 @@ dataset('validation_rules_with_parameters', fn (): array => [
 
     // Multiple parameter rules
     'in_list' => [
-        'rule' => CustomFieldValidationRule::IN->value,
+        'rule' => ValidationRule::IN->value,
         'parameters' => ['red', 'green', 'blue'],
         'validValue' => 'red',
         'invalidValue' => 'yellow',
     ],
     'not_in_list' => [
-        'rule' => CustomFieldValidationRule::NOT_IN->value,
+        'rule' => ValidationRule::NOT_IN->value,
         'parameters' => ['red', 'green', 'blue'],
         'validValue' => 'yellow',
         'invalidValue' => 'red',
     ],
     'starts_with' => [
-        'rule' => CustomFieldValidationRule::STARTS_WITH->value,
+        'rule' => ValidationRule::STARTS_WITH->value,
         'parameters' => ['hello', 'hi'],
         'validValue' => 'hello world',
         'invalidValue' => 'goodbye world',
     ],
     'ends_with' => [
-        'rule' => CustomFieldValidationRule::ENDS_WITH->value,
+        'rule' => ValidationRule::ENDS_WITH->value,
         'parameters' => ['world', 'universe'],
         'validValue' => 'hello world',
         'invalidValue' => 'hello there',
     ],
     'doesnt_start_with' => [
-        'rule' => CustomFieldValidationRule::DOESNT_START_WITH->value,
+        'rule' => ValidationRule::DOESNT_START_WITH->value,
         'parameters' => ['bad', 'evil'],
         'validValue' => 'good morning',
         'invalidValue' => 'bad morning',
     ],
     'doesnt_end_with' => [
-        'rule' => CustomFieldValidationRule::DOESNT_END_WITH->value,
+        'rule' => ValidationRule::DOESNT_END_WITH->value,
         'parameters' => ['bad', 'evil'],
         'validValue' => 'something good',
         'invalidValue' => 'something bad',
     ],
     'mimes' => [
-        'rule' => CustomFieldValidationRule::MIMES->value,
+        'rule' => ValidationRule::MIMES->value,
         'parameters' => ['jpg', 'png', 'gif'],
         'validValue' => null, // UploadedFile needed
         'invalidValue' => null, // Wrong mime type file needed
     ],
     'mimetypes' => [
-        'rule' => CustomFieldValidationRule::MIMETYPES->value,
+        'rule' => ValidationRule::MIMETYPES->value,
         'parameters' => ['image/jpeg', 'image/png'],
         'validValue' => null, // UploadedFile needed
         'invalidValue' => null, // Wrong mime type file needed
@@ -388,79 +388,79 @@ dataset('validation_rules_with_parameters', fn (): array => [
 
     // Complex conditional rules
     'required_if' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_IF->value,
+        'rule' => ValidationRule::REQUIRED_IF->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => 'required value',
         'invalidValue' => null, // When other_field = value
     ],
     'required_unless' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_UNLESS->value,
+        'rule' => ValidationRule::REQUIRED_UNLESS->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => 'required value',
         'invalidValue' => null, // When other_field != value
     ],
     'required_with' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_WITH->value,
+        'rule' => ValidationRule::REQUIRED_WITH->value,
         'parameters' => ['other_field'],
         'validValue' => 'required value',
         'invalidValue' => null, // When other_field is present
     ],
     'required_with_all' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_WITH_ALL->value,
+        'rule' => ValidationRule::REQUIRED_WITH_ALL->value,
         'parameters' => ['field1', 'field2'],
         'validValue' => 'required value',
         'invalidValue' => null, // When all fields are present
     ],
     'required_without' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_WITHOUT->value,
+        'rule' => ValidationRule::REQUIRED_WITHOUT->value,
         'parameters' => ['other_field'],
         'validValue' => 'required value',
         'invalidValue' => null, // When other_field is missing
     ],
     'required_without_all' => [
-        'rule' => CustomFieldValidationRule::REQUIRED_WITHOUT_ALL->value,
+        'rule' => ValidationRule::REQUIRED_WITHOUT_ALL->value,
         'parameters' => ['field1', 'field2'],
         'validValue' => 'required value',
         'invalidValue' => null, // When all fields are missing
     ],
     'accepted_if' => [
-        'rule' => CustomFieldValidationRule::ACCEPTED_IF->value,
+        'rule' => ValidationRule::ACCEPTED_IF->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => true,
         'invalidValue' => false, // When other_field = value
     ],
     'declined_if' => [
-        'rule' => CustomFieldValidationRule::DECLINED_IF->value,
+        'rule' => ValidationRule::DECLINED_IF->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => false,
         'invalidValue' => true, // When other_field = value
     ],
     'prohibited_if' => [
-        'rule' => CustomFieldValidationRule::PROHIBITED_IF->value,
+        'rule' => ValidationRule::PROHIBITED_IF->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => null,
         'invalidValue' => 'prohibited value', // When other_field = value
     ],
     'prohibited_unless' => [
-        'rule' => CustomFieldValidationRule::PROHIBITED_UNLESS->value,
+        'rule' => ValidationRule::PROHIBITED_UNLESS->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => null,
         'invalidValue' => 'prohibited value', // When other_field != value
     ],
     'exclude_if' => [
-        'rule' => CustomFieldValidationRule::EXCLUDE_IF->value,
+        'rule' => ValidationRule::EXCLUDE_IF->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => 'any value', // Excluded from validation
         'invalidValue' => 'any value', // Excluded from validation
     ],
     'exclude_unless' => [
-        'rule' => CustomFieldValidationRule::EXCLUDE_UNLESS->value,
+        'rule' => ValidationRule::EXCLUDE_UNLESS->value,
         'parameters' => ['other_field', 'value'],
         'validValue' => 'any value', // Excluded from validation
         'invalidValue' => 'any value', // Excluded from validation
     ],
     'prohibits' => [
-        'rule' => CustomFieldValidationRule::PROHIBITS->value,
+        'rule' => ValidationRule::PROHIBITS->value,
         'parameters' => ['other_field'],
         'validValue' => 'some value',
         'invalidValue' => 'some value', // When other_field is also present
@@ -468,61 +468,61 @@ dataset('validation_rules_with_parameters', fn (): array => [
 
     // Advanced rules
     'different' => [
-        'rule' => CustomFieldValidationRule::DIFFERENT->value,
+        'rule' => ValidationRule::DIFFERENT->value,
         'parameters' => ['other_field'],
         'validValue' => 'different value',
         'invalidValue' => 'same value', // When other_field has same value
     ],
     'same' => [
-        'rule' => CustomFieldValidationRule::SAME->value,
+        'rule' => ValidationRule::SAME->value,
         'parameters' => ['other_field'],
         'validValue' => 'same value',
         'invalidValue' => 'different value', // When other_field has different value
     ],
     'regex_pattern' => [
-        'rule' => CustomFieldValidationRule::REGEX->value,
+        'rule' => ValidationRule::REGEX->value,
         'parameters' => ['/^[A-Z][a-z]+$/'],
         'validValue' => 'Hello',
         'invalidValue' => 'hello',
     ],
     'not_regex_pattern' => [
-        'rule' => CustomFieldValidationRule::NOT_REGEX->value,
+        'rule' => ValidationRule::NOT_REGEX->value,
         'parameters' => ['/^\d+$/'],
         'validValue' => 'abc123',
         'invalidValue' => '123',
     ],
     'exists_in_table' => [
-        'rule' => CustomFieldValidationRule::EXISTS->value,
+        'rule' => ValidationRule::EXISTS->value,
         'parameters' => ['users.id'],
         'validValue' => 1, // Existing user ID
         'invalidValue' => 999999, // Non-existing user ID
     ],
     'unique_in_table' => [
-        'rule' => CustomFieldValidationRule::UNIQUE->value,
+        'rule' => ValidationRule::UNIQUE->value,
         'parameters' => ['users.email'],
         'validValue' => 'unique@example.com',
         'invalidValue' => 'existing@example.com', // Existing email
     ],
     'in_array_field' => [
-        'rule' => CustomFieldValidationRule::IN_ARRAY->value,
+        'rule' => ValidationRule::IN_ARRAY->value,
         'parameters' => ['allowed_values'],
         'validValue' => 'allowed_value',
         'invalidValue' => 'not_allowed_value',
     ],
     'dimensions_image' => [
-        'rule' => CustomFieldValidationRule::DIMENSIONS->value,
+        'rule' => ValidationRule::DIMENSIONS->value,
         'parameters' => ['min_width=100', 'min_height=100'],
         'validValue' => null, // Valid image file needed
         'invalidValue' => null, // Invalid dimensions image needed
     ],
     'exclude' => [
-        'rule' => CustomFieldValidationRule::EXCLUDE->value,
+        'rule' => ValidationRule::EXCLUDE->value,
         'parameters' => [],
         'validValue' => 'any value', // Always excluded
         'invalidValue' => 'any value', // Always excluded
     ],
     'enum_values' => [
-        'rule' => CustomFieldValidationRule::ENUM->value,
+        'rule' => ValidationRule::ENUM->value,
         'parameters' => ['App\\Enums\\Status'],
         'validValue' => 'active', // Valid enum value
         'invalidValue' => 'invalid_status', // Invalid enum value

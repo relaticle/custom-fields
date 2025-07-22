@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Services;
 
 use Relaticle\CustomFields\Data\ValidationRuleData;
-use Relaticle\CustomFields\Enums\CustomFieldValidationRule;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
@@ -30,7 +30,7 @@ final class ValidationService
     public function getValidationRules(CustomField $customField): array
     {
         // Convert user rules to Laravel validator format
-        $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules);
+        $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
 
         // Get database constraint rules based on storage column
         $isEncrypted = $customField->settings->encrypted ?? false;
@@ -49,25 +49,33 @@ final class ValidationService
     public function isRequired(CustomField $customField): bool
     {
         return $customField->validation_rules->toCollection()
-            ->contains('name', CustomFieldValidationRule::REQUIRED->value);
+            ->contains('name', ValidationRule::REQUIRED->value);
     }
 
     /**
      * Convert user validation rules from DataCollection format to Laravel validator format.
      *
      * @param  DataCollection<int, ValidationRuleData>|null  $rules  The validation rules to convert
+     * @param  CustomField  $customField  The custom field for context
      * @return array<int, string> The converted rules
      */
-    private function convertUserRulesToValidatorFormat(?DataCollection $rules): array
+    private function convertUserRulesToValidatorFormat(?DataCollection $rules, CustomField $customField): array
     {
         if (! $rules instanceof DataCollection || $rules->toCollection()->isEmpty()) {
             return [];
         }
 
         return $rules->toCollection()
-            ->map(function (ValidationRuleData $ruleData): string {
+            ->map(function (ValidationRuleData $ruleData) use ($customField): string {
                 if ($ruleData->parameters === []) {
                     return $ruleData->name;
+                }
+
+                // For choice fields with IN or NOT_IN rules, convert option names to IDs
+                if ($customField->isChoiceField() && in_array($ruleData->name, ['in', 'not_in'])) {
+                    $parameters = $this->convertOptionNamesToIds($ruleData->parameters, $customField);
+
+                    return $ruleData->name.':'.implode(',', $parameters);
                 }
 
                 return $ruleData->name.':'.implode(',', $ruleData->parameters);
@@ -93,7 +101,7 @@ final class ValidationService
 
         // For JSON fields, add array validation rules
         if ($columnName === 'json_value') {
-            $jsonRules = DatabaseFieldConstraints::getJsonValidationRules($isEncrypted);
+            $jsonRules = DatabaseFieldConstraints::getJsonValidationRules();
 
             return array_merge($dbRules, $jsonRules);
         }
@@ -148,5 +156,26 @@ final class ValidationService
 
         // Combine the rules, with primary rules first
         return array_merge($primaryRules, $filteredSecondaryRules);
+    }
+
+    /**
+     * Convert option names to their corresponding IDs for choice field validation.
+     *
+     * @param  array<array-key, string>  $optionNames  Array of option names
+     * @param  CustomField  $customField  The custom field with options
+     * @return array<int, string> Array of option IDs
+     */
+    private function convertOptionNamesToIds(array $optionNames, CustomField $customField): array
+    {
+        // Load options if not already loaded
+        $customField->loadMissing('options');
+
+        // Create a mapping of option names to IDs
+        $nameToIdMap = $customField->options->pluck('id', 'name')->toArray();
+
+        // Convert names to IDs, keeping the original value if not found
+        return array_map(function ($name) use ($nameToIdMap): string {
+            return (string) ($nameToIdMap[$name] ?? $name);
+        }, $optionNames);
     }
 }
