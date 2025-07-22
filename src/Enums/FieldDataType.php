@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Enums;
 
 /**
- * Field categories for unified classification system.
+ * Field categories for a unified classification system.
  */
 enum FieldDataType: string
 {
