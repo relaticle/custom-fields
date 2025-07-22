@@ -69,6 +69,7 @@ class ColorPickerFieldType implements FieldTypeDefinitionInterface
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::STARTS_WITH,
         ];
     }
 }

@@ -70,6 +70,8 @@ class RadioFieldType implements FieldTypeDefinitionInterface
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::IN,
+            ValidationRule::NOT_IN,
         ];
     }
 }

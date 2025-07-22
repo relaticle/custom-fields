@@ -65,7 +65,7 @@ class LinkFieldType implements FieldTypeDefinitionInterface
         return [
             ValidationRule::REQUIRED,
             ValidationRule::URL,
-            ValidationRule::UNIQUE,
+            ValidationRule::STARTS_WITH,
         ];
     }
 }

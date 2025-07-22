@@ -64,8 +64,10 @@ class CheckboxListFieldType implements FieldTypeDefinitionInterface
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::ARRAY,
             ValidationRule::MIN,
             ValidationRule::MAX,
+            ValidationRule::DISTINCT,
         ];
     }
 }

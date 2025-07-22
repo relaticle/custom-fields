@@ -66,7 +66,12 @@ class TextFieldType implements FieldTypeDefinitionInterface
             ValidationRule::REQUIRED,
             ValidationRule::MIN,
             ValidationRule::MAX,
-            ValidationRule::UNIQUE,
+            ValidationRule::ALPHA,
+            ValidationRule::ALPHA_NUM,
+            ValidationRule::ALPHA_DASH,
+            ValidationRule::EMAIL,
+            ValidationRule::STARTS_WITH,
+            ValidationRule::ENDS_WITH,
         ];
     }
 }

@@ -68,8 +68,13 @@ class CurrencyFieldType implements FieldImportExportInterface, FieldTypeDefiniti
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::NUMERIC,
+            ValidationRule::DECIMAL,
             ValidationRule::MIN,
             ValidationRule::MAX,
+            ValidationRule::BETWEEN,
+            ValidationRule::GT,
+            ValidationRule::GTE,
         ];
     }
 

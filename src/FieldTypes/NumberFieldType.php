@@ -64,9 +64,15 @@ class NumberFieldType implements FieldTypeDefinitionInterface
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::NUMERIC,
+            ValidationRule::INTEGER,
             ValidationRule::MIN,
             ValidationRule::MAX,
-            ValidationRule::UNIQUE,
+            ValidationRule::BETWEEN,
+            ValidationRule::GT,
+            ValidationRule::GTE,
+            ValidationRule::LT,
+            ValidationRule::LTE,
         ];
     }
 }

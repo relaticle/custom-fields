@@ -65,7 +65,10 @@ class DateFieldType implements FieldTypeDefinitionInterface
         return [
             ValidationRule::REQUIRED,
             ValidationRule::AFTER,
+            ValidationRule::AFTER_OR_EQUAL,
             ValidationRule::BEFORE,
+            ValidationRule::BEFORE_OR_EQUAL,
+            ValidationRule::DATE_EQUALS,
         ];
     }
 }

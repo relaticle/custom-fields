@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\FieldTypes;
 
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\DateTimeComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\DateTimeEntry;
@@ -56,5 +57,17 @@ class DateTimeFieldType implements FieldTypeDefinitionInterface
     public function getPriority(): int
     {
         return 50;
+    }
+
+    public function allowedValidationRules(): array
+    {
+        return [
+            ValidationRule::REQUIRED,
+            ValidationRule::AFTER,
+            ValidationRule::AFTER_OR_EQUAL,
+            ValidationRule::BEFORE,
+            ValidationRule::BEFORE_OR_EQUAL,
+            ValidationRule::DATE_EQUALS,
+        ];
     }
 }

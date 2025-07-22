@@ -64,6 +64,8 @@ class CheckboxFieldType implements FieldTypeDefinitionInterface
     {
         return [
             ValidationRule::REQUIRED,
+            ValidationRule::BOOLEAN,
+            ValidationRule::ACCEPTED,
         ];
     }
 }

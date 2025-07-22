@@ -81,9 +81,7 @@ class SelectFieldType implements FieldTypeDefinitionInterface
         return [
             ValidationRule::REQUIRED,
             ValidationRule::IN,
-            ValidationRule::EXISTS,
             ValidationRule::NOT_IN,
-            ValidationRule::ENUM,
         ];
     }
 }
