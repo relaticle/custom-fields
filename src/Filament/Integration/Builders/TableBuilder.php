@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // ABOUTME: Builder for creating Filament table columns and filters from custom fields
 // ABOUTME: Provides fluent API for generating table components with filtering support
 
@@ -12,7 +14,7 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Support\Utils;
 
-class TableBuilder extends BaseBuilder
+final class TableBuilder extends BaseBuilder
 {
     public function columns(): Collection
     {
@@ -30,6 +32,10 @@ class TableBuilder extends BaseBuilder
             ->flatMap(fn ($section) => $section->fields)
             ->map(function (CustomField $field) use ($fieldColumnFactory, $backendVisibilityService, $allFields) {
                 $column = $fieldColumnFactory->create($field);
+
+                if (! method_exists($column, 'formatStateUsing')) {
+                    return $column;
+                }
 
                 // Wrap the existing state with visibility check
                 $column->formatStateUsing(function ($state, $record) use ($field, $backendVisibilityService, $allFields) {
