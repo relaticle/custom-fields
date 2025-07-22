@@ -62,16 +62,16 @@ expect()->extend('toHaveCorrectComponent', function (string $expectedComponent):
         'textarea' => 'Textarea',
         'select', 'multi_select' => 'Select',
         'checkbox' => 'Checkbox',
-        'checkbox_list' => 'CheckboxList',
+        'checkbox-list' => 'CheckboxList',
         'radio' => 'Radio',
         'toggle' => 'Toggle',
         'date' => 'DatePicker',
-        'date_time' => 'DateTimePicker',
-        'rich_editor' => 'RichEditor',
-        'markdown_editor' => 'MarkdownEditor',
-        'tags_input' => 'TagsInput',
-        'color_picker' => 'ColorPicker',
-        'toggle_buttons' => 'ToggleButtons',
+        'date-time' => 'DateTimePicker',
+        'rich-editor' => 'RichEditor',
+        'markdown-editor' => 'MarkdownEditor',
+        'tags-input' => 'TagsInput',
+        'color-picker' => 'ColorPicker',
+        'toggle-buttons' => 'ToggleButtons',
         default => 'Unknown'
     };
 

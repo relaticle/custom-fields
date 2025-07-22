@@ -462,9 +462,9 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
         // Test that all 18 field types are properly discoverable
         $fieldTypes = [
             'text', 'number', 'currency', 'checkbox', 'toggle',
-            'date', 'datetime', 'textarea', 'rich_editor', 'markdown_editor',
-            'link', 'color_picker', 'select', 'multi_select', 'radio',
-            'checkbox_list', 'tags_input', 'toggle_buttons',
+            'date', 'datetime', 'textarea', 'rich-editor', 'markdown-editor',
+            'link', 'color-picker', 'select', 'multi_select', 'radio',
+            'checkbox-list', 'tags-input', 'toggle-buttons',
         ];
         expect($fieldTypes)->toHaveCount(18);
 

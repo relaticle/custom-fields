@@ -566,12 +566,12 @@ dataset('field_type_validation_compatibility', fn (): array => [
         'allowedRules' => ['required', 'array', 'min', 'max', 'between', 'in'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'string', 'date', 'email'],
     ],
-    'checkbox_list_field_rules' => [
+    'checkbox-list_field_rules' => [
         'fieldType' => 'checkbox-list',
         'allowedRules' => ['required', 'array', 'min', 'max', 'between'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'string', 'date', 'email'],
     ],
-    'rich_editor_field_rules' => [
+    'rich-editor_field_rules' => [
         'fieldType' => 'rich-editor',
         'allowedRules' => ['required', 'string', 'min', 'max', 'between', 'starts_with'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],

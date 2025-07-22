@@ -68,7 +68,7 @@ dataset('field_type_configurations', fn (): array => [
         'expectedComponent' => 'DatePicker',
     ],
     'datetime_field' => [
-        'fieldType' => 'date_time',
+        'fieldType' => 'date-time',
         'config' => [
             'validation_rules' => [
                 ['name' => 'date', 'parameters' => []],
@@ -146,8 +146,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'Checkbox',
     ],
-    'checkbox_list_field' => [
-        'fieldType' => 'checkbox_list',
+    'checkbox-list_field' => [
+        'fieldType' => 'checkbox-list',
         'config' => [
             'validation_rules' => [
                 ['name' => 'array', 'parameters' => []],
@@ -197,8 +197,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'Toggle',
     ],
-    'toggle_buttons_field' => [
-        'fieldType' => 'toggle_buttons',
+    'toggle-buttons_field' => [
+        'fieldType' => 'toggle-buttons',
         'config' => [
             'validation_rules' => [
                 ['name' => 'array', 'parameters' => []],
@@ -215,8 +215,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'ToggleButtons',
     ],
-    'rich_editor_field' => [
-        'fieldType' => 'rich_editor',
+    'rich-editor_field' => [
+        'fieldType' => 'rich-editor',
         'config' => [
             'validation_rules' => [
                 ['name' => 'string', 'parameters' => []],
@@ -229,8 +229,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'RichEditor',
     ],
-    'markdown_editor_field' => [
-        'fieldType' => 'markdown_editor',
+    'markdown-editor_field' => [
+        'fieldType' => 'markdown-editor',
         'config' => [
             'validation_rules' => [
                 ['name' => 'string', 'parameters' => []],
@@ -243,8 +243,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'MarkdownEditor',
     ],
-    'tags_input_field' => [
-        'fieldType' => 'tags_input',
+    'tags-input_field' => [
+        'fieldType' => 'tags-input',
         'config' => [
             'validation_rules' => [
                 ['name' => 'array', 'parameters' => []],
@@ -258,8 +258,8 @@ dataset('field_type_configurations', fn (): array => [
         ],
         'expectedComponent' => 'TagsInput',
     ],
-    'color_picker_field' => [
-        'fieldType' => 'color_picker',
+    'color-picker_field' => [
+        'fieldType' => 'color-picker',
         'config' => [
             'validation_rules' => [
                 ['name' => 'string', 'parameters' => []],
@@ -296,9 +296,9 @@ dataset('field_type_categories', fn (): array => [
             'text',
             'textarea',
             'link',
-            'rich_editor',
-            'markdown_editor',
-            'color_picker',
+            'rich-editor',
+            'markdown-editor',
+            'color-picker',
         ],
         'characteristics' => [
             'encryptable' => true,
@@ -324,7 +324,7 @@ dataset('field_type_categories', fn (): array => [
         'category' => 'date',
         'fieldTypes' => [
             'date',
-            'date_time',
+            'date-time',
         ],
         'characteristics' => [
             'encryptable' => false,
@@ -363,13 +363,13 @@ dataset('field_type_categories', fn (): array => [
         'category' => 'multi_choice',
         'fieldTypes' => [
             'multi_select',
-            'checkbox_list',
-            'tags_input',
-            'toggle_buttons',
+            'checkbox-list',
+            'tags-input',
+            'toggle-buttons',
         ],
         'characteristics' => [
             'encryptable' => false,
-            'searchable' => true, // tags_input is searchable
+            'searchable' => true, // tags-input is searchable
             'filterable' => true,
             'optionable' => true,
         ],
@@ -402,8 +402,8 @@ dataset('field_type_component_mappings', fn (): array => [
         'fieldTypes' => ['checkbox'],
         'expectedComponent' => 'Checkbox',
     ],
-    'checkbox_list_types' => [
-        'fieldTypes' => ['checkbox_list'],
+    'checkbox-list_types' => [
+        'fieldTypes' => ['checkbox-list'],
         'expectedComponent' => 'CheckboxList',
     ],
     'radio_types' => [
@@ -414,8 +414,8 @@ dataset('field_type_component_mappings', fn (): array => [
         'fieldTypes' => ['toggle'],
         'expectedComponent' => 'Toggle',
     ],
-    'toggle_buttons_types' => [
-        'fieldTypes' => ['toggle_buttons'],
+    'toggle-buttons_types' => [
+        'fieldTypes' => ['toggle-buttons'],
         'expectedComponent' => 'ToggleButtons',
     ],
     'date_picker_types' => [
@@ -423,23 +423,23 @@ dataset('field_type_component_mappings', fn (): array => [
         'expectedComponent' => 'DatePicker',
     ],
     'datetime_picker_types' => [
-        'fieldTypes' => ['date_time'],
+        'fieldTypes' => ['date-time'],
         'expectedComponent' => 'DateTimePicker',
     ],
-    'rich_editor_types' => [
-        'fieldTypes' => ['rich_editor'],
+    'rich-editor_types' => [
+        'fieldTypes' => ['rich-editor'],
         'expectedComponent' => 'RichEditor',
     ],
-    'markdown_editor_types' => [
-        'fieldTypes' => ['markdown_editor'],
+    'markdown-editor_types' => [
+        'fieldTypes' => ['markdown-editor'],
         'expectedComponent' => 'MarkdownEditor',
     ],
-    'tags_input_types' => [
-        'fieldTypes' => ['tags_input'],
+    'tags-input_types' => [
+        'fieldTypes' => ['tags-input'],
         'expectedComponent' => 'TagsInput',
     ],
-    'color_picker_types' => [
-        'fieldTypes' => ['color_picker'],
+    'color-picker_types' => [
+        'fieldTypes' => ['color-picker'],
         'expectedComponent' => 'ColorPicker',
     ],
 ]);
