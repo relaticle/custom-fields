@@ -9,8 +9,8 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypes\Concerns\HasCommonFieldProperties;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CheckboxListComponent;
-use Relaticle\CustomFields\Filament\Integration\Infolists\Fields\MultiValueEntry;
-use Relaticle\CustomFields\Filament\Integration\Tables\Columns\MultiValueColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Infolists\MultiChoiceEntry;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiChoiceColumn;
 
 /**
  * ABOUTME: Field type definition for Checkbox List fields
@@ -47,12 +47,12 @@ class CheckboxListFieldType implements FieldTypeDefinitionInterface
 
     public function getTableColumnClass(): string
     {
-        return MultiValueColumn::class;
+        return MultiChoiceColumn::class;
     }
 
     public function getInfolistEntryClass(): string
     {
-        return MultiValueEntry::class;
+        return MultiChoiceEntry::class;
     }
 
     public function getPriority(): int
