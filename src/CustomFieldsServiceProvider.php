@@ -9,6 +9,7 @@ use Filament\Support\Assets\Asset;
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentIcon;
+use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Livewire;
@@ -82,7 +83,14 @@ class CustomFieldsServiceProvider extends PackageServiceProvider
                 $command
                     ->publishConfigFile()
                     ->publishMigrations()
-                    ->askToRunMigrations();
+                    ->askToRunMigrations()
+                    ->endWith(function (Command $command) {
+                        $command->newLine();
+                        $command->warn('⚠️ Commercial/closed projects require a Commercial License');
+                        $command->info('📄 Open source projects use AGPL-3.0');
+                        $command->info('https://custom-fields.relaticle.com/legal-acknowledgments/license');
+                        $command->newLine(2);
+                    });
             });
 
         $configFileName = $package->shortName();
