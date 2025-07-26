@@ -64,7 +64,7 @@ final class DatabaseFieldConstraints
             'rules' => ['date'],
         ],
         'datetime_value' => [
-            'rules' => ['datetime'],
+            'rules' => ['date'],
         ],
     ];
 
