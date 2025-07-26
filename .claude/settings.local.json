@@ -40,7 +40,8 @@
       "Bash(npm run build:*)",
       "mcp__ide__getDiagnostics",
       "Bash(git checkout:*)",
-      "Bash(composer install:*)"
+      "Bash(composer install:*)",
+      "mcp__tinkerwell__evaluate-local-php-code"
     ],
     "deny": []
   }

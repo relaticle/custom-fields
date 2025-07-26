@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+use ReflectionClass;
+use ReflectionException;
+
 class Utils
 {
     public static function getResourceCluster(): ?string
@@ -110,11 +113,11 @@ class Utils
      * @param  array  $parameters  The parameters to pass to the method
      * @return mixed The method's return value
      *
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public static function invokeMethodByReflection(object $object, string $method, array $parameters = []): mixed
     {
-        $reflection = new \ReflectionClass($object);
+        $reflection = new ReflectionClass($object);
         $method = $reflection->getMethod($method);
         $method->setAccessible(true);
 
