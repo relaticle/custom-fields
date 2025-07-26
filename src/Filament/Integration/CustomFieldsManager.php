@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Relaticle\CustomFields\Filament\Integration;
 
+use Relaticle\CustomFields\Filament\Integration\Builders\ExporterBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\FormBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\InfolistBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\TableBuilder;
 
-class CustomFieldsManager
+final class CustomFieldsManager
 {
     public function table(): TableBuilder
     {
@@ -21,5 +24,10 @@ class CustomFieldsManager
     public function infolist(): InfolistBuilder
     {
         return new InfolistBuilder;
+    }
+
+    public function exporter(): ExporterBuilder
+    {
+        return new ExporterBuilder;
     }
 }

@@ -140,7 +140,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         }
     }
 
-    protected function getAssetPackageName(): ?string
+    private function getAssetPackageName(): ?string
     {
         return 'relaticle/custom-fields';
     }
@@ -148,7 +148,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<Asset>
      */
-    protected function getAssets(): array
+    private function getAssets(): array
     {
         return [
             // AlpineComponent::make('custom-fields', __DIR__ . '/../resources/dist/components/custom-fields.js'),
@@ -160,7 +160,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<class-string>
      */
-    protected function getCommands(): array
+    private function getCommands(): array
     {
         return [];
     }
@@ -168,15 +168,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string>
      */
-    protected function getIcons(): array
-    {
-        return [];
-    }
-
-    /**
-     * @return array<string>
-     */
-    protected function getRoutes(): array
+    private function getIcons(): array
     {
         return [];
     }
@@ -184,7 +176,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string, mixed>
      */
-    protected function getScriptData(): array
+    private function getScriptData(): array
     {
         return [];
     }
@@ -192,7 +184,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string>
      */
-    protected function getMigrations(): array
+    private function getMigrations(): array
     {
         return [
             'create_custom_fields_table',
