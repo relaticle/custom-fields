@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Override;
 use Psr\Log\LoggerInterface;
 use Relaticle\CustomFields\Filament\Integration\Actions\Imports\ColumnConfigurators\BasicColumnConfigurator;
 use Relaticle\CustomFields\Filament\Integration\Actions\Imports\ColumnConfigurators\MultiSelectColumnConfigurator;
@@ -22,10 +21,6 @@ use Relaticle\CustomFields\Filament\Integration\Factories\ImportColumnFactory;
  */
 class ImportsServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    #[Override]
     public function register(): void
     {
         // Register implementations

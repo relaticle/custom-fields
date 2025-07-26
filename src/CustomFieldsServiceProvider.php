@@ -32,7 +32,7 @@ use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class CustomFieldsServiceProvider extends PackageServiceProvider
+final class CustomFieldsServiceProvider extends PackageServiceProvider
 {
     public static string $name = 'custom-fields';
 
@@ -77,7 +77,7 @@ class CustomFieldsServiceProvider extends PackageServiceProvider
          *
          * More info: https://github.com/spatie/laravel-package-tools
          */
-        $package->name(static::$name)
+        $package->name(self::$name)
             ->hasCommands($this->getCommands())
             ->hasInstallCommand(function (InstallCommand $command): void {
                 $command
@@ -108,7 +108,7 @@ class CustomFieldsServiceProvider extends PackageServiceProvider
         }
 
         if (file_exists($package->basePath('/../resources/views'))) {
-            $package->hasViews(static::$viewNamespace);
+            $package->hasViews(self::$viewNamespace);
         }
     }
 

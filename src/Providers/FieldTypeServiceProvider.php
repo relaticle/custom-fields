@@ -9,17 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\ServiceProvider;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 
-class FieldTypeServiceProvider extends ServiceProvider
+final class FieldTypeServiceProvider extends ServiceProvider
 {
-    public function register(): void
-    {
-        //        $this->app->singleton(
-        //            'field-type-registry',
-        //            \Relaticle\CustomFields\Services\FieldTypeRegistry::class
-        //        );
-        //        CustomFieldsType::register();
-    }
-
     public function boot(): void
     {
         Table::configureUsing(function (Table $table): void {
