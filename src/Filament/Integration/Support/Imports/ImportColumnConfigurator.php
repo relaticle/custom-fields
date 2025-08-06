@@ -11,7 +11,6 @@ use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
-use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Contracts\FieldImportExportInterface;
 use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
@@ -28,7 +27,7 @@ final class ImportColumnConfigurator
 {
     /**
      * Configure an import column based on a custom field.
-     * 
+     *
      * This is the main entry point that delegates to specific configuration methods
      * based on the field's data type.
      */
@@ -39,8 +38,10 @@ final class ImportColumnConfigurator
             return $this->finalize($column, $customField);
         }
 
-        // Configure based on data type
-        match ($customField->typeData->dataType) {
+        // Configure based on data type (handle null typeData gracefully)
+        $dataType = $customField->typeData?->dataType ?? FieldDataType::STRING;
+
+        match ($dataType) {
             FieldDataType::SINGLE_CHOICE => $this->configureSingleChoice($column, $customField),
             FieldDataType::MULTI_CHOICE => $this->configureMultiChoice($column, $customField),
             FieldDataType::DATE => $this->configureDate($column),
@@ -74,12 +75,13 @@ final class ImportColumnConfigurator
         if ($example !== null) {
             $column->example($example);
         }
-        
+
         // Apply transformation
         $column->castStateUsing(function ($state) use ($fieldTypeInstance) {
             if ($state === null || $state === '') {
                 return null;
             }
+
             return $fieldTypeInstance->transformImportValue($state);
         });
 
@@ -104,7 +106,7 @@ final class ImportColumnConfigurator
     private function configureMultiChoice(ImportColumn $column, CustomField $customField): void
     {
         $column->array(',');
-        
+
         if ($customField->lookup_type) {
             $this->configureLookup($column, $customField, true);
         } else {
@@ -122,12 +124,12 @@ final class ImportColumnConfigurator
                 return $multiple ? [] : null;
             }
 
-            $values = $multiple && !is_array($state) ? [$state] : $state;
-            
+            $values = $multiple && ! is_array($state) ? [$state] : $state;
+
             if ($multiple) {
                 return $this->resolveLookupValues($customField, $values);
             }
-            
+
             return $this->resolveLookupValue($customField, $state);
         });
 
@@ -143,22 +145,22 @@ final class ImportColumnConfigurator
             $entity = Entities::getEntity($customField->lookup_type);
             $modelInstance = $entity->createModelInstance();
             $primaryAttribute = $entity->getPrimaryAttribute();
-            
+
             // Try to find by primary attribute
             $record = $modelInstance->newQuery()
                 ->where($primaryAttribute, $value)
                 ->first();
-            
+
             if ($record) {
                 return (int) $record->getKey();
             }
-            
+
             // Try to find by ID if numeric
             if (is_numeric($value)) {
                 $record = $modelInstance->newQuery()
                     ->where($modelInstance->getKeyName(), $value)
                     ->first();
-                    
+
                 if ($record) {
                     return (int) $record->getKey();
                 }
@@ -171,7 +173,7 @@ final class ImportColumnConfigurator
             if ($e instanceof RowImportFailedException) {
                 throw $e;
             }
-            
+
             throw new RowImportFailedException(
                 "Error resolving lookup value: {$e->getMessage()}"
             );
@@ -197,9 +199,9 @@ final class ImportColumnConfigurator
             }
         }
 
-        if (!empty($missingValues)) {
+        if (! empty($missingValues)) {
             throw new RowImportFailedException(
-                "Could not find {$customField->lookup_type} records: " . 
+                "Could not find {$customField->lookup_type} records: " .
                 implode(', ', $missingValues)
             );
         }
@@ -217,12 +219,12 @@ final class ImportColumnConfigurator
                 return $multiple ? [] : null;
             }
 
-            $values = $multiple && !is_array($state) ? [$state] : $state;
-            
+            $values = $multiple && ! is_array($state) ? [$state] : $state;
+
             if ($multiple) {
                 return $this->resolveOptionValues($customField, $values);
             }
-            
+
             return $this->resolveOptionValue($customField, $state);
         });
 
@@ -243,13 +245,13 @@ final class ImportColumnConfigurator
         $option = $customField->options->where('name', $value)->first();
 
         // Try case-insensitive match
-        if (!$option) {
+        if (! $option) {
             $option = $customField->options->first(
                 fn ($opt) => strtolower((string) $opt->name) === strtolower($value)
             );
         }
 
-        if (!$option) {
+        if (! $option) {
             throw new RowImportFailedException(
                 "Invalid option '{$value}' for {$customField->name}. Valid options: " .
                 $customField->options->pluck('name')->implode(', ')
@@ -278,11 +280,11 @@ final class ImportColumnConfigurator
             }
         }
 
-        if (!empty($missingValues)) {
+        if (! empty($missingValues)) {
             throw new RowImportFailedException(
-                "Invalid options for {$customField->name}: " . 
-                implode(', ', $missingValues) . 
-                ". Valid options: " . 
+                "Invalid options for {$customField->name}: " .
+                implode(', ', $missingValues) .
+                '. Valid options: ' .
                 $customField->options->pluck('name')->implode(', ')
             );
         }
@@ -301,6 +303,12 @@ final class ImportColumnConfigurator
             }
 
             try {
+                // Try to parse DD/MM/YYYY format first
+                if (preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $state, $matches)) {
+                    return Carbon::createFromFormat('d/m/Y', $state)->format('Y-m-d');
+                }
+
+                // Fall back to Carbon's default parsing
                 return Carbon::parse($state)->format('Y-m-d');
             } catch (Exception) {
                 return null;
@@ -331,12 +339,14 @@ final class ImportColumnConfigurator
      */
     private function configureText(ImportColumn $column, CustomField $customField): void
     {
-        $example = match ($customField->typeData->dataType) {
+        $dataType = $customField->typeData?->dataType ?? FieldDataType::STRING;
+
+        $example = match ($dataType) {
             FieldDataType::STRING => 'Sample text',
             FieldDataType::TEXT => 'Sample longer text',
             default => 'Sample value',
         };
-        
+
         $column->example($example);
     }
 
@@ -349,19 +359,19 @@ final class ImportColumnConfigurator
             $entity = Entities::getEntity($customField->lookup_type);
             $modelInstance = $entity->createModelInstance();
             $primaryAttribute = $entity->getPrimaryAttribute();
-            
+
             $samples = $modelInstance->newQuery()
                 ->limit(2)
                 ->pluck($primaryAttribute)
                 ->toArray();
-            
-            if (!empty($samples)) {
-                $example = $multiple 
+
+            if (! empty($samples)) {
+                $example = $multiple
                     ? implode(', ', $samples)
                     : $samples[0];
-                    
+
                 $column->example($example);
-                
+
                 if ($multiple) {
                     $column->helperText('Separate multiple values with commas');
                 }
@@ -377,19 +387,19 @@ final class ImportColumnConfigurator
     private function setOptionExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         $options = $customField->options->pluck('name')->toArray();
-        
-        if (!empty($options)) {
+
+        if (! empty($options)) {
             $exampleOptions = array_slice($options, 0, 2);
-            $example = $multiple 
+            $example = $multiple
                 ? implode(', ', $exampleOptions)
                 : $exampleOptions[0];
-                
+
             $column->example($example);
-            
+
             $helperText = $multiple
                 ? 'Separate with commas. Options: ' . implode(', ', $options)
                 : 'Options: ' . implode(', ', $options);
-                
+
             $column->helperText($helperText);
         }
     }
@@ -401,12 +411,12 @@ final class ImportColumnConfigurator
     {
         // Apply validation rules
         $this->applyValidationRules($column, $customField);
-        
+
         // CRITICAL: Prevent SQL errors by using fillRecordUsing
         $column->fillRecordUsing(function ($state, $record) use ($customField) {
             ImportDataStorage::set($record, $customField->code, $state);
         });
-        
+
         return $column;
     }
 
@@ -415,16 +425,24 @@ final class ImportColumnConfigurator
      */
     private function applyValidationRules(ImportColumn $column, CustomField $customField): void
     {
-        $rules = $customField->validation_rules->toCollection()
-            ->map(fn (ValidationRuleData $rule): string => 
-                $rule->parameters === []
+        // Handle validation_rules being a DataCollection or Collection
+        $validationRules = $customField->validation_rules;
+
+        // Convert to regular collection if it's a DataCollection
+        if (method_exists($validationRules, 'toCollection')) {
+            $validationRules = $validationRules->toCollection();
+        }
+
+        $rules = $validationRules
+            ->map(
+                fn (ValidationRuleData $rule): string => $rule->parameters === []
                     ? $rule->name
                     : $rule->name . ':' . implode(',', $rule->parameters)
             )
             ->filter()
             ->toArray();
 
-        if (!empty($rules)) {
+        if (! empty($rules)) {
             $column->rules($rules);
         }
     }
