@@ -93,7 +93,7 @@ final class ImportColumnConfigurator
         if ($customField->lookup_type) {
             $this->configureLookup($column, $customField, false);
         } else {
-            $this->configureOptions($column, $customField, false);
+            $this->configureChoices($column, $customField, false);
         }
     }
 
@@ -107,7 +107,7 @@ final class ImportColumnConfigurator
         if ($customField->lookup_type) {
             $this->configureLookup($column, $customField, true);
         } else {
-            $this->configureOptions($column, $customField, true);
+            $this->configureChoices($column, $customField, true);
         }
     }
 
@@ -207,9 +207,9 @@ final class ImportColumnConfigurator
     }
 
     /**
-     * Configure option-based fields.
+     * Configure choice-based fields.
      */
-    private function configureOptions(ImportColumn $column, CustomField $customField, bool $multiple): void
+    private function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         $column->castStateUsing(function ($state) use ($customField, $multiple) {
             if (blank($state)) {
@@ -219,57 +219,57 @@ final class ImportColumnConfigurator
             $values = $multiple && ! is_array($state) ? [$state] : $state;
 
             if ($multiple) {
-                return $this->resolveOptionValues($customField, $values);
+                return $this->resolveChoiceValues($customField, $values);
             }
 
-            return $this->resolveOptionValue($customField, $state);
+            return $this->resolveChoiceValue($customField, $state);
         });
 
-        $this->setOptionExamples($column, $customField, $multiple);
+        $this->setChoiceExamples($column, $customField, $multiple);
     }
 
     /**
-     * Resolve a single option value.
+     * Resolve a single choice value.
      */
-    private function resolveOptionValue(CustomField $customField, mixed $value): ?int
+    private function resolveChoiceValue(CustomField $customField, mixed $value): ?int
     {
-        // If already numeric, assume it's an option ID
+        // If already numeric, assume it's a choice ID
         if (is_numeric($value)) {
             return (int) $value;
         }
 
         // Try exact match
-        $option = $customField->options->where('name', $value)->first();
+        $choice = $customField->options->where('name', $value)->first();
 
         // Try case-insensitive match
-        if (! $option) {
-            $option = $customField->options->first(
+        if (! $choice) {
+            $choice = $customField->options->first(
                 fn ($opt) => strtolower((string) $opt->name) === strtolower($value)
             );
         }
 
-        if (! $option) {
+        if (! $choice) {
             throw new RowImportFailedException(
-                "Invalid option '{$value}' for {$customField->name}. Valid options: " .
+                "Invalid choice '{$value}' for {$customField->name}. Valid choices: " .
                 $customField->options->pluck('name')->implode(', ')
             );
         }
 
-        return $option->getKey();
+        return $choice->getKey();
     }
 
     /**
-     * Resolve multiple option values.
+     * Resolve multiple choice values.
      * @throws RowImportFailedException
      */
-    private function resolveOptionValues(CustomField $customField, array $values): array
+    private function resolveChoiceValues(CustomField $customField, array $values): array
     {
         $foundIds = [];
         $missingValues = [];
 
         foreach ($values as $value) {
             try {
-                $id = $this->resolveOptionValue($customField, $value);
+                $id = $this->resolveChoiceValue($customField, $value);
                 if ($id !== null) {
                     $foundIds[] = $id;
                 }
@@ -280,9 +280,9 @@ final class ImportColumnConfigurator
 
         if (! empty($missingValues)) {
             throw new RowImportFailedException(
-                "Invalid options for {$customField->name}: " .
+                "Invalid choices for {$customField->name}: " .
                 implode(', ', $missingValues) .
-                '. Valid options: ' .
+                '. Valid choices: ' .
                 $customField->options->pluck('name')->implode(', ')
             );
         }
@@ -380,23 +380,23 @@ final class ImportColumnConfigurator
     }
 
     /**
-     * Set option examples on the column.
+     * Set choice examples on the column.
      */
-    private function setOptionExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
+    private function setChoiceExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $options = $customField->options->pluck('name')->toArray();
+        $choices = $customField->options->pluck('name')->toArray();
 
-        if (! empty($options)) {
-            $exampleOptions = array_slice($options, 0, 2);
+        if (! empty($choices)) {
+            $exampleChoices = array_slice($choices, 0, 2);
             $example = $multiple
-                ? implode(', ', $exampleOptions)
-                : $exampleOptions[0];
+                ? implode(', ', $exampleChoices)
+                : $exampleChoices[0];
 
             $column->example($example);
 
             $helperText = $multiple
-                ? 'Separate with commas. Options: ' . implode(', ', $options)
-                : 'Options: ' . implode(', ', $options);
+                ? 'Separate with commas. Choices: ' . implode(', ', $choices)
+                : 'Choices: ' . implode(', ', $choices);
 
             $column->helperText($helperText);
         }
