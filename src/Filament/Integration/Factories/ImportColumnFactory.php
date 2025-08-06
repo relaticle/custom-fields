@@ -44,7 +44,7 @@ final class ImportColumnFactory
      */
     public function create(CustomField $customField): ImportColumn
     {
-        $column = ImportColumn::make('custom_fields_'.$customField->code)
+        $column = ImportColumn::make('custom_fields_' . $customField->code)
             ->label($customField->name);
 
         // Configure the column based on the field type
@@ -102,7 +102,7 @@ final class ImportColumnFactory
             ->map(
                 fn (ValidationRuleData $rule): string => $rule->parameters === []
                     ? $rule->name
-                    : $rule->name.':'.implode(',', $rule->parameters)
+                    : $rule->name . ':' . implode(',', $rule->parameters)
             )
             ->filter()
             ->toArray();

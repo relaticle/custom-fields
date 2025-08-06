@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration;
 
 use Relaticle\CustomFields\Filament\Integration\Builders\ExporterBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\FormBuilder;
+use Relaticle\CustomFields\Filament\Integration\Builders\ImporterBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\InfolistBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\TableBuilder;
 
@@ -24,6 +25,11 @@ final class CustomFieldsManager
     public function infolist(): InfolistBuilder
     {
         return new InfolistBuilder;
+    }
+
+    public function importer(): ImporterBuilder
+    {
+        return new ImporterBuilder;
     }
 
     public function exporter(): ExporterBuilder
