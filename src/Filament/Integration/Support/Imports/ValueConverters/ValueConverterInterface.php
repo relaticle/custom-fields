@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Actions\Imports\ValueConverters;
+namespace Relaticle\CustomFields\Filament\Integration\Support\Imports\ValueConverters;
 
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;

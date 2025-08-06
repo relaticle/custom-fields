@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Actions\Imports\ColumnConfigurators;
+namespace Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators;
 
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\Models\CustomField;

@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Actions\Imports\ColumnConfigurators;
+namespace Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators;
 
 use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\Contracts\FieldImportExportInterface;
-use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\FieldTypes\FieldTypeManager;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**
@@ -25,7 +26,8 @@ final class BasicColumnConfigurator implements ColumnConfiguratorInterface
     public function configure(ImportColumn $column, CustomField $customField): void
     {
         // Check if field type implements import/export interface
-        $fieldTypeInstance = CustomFieldsType::getFieldTypeInstance($customField->type);
+        $fieldTypeManager = app(FieldTypeManager::class);
+        $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
 
         if ($fieldTypeInstance instanceof FieldImportExportInterface) {
             // Let the field type configure itself
@@ -36,16 +38,24 @@ final class BasicColumnConfigurator implements ColumnConfiguratorInterface
             if ($example !== null) {
                 $column->example($example);
             }
+            
+            // Apply transformation if field type implements it
+            $column->castStateUsing(function ($state) use ($fieldTypeInstance) {
+                if ($state === null || $state === '') {
+                    return null;
+                }
+                return $fieldTypeInstance->transformImportValue($state);
+            });
 
             return;
         }
 
         // Apply default configuration based on data type
-        match ($customField->typeData->dataType->value) {
-            'numeric' => $column->numeric(),
-            'boolean' => $column->boolean(),
-            'date' => $this->configureDateColumn($column),
-            'date_time' => $this->configureDateTimeColumn($column),
+        match ($customField->typeData->dataType) {
+            FieldDataType::NUMERIC, FieldDataType::FLOAT => $column->numeric(),
+            FieldDataType::BOOLEAN => $column->boolean(),
+            FieldDataType::DATE => $this->configureDateColumn($column),
+            FieldDataType::DATE_TIME => $this->configureDateTimeColumn($column),
             default => $this->setExampleValue($column, $customField),
         };
     }
@@ -87,30 +97,26 @@ final class BasicColumnConfigurator implements ColumnConfiguratorInterface
     }
 
     /**
-     * Set example values for a column based on the field type.
+     * Set example values for a column based on the field's data type.
      *
      * @param  ImportColumn  $column  The column to set example for
      * @param  CustomField  $customField  The custom field to extract example values from
      */
     private function setExampleValue(ImportColumn $column, CustomField $customField): void
     {
-        // Generate appropriate example values based on field type
-        $example = match ($customField->type) {
-            'text' => 'Sample text',
-            'number' => '42',
-            'currency' => '99.99',
-            'checkbox', 'toggle' => 'Yes',
-            'date' => now()->format('Y-m-d'),
-            'datetime' => now()->format('Y-m-d H:i:s'),
-            'textarea' => 'Sample longer text with multiple words',
-            'rich_editor', 'markdown_editor' => "# Sample Header\nSample content with **formatting**",
-            'link' => 'https://example.com',
-            'color_picker' => '#3366FF',
-            default => null,
+        // Generate appropriate example values based on data type
+        $example = match ($customField->typeData->dataType) {
+            FieldDataType::STRING => 'Sample text',
+            FieldDataType::TEXT => 'Sample longer text with multiple lines',
+            FieldDataType::NUMERIC => '42',
+            FieldDataType::FLOAT => '99.99',
+            FieldDataType::BOOLEAN => 'Yes',
+            FieldDataType::DATE => now()->format('Y-m-d'),
+            FieldDataType::DATE_TIME => now()->format('Y-m-d H:i:s'),
+            FieldDataType::SINGLE_CHOICE => 'Option 1',
+            FieldDataType::MULTI_CHOICE => 'Option 1, Option 2',
         };
 
-        if ($example !== null) {
-            $column->example($example);
-        }
+        $column->example($example);
     }
 }

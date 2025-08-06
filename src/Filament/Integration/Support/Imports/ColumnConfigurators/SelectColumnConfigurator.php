@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Actions\Imports\ColumnConfigurators;
+namespace Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators;
 
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Filament\Integration\Actions\Imports\Matchers\LookupMatcherInterface;
+use Relaticle\CustomFields\Filament\Integration\Support\Imports\Matchers\LookupMatcherInterface;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\Facades\Entities;
 use Throwable;

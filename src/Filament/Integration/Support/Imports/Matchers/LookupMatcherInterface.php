@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Actions\Imports\Matchers;
+namespace Relaticle\CustomFields\Filament\Integration\Support\Imports\Matchers;
 
 use Illuminate\Database\Eloquent\Model;
 
