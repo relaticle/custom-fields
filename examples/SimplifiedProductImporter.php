@@ -10,7 +10,7 @@ use Relaticle\CustomFields\Facades\CustomFields;
 
 /**
  * Simplified Product Importer - Minimal Hooks Approach
- * 
+ *
  * This example shows the simplest way to import custom fields
  * in Filament v4, requiring only ONE hook.
  */
@@ -20,7 +20,7 @@ class SimplifiedProductImporter extends Importer
 
     /**
      * Define columns including custom fields.
-     * 
+     *
      * The custom field columns handle their own data storage
      * using fillRecordUsing callbacks built into the ImportColumnFactory.
      */
@@ -31,20 +31,20 @@ class SimplifiedProductImporter extends Importer
             ImportColumn::make('name')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
-                
+
             ImportColumn::make('sku')
                 ->requiredMapping()
                 ->rules(['required', 'unique:products,sku']),
-                
+
             ImportColumn::make('price')
                 ->numeric()
                 ->rules(['required', 'numeric', 'min:0']),
-                
+
             // Custom field columns
             // These automatically use fillRecordUsing to store data temporarily
             ...CustomFields::importer()
                 ->forModel(static::getModel())
-                ->columns()
+                ->columns(),
         ];
     }
 
@@ -60,7 +60,7 @@ class SimplifiedProductImporter extends Importer
 
     /**
      * ONLY HOOK NEEDED!
-     * 
+     *
      * Save the custom fields after the record is saved.
      * The ImporterBuilder automatically detects and saves
      * any pendingCustomFieldData that was stored by the columns.
@@ -78,13 +78,13 @@ class SimplifiedProductImporter extends Importer
      */
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Your product import has completed and ' . 
-                number_format($import->successful_rows) . ' ' . 
-                str('row')->plural($import->successful_rows) . ' imported.';
+        $body = 'Your product import has completed and '.
+                number_format($import->successful_rows).' '.
+                str('row')->plural($import->successful_rows).' imported.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . 
-                     str('row')->plural($failedRowsCount) . ' failed to import.';
+            $body .= ' '.number_format($failedRowsCount).' '.
+                     str('row')->plural($failedRowsCount).' failed to import.';
         }
 
         return $body;
@@ -93,7 +93,7 @@ class SimplifiedProductImporter extends Importer
 
 /**
  * Alternative: Traditional Two-Hook Approach
- * 
+ *
  * If you prefer the explicit two-hook approach or need more control.
  */
 class TraditionalProductImporter extends Importer
@@ -107,18 +107,18 @@ class TraditionalProductImporter extends Importer
             ImportColumn::make('name')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
-                
+
             ImportColumn::make('sku')
                 ->requiredMapping()
                 ->rules(['required', 'unique:products,sku']),
-                
+
             ImportColumn::make('price')
                 ->numeric()
                 ->rules(['required', 'numeric', 'min:0']),
-                
+
             ...CustomFields::importer()
                 ->forModel(static::getModel())
-                ->columns()
+                ->columns(),
         ];
     }
 
@@ -131,7 +131,7 @@ class TraditionalProductImporter extends Importer
 
     /**
      * Filter out custom fields before filling the model.
-     * 
+     *
      * This prevents Filament from trying to set non-existent attributes.
      */
     protected function beforeFill(): void
@@ -142,7 +142,7 @@ class TraditionalProductImporter extends Importer
 
     /**
      * Save custom fields after the record is saved.
-     * 
+     *
      * Uses originalData which contains the unfiltered import data.
      */
     protected function afterSave(): void
@@ -150,7 +150,7 @@ class TraditionalProductImporter extends Importer
         CustomFields::importer()
             ->forModel($this->record)
             ->saveCustomFieldValues(
-                $this->record, 
+                $this->record,
                 $this->originalData,
                 filament()->getTenant()
             );
@@ -158,13 +158,13 @@ class TraditionalProductImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Your product import has completed and ' . 
-                number_format($import->successful_rows) . ' ' . 
-                str('row')->plural($import->successful_rows) . ' imported.';
+        $body = 'Your product import has completed and '.
+                number_format($import->successful_rows).' '.
+                str('row')->plural($import->successful_rows).' imported.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . 
-                     str('row')->plural($failedRowsCount) . ' failed to import.';
+            $body .= ' '.number_format($failedRowsCount).' '.
+                     str('row')->plural($failedRowsCount).' failed to import.';
         }
 
         return $body;

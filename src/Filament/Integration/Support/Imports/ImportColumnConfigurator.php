@@ -14,9 +14,9 @@ use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\Contracts\FieldImportExportInterface;
 use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FieldTypes\FieldTypeManager;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Facades\Entities;
 use Throwable;
 
 /**
@@ -116,7 +116,7 @@ final class ImportColumnConfigurator
      */
     private function configureLookup(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $column->castStateUsing(function ($state) use ($customField, $multiple) {
+        $column->castStateUsing(function ($state) use ($customField, $multiple): array|null|int {
             if (blank($state)) {
                 return $multiple ? [] : null;
             }
@@ -164,15 +164,15 @@ final class ImportColumnConfigurator
             }
 
             throw new RowImportFailedException(
-                "No {$customField->lookup_type} record found matching '{$value}'"
+                sprintf("No %s record found matching '%s'", $customField->lookup_type, $value)
             );
-        } catch (Throwable $e) {
-            if ($e instanceof RowImportFailedException) {
-                throw $e;
+        } catch (Throwable $throwable) {
+            if ($throwable instanceof RowImportFailedException) {
+                throw $throwable;
             }
 
             throw new RowImportFailedException(
-                "Error resolving lookup value: {$e->getMessage()}"
+                'Error resolving lookup value: '.$throwable->getMessage()
             );
         }
     }
@@ -196,9 +196,9 @@ final class ImportColumnConfigurator
             }
         }
 
-        if (! empty($missingValues)) {
+        if ($missingValues !== []) {
             throw new RowImportFailedException(
-                "Could not find {$customField->lookup_type} records: " .
+                sprintf('Could not find %s records: ', $customField->lookup_type).
                 implode(', ', $missingValues)
             );
         }
@@ -211,7 +211,7 @@ final class ImportColumnConfigurator
      */
     private function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $column->castStateUsing(function ($state) use ($customField, $multiple) {
+        $column->castStateUsing(function ($state) use ($customField, $multiple): array|null|int {
             if (blank($state)) {
                 return $multiple ? [] : null;
             }
@@ -244,13 +244,13 @@ final class ImportColumnConfigurator
         // Try case-insensitive match
         if (! $choice) {
             $choice = $customField->options->first(
-                fn ($opt) => strtolower((string) $opt->name) === strtolower($value)
+                fn ($opt): bool => strtolower((string) $opt->name) === strtolower($value)
             );
         }
 
         if (! $choice) {
             throw new RowImportFailedException(
-                "Invalid choice '{$value}' for {$customField->name}. Valid choices: " .
+                sprintf("Invalid choice '%s' for %s. Valid choices: ", $value, $customField->name).
                 $customField->options->pluck('name')->implode(', ')
             );
         }
@@ -260,6 +260,7 @@ final class ImportColumnConfigurator
 
     /**
      * Resolve multiple choice values.
+     *
      * @throws RowImportFailedException
      */
     private function resolveChoiceValues(CustomField $customField, array $values): array
@@ -278,11 +279,11 @@ final class ImportColumnConfigurator
             }
         }
 
-        if (! empty($missingValues)) {
+        if ($missingValues !== []) {
             throw new RowImportFailedException(
-                "Invalid choices for {$customField->name}: " .
-                implode(', ', $missingValues) .
-                '. Valid choices: ' .
+                sprintf('Invalid choices for %s: ', $customField->name).
+                implode(', ', $missingValues).
+                '. Valid choices: '.
                 $customField->options->pluck('name')->implode(', ')
             );
         }
@@ -395,8 +396,8 @@ final class ImportColumnConfigurator
             $column->example($example);
 
             $helperText = $multiple
-                ? 'Separate with commas. Choices: ' . implode(', ', $choices)
-                : 'Choices: ' . implode(', ', $choices);
+                ? 'Separate with commas. Choices: '.implode(', ', $choices)
+                : 'Choices: '.implode(', ', $choices);
 
             $column->helperText($helperText);
         }
@@ -410,7 +411,7 @@ final class ImportColumnConfigurator
         // Apply validation rules
         $this->applyValidationRules($column, $customField);
 
-        $column->fillRecordUsing(function ($state, $record) use ($customField) {
+        $column->fillRecordUsing(function ($state, $record) use ($customField): void {
             ImportDataStorage::set($record, $customField->code, $state);
         });
 
@@ -429,7 +430,7 @@ final class ImportColumnConfigurator
             ->map(
                 fn (ValidationRuleData $rule): string => $rule->parameters === []
                     ? $rule->name
-                    : $rule->name . ':' . implode(',', $rule->parameters)
+                    : $rule->name.':'.implode(',', $rule->parameters)
             )
             ->filter()
             ->toArray();

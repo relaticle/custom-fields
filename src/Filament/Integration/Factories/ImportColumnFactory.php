@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * Simplified factory for creating import columns.
- * 
+ *
  * This factory has been dramatically simplified:
  * - No more dependency injection of multiple configurators
  * - Single unified configurator handles all field types
@@ -33,13 +33,13 @@ final class ImportColumnFactory
 
     /**
      * Create an import column for a custom field.
-     * 
-     * @param CustomField $customField The custom field to create an import column for
+     *
+     * @param  CustomField  $customField  The custom field to create an import column for
      * @return ImportColumn The fully configured import column
      */
     public function create(CustomField $customField): ImportColumn
     {
-        $column = ImportColumn::make('custom_fields_' . $customField->code)
+        $column = ImportColumn::make('custom_fields_'.$customField->code)
             ->label($customField->name);
 
         // Let the unified configurator handle everything

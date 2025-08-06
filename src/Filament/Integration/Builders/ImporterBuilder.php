@@ -19,13 +19,13 @@ final class ImporterBuilder extends BaseBuilder
     {
         return $this->getFilteredSections()
             ->flatMap(fn ($section) => $section->fields)
-            ->map(fn (CustomField $field) => $this->createColumn($field))
+            ->map(fn (CustomField $field): ImportColumn => $this->createColumn($field))
             ->values();
     }
 
     private function createColumn(CustomField $field): ImportColumn
     {
-        $column = ImportColumn::make('custom_fields_' . $field->code)
+        $column = ImportColumn::make('custom_fields_'.$field->code)
             ->label($field->name);
 
         // Use the unified configurator
@@ -39,7 +39,7 @@ final class ImporterBuilder extends BaseBuilder
         // Get custom field data from storage or extract from provided data
         $customFieldsData = ImportDataStorage::pull($this->model);
 
-        if (empty($customFieldsData)) {
+        if ($customFieldsData === []) {
             return;
         }
 
@@ -49,7 +49,6 @@ final class ImporterBuilder extends BaseBuilder
         // Save the custom fields
         $this->model->saveCustomFields($customFieldsData, $tenant);
     }
-
 
     public function filterCustomFieldsFromData(array $data): array
     {

@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Models\CustomFieldOption;
 /**
  * Test that WeakMap properly handles memory management
  */
-it('uses weakmap for automatic memory management', function () {
+it('uses weakmap for automatic memory management', function (): void {
     // Create models
     $model1 = new class extends Model
     {
@@ -60,7 +60,7 @@ it('uses weakmap for automatic memory management', function () {
 /**
  * Test concurrent imports don't interfere with each other
  */
-it('handles concurrent imports safely', function () {
+it('handles concurrent imports safely', function (): void {
     $model1 = new class extends Model
     {
         protected $table = 'test1';
@@ -87,7 +87,7 @@ it('handles concurrent imports safely', function () {
 /**
  * Test that pull operation clears data and returns it
  */
-it('pulls and clears data atomically', function () {
+it('pulls and clears data atomically', function (): void {
     $model = new class extends Model
     {
         protected $table = 'test';
@@ -119,11 +119,11 @@ it('pulls and clears data atomically', function () {
 /**
  * Test configurator handles all field data types correctly
  */
-it('configures all field data types', function () {
+it('configures all field data types', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     // Helper to create custom field
-    $createField = function ($code, $dataType) {
+    $createField = function ($code, $dataType): CustomField {
         $field = new CustomField([
             'name' => ucfirst($code),
             'code' => $code,
@@ -172,7 +172,7 @@ it('configures all field data types', function () {
 /**
  * Test date parsing handles various formats
  */
-it('handles various date formats', function () {
+it('handles various date formats', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     $field = new CustomField([
@@ -195,6 +195,7 @@ it('handles various date formats', function () {
     $reflection = new ReflectionObject($column);
     $property = $reflection->getProperty('castStateUsing');
     $property->setAccessible(true);
+
     $castCallback = $property->getValue($column);
 
     if ($castCallback) {
@@ -212,7 +213,7 @@ it('handles various date formats', function () {
 /**
  * Test option resolution with case-insensitive matching
  */
-it('resolves options case insensitively', function () {
+it('resolves options case insensitively', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     // Create field with options
@@ -234,8 +235,8 @@ it('resolves options case insensitively', function () {
     ]);
 
     // Make options behave like real options
-    $field->options->each(function ($option) {
-        $option->getKeyName = fn () => 'id';
+    $field->options->each(function ($option): void {
+        $option->getKeyName = fn (): string => 'id';
         $option->getKey = fn () => $option->id;
     });
 
@@ -246,6 +247,7 @@ it('resolves options case insensitively', function () {
     $reflection = new ReflectionObject($column);
     $property = $reflection->getProperty('castStateUsing');
     $property->setAccessible(true);
+
     $castCallback = $property->getValue($column);
 
     if ($castCallback) {
@@ -265,7 +267,7 @@ it('resolves options case insensitively', function () {
 /**
  * Test multi-choice fields handle arrays correctly
  */
-it('handles multi choice arrays', function () {
+it('handles multi choice arrays', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     $field = new CustomField([
@@ -286,8 +288,8 @@ it('handles multi choice arrays', function () {
     ]);
 
     // Make options behave like real options
-    $field->options->each(function ($option) {
-        $option->getKeyName = fn () => 'id';
+    $field->options->each(function ($option): void {
+        $option->getKeyName = fn (): string => 'id';
         $option->getKey = fn () => $option->id;
     });
 
@@ -319,7 +321,7 @@ it('handles multi choice arrays', function () {
 /**
  * Test validation rules are properly applied
  */
-it('applies validation rules', function () {
+it('applies validation rules', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     $field = new CustomField([
@@ -361,7 +363,7 @@ it('applies validation rules', function () {
 /**
  * Test that fillRecordUsing prevents SQL errors
  */
-it('prevents sql errors with fill record using', function () {
+it('prevents sql errors with fill record using', function (): void {
     $configurator = new ImportColumnConfigurator;
 
     $field = new CustomField([
@@ -384,6 +386,7 @@ it('prevents sql errors with fill record using', function () {
     $reflection = new ReflectionObject($column);
     $property = $reflection->getProperty('fillRecordUsing');
     $property->setAccessible(true);
+
     $fillCallback = $property->getValue($column);
 
     expect($fillCallback)->toBeCallable();
@@ -402,7 +405,7 @@ it('prevents sql errors with fill record using', function () {
 /**
  * Test complete import flow integration
  */
-it('handles complete import flow', function () {
+it('handles complete import flow', function (): void {
     // Create a model
     $model = new class extends Model
     {
@@ -432,7 +435,7 @@ it('handles complete import flow', function () {
 /**
  * Test for memory leak prevention
  */
-it('prevents memory leaks with proper cleanup', function () {
+it('prevents memory leaks with proper cleanup', function (): void {
     $iterations = 1000;
     $initialMemory = memory_get_usage();
 
@@ -441,7 +444,7 @@ it('prevents memory leaks with proper cleanup', function () {
         {
             protected $table = 'test';
         };
-        ImportDataStorage::set($model, 'field', "value_{$i}");
+        ImportDataStorage::set($model, 'field', 'value_'.$i);
         ImportDataStorage::pull($model);
         unset($model);
     }
@@ -457,7 +460,7 @@ it('prevents memory leaks with proper cleanup', function () {
 /**
  * Test edge cases
  */
-it('handles edge cases gracefully', function () {
+it('handles edge cases gracefully', function (): void {
     $model = new class extends Model
     {
         protected $table = 'test';
@@ -484,7 +487,7 @@ it('handles edge cases gracefully', function () {
 /**
  * Test that our architecture follows SOLID principles
  */
-it('follows SOLID principles', function () {
+it('follows SOLID principles', function (): void {
     // Single Responsibility
     expect(ImportDataStorage::class)->toOnlyUse([
         Model::class,

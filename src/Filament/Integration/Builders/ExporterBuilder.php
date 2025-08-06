@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Contracts\Container\CircularDependencyException;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\ValueResolvers;
 use Relaticle\CustomFields\Filament\Integration\Factories\ExportColumnFactory;
@@ -16,9 +18,8 @@ use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 final class ExporterBuilder extends BaseBuilder
 {
     /**
-     * @return Collection
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     * @throws \Illuminate\Contracts\Container\CircularDependencyException
+     * @throws BindingResolutionException
+     * @throws CircularDependencyException
      */
     public function columns(): Collection
     {

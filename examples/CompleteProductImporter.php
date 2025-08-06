@@ -10,7 +10,7 @@ use Relaticle\CustomFields\Facades\CustomFields;
 
 /**
  * Complete example of a Filament v4 importer with custom fields integration.
- * 
+ *
  * This example demonstrates the proper way to integrate custom fields
  * into a Filament v4 importer using the modernized ImporterBuilder.
  */
@@ -29,47 +29,47 @@ class CompleteProductImporter extends Importer
                 ->requiredMapping()
                 ->rules(['required', 'max:255'])
                 ->example('Product Name'),
-                
+
             ImportColumn::make('sku')
                 ->requiredMapping()
                 ->rules(['required', 'unique:products,sku'])
                 ->example('PROD-001'),
-                
+
             ImportColumn::make('price')
                 ->numeric()
                 ->rules(['required', 'numeric', 'min:0'])
                 ->example('99.99'),
-                
+
             ImportColumn::make('description')
                 ->rules(['nullable', 'string'])
                 ->example('Product description'),
-                
+
             ImportColumn::make('stock_quantity')
                 ->numeric()
                 ->rules(['required', 'integer', 'min:0'])
                 ->example('100'),
-                
+
             ImportColumn::make('is_active')
                 ->boolean()
                 ->rules(['boolean'])
                 ->example('yes'),
         ];
-        
+
         // Add custom field columns using the ImporterBuilder
         // The spread operator (...) converts the Collection to an array
         $customFieldColumns = [
             ...CustomFields::importer()
                 ->forModel(static::getModel())
-                ->columns()
+                ->columns(),
         ];
-        
+
         // Combine standard and custom field columns
         return array_merge($standardColumns, $customFieldColumns);
     }
 
     /**
      * Resolve the record - find existing or create new.
-     * 
+     *
      * This method is called to determine if we're updating an existing
      * record or creating a new one.
      */
@@ -81,14 +81,14 @@ class CompleteProductImporter extends Importer
                 'sku' => $this->data['sku'],
             ]);
         }
-        
+
         // Create new product if SKU not provided
-        return new Product();
+        return new Product;
     }
 
     /**
      * Hook called before filling the model with data.
-     * 
+     *
      * Use this to prepare or filter the data before it's used
      * to fill the model attributes.
      */
@@ -98,7 +98,7 @@ class CompleteProductImporter extends Importer
         // non-existent model attributes
         $this->data = CustomFields::importer()
             ->filterCustomFieldsFromData($this->data);
-            
+
         // You can also perform other data preparations here
         // For example, normalize the SKU to uppercase
         if (isset($this->data['sku'])) {
@@ -108,7 +108,7 @@ class CompleteProductImporter extends Importer
 
     /**
      * Hook called after the model has been filled with data.
-     * 
+     *
      * Use this to handle related data, custom fields, or other
      * operations that require the model to be filled first.
      */
@@ -124,7 +124,7 @@ class CompleteProductImporter extends Importer
                 data: $this->originalData,
                 tenant: filament()->getTenant() // null if not using multi-tenancy
             );
-            
+
         // You can also handle other relationships here
         // For example, associate with categories if provided
         if (isset($this->originalData['category_ids'])) {
@@ -138,13 +138,13 @@ class CompleteProductImporter extends Importer
      */
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Your product import has completed and ' . 
-                number_format($import->successful_rows) . ' ' . 
-                str('row')->plural($import->successful_rows) . ' imported.';
+        $body = 'Your product import has completed and '.
+                number_format($import->successful_rows).' '.
+                str('row')->plural($import->successful_rows).' imported.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . 
-                     str('row')->plural($failedRowsCount) . ' failed to import.';
+            $body .= ' '.number_format($failedRowsCount).' '.
+                     str('row')->plural($failedRowsCount).' failed to import.';
         }
 
         return $body;
@@ -152,7 +152,7 @@ class CompleteProductImporter extends Importer
 
     /**
      * Optional: Validate the entire row before processing.
-     * 
+     *
      * This is called before resolveRecord() and can be used
      * for complex validation that spans multiple columns.
      */
@@ -168,7 +168,7 @@ class CompleteProductImporter extends Importer
 
     /**
      * Optional: Hook called before saving the record.
-     * 
+     *
      * Use this for last-minute modifications or validations.
      */
     protected function beforeSave(): void
@@ -177,7 +177,7 @@ class CompleteProductImporter extends Importer
         if (empty($this->record->slug)) {
             $this->record->slug = str($this->record->name)->slug();
         }
-        
+
         // Example: Set default values
         $this->record->import_batch = $this->import->id;
         $this->record->imported_at = now();
@@ -185,7 +185,7 @@ class CompleteProductImporter extends Importer
 
     /**
      * Optional: Hook called after the record is saved.
-     * 
+     *
      * Use this for operations that require the record to have an ID.
      */
     protected function afterSave(): void
@@ -199,7 +199,7 @@ class CompleteProductImporter extends Importer
                 'row_number' => $this->rowNumber,
             ])
             ->log('Product imported');
-            
+
         // Example: Dispatch job for further processing
         // ProcessImportedProduct::dispatch($this->record);
     }
@@ -221,10 +221,10 @@ class CompleteProductImporter extends Importer
     {
         // Track who updated the record
         $this->record->updated_by = auth()->id();
-        
+
         // Log what changed
         $changes = $this->record->getDirty();
-        if (!empty($changes)) {
+        if (! empty($changes)) {
             logger()->info('Product updated via import', [
                 'product_id' => $this->record->id,
                 'changes' => $changes,
