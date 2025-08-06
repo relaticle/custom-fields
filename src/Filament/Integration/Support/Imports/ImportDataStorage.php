@@ -12,7 +12,7 @@ use WeakMap;
 
 /**
  * Stores custom field data during import process using WeakMap for automatic memory management.
- * 
+ *
  * This class solves the problem of Filament trying to set custom_fields_* as model attributes,
  * which causes SQL errors. WeakMap ensures automatic cleanup when models are garbage collected.
  */
@@ -29,7 +29,7 @@ final class ImportDataStorage
      */
     private static function init(): void
     {
-        self::$storage ??= new WeakMap();
+        self::$storage ??= new WeakMap;
     }
 
     /**
@@ -42,7 +42,7 @@ final class ImportDataStorage
     public static function set(Model $record, string $fieldCode, mixed $value): void
     {
         self::init();
-        
+
         $data = self::$storage[$record] ?? [];
         $data[$fieldCode] = $value;
         self::$storage[$record] = $data;
@@ -57,7 +57,7 @@ final class ImportDataStorage
     public static function setMultiple(Model $record, array $values): void
     {
         self::init();
-        
+
         $data = self::$storage[$record] ?? [];
         self::$storage[$record] = array_merge($data, $values);
     }
@@ -71,7 +71,7 @@ final class ImportDataStorage
     public static function get(Model $record): array
     {
         self::init();
-        
+
         return self::$storage[$record] ?? [];
     }
 
@@ -84,10 +84,10 @@ final class ImportDataStorage
     public static function pull(Model $record): array
     {
         self::init();
-        
+
         $data = self::$storage[$record] ?? [];
         unset(self::$storage[$record]);
-        
+
         return $data;
     }
 
@@ -99,7 +99,7 @@ final class ImportDataStorage
     public static function has(Model $record): bool
     {
         self::init();
-        
+
         return isset(self::$storage[$record]);
     }
 
@@ -109,6 +109,6 @@ final class ImportDataStorage
      */
     public static function clearAll(): void
     {
-        self::$storage = new WeakMap();
+        self::$storage = new WeakMap;
     }
 }

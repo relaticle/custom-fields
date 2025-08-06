@@ -16,7 +16,7 @@ use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\FieldTypes\FieldTypeManager;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Support\Facades\Entities;
+use Relaticle\CustomFields\Facades\Entities;
 use Throwable;
 
 /**
@@ -412,7 +412,6 @@ final class ImportColumnConfigurator
         // Apply validation rules
         $this->applyValidationRules($column, $customField);
 
-        // CRITICAL: Prevent SQL errors by using fillRecordUsing
         $column->fillRecordUsing(function ($state, $record) use ($customField) {
             ImportDataStorage::set($record, $customField->code, $state);
         });
@@ -426,12 +425,7 @@ final class ImportColumnConfigurator
     private function applyValidationRules(ImportColumn $column, CustomField $customField): void
     {
         // Handle validation_rules being a DataCollection or Collection
-        $validationRules = $customField->validation_rules;
-
-        // Convert to regular collection if it's a DataCollection
-        if (method_exists($validationRules, 'toCollection')) {
-            $validationRules = $validationRules->toCollection();
-        }
+        $validationRules = $customField->validation_rules->toCollection();
 
         $rules = $validationRules
             ->map(
