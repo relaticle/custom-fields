@@ -38,10 +38,7 @@ final class ImportColumnConfigurator
             return $this->finalize($column, $customField);
         }
 
-        // Configure based on data type (handle null typeData gracefully)
-        $dataType = $customField->typeData?->dataType ?? FieldDataType::STRING;
-
-        match ($dataType) {
+        match ($customField->typeData->dataType) {
             FieldDataType::SINGLE_CHOICE => $this->configureSingleChoice($column, $customField),
             FieldDataType::MULTI_CHOICE => $this->configureMultiChoice($column, $customField),
             FieldDataType::DATE => $this->configureDate($column),
@@ -263,6 +260,7 @@ final class ImportColumnConfigurator
 
     /**
      * Resolve multiple option values.
+     * @throws RowImportFailedException
      */
     private function resolveOptionValues(CustomField $customField, array $values): array
     {
