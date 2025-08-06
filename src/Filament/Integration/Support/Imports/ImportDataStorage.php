@@ -2,28 +2,35 @@
 
 declare(strict_types=1);
 
-// ABOUTME: Manages temporary storage of custom field data during imports
-// ABOUTME: Prevents SQL errors by storing data separately from model attributes
+// ABOUTME: Manages temporary storage of custom field data during imports using WeakMap
+// ABOUTME: Provides automatic memory cleanup and prevents SQL errors during import
 
 namespace Relaticle\CustomFields\Filament\Integration\Support\Imports;
 
 use Illuminate\Database\Eloquent\Model;
+use WeakMap;
 
 /**
- * Stores custom field data during import process.
- *
- * This class solves the problem of Filament trying to set
- * custom_fields_* as model attributes, which causes SQL errors.
+ * Stores custom field data during import process using WeakMap for automatic memory management.
+ * 
+ * This class solves the problem of Filament trying to set custom_fields_* as model attributes,
+ * which causes SQL errors. WeakMap ensures automatic cleanup when models are garbage collected.
  */
 final class ImportDataStorage
 {
     /**
-     * Storage for custom field data during import.
-     * Keyed by object ID to handle concurrent imports.
-     *
-     * @var array<int, array<string, mixed>>
+     * WeakMap storage for custom field data during import.
+     * Automatically cleans up when model instances are garbage collected.
      */
-    private static array $storage = [];
+    private static ?WeakMap $storage = null;
+
+    /**
+     * Initialize the WeakMap storage if not already initialized.
+     */
+    private static function init(): void
+    {
+        self::$storage ??= new WeakMap();
+    }
 
     /**
      * Store custom field data for a record.
@@ -34,13 +41,25 @@ final class ImportDataStorage
      */
     public static function set(Model $record, string $fieldCode, mixed $value): void
     {
-        $key = spl_object_id($record);
+        self::init();
+        
+        $data = self::$storage[$record] ?? [];
+        $data[$fieldCode] = $value;
+        self::$storage[$record] = $data;
+    }
 
-        if (! isset(self::$storage[$key])) {
-            self::$storage[$key] = [];
-        }
-
-        self::$storage[$key][$fieldCode] = $value;
+    /**
+     * Store multiple custom field values at once.
+     *
+     * @param  Model  $record  The record being imported
+     * @param  array<string, mixed>  $values  The values to store
+     */
+    public static function setMultiple(Model $record, array $values): void
+    {
+        self::init();
+        
+        $data = self::$storage[$record] ?? [];
+        self::$storage[$record] = array_merge($data, $values);
     }
 
     /**
@@ -51,9 +70,9 @@ final class ImportDataStorage
      */
     public static function get(Model $record): array
     {
-        $key = spl_object_id($record);
-
-        return self::$storage[$key] ?? [];
+        self::init();
+        
+        return self::$storage[$record] ?? [];
     }
 
     /**
@@ -64,31 +83,12 @@ final class ImportDataStorage
      */
     public static function pull(Model $record): array
     {
-        $key = spl_object_id($record);
-        $data = self::$storage[$key] ?? [];
-
-        unset(self::$storage[$key]);
-
+        self::init();
+        
+        $data = self::$storage[$record] ?? [];
+        unset(self::$storage[$record]);
+        
         return $data;
-    }
-
-    /**
-     * Clear data for a specific record.
-     *
-     * @param  Model  $record  The record to clear data for
-     */
-    public static function clear(Model $record): void
-    {
-        unset(self::$storage[spl_object_id($record)]);
-    }
-
-    /**
-     * Clear all stored data.
-     * Use with caution - mainly for testing.
-     */
-    public static function clearAll(): void
-    {
-        self::$storage = [];
     }
 
     /**
@@ -98,6 +98,17 @@ final class ImportDataStorage
      */
     public static function has(Model $record): bool
     {
-        return isset(self::$storage[spl_object_id($record)]);
+        self::init();
+        
+        return isset(self::$storage[$record]);
+    }
+
+    /**
+     * Clear all stored data.
+     * Use with caution - mainly for testing.
+     */
+    public static function clearAll(): void
+    {
+        self::$storage = new WeakMap();
     }
 }

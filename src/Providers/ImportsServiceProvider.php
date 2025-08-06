@@ -2,44 +2,50 @@
 
 declare(strict_types=1);
 
+// ABOUTME: Minimal service provider for custom fields import functionality
+// ABOUTME: Registers only essential services with no unnecessary abstractions
+
 namespace Relaticle\CustomFields\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Psr\Log\LoggerInterface;
-use Relaticle\CustomFields\Filament\Integration\Actions\Imports\CustomFieldsImporter;
-use Relaticle\CustomFields\Filament\Integration\Factories\ImportColumnFactory;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators\BasicColumnConfigurator;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators\MultiSelectColumnConfigurator;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\ColumnConfigurators\SelectColumnConfigurator;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\Matchers\LookupMatcher;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\Matchers\LookupMatcherInterface;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\ValueConverters\ValueConverter;
-use Relaticle\CustomFields\Filament\Integration\Support\Imports\ValueConverters\ValueConverterInterface;
+use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConfigurator;
 
 /**
- * Service provider for custom fields import functionality.
+ * Simplified service provider for custom fields import functionality.
+ * 
+ * This provider has been dramatically simplified from the previous version:
+ * - Removed unnecessary interfaces and abstractions
+ * - No longer registers factories (created on-demand)
+ * - Configurator is created when needed
+ * - WeakMap storage is static and self-initializing
  */
 class ImportsServiceProvider extends ServiceProvider
 {
+    /**
+     * Register import services.
+     * 
+     * We only register what absolutely needs to be in the container.
+     * Everything else is created on-demand for better performance.
+     */
     public function register(): void
     {
-        // Register implementations
-        $this->app->singleton(LookupMatcherInterface::class, LookupMatcher::class);
-        $this->app->singleton(ValueConverterInterface::class, ValueConverter::class);
+        // Register the unified configurator as a singleton
+        // This ensures consistent behavior across all imports
+        $this->app->singleton(ImportColumnConfigurator::class);
+        
+        // That's it! Everything else is handled internally or created on-demand:
+        // - ImportDataStorage uses static WeakMap (self-initializing)
+        // - ImporterBuilder creates its own configurator instance
+        // - No need for factories, matchers, or converters
+    }
 
-        // Register column configurators
-        $this->app->singleton(BasicColumnConfigurator::class);
-        $this->app->singleton(SelectColumnConfigurator::class);
-        $this->app->singleton(MultiSelectColumnConfigurator::class);
-
-        // Register column factory
-        $this->app->singleton(ImportColumnFactory::class);
-
-        // Register the importer
-        $this->app->singleton(CustomFieldsImporter::class, fn ($app): CustomFieldsImporter => new CustomFieldsImporter(
-            $app->make(ImportColumnFactory::class),
-            $app->make(ValueConverterInterface::class),
-            $app->make(LoggerInterface::class)
-        ));
+    /**
+     * Bootstrap import services.
+     * 
+     * Currently no bootstrapping needed, but method kept for future extensions.
+     */
+    public function boot(): void
+    {
+        // No bootstrapping needed currently
     }
 }
