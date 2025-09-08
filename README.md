@@ -78,15 +78,8 @@ public function form(Form $form): Form
 }
 ```
 
-## 📚 Documentation
-
-**Full documentation and examples:** https://custom-fields.relaticle.com/
-
-- [Installation Guide](https://custom-fields.relaticle.com/installation)
-- [Quickstart](https://custom-fields.relaticle.com/quickstart)
-- [Configuration](https://custom-fields.relaticle.com/essentials/configuration)
-- [Authorization](https://custom-fields.relaticle.com/essentials/authorization)
-- [Preset Custom Fields](https://custom-fields.relaticle.com/essentials/preset-custom-fields)
+## 📚 Documentation  
+Read the full docs with guides, examples, and references here: [Relaticle Custom Fields Documentation](https://custom-fields.relaticle.com/)
 
 ## 🤝 Contributing
 
