@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * @extends AbstractComponentFactory<FormComponentInterface, Field>
  */
-final class FieldComponentFactory extends AbstractComponentFactory
+class FieldComponentFactory extends AbstractComponentFactory
 {
     /**
      * @param  array<string>  $dependentFieldCodes

@@ -11,7 +11,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class FieldColumnFactory
+class FieldColumnFactory
 {
     public function create(CustomField $customField): Column
     {

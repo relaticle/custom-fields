@@ -22,7 +22,7 @@ class FormBuilder extends BaseBuilder
             ->except($this->except);
     }
 
-    private function getDependentFieldCodes(Collection $fields): array
+    protected function getDependentFieldCodes(Collection $fields): array
     {
         $dependentCodes = [];
 

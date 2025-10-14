@@ -10,7 +10,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class FieldFilterFactory
+class FieldFilterFactory
 {
     /**
      * @throws BindingResolutionException

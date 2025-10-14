@@ -61,7 +61,7 @@ final readonly class FrontendVisibilityService
      *
      * @param  Collection<int, CustomField>  $allFields
      */
-    private function buildFieldConditions(
+    protected function buildFieldConditions(
         CustomField $field,
         Collection $allFields
     ): ?string {
@@ -105,7 +105,7 @@ final readonly class FrontendVisibilityService
      *
      * @param  Collection<int, CustomField>  $allFields
      */
-    private function buildParentConditions(
+    protected function buildParentConditions(
         CustomField $field,
         Collection $allFields
     ): ?string {
@@ -141,7 +141,7 @@ final readonly class FrontendVisibilityService
      *
      * @param  Collection<int, CustomField>  $allFields
      */
-    private function buildCondition(
+    protected function buildCondition(
         VisibilityConditionData $condition,
         VisibilityMode $mode,
         Collection $allFields
@@ -168,7 +168,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build operator expression using the same logic as backend evaluation.
      */
-    private function buildOperatorExpression(
+    protected function buildOperatorExpression(
         VisibilityOperator $operator,
         string $fieldValue,
         mixed $value,
@@ -230,7 +230,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build equals expression with optionable field support.
      */
-    private function buildEqualsExpression(
+    protected function buildEqualsExpression(
         string $fieldValue,
         mixed $value,
         ?CustomField $targetField
@@ -253,7 +253,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build not equals expression.
      */
-    private function buildNotEqualsExpression(
+    protected function buildNotEqualsExpression(
         string $fieldValue,
         mixed $value,
         ?CustomField $targetField
@@ -276,7 +276,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build standard equals expression for non-optionable fields.
      */
-    private function buildStandardEqualsExpression(
+    protected function buildStandardEqualsExpression(
         string $fieldValue,
         mixed $value
     ): string {
@@ -318,7 +318,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build standard not equals expression.
      */
-    private function buildStandardNotEqualsExpression(
+    protected function buildStandardNotEqualsExpression(
         string $fieldValue,
         mixed $value
     ): string {
@@ -333,7 +333,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build option expression for optionable fields.
      */
-    private function buildOptionExpression(
+    protected function buildOptionExpression(
         string $fieldValue,
         mixed $value,
         CustomField $targetField,
@@ -359,7 +359,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build multi-value option condition.
      */
-    private function buildMultiValueOptionCondition(
+    protected function buildMultiValueOptionCondition(
         string $fieldValue,
         mixed $resolvedValue,
         string $jsValue
@@ -379,7 +379,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build single value option condition.
      */
-    private function buildSingleValueOptionCondition(
+    protected function buildSingleValueOptionCondition(
         string $fieldValue,
         string $jsValue
     ): string {
@@ -406,7 +406,7 @@ final readonly class FrontendVisibilityService
     /**
      * Resolve option value using the same logic as backend.
      */
-    private function resolveOptionValue(
+    protected function resolveOptionValue(
         mixed $value,
         CustomField $targetField
     ): mixed {
@@ -425,7 +425,7 @@ final readonly class FrontendVisibilityService
      *
      * @param  array<mixed>  $value
      */
-    private function resolveArrayOptionValue(
+    protected function resolveArrayOptionValue(
         array $value,
         CustomField $targetField
     ): mixed {
@@ -441,7 +441,7 @@ final readonly class FrontendVisibilityService
     /**
      * Convert option value to proper format.
      */
-    private function convertOptionValue(
+    protected function convertOptionValue(
         mixed $value,
         CustomField $targetField
     ): mixed {
@@ -479,7 +479,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build contains expression.
      */
-    private function buildContainsExpression(
+    protected function buildContainsExpression(
         string $fieldValue,
         mixed $value,
         ?CustomField $targetField
@@ -499,7 +499,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build numeric comparison expression.
      */
-    private function buildNumericComparison(
+    protected function buildNumericComparison(
         string $fieldValue,
         mixed $value,
         string $operator
@@ -514,7 +514,7 @@ final readonly class FrontendVisibilityService
     /**
      * Build empty expression.
      */
-    private function buildEmptyExpression(
+    protected function buildEmptyExpression(
         string $fieldValue,
         bool $isEmpty
     ): string {
@@ -529,7 +529,7 @@ final readonly class FrontendVisibilityService
     /**
      * Format JavaScript value using the same logic as FieldConfigurator.
      */
-    private function formatJsValue(mixed $value): string
+    protected function formatJsValue(mixed $value): string
     {
         return match (true) {
             $value === null => 'null',

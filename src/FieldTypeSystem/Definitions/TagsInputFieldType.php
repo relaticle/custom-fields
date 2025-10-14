@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiC
  * ABOUTME: Field type definition for Tags Input fields
  * ABOUTME: Provides Tags Input functionality with appropriate validation rules
  */
-final class TagsInputFieldType extends BaseFieldType
+class TagsInputFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
     {

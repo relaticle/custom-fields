@@ -162,7 +162,7 @@ enum ValidationRule: string implements HasLabel
      *
      * Utility method to eliminate repeated null/empty checks throughout the enum.
      */
-    private static function isEmptyRule(mixed $rule): bool
+    protected static function isEmptyRule(mixed $rule): bool
     {
         return $rule === null || $rule === '' || $rule === '0';
     }

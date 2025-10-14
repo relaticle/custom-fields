@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Filament\Integration\Factories\ExportColumnFactory;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
-final class ExporterBuilder extends BaseBuilder
+class ExporterBuilder extends BaseBuilder
 {
     /**
      * @throws BindingResolutionException

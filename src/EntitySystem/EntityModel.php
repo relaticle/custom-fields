@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Enums\EntityFeature;
  * Array-based entity configuration factory
  * Provides type-safe configuration using class strings and enums
  */
-final class EntityModel
+class EntityModel
 {
     /**
      * Create entity configuration array from model class
@@ -68,7 +68,7 @@ final class EntityModel
     /**
      * Validate the model class is valid
      */
-    private static function validateModelClass(string $modelClass): void
+    protected static function validateModelClass(string $modelClass): void
     {
         if (! class_exists($modelClass)) {
             throw new InvalidArgumentException(sprintf('Model class %s does not exist', $modelClass));
@@ -82,7 +82,7 @@ final class EntityModel
     /**
      * Set smart defaults based on the model class
      */
-    private static function setSmartDefaults(string $modelClass): array
+    protected static function setSmartDefaults(string $modelClass): array
     {
         /** @var Model $model */
         $model = new $modelClass;
@@ -109,7 +109,7 @@ final class EntityModel
     /**
      * Guess the best primary attribute for this model
      */
-    private static function guessPrimaryAttribute(Model $model): string
+    protected static function guessPrimaryAttribute(Model $model): string
     {
         $fillable = $model->getFillable();
 
@@ -126,7 +126,7 @@ final class EntityModel
     /**
      * Guess the best search attributes for this model
      */
-    private static function guessSearchAttributes(string $primaryAttribute): array
+    protected static function guessSearchAttributes(string $primaryAttribute): array
     {
         // If we found a good primary attribute, use it for search
         if ($primaryAttribute !== 'id') {

@@ -11,7 +11,7 @@ use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeC
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValueResolver\LookupMultiValueResolver;
 
-final class MultiChoiceEntry extends AbstractInfolistEntry
+class MultiChoiceEntry extends AbstractInfolistEntry
 {
     use ConfiguresBadgeColors;
 

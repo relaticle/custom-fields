@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValueResolver\LookupMultiValueResolver;
 
-final class MultiChoiceColumn extends AbstractTableColumn
+class MultiChoiceColumn extends AbstractTableColumn
 {
     use ConfiguresBadgeColors;
     use ConfiguresColumnLabel;

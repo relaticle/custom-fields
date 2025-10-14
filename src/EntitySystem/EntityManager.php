@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Contracts\EntityManagerInterface;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
-final class EntityManager implements EntityManagerInterface
+class EntityManager implements EntityManagerInterface
 {
     use Macroable;
 
@@ -23,15 +23,15 @@ final class EntityManager implements EntityManagerInterface
 
     private const int CACHE_TTL = 3600; // 1 hour
 
-    private array $entities = [];
+    protected array $entities = [];
 
-    private ?array $cachedEntities = null;
+    protected ?array $cachedEntities = null;
 
-    private ?EntityDiscovery $discovery = null;
+    protected ?EntityDiscovery $discovery = null;
 
-    private bool $discoveryEnabled = false;
+    protected bool $discoveryEnabled = false;
 
-    private array $resolvingCallbacks = [];
+    protected array $resolvingCallbacks = [];
 
     public function __construct(
         private readonly bool $cacheEnabled = true
@@ -105,7 +105,7 @@ final class EntityManager implements EntityManagerInterface
     /**
      * Invalidate the in-memory cache (lightweight operation)
      */
-    private function invalidateCache(): void
+    protected function invalidateCache(): void
     {
         $this->cachedEntities = null;
     }
@@ -145,7 +145,7 @@ final class EntityManager implements EntityManagerInterface
     /**
      * Build the entity cache
      */
-    private function buildEntityCache(): array
+    protected function buildEntityCache(): array
     {
         $entities = [];
 
@@ -179,7 +179,7 @@ final class EntityManager implements EntityManagerInterface
     /**
      * Resolve entities from various input types
      */
-    private function resolveEntities(array|Closure $entities): array
+    protected function resolveEntities(array|Closure $entities): array
     {
         if ($entities instanceof Closure) {
             $entities = $entities();

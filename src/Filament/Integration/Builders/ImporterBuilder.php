@@ -11,7 +11,7 @@ use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConf
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportDataStorage;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class ImporterBuilder extends BaseBuilder
+class ImporterBuilder extends BaseBuilder
 {
     public function columns(): Collection
     {
@@ -21,7 +21,7 @@ final class ImporterBuilder extends BaseBuilder
             ->values();
     }
 
-    private function createColumn(CustomField $field): ImportColumn
+    protected function createColumn(CustomField $field): ImportColumn
     {
         $column = ImportColumn::make('custom_fields_'.$field->code)
             ->label($field->name);

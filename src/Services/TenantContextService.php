@@ -7,7 +7,7 @@ namespace Relaticle\CustomFields\Services;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Context;
 
-final class TenantContextService
+class TenantContextService
 {
     private const string TENANT_ID_KEY = 'custom_fields_tenant_id';
 

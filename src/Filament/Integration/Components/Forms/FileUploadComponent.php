@@ -22,7 +22,7 @@ final readonly class FileUploadComponent extends AbstractFormComponent
         return $this->applySettingsToComponent($component, $defaults);
     }
 
-    private function getSmartDefaults(): array
+    protected function getSmartDefaults(): array
     {
         return [
             'disk' => 'public',

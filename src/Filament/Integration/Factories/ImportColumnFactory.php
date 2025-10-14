@@ -20,7 +20,7 @@ use Relaticle\CustomFields\Models\CustomField;
  * - Single unified configurator handles all field types
  * - Clean, simple API
  */
-final class ImportColumnFactory
+class ImportColumnFactory
 {
     private ImportColumnConfigurator $configurator;
 

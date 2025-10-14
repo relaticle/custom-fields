@@ -56,7 +56,7 @@ enum VisibilityOperator: string
         };
     }
 
-    private function evaluateEquals(mixed $fieldValue, mixed $expectedValue): bool
+    protected function evaluateEquals(mixed $fieldValue, mixed $expectedValue): bool
     {
         // Handle null values
         if ($fieldValue === null && $expectedValue === null) {
@@ -81,7 +81,7 @@ enum VisibilityOperator: string
         return $fieldValue === $expectedValue;
     }
 
-    private function evaluateContains(mixed $fieldValue, mixed $expectedValue): bool
+    protected function evaluateContains(mixed $fieldValue, mixed $expectedValue): bool
     {
         if ($fieldValue === null || $expectedValue === null) {
             return false;
@@ -120,7 +120,7 @@ enum VisibilityOperator: string
         return false;
     }
 
-    private function evaluateGreaterThan(mixed $fieldValue, mixed $expectedValue): bool
+    protected function evaluateGreaterThan(mixed $fieldValue, mixed $expectedValue): bool
     {
         if (! is_numeric($fieldValue) || ! is_numeric($expectedValue)) {
             return false;
@@ -129,7 +129,7 @@ enum VisibilityOperator: string
         return (float) $fieldValue > (float) $expectedValue;
     }
 
-    private function evaluateLessThan(mixed $fieldValue, mixed $expectedValue): bool
+    protected function evaluateLessThan(mixed $fieldValue, mixed $expectedValue): bool
     {
         if (! is_numeric($fieldValue) || ! is_numeric($expectedValue)) {
             return false;
@@ -138,7 +138,7 @@ enum VisibilityOperator: string
         return (float) $fieldValue < (float) $expectedValue;
     }
 
-    private function evaluateIsEmpty(mixed $fieldValue): bool
+    protected function evaluateIsEmpty(mixed $fieldValue): bool
     {
         if ($fieldValue === null) {
             return true;

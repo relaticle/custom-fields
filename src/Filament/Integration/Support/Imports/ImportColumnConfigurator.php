@@ -22,7 +22,7 @@ use Throwable;
  * Unified configurator for import columns based on custom field types.
  * Simplifies the previous multi-class approach into a single, data-driven configurator.
  */
-final class ImportColumnConfigurator
+class ImportColumnConfigurator
 {
     /**
      * Configure an import column based on a custom field.
@@ -53,7 +53,7 @@ final class ImportColumnConfigurator
     /**
      * Check if field type implements custom import/export interface and configure accordingly.
      */
-    private function configureViaFieldType(): bool
+    protected function configureViaFieldType(): bool
     {
         // Import configuration is not currently supported for field types
         return false;
@@ -62,7 +62,7 @@ final class ImportColumnConfigurator
     /**
      * Configure single choice fields (select, radio).
      */
-    private function configureSingleChoice(ImportColumn $column, CustomField $customField): void
+    protected function configureSingleChoice(ImportColumn $column, CustomField $customField): void
     {
         if ($customField->lookup_type) {
             $this->configureLookup($column, $customField, false);
@@ -74,7 +74,7 @@ final class ImportColumnConfigurator
     /**
      * Configure multi choice fields (multi-select, checkbox list, tags).
      */
-    private function configureMultiChoice(ImportColumn $column, CustomField $customField): void
+    protected function configureMultiChoice(ImportColumn $column, CustomField $customField): void
     {
         $column->array(',');
 
@@ -105,7 +105,7 @@ final class ImportColumnConfigurator
     /**
      * Configure lookup-based fields.
      */
-    private function configureLookup(ImportColumn $column, CustomField $customField, bool $multiple): void
+    protected function configureLookup(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int {
             if (blank($state)) {
@@ -127,7 +127,7 @@ final class ImportColumnConfigurator
     /**
      * Resolve a single lookup value.
      */
-    private function resolveLookupValue(CustomField $customField, mixed $value): int
+    protected function resolveLookupValue(CustomField $customField, mixed $value): int
     {
         try {
             $entity = Entities::getEntity($customField->lookup_type);
@@ -171,7 +171,7 @@ final class ImportColumnConfigurator
     /**
      * Resolve multiple lookup values.
      */
-    private function resolveLookupValues(CustomField $customField, array $values): array
+    protected function resolveLookupValues(CustomField $customField, array $values): array
     {
         $foundIds = [];
         $missingValues = [];
@@ -198,7 +198,7 @@ final class ImportColumnConfigurator
     /**
      * Configure choice-based fields.
      */
-    private function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
+    protected function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int {
             if (blank($state)) {
@@ -220,7 +220,7 @@ final class ImportColumnConfigurator
     /**
      * Resolve a single choice value.
      */
-    private function resolveChoiceValue(CustomField $customField, mixed $value): ?int
+    protected function resolveChoiceValue(CustomField $customField, mixed $value): ?int
     {
         // If already numeric, assume it's a choice ID
         if (is_numeric($value)) {
@@ -252,7 +252,7 @@ final class ImportColumnConfigurator
      *
      * @throws RowImportFailedException
      */
-    private function resolveChoiceValues(CustomField $customField, array $values): array
+    protected function resolveChoiceValues(CustomField $customField, array $values): array
     {
         $foundIds = [];
         $missingValues = [];
@@ -283,7 +283,7 @@ final class ImportColumnConfigurator
     /**
      * Configure date fields.
      */
-    private function configureDate(ImportColumn $column): void
+    protected function configureDate(ImportColumn $column): void
     {
         $column->castStateUsing(function (mixed $state): ?string {
             if (blank($state)) {
@@ -307,7 +307,7 @@ final class ImportColumnConfigurator
     /**
      * Configure datetime fields.
      */
-    private function configureDateTime(ImportColumn $column): void
+    protected function configureDateTime(ImportColumn $column): void
     {
         $column->castStateUsing(function (mixed $state): ?string {
             if (blank($state)) {
@@ -325,7 +325,7 @@ final class ImportColumnConfigurator
     /**
      * Configure text fields with appropriate examples.
      */
-    private function configureText(ImportColumn $column, CustomField $customField): void
+    protected function configureText(ImportColumn $column, CustomField $customField): void
     {
         $dataType = $customField->typeData->dataType;
 
@@ -341,7 +341,7 @@ final class ImportColumnConfigurator
     /**
      * Set lookup examples on the column.
      */
-    private function setLookupExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
+    protected function setLookupExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         try {
             $entity = Entities::getEntity($customField->lookup_type);
@@ -372,7 +372,7 @@ final class ImportColumnConfigurator
     /**
      * Set choice examples on the column.
      */
-    private function setChoiceExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
+    protected function setChoiceExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         $choices = $customField->options->pluck('name')->toArray();
 
@@ -395,7 +395,7 @@ final class ImportColumnConfigurator
     /**
      * Finalize column configuration.
      */
-    private function finalize(ImportColumn $column, CustomField $customField): ImportColumn
+    protected function finalize(ImportColumn $column, CustomField $customField): ImportColumn
     {
         // Apply validation rules
         $this->applyValidationRules($column, $customField);
@@ -410,7 +410,7 @@ final class ImportColumnConfigurator
     /**
      * Apply validation rules to the column.
      */
-    private function applyValidationRules(ImportColumn $column, CustomField $customField): void
+    protected function applyValidationRules(ImportColumn $column, CustomField $customField): void
     {
         // Handle validation_rules being a DataCollection or Collection
         $validationRules = $customField->validation_rules->toCollection();

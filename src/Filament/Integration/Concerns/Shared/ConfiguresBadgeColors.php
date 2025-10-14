@@ -25,7 +25,7 @@ trait ConfiguresBadgeColors
             });
     }
 
-    private function shouldApplyBadgeColors(CustomField $customField): bool
+    protected function shouldApplyBadgeColors(CustomField $customField): bool
     {
         return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
             && $customField->settings->enable_option_colors

@@ -51,7 +51,7 @@ trait ConfiguresVisibility
      *
      * @param  Collection<int, CustomField>  $allFields
      */
-    private function applyVisibility(
+    protected function applyVisibility(
         Field $field,
         CustomField $customField,
         Collection $allFields,

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableFilter;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class TernaryFilter extends AbstractTableFilter
+class TernaryFilter extends AbstractTableFilter
 {
     public function make(CustomField $customField): FilamentTernaryFilter
     {

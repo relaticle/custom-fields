@@ -10,7 +10,7 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-final class CustomFieldData extends Data
+class CustomFieldData extends Data
 {
     /**
      * Create a new instance of the CustomFieldData class.

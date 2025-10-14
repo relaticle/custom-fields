@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextCo
  * ABOUTME: Field type definition for Rich Editor fields
  * ABOUTME: Provides Rich Editor functionality with appropriate validation rules
  */
-final class RichEditorFieldType extends BaseFieldType
+class RichEditorFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
     {

@@ -9,7 +9,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 /**
  * Simple service for runtime feature checking
  */
-final class FeatureManager
+class FeatureManager
 {
     /**
      * Check if a specific feature is enabled

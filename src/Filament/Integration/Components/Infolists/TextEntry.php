@@ -9,7 +9,7 @@ use Filament\Infolists\Components\TextEntry as BaseTextEntry;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class TextEntry extends AbstractInfolistEntry
+class TextEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): Entry
     {

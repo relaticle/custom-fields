@@ -10,7 +10,7 @@ use Filament\Schemas\Components\Section;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
-final class SectionInfolistsFactory
+class SectionInfolistsFactory
 {
     public function create(CustomFieldSection $customFieldSection): Section|Fieldset|Grid
     {

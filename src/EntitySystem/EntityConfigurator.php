@@ -11,23 +11,23 @@ use Relaticle\CustomFields\Contracts\EntityConfigurationInterface;
  * Fluent builder for configuring the entire entity management system
  * Provides clean, discoverable API for global entity configuration
  */
-final class EntityConfigurator implements EntityConfigurationInterface
+class EntityConfigurator implements EntityConfigurationInterface
 {
-    private bool $autoDiscover = true;
+    protected bool $autoDiscover = true;
 
-    private array $discoveryPaths = [];
+    protected array $discoveryPaths = [];
 
-    private array $discoveryNamespaces = ['App\\Models'];
+    protected array $discoveryNamespaces = ['App\\Models'];
 
-    private array $excludedModels = [];
+    protected array $excludedModels = [];
 
-    private bool $cacheEnabled = true;
+    protected bool $cacheEnabled = true;
 
-    private int $cacheTtl = 3600;
+    protected int $cacheTtl = 3600;
 
-    private array $entityModels = [];
+    protected array $entityModels = [];
 
-    private function __construct()
+    protected function __construct()
     {
         // Set smart defaults
         $this->discoveryPaths = [app_path('Models')];
@@ -142,7 +142,7 @@ final class EntityConfigurator implements EntityConfigurationInterface
     /**
      * Build the entities array from configured entity arrays
      */
-    private function buildEntitiesArray(): array
+    protected function buildEntitiesArray(): array
     {
         $entities = [];
 

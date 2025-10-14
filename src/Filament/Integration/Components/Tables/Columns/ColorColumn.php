@@ -12,7 +12,7 @@ use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumn
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class ColorColumn extends AbstractTableColumn
+class ColorColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
     use ConfiguresColumnState;

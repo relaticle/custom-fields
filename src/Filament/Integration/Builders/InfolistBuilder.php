@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
-final class InfolistBuilder extends BaseBuilder
+class InfolistBuilder extends BaseBuilder
 {
     private bool $hiddenLabels = false;
 

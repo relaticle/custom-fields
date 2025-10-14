@@ -45,7 +45,7 @@ class EntityServiceProvider extends ServiceProvider
     /**
      * Configure the EntityManager with discovery and registered entities
      */
-    private function configureEntityManager(EntityManager $manager): void
+    protected function configureEntityManager(EntityManager $manager): void
     {
         $this->configureDiscovery($manager);
         $this->registerEntities($manager);
@@ -55,7 +55,7 @@ class EntityServiceProvider extends ServiceProvider
     /**
      * Configure entity discovery
      */
-    private function configureDiscovery(EntityManager $manager): void
+    protected function configureDiscovery(EntityManager $manager): void
     {
         $config = $this->getEntityConfig();
 
@@ -68,7 +68,7 @@ class EntityServiceProvider extends ServiceProvider
     /**
      * Register entities from configuration
      */
-    private function registerEntities(EntityManager $manager): void
+    protected function registerEntities(EntityManager $manager): void
     {
         $config = $this->getEntityConfig();
         $entities = $config['entities'] ?? [];
@@ -108,7 +108,7 @@ class EntityServiceProvider extends ServiceProvider
     /**
      * Register entity filters
      */
-    private function registerFilters(EntityManager $manager): void
+    protected function registerFilters(EntityManager $manager): void
     {
         $config = $this->getEntityConfig();
         $excludedModels = $config['excluded_models'] ?? [];
@@ -127,7 +127,7 @@ class EntityServiceProvider extends ServiceProvider
     /**
      * Get entity configuration from the builder
      */
-    private function getEntityConfig(): array
+    protected function getEntityConfig(): array
     {
         $entityConfiguration = config('custom-fields.entity_configuration');
 

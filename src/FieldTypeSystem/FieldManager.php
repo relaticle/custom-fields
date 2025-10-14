@@ -31,7 +31,7 @@ use Relaticle\CustomFields\FieldTypeSystem\Definitions\TextFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\ToggleButtonsFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\ToggleFieldType;
 
-final class FieldManager
+class FieldManager
 {
     use EvaluatesClosures;
 
@@ -62,17 +62,17 @@ final class FieldManager
     /**
      * @var array<array<string, array<int, string> | string> | Closure>
      */
-    private array $fieldTypes = [];
+    protected array $fieldTypes = [];
 
     /**
      * @var array<int, string>
      */
-    private array $cachedFieldTypes;
+    protected array $cachedFieldTypes;
 
     /**
      * @var array<string, FieldTypeDefinitionInterface>
      */
-    private array $cachedInstances = [];
+    protected array $cachedInstances = [];
 
     /**
      * @param  array<string, array<int, string> | string> | Closure  $fieldTypes

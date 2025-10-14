@@ -55,7 +55,7 @@ class VisibilityData extends Data
     /**
      * @param  array<string, mixed>  $fieldValues
      */
-    private function evaluateCondition(VisibilityConditionData $condition, array $fieldValues): bool
+    protected function evaluateCondition(VisibilityConditionData $condition, array $fieldValues): bool
     {
         $fieldValue = $fieldValues[$condition->field_code] ?? null;
 

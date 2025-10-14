@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
-final class EntityCollection extends Collection
+class EntityCollection extends Collection
 {
     /**
      * Find entity by model class or alias

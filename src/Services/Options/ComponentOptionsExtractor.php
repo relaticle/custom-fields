@@ -18,7 +18,7 @@ use Relaticle\CustomFields\Models\CustomField;
  * This service analyzes form components to discover their configured options,
  * whether they're static arrays or dynamic search results.
  */
-final class ComponentOptionsExtractor
+class ComponentOptionsExtractor
 {
     public function __construct(
         private FieldManager $fieldTypeManager
@@ -49,7 +49,7 @@ final class ComponentOptionsExtractor
     /**
      * Extract options from a closure-based form component
      */
-    private function extractFromClosure(Closure $closure, ?CustomField $field): array
+    protected function extractFromClosure(Closure $closure, ?CustomField $field): array
     {
         try {
             // Create a test field if none provided
@@ -69,7 +69,7 @@ final class ComponentOptionsExtractor
     /**
      * Extract options from a component class
      */
-    private function extractFromComponentClass(): array
+    protected function extractFromComponentClass(): array
     {
         // This would require instantiating the component class
         // For now, return empty array as component classes typically use database options
@@ -79,7 +79,7 @@ final class ComponentOptionsExtractor
     /**
      * Extract options from an instantiated Filament component
      */
-    private function extractFromComponent(Field $component): array
+    protected function extractFromComponent(Field $component): array
     {
         try {
             // Method 1: Try getOptions() method (standard Filament pattern)
@@ -118,7 +118,7 @@ final class ComponentOptionsExtractor
     /**
      * Extract sample options from a searchable component
      */
-    private function extractFromSearchableComponent(Field $component): array
+    protected function extractFromSearchableComponent(Field $component): array
     {
         try {
             // Try to extract the search callback and run it with empty string
@@ -156,7 +156,7 @@ final class ComponentOptionsExtractor
     /**
      * Create a test CustomField for component instantiation
      */
-    private function createTestField(): CustomField
+    protected function createTestField(): CustomField
     {
         $field = new CustomField;
         $field->id = 999;

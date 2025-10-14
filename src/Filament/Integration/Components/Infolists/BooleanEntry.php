@@ -9,7 +9,7 @@ use Filament\Infolists\Components\IconEntry as BaseIconEntry;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class BooleanEntry extends AbstractInfolistEntry
+class BooleanEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): Entry
     {

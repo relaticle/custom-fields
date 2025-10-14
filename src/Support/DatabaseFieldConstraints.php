@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
  * ABOUTME: Handles database field constraints and converts them to validation rules
  * ABOUTME: Ensures user input respects database column limitations across different database drivers
  */
-final class DatabaseFieldConstraints
+class DatabaseFieldConstraints
 {
     /**
      * Cache configuration.
@@ -190,7 +190,7 @@ final class DatabaseFieldConstraints
     /**
      * Merge a single rule with existing rules.
      */
-    private static function mergeRule(
+    protected static function mergeRule(
         array $rules,
         string $ruleType,
         array $dbConstraints
@@ -236,7 +236,7 @@ final class DatabaseFieldConstraints
     /**
      * Apply the stricter constraint between user and database rules.
      */
-    private static function applyStricterConstraint(
+    protected static function applyStricterConstraint(
         array $rules,
         string $ruleName,
         int $existingIndex,
@@ -284,7 +284,7 @@ final class DatabaseFieldConstraints
     /**
      * Resolve max value from constraints, handling driver-specific values.
      */
-    private static function resolveMaxValue(mixed $maxConstraint): mixed
+    protected static function resolveMaxValue(mixed $maxConstraint): mixed
     {
         return is_array($maxConstraint)
             ? ($maxConstraint[self::getDatabaseDriver()] ?? current($maxConstraint))

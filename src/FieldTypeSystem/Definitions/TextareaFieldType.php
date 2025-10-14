@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextCo
  * ABOUTME: Field type definition for Textarea fields
  * ABOUTME: Provides Textarea functionality with appropriate validation rules
  */
-final class TextareaFieldType extends BaseFieldType
+class TextareaFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
     {

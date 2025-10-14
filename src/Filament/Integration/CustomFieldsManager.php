@@ -10,7 +10,7 @@ use Relaticle\CustomFields\Filament\Integration\Builders\ImporterBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\InfolistBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\TableBuilder;
 
-final class CustomFieldsManager
+class CustomFieldsManager
 {
     public function table(): TableBuilder
     {

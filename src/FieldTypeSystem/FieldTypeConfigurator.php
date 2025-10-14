@@ -10,23 +10,23 @@ use Closure;
  * System-wide configuration for the entire field type system
  * Provides clean, discoverable API for field type configuration and management
  */
-final class FieldTypeConfigurator
+class FieldTypeConfigurator
 {
-    private bool $autoDiscover = true;
+    protected bool $autoDiscover = true;
 
-    private bool $cacheEnabled = true;
+    protected bool $cacheEnabled = true;
 
-    private int $cacheTtl = 3600;
+    protected int $cacheTtl = 3600;
 
-    private string $cacheStore = 'default';
+    protected string $cacheStore = 'default';
 
-    private array $cacheTags = ['field-types', 'configuration'];
+    protected array $cacheTags = ['field-types', 'configuration'];
 
-    private array $enabledFieldTypes = [];
+    protected array $enabledFieldTypes = [];
 
-    private array $disabledFieldTypes = [];
+    protected array $disabledFieldTypes = [];
 
-    private function __construct()
+    protected function __construct()
     {
         //
     }

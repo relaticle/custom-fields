@@ -19,9 +19,9 @@ use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Symfony\Component\Finder\Finder;
 
-final class EntityDiscovery
+class EntityDiscovery
 {
-    private array $discoveredCache = [];
+    protected array $discoveredCache = [];
 
     public function __construct(
         private array $paths = [],
@@ -81,7 +81,7 @@ final class EntityDiscovery
     /**
      * Discover entities from Filament Resources
      */
-    private function discoverFromFilamentResources(): array
+    protected function discoverFromFilamentResources(): array
     {
         $entities = [];
 
@@ -116,7 +116,7 @@ final class EntityDiscovery
     /**
      * Discover entities from configured paths
      */
-    private function discoverFromPaths(): array
+    protected function discoverFromPaths(): array
     {
         $entities = [];
 
@@ -148,7 +148,7 @@ final class EntityDiscovery
     /**
      * Discover entities from namespaces
      */
-    private function discoverFromNamespaces(): array
+    protected function discoverFromNamespaces(): array
     {
         $entities = [];
 
@@ -173,7 +173,7 @@ final class EntityDiscovery
     /**
      * Check if a model should be discovered
      */
-    private function shouldDiscoverModel(string $modelClass): bool
+    protected function shouldDiscoverModel(string $modelClass): bool
     {
         if (! class_exists($modelClass)) {
             return false;
@@ -205,7 +205,7 @@ final class EntityDiscovery
     /**
      * Create entity configuration from a model class
      */
-    private function createEntityFromModel(string $modelClass): EntityConfigurationData
+    protected function createEntityFromModel(string $modelClass): EntityConfigurationData
     {
         /** @var Model $model */
         $model = new $modelClass;
@@ -226,7 +226,7 @@ final class EntityDiscovery
     /**
      * Get model label from class name
      */
-    private function getModelLabel(string $modelClass): string
+    protected function getModelLabel(string $modelClass): string
     {
         $baseName = class_basename($modelClass);
 
@@ -236,7 +236,7 @@ final class EntityDiscovery
     /**
      * Get model plural label
      */
-    private function getModelPluralLabel(string $modelClass): string
+    protected function getModelPluralLabel(string $modelClass): string
     {
         return Str::plural($this->getModelLabel($modelClass));
     }
@@ -244,7 +244,7 @@ final class EntityDiscovery
     /**
      * Get model icon (can be customized via method or property)
      */
-    private function getModelIcon(string $modelClass): string
+    protected function getModelIcon(string $modelClass): string
     {
         if (method_exists($modelClass, 'getCustomFieldsIcon')) {
             return $modelClass::getCustomFieldsIcon();
@@ -260,7 +260,7 @@ final class EntityDiscovery
     /**
      * Get model primary attribute
      */
-    private function getModelPrimaryAttribute(string $modelClass): string
+    protected function getModelPrimaryAttribute(string $modelClass): string
     {
         if (method_exists($modelClass, 'getCustomFieldsPrimaryAttribute')) {
             return $modelClass::getCustomFieldsPrimaryAttribute();
@@ -286,7 +286,7 @@ final class EntityDiscovery
     /**
      * Get model search attributes
      */
-    private function getModelSearchAttributes(string $modelClass): array
+    protected function getModelSearchAttributes(string $modelClass): array
     {
         if (method_exists($modelClass, 'getCustomFieldsSearchAttributes')) {
             return $modelClass::getCustomFieldsSearchAttributes();
@@ -305,7 +305,7 @@ final class EntityDiscovery
     /**
      * Get class name from file path
      */
-    private function getClassNameFromFile(string $path): ?string
+    protected function getClassNameFromFile(string $path): ?string
     {
         $contents = File::get($path);
 
@@ -327,7 +327,7 @@ final class EntityDiscovery
     /**
      * Get classes in a namespace (using declared classes)
      */
-    private function getClassesInNamespace(string $namespace): array
+    protected function getClassesInNamespace(string $namespace): array
     {
         $classes = [];
         $declaredClasses = get_declared_classes();
@@ -344,7 +344,7 @@ final class EntityDiscovery
     /**
      * Check if a resource class is valid
      */
-    private function isValidResourceClass(string $resourceClass): bool
+    protected function isValidResourceClass(string $resourceClass): bool
     {
         return class_exists($resourceClass)
             && is_subclass_of($resourceClass, Resource::class);

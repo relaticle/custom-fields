@@ -36,7 +36,7 @@ use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-final class CustomFieldsServiceProvider extends PackageServiceProvider
+class CustomFieldsServiceProvider extends PackageServiceProvider
 {
     public static string $name = 'custom-fields';
 
@@ -143,7 +143,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         }
     }
 
-    private function getAssetPackageName(): string
+    protected function getAssetPackageName(): string
     {
         return 'relaticle/custom-fields';
     }
@@ -151,7 +151,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<Asset>
      */
-    private function getAssets(): array
+    protected function getAssets(): array
     {
         return [
             Css::make('custom-fields', __DIR__.'/../resources/dist/custom-fields.css')->loadedOnRequest(),
@@ -161,7 +161,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<class-string>
      */
-    private function getCommands(): array
+    protected function getCommands(): array
     {
         return [
             MakeCustomFieldsMigrationCommand::class,
@@ -172,7 +172,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string>
      */
-    private function getIcons(): array
+    protected function getIcons(): array
     {
         return [];
     }
@@ -180,7 +180,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string, mixed>
      */
-    private function getScriptData(): array
+    protected function getScriptData(): array
     {
         return [];
     }
@@ -188,7 +188,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     /**
      * @return array<string>
      */
-    private function getMigrations(): array
+    protected function getMigrations(): array
     {
         return [
             'create_custom_fields_table',

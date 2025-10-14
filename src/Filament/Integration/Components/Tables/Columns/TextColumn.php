@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearch
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSortable;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class TextColumn extends AbstractTableColumn
+class TextColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
     use ConfiguresColumnState;

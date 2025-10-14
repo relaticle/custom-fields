@@ -25,7 +25,7 @@ use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
-final class ManageCustomFieldSection extends Component implements HasActions, HasForms
+class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
     use InteractsWithForms;

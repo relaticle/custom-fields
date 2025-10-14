@@ -9,11 +9,11 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 /**
  * Simple fluent builder for configuring package features
  */
-final class FeatureConfigurator
+class FeatureConfigurator
 {
-    private array $features = [];
+    protected array $features = [];
 
-    private function __construct()
+    protected function __construct()
     {
         //
     }

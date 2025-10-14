@@ -17,7 +17,7 @@ use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 
-final class CustomFieldValidationComponent extends Component
+class CustomFieldValidationComponent extends Component
 {
     protected string $view = 'filament-schemas::components.grid';
 
@@ -32,7 +32,7 @@ final class CustomFieldValidationComponent extends Component
         return app(self::class);
     }
 
-    private function buildValidationRulesRepeater(): Repeater
+    protected function buildValidationRulesRepeater(): Repeater
     {
         return Repeater::make('validation_rules')
             ->label(
@@ -68,7 +68,7 @@ final class CustomFieldValidationComponent extends Component
             ->columnSpanFull();
     }
 
-    private function buildRuleSelector(): Select
+    protected function buildRuleSelector(): Select
     {
         return Select::make('name')
             ->label(
@@ -97,7 +97,7 @@ final class CustomFieldValidationComponent extends Component
             ->columnSpan(1);
     }
 
-    private function buildRuleDescription(): TextEntry
+    protected function buildRuleDescription(): TextEntry
     {
         return TextEntry::make('description')
             ->label(
@@ -115,7 +115,7 @@ final class CustomFieldValidationComponent extends Component
             ->columnSpan(2);
     }
 
-    private function buildRuleParametersRepeater(): Repeater
+    protected function buildRuleParametersRepeater(): Repeater
     {
         return Repeater::make('parameters')
             ->label(
@@ -194,7 +194,7 @@ final class CustomFieldValidationComponent extends Component
     /**
      * @return array<string, string>
      */
-    private function getAvailableRuleOptions(Get $get): array
+    protected function getAvailableRuleOptions(Get $get): array
     {
         $fieldTypeKey = $get('../../type');
         if (! $fieldTypeKey) {
@@ -225,7 +225,7 @@ final class CustomFieldValidationComponent extends Component
     /**
      * @return array<string, mixed>
      */
-    private function getAllowedRuleValues(Get $get): array
+    protected function getAllowedRuleValues(Get $get): array
     {
         $fieldType = $this->getFieldType($get);
 
@@ -238,7 +238,7 @@ final class CustomFieldValidationComponent extends Component
             ->toArray();
     }
 
-    private function handleRuleChange(
+    protected function handleRuleChange(
         Set $set,
         ?string $state,
         ?string $old
@@ -266,7 +266,7 @@ final class CustomFieldValidationComponent extends Component
     /**
      * @return array<int, string>
      */
-    private function getParameterValidationRules(
+    protected function getParameterValidationRules(
         Get $get,
         Component $component
     ): array {
@@ -279,7 +279,7 @@ final class CustomFieldValidationComponent extends Component
         );
     }
 
-    private function getParameterHint(
+    protected function getParameterHint(
         Get $get,
         ?Component $component = null
     ): string {
@@ -335,7 +335,7 @@ final class CustomFieldValidationComponent extends Component
         };
     }
 
-    private function hydrateParameterValue(
+    protected function hydrateParameterValue(
         Get $get,
         Set $set,
         mixed $state,
@@ -360,7 +360,7 @@ final class CustomFieldValidationComponent extends Component
         $set('value', $normalizedValue);
     }
 
-    private function dehydrateParameterValue(
+    protected function dehydrateParameterValue(
         Get $get,
         mixed $state,
         Component $component
@@ -383,7 +383,7 @@ final class CustomFieldValidationComponent extends Component
         );
     }
 
-    private function getParameterCount(Get $get): int
+    protected function getParameterCount(Get $get): int
     {
         $ruleName = $get('name');
         if (empty($ruleName)) {
@@ -397,14 +397,14 @@ final class CustomFieldValidationComponent extends Component
             : 1;
     }
 
-    private function getMaxParameterCount(Get $get): int
+    protected function getMaxParameterCount(Get $get): int
     {
         return ValidationRule::getAllowedParametersCountForRule(
             $get('name')
         );
     }
 
-    private function canDeleteParameter(Get $get): bool
+    protected function canDeleteParameter(Get $get): bool
     {
         $ruleName = $get('name');
         if (empty($ruleName)) {
@@ -424,7 +424,7 @@ final class CustomFieldValidationComponent extends Component
     /**
      * @param  array<string, mixed>  $state
      */
-    private function generateRuleLabel(array $state): string
+    protected function generateRuleLabel(array $state): string
     {
         $ruleName = $state['name'] ?? '';
         $parameters = $state['parameters'] ?? [];
@@ -440,7 +440,7 @@ final class CustomFieldValidationComponent extends Component
      *
      * @return array<int, ValidationRule>
      */
-    private function getAllowedValidationRulesForFieldType(
+    protected function getAllowedValidationRulesForFieldType(
         string $fieldTypeKey
     ): array {
         $fieldType = CustomFieldsType::getFieldType($fieldTypeKey);
@@ -448,7 +448,7 @@ final class CustomFieldValidationComponent extends Component
         return $fieldType->validationRules;
     }
 
-    private function getFieldType(Get $get): ?FieldTypeData
+    protected function getFieldType(Get $get): ?FieldTypeData
     {
         $type = $get('../../type');
 
@@ -462,14 +462,14 @@ final class CustomFieldValidationComponent extends Component
     /**
      * @param  array<string, mixed>  $existingRules
      */
-    private function isRuleDuplicate(array $existingRules, string $rule): bool
+    protected function isRuleDuplicate(array $existingRules, string $rule): bool
     {
         return collect($existingRules)->contains(
             fn (array $existingRule): bool => ($existingRule['name'] ?? '') === $rule
         );
     }
 
-    private function getParameterIndex(Component $component): int
+    protected function getParameterIndex(Component $component): int
     {
         $statePath = $component->getStatePath();
 

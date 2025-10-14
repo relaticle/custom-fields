@@ -133,7 +133,7 @@ class CustomFieldsManagementPage extends Page
         }
     }
 
-    private function storeSection(array $data): CustomFieldSection
+    protected function storeSection(array $data): CustomFieldSection
     {
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
             $data[config('custom-fields.database.column_names.tenant_foreign_key')] = Filament::getTenant()?->getKey();

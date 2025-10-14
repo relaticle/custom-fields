@@ -83,7 +83,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             );
     }
 
-    private function getFieldValue(
+    protected function getFieldValue(
         CustomField $customField,
         mixed $state,
         mixed $record
@@ -102,12 +102,12 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         });
     }
 
-    private function hasVisibilityConditions(CustomField $customField): bool
+    protected function hasVisibilityConditions(CustomField $customField): bool
     {
         return $this->coreVisibilityLogic->hasVisibilityConditions($customField);
     }
 
-    private function applyVisibility(
+    protected function applyVisibility(
         Field $field,
         CustomField $customField,
         Collection $allFields

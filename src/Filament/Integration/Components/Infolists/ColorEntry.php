@@ -9,7 +9,7 @@ use Filament\Infolists\Components\Entry;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class ColorEntry extends AbstractInfolistEntry
+class ColorEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): Entry
     {

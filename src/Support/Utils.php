@@ -7,7 +7,7 @@ namespace Relaticle\CustomFields\Support;
 use ReflectionClass;
 use ReflectionException;
 
-final class Utils
+class Utils
 {
     public static function getResourceCluster(): ?string
     {

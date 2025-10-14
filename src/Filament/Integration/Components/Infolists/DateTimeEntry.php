@@ -9,7 +9,7 @@ use Filament\Infolists\Components\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class DateTimeEntry extends AbstractInfolistEntry
+class DateTimeEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): Entry
     {

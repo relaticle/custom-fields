@@ -14,7 +14,7 @@ use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValueResolver\LookupSingleValueResolver;
 
-final class SingleChoiceColumn extends AbstractTableColumn
+class SingleChoiceColumn extends AbstractTableColumn
 {
     use ConfiguresBadgeColors;
     use ConfiguresColumnLabel;

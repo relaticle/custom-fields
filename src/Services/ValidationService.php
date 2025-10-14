@@ -15,7 +15,7 @@ use Spatie\LaravelData\DataCollection;
 /**
  * Service for handling field validation rules and constraints.
  */
-final class ValidationService
+class ValidationService
 {
     /**
      * Get all validation rules for a custom field, applying both:
@@ -63,7 +63,7 @@ final class ValidationService
      * @param  CustomField  $customField  The custom field for context
      * @return array<int, string> The converted rules
      */
-    private function convertUserRulesToValidatorFormat(?DataCollection $rules, CustomField $customField): array
+    protected function convertUserRulesToValidatorFormat(?DataCollection $rules, CustomField $customField): array
     {
         if (! $rules instanceof DataCollection || $rules->toCollection()->isEmpty()) {
             return [];
@@ -120,7 +120,7 @@ final class ValidationService
      * @param  array<int, string>  $secondaryRules  Rules that are overridden by primary rules
      * @return array<int, string> Combined rules
      */
-    private function combineRules(array $primaryRules, array $secondaryRules): array
+    protected function combineRules(array $primaryRules, array $secondaryRules): array
     {
         // Extract rule names (without parameters) from primary rules
         $primaryRuleNames = array_map(fn (string $rule): string => explode(':', $rule, 2)[0], $primaryRules);
@@ -143,7 +143,7 @@ final class ValidationService
      * @param  CustomField  $customField  The custom field with options
      * @return array<int, string> Array of option IDs
      */
-    private function convertOptionNamesToIds(array $optionNames, CustomField $customField): array
+    protected function convertOptionNamesToIds(array $optionNames, CustomField $customField): array
     {
         // Load options if not already loaded
         $customField->loadMissing('options');
@@ -168,7 +168,7 @@ final class ValidationService
      * @param  string  $fieldType  The field type
      * @return array<int, string> Array of default validation rules
      */
-    private function getFieldTypeDefaultRules(string $fieldType): array
+    protected function getFieldTypeDefaultRules(string $fieldType): array
     {
         // Get from field type definition's defaultValidationRules
         $fieldTypeManager = app(FieldManager::class);
@@ -194,7 +194,7 @@ final class ValidationService
      * @param  string  $fieldType  The field type
      * @return array<int, string> Merged validation rules
      */
-    private function mergeAllValidationRules(array $fieldTypeDefaults, array $userRules, array $databaseRules, string $fieldType): array
+    protected function mergeAllValidationRules(array $fieldTypeDefaults, array $userRules, array $databaseRules, string $fieldType): array
     {
         // Start with field type defaults (always applied)
         $mergedRules = $fieldTypeDefaults;

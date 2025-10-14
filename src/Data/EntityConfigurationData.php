@@ -16,7 +16,7 @@ use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Spatie\LaravelData\Data;
 
-final class EntityConfigurationData extends Data
+class EntityConfigurationData extends Data
 {
     public function __construct(
         public string $modelClass,
@@ -42,7 +42,7 @@ final class EntityConfigurationData extends Data
     /**
      * Validate the configuration
      */
-    private function validateConfiguration(): void
+    protected function validateConfiguration(): void
     {
         if (! class_exists($this->modelClass)) {
             throw new InvalidArgumentException(sprintf('Model class %s does not exist', $this->modelClass));

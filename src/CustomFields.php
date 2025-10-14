@@ -9,7 +9,7 @@ use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 
-final class CustomFields
+class CustomFields
 {
     /**
      * The custom field model that should be used by Custom Fields.

@@ -9,7 +9,7 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 use Spatie\LaravelData\Data;
 use Stringable;
 
-final class FieldTypeData extends Data implements Stringable
+class FieldTypeData extends Data implements Stringable
 {
     public function __construct(
         public string $key,

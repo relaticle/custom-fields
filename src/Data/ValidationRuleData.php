@@ -6,7 +6,7 @@ namespace Relaticle\CustomFields\Data;
 
 use Spatie\LaravelData\Data;
 
-final class ValidationRuleData extends Data
+class ValidationRuleData extends Data
 {
     /**
      * Create a new instance of the ValidationRuleData class.

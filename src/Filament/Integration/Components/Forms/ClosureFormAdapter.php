@@ -67,7 +67,7 @@ final readonly class ClosureFormAdapter extends AbstractFormComponent
     /**
      * Apply user-defined options to choice fields automatically.
      */
-    private function applyUserDefinedOptions(Field $field, CustomField $customField): Field
+    protected function applyUserDefinedOptions(Field $field, CustomField $customField): Field
     {
         if (method_exists($field, 'options')) {
             // Only apply if field doesn't already have options configured
@@ -84,7 +84,7 @@ final readonly class ClosureFormAdapter extends AbstractFormComponent
     /**
      * Apply color options based on field type.
      */
-    private function applyColorOptions(Field $field, CustomField $customField): Field
+    protected function applyColorOptions(Field $field, CustomField $customField): Field
     {
         if (method_exists($field, 'options') && $field instanceof Select) {
             $coloredOptions = $this->getSelectColoredOptions($customField);

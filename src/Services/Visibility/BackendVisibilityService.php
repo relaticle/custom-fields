@@ -159,7 +159,7 @@ final readonly class BackendVisibilityService
     /**
      * Normalize a single field value for visibility evaluation.
      */
-    private function normalizeValueForEvaluation(
+    protected function normalizeValueForEvaluation(
         mixed $value,
         ?CustomField $field
     ): mixed {
@@ -275,7 +275,7 @@ final readonly class BackendVisibilityService
      * @param  array<string|int, mixed>  $options
      * @return array<string, string>
      */
-    private function normalizeOptionsForVisibility(array $options): array
+    protected function normalizeOptionsForVisibility(array $options): array
     {
         if ($options === []) {
             return [];
@@ -305,7 +305,7 @@ final readonly class BackendVisibilityService
      *
      * @return array<string, string>
      */
-    private function getLookupOptions(string $lookupType): array
+    protected function getLookupOptions(string $lookupType): array
     {
         try {
             $entity = Entities::getEntity($lookupType);

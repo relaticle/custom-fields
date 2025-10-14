@@ -5,7 +5,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Database\Eloquent\Model;
 
-final class FormContainer extends Grid
+class FormContainer extends Grid
 {
     private Model|string|null $explicitModel = null;
 
@@ -44,7 +44,7 @@ final class FormContainer extends Grid
         return $this;
     }
 
-    private function generateSchema(): array
+    protected function generateSchema(): array
     {
         // Inline priority: explicit ?? record ?? model class
         $model = $this->explicitModel ?? $this->getRecord() ?? $this->getModel();

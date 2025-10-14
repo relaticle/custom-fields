@@ -46,7 +46,7 @@ final readonly class LookupResolver
      *
      * @throws Throwable
      */
-    private function getLookupAttributes(string $lookupType): array
+    protected function getLookupAttributes(string $lookupType): array
     {
         $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
         $lookupInstance = app($lookupModelPath);

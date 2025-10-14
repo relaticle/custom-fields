@@ -27,7 +27,7 @@ use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
  * ABOUTME: Visibility component for configuring field visibility conditions.
  * ABOUTME: Provides dynamic form inputs based on field types and operators.
  */
-final class VisibilityComponent extends Component
+class VisibilityComponent extends Component
 {
     protected string $view = 'filament-schemas::components.grid';
 
@@ -42,7 +42,7 @@ final class VisibilityComponent extends Component
         return new self;
     }
 
-    private function buildFieldset(): Fieldset
+    protected function buildFieldset(): Fieldset
     {
         return Fieldset::make('Conditional Visibility')->schema([
             Select::make('settings.visibility.mode')
@@ -83,7 +83,7 @@ final class VisibilityComponent extends Component
      *
      * @throws Exception
      */
-    private function buildConditionSchema(): array
+    protected function buildConditionSchema(): array
     {
         return [
             Select::make('field_code')
@@ -113,7 +113,7 @@ final class VisibilityComponent extends Component
      *
      * @throws Exception
      */
-    private function getValueInputComponents(): array
+    protected function getValueInputComponents(): array
     {
         return [
             // Single select for choice fields
@@ -161,7 +161,7 @@ final class VisibilityComponent extends Component
         ];
     }
 
-    private function shouldShowSingleSelect(Get $get): bool
+    protected function shouldShowSingleSelect(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
             return false;
@@ -181,7 +181,7 @@ final class VisibilityComponent extends Component
         return ! ($fieldData->dataType->isMultiChoiceField() && $this->isContainsOperator($operator));
     }
 
-    private function shouldShowMultipleSelect(Get $get): bool
+    protected function shouldShowMultipleSelect(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
             return false;
@@ -196,7 +196,7 @@ final class VisibilityComponent extends Component
                $this->isContainsOperator($get('operator'));
     }
 
-    private function shouldShowToggle(Get $get): bool
+    protected function shouldShowToggle(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
             return false;
@@ -207,7 +207,7 @@ final class VisibilityComponent extends Component
         return $fieldData && $fieldData->dataType === FieldDataType::BOOLEAN;
     }
 
-    private function shouldShowTextInput(Get $get): bool
+    protected function shouldShowTextInput(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
             return false;
@@ -225,7 +225,7 @@ final class VisibilityComponent extends Component
     /**
      * @return array<string, string>
      */
-    private function getFieldOptions(Get $get): array
+    protected function getFieldOptions(Get $get): array
     {
         $fieldCode = $get('field_code');
         if (blank($fieldCode)) {
@@ -243,7 +243,7 @@ final class VisibilityComponent extends Component
         }, []);
     }
 
-    private function getPlaceholder(Get $get): string
+    protected function getPlaceholder(Get $get): string
     {
         if (blank($get('field_code'))) {
             return 'Select a field first';
@@ -272,14 +272,14 @@ final class VisibilityComponent extends Component
         };
     }
 
-    private function modeRequiresConditions(Get $get): bool
+    protected function modeRequiresConditions(Get $get): bool
     {
         $mode = $get('settings.visibility.mode');
 
         return $mode instanceof VisibilityMode && $mode->requiresConditions();
     }
 
-    private function operatorRequiresValue(Get $get): bool
+    protected function operatorRequiresValue(Get $get): bool
     {
         $operator = $get('operator');
         if (blank($operator)) {
@@ -295,7 +295,7 @@ final class VisibilityComponent extends Component
     /**
      * @return array<string, string>
      */
-    private function getAvailableFields(Get $get): array
+    protected function getAvailableFields(Get $get): array
     {
         $entityType = $this->getEntityType($get);
         if (blank($entityType)) {
@@ -317,7 +317,7 @@ final class VisibilityComponent extends Component
     /**
      * @return array<string, string>
      */
-    private function getCompatibleOperators(Get $get): array
+    protected function getCompatibleOperators(Get $get): array
     {
         $fieldData = $this->getFieldTypeData($get);
 
@@ -326,7 +326,7 @@ final class VisibilityComponent extends Component
             : VisibilityOperator::options();
     }
 
-    private function getFieldTypeData(Get $get): ?object
+    protected function getFieldTypeData(Get $get): ?object
     {
         $fieldCode = $get('field_code');
         if (blank($fieldCode)) {
@@ -344,7 +344,7 @@ final class VisibilityComponent extends Component
         );
     }
 
-    private function getCustomField(string $fieldCode, Get $get): ?CustomField
+    protected function getCustomField(string $fieldCode, Get $get): ?CustomField
     {
         $entityType = $this->getEntityType($get);
         if (blank($entityType)) {
@@ -359,20 +359,20 @@ final class VisibilityComponent extends Component
         }, null);
     }
 
-    private function getEntityType(Get $get): ?string
+    protected function getEntityType(Get $get): ?string
     {
         return $get('../../../../entity_type')
             ?? request('entityType')
             ?? request()->route('entityType');
     }
 
-    private function resetConditionValues(Get $get, Set $set): void
+    protected function resetConditionValues(Get $get, Set $set): void
     {
         $this->clearAllValueFields($set);
         $set('operator', array_key_first($this->getCompatibleOperators($get)));
     }
 
-    private function clearAllValueFields(Set $set): void
+    protected function clearAllValueFields(Set $set): void
     {
         $set('value', null);
         $set('text_value', null);
@@ -381,7 +381,7 @@ final class VisibilityComponent extends Component
         $set('multiple_values', []);
     }
 
-    private function isContainsOperator(?string $operator): bool
+    protected function isContainsOperator(?string $operator): bool
     {
         return in_array($operator, [
             VisibilityOperator::CONTAINS->value,

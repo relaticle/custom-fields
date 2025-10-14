@@ -6,7 +6,7 @@ use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Database\Eloquent\Model;
 
-final class InfolistContainer extends Grid
+class InfolistContainer extends Grid
 {
     private Model|string|null $explicitModel = null;
 
@@ -75,7 +75,7 @@ final class InfolistContainer extends Grid
     /**
      * @return array<int, Field>
      */
-    private function generateSchema(): array
+    protected function generateSchema(): array
     {
         // Inline priority: explicit ?? record ?? model class
         $model = $this->explicitModel ?? $this->getRecord() ?? $this->getModel();

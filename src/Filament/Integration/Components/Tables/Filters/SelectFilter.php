@@ -14,7 +14,7 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\Utils;
 use Throwable;
 
-final class SelectFilter extends AbstractTableFilter
+class SelectFilter extends AbstractTableFilter
 {
     /**
      * @throws Throwable
@@ -50,7 +50,7 @@ final class SelectFilter extends AbstractTableFilter
     /**
      * @throws Throwable
      */
-    private function configureLookup(FilamentSelectFilter $select, string $lookupType): FilamentSelectFilter
+    protected function configureLookup(FilamentSelectFilter $select, string $lookupType): FilamentSelectFilter
     {
         $entity = Entities::getEntity($lookupType);
 

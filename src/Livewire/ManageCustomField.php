@@ -18,7 +18,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Models\CustomField;
 
-final class ManageCustomField extends Component implements HasActions, HasForms
+class ManageCustomField extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
     use InteractsWithForms;
