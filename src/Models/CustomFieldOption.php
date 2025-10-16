@@ -20,6 +20,7 @@ use Relaticle\CustomFields\Models\Scopes\TenantScope;
 /**
  * @property int $id
  * @property ?string $name
+ * @property ?string $value
  * @property ?int $sort_order
  * @property CustomFieldOptionSettingsData $settings
  * @property int $custom_field_id
@@ -72,6 +73,7 @@ class CustomFieldOption extends Model
     protected $visible = [
         'id',
         'name',
+        'value',
         'settings',
         'sort_order',
         'custom_field_id',
@@ -101,6 +103,17 @@ class CustomFieldOption extends Model
                 // Value is not encrypted, return as-is
                 return Crypt::decryptString($value);
             }
+        );
+    }
+
+    /**
+     * Return value if it exists, otherwise fallback to id for backward compatibility.
+     * This allows pluck('name', 'id') to work with value-based options.
+     */
+    protected function id(): Attribute
+    {
+        return Attribute::make(
+            get: fn (int $value): int|string => $this->attributes['value'] ?? $value
         );
     }
 

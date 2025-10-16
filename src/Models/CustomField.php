@@ -39,6 +39,7 @@ use Spatie\LaravelData\DataCollection;
  * @property int $sort_order
  * @property bool $active
  * @property bool $system_defined
+ * @property bool $uses_entity_column
  * @property FieldTypeData $typeData
  * @property CustomFieldWidth $width
  *
@@ -115,6 +116,7 @@ class CustomField extends Model
             'validation_rules' => DataCollection::class.':'.ValidationRuleData::class.',default',
             'active' => 'boolean',
             'system_defined' => 'boolean',
+            'uses_entity_column' => 'boolean',
             'settings' => CustomFieldSettingsData::class.':default',
         ];
     }
@@ -161,6 +163,14 @@ class CustomField extends Model
         return $this->system_defined === true;
     }
 
+    /**
+     * Determine if the field saves to entity column instead of custom_field_values.
+     */
+    public function usesEntityColumn(): bool
+    {
+        return $this->uses_entity_column === true;
+    }
+
     public function getValueColumn(): string
     {
         return CustomFields::newValueModel()::getValueColumn($this->type);
@@ -168,6 +178,11 @@ class CustomField extends Model
 
     public function getFieldName(): string
     {
+        // Entity column fields are saved directly to model columns, not under custom_fields
+        if ($this->usesEntityColumn()) {
+            return $this->code;
+        }
+
         return 'custom_fields.'.$this->code;
     }
 }

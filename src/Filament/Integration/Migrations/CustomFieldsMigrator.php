@@ -264,10 +264,24 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
         $customField->options()->createMany(
             collect($options)
                 ->map(function (mixed $value, mixed $key) {
-                    $data = [
-                        'name' => $value,
-                        'sort_order' => $key,
-                    ];
+                    // Handle both formats:
+                    // 1. Simple: ['M' => 'Male', 'F' => 'Female']
+                    // 2. Detailed: [['value' => 'M', 'label' => 'Male'], ...]
+                    if (is_array($value) && isset($value['value'], $value['label'])) {
+                        // Detailed format
+                        $data = [
+                            'name' => $value['label'],
+                            'value' => $value['value'],
+                            'sort_order' => is_int($key) ? $key : 0,
+                        ];
+                    } else {
+                        // Simple format: key => value
+                        $data = [
+                            'name' => $value,
+                            'value' => is_string($key) ? $key : null,
+                            'sort_order' => is_int($key) ? $key : 0,
+                        ];
+                    }
 
                     if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
                         $data[config(

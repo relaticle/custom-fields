@@ -34,10 +34,16 @@ final class ValidationService
         $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
 
         // Get field type default rules (always applied for data integrity)
-        $fieldTypeDefaultRules = $this->getFieldTypeDefaultRules($customField->type);
+        $fieldTypeDefaultRules = $this->getFieldTypeDefaultRules($customField->type, $customField);
+
+        // For fields that use entity column, skip database constraint rules
+        // since they save to model columns with their own types
+        if ($customField->usesEntityColumn()) {
+            return $this->combineRules($fieldTypeDefaultRules, $userRules);
+        }
 
         // Get database constraint rules based on storage column
-        $isEncrypted = $customField->settings->encrypted ?? false;
+        $isEncrypted   = $customField->settings->encrypted ?? false;
         $databaseRules = $this->getDatabaseValidationRules($customField->type, $isEncrypted);
 
         // Merge all rule types: field defaults + user rules + database constraints
@@ -53,7 +59,8 @@ final class ValidationService
     public function isRequired(CustomField $customField): bool
     {
         return $customField->validation_rules->toCollection()
-            ->contains('name', ValidationRule::REQUIRED->value);
+            ->contains('name', ValidationRule::REQUIRED->value)
+        ;
     }
 
     /**
@@ -70,21 +77,31 @@ final class ValidationService
         }
 
         return $rules->toCollection()
+            ->filter(function (ValidationRuleData $ruleData) use ($customField): bool {
+                // For choice fields using entity columns, filter out numeric/integer rules
+                // since these fields store enum values (strings) not integer IDs
+                if ($customField->usesEntityColumn() && $customField->isChoiceField()) {
+                    return ! in_array($ruleData->name, ['numeric', 'integer']);
+                }
+
+                return true;
+            })
             ->map(function (ValidationRuleData $ruleData) use ($customField): string {
                 if ($ruleData->parameters === []) {
                     return $ruleData->name;
                 }
 
-                // For choice fields with IN or NOT_IN rules, convert option names to IDs
+                // For choice fields with IN or NOT_IN rules, convert option names to IDs/values
                 if ($customField->isChoiceField() && in_array($ruleData->name, ['in', 'not_in'])) {
                     $parameters = $this->convertOptionNamesToIds($ruleData->parameters, $customField);
 
-                    return $ruleData->name.':'.implode(',', $parameters);
+                    return $ruleData->name . ':' . implode(',', $parameters);
                 }
 
-                return $ruleData->name.':'.implode(',', $ruleData->parameters);
+                return $ruleData->name . ':' . implode(',', $ruleData->parameters);
             })
-            ->toArray();
+            ->toArray()
+        ;
     }
 
     /**
@@ -120,7 +137,7 @@ final class ValidationService
      * @param  array<int, string>  $secondaryRules  Rules that are overridden by primary rules
      * @return array<int, string> Combined rules
      */
-    private function combineRules(array $primaryRules, array $secondaryRules): array
+    protected function combineRules(array $primaryRules, array $secondaryRules): array
     {
         // Extract rule names (without parameters) from primary rules
         $primaryRuleNames = array_map(fn (string $rule): string => explode(':', $rule, 2)[0], $primaryRules);
@@ -166,18 +183,25 @@ final class ValidationService
      * 2. Field type definition's defaultValidationRules
      *
      * @param  string  $fieldType  The field type
+     * @param  CustomField  $customField  The custom field for context
      * @return array<int, string> Array of default validation rules
      */
-    private function getFieldTypeDefaultRules(string $fieldType): array
+    private function getFieldTypeDefaultRules(string $fieldType, CustomField $customField): array
     {
         // Get from field type definition's defaultValidationRules
-        $fieldTypeManager = app(FieldManager::class);
+        $fieldTypeManager  = app(FieldManager::class);
         $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($fieldType);
 
         if ($fieldTypeInstance) {
             $configurator = $fieldTypeInstance->configure();
+            $rules        = $configurator->getDefaultValidationRules();
 
-            return $configurator->getDefaultValidationRules();
+            // For choice fields using entity columns, filter out numeric/integer rules
+            if ($customField->usesEntityColumn() && $customField->isChoiceField()) {
+                $rules = array_filter($rules, fn (string $rule): bool => ! in_array(explode(':', $rule, 2)[0], ['numeric', 'integer']));
+            }
+
+            return $rules;
         }
 
         return [];
@@ -203,7 +227,7 @@ final class ValidationService
         $mergedRules = $this->combineRules($mergedRules, $userRules);
 
         // Apply database constraint rules using existing logic
-        $columnName = CustomFieldValue::getValueColumn($fieldType);
+        $columnName    = CustomFieldValue::getValueColumn($fieldType);
         $dbConstraints = DatabaseFieldConstraints::getConstraintsForColumn($columnName);
 
         if ($dbConstraints !== null && $dbConstraints !== []) {

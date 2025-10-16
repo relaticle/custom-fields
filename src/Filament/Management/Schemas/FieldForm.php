@@ -42,22 +42,57 @@ class FieldForm implements FormInterface
     public static function schema(bool $withOptionsRelationship = true): array
     {
         $optionsRepeater = Repeater::make('options')
-            ->table([
-                TableColumn::make('Color')->width('150px')->hiddenHeaderLabel(),
-                TableColumn::make('Name')->hiddenHeaderLabel(),
-            ])
-            ->schema([
-                ColorPicker::make('settings.color')
-                    ->columnSpan(3)
-                    ->hexColor()
-                    ->visible(
-                        fn (
-                            Get $get
-                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
-                            $get('../../settings.enable_option_colors')
-                    ),
-                TextInput::make('name')->required()->columnSpan(9)->distinct(),
-            ])
+            ->table(function (Get $get): array {
+                $hasColors = FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
+                    $get('settings.enable_option_colors');
+
+                $columns = [];
+
+                if ($hasColors) {
+                    $columns[] = TableColumn::make('Color')->width('100px');
+                }
+
+                if (! $hasColors) {
+                    $columns[] = TableColumn::make('Value')->width('150px');
+                }
+
+                $columns[] = TableColumn::make('Name');
+
+                return $columns;
+            })
+            ->schema(function (Get $get): array {
+                $hasColors = FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
+                    $get('settings.enable_option_colors');
+
+                $fields = [];
+
+                if ($hasColors) {
+                    $fields[] = ColorPicker::make('settings.color')
+                        ->hexColor()
+                        ->label('Color')
+                        ->columnSpan(2)
+                    ;
+                } else {
+                    $fields[] = TextInput::make('value')
+                        ->label('Value')
+                        ->placeholder('M')
+                        ->distinct()
+                        ->disabled(fn (Get $get): bool => (bool) $get('../../uses_entity_column'))
+                        ->columnSpan(3)
+                    ;
+                }
+
+                $fields[] = TextInput::make('name')
+                    ->required()
+                    ->label('Name')
+                    ->placeholder('Male')
+                    ->distinct()
+                    ->disabled(fn (Get $get): bool => (bool) $get('../../uses_entity_column'))
+                    ->columnSpan($hasColors ? 10 : 9)
+                ;
+
+                return $fields;
+            })
             ->columns(12)
             ->columnSpanFull()
             ->requiredUnless('type', function (callable $get) {
@@ -81,6 +116,7 @@ class FieldForm implements FormInterface
                     && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
                     && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
             )
+            ->disabled(fn (Get $get): bool => (bool) $get('uses_entity_column'))
             ->mutateRelationshipDataBeforeCreateUsing(function (
                 array $data
             ): array {
@@ -89,7 +125,8 @@ class FieldForm implements FormInterface
                 }
 
                 return $data;
-            });
+            })
+        ;
 
         if ($withOptionsRelationship) {
             $optionsRepeater = $optionsRepeater->relationship();
@@ -156,11 +193,6 @@ class FieldForm implements FormInterface
                             ->live(onBlur: true)
                             ->required()
                             ->maxLength(50)
-                            ->disabled(
-                                fn (
-                                    ?CustomField $record
-                                ): bool => (bool) $record?->system_defined
-                            )
                             ->unique(
                                 table: CustomFields::customFieldModel(),
                                 column: 'name',
@@ -257,38 +289,21 @@ class FieldForm implements FormInterface
                             ->columnSpanFull()
                             ->columns(2)
                             ->schema([
-                                // Visibility settings
-                                Toggle::make('settings.visible_in_list')
+                                // Storage settings
+                                Toggle::make('uses_entity_column')
                                     ->inline(false)
                                     ->live()
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.visible_in_list'
-                                        )
+                                    ->label('Store in Entity Column')
+                                    ->helperText('When enabled, this field will store its value directly in a column on the entity model instead of the custom_field_values table. The column name must match the field code.')
+                                    ->visible(
+                                        fn (Get $get): bool => $get('type') !== null
                                     )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        ?Model $record
-                                    ): void {
-                                        if (is_null($record)) {
-                                            $component->state(true);
-                                        }
-                                    }),
-                                Toggle::make('settings.visible_in_view')
-                                    ->inline(false)
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.visible_in_view'
-                                        )
+                                    ->disabled(
+                                        fn (
+                                            ?CustomField $record
+                                        ): bool => (bool) $record?->exists
                                     )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        ?Model $record
-                                    ): void {
-                                        if (is_null($record)) {
-                                            $component->state(true);
-                                        }
-                                    }),
+                                    ->default(false),
                                 Toggle::make('settings.list_toggleable_hidden')
                                     ->inline(false)
                                     ->label(
@@ -311,10 +326,42 @@ class FieldForm implements FormInterface
                                         Toggle $component,
                                         ?Model $record
                                     ): void {
-                                        if (is_null($record)) {
+                                        if ($record === null) {
                                             $component->state(
                                                 FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT)
                                             );
+                                        }
+                                    }),
+                                // Visibility settings
+                                Toggle::make('settings.visible_in_list')
+                                    ->inline(false)
+                                    ->live()
+                                    ->label(
+                                        __(
+                                            'custom-fields::custom-fields.field.form.visible_in_list'
+                                        )
+                                    )
+                                    ->afterStateHydrated(function (
+                                        Toggle $component,
+                                        ?Model $record
+                                    ): void {
+                                        if ($record === null) {
+                                            $component->state(true);
+                                        }
+                                    }),
+                                Toggle::make('settings.visible_in_view')
+                                    ->inline(false)
+                                    ->label(
+                                        __(
+                                            'custom-fields::custom-fields.field.form.visible_in_view'
+                                        )
+                                    )
+                                    ->afterStateHydrated(function (
+                                        Toggle $component,
+                                        ?Model $record
+                                    ): void {
+                                        if ($record === null) {
+                                            $component->state(true);
                                         }
                                     }),
                                 // Data settings
@@ -339,7 +386,7 @@ class FieldForm implements FormInterface
                                         Toggle $component,
                                         mixed $state
                                     ): void {
-                                        if (is_null($state)) {
+                                        if ($state === null) {
                                             $component->state(false);
                                         }
                                     }),
@@ -381,7 +428,8 @@ class FieldForm implements FormInterface
                                     ->visible(
                                         fn (
                                             Get $get
-                                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
+                                        ): bool => ! $get('uses_entity_column') &&
+                                            FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
                                             in_array((string) $get('type'), [
                                                 'select',
                                                 'multi_select',
@@ -410,7 +458,7 @@ class FieldForm implements FormInterface
                                 'options' => __(
                                     'custom-fields::custom-fields.field.form.options_lookup_type.options'
                                 ),
-                                'lookup' => __(
+                                'lookup'  => __(
                                     'custom-fields::custom-fields.field.form.options_lookup_type.lookup'
                                 ),
                             ])

@@ -98,9 +98,20 @@ trait UsesCustomFields
 
     public function getCustomFieldValue(CustomField $customField): mixed
     {
+        // If field uses entity column, read directly from model
+        if ($customField->usesEntityColumn()) {
+            $value = $this->getAttribute($customField->code);
+
+            // For choice fields with options, we need to return the value as-is
+            // since the form components will use it with pluck('name', 'id')
+            // where 'id' is actually the 'value' thanks to our accessor
+            return $value;
+        }
+
         $fieldValue = $this->customFieldValues
             ->firstWhere('custom_field_id', $customField->getKey())
-            ?->getValue();
+            ?->getValue()
+        ;
 
         if (empty($fieldValue)) {
             return $fieldValue;
@@ -117,6 +128,11 @@ trait UsesCustomFields
 
     public function saveCustomFieldValue(CustomField $customField, mixed $value, ?Model $tenant = null): void
     {
+        // Entity column fields should not use this method
+        if ($customField->usesEntityColumn()) {
+            return;
+        }
+
         $data = ['custom_field_id' => $customField->getKey()];
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
@@ -163,7 +179,11 @@ trait UsesCustomFields
     {
         $this->customFields()->each(function (CustomField $customField) use ($customFields, $tenant): void {
             $value = $customFields[$customField->code] ?? null;
-            $this->saveCustomFieldValue($customField, $value, $tenant);
+
+            // Skip entity column fields - they're already saved as regular model attributes
+            if (! $customField->usesEntityColumn()) {
+                $this->saveCustomFieldValue($customField, $value, $tenant);
+            }
         });
     }
 }

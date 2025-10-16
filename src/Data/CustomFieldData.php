@@ -27,6 +27,7 @@ final class CustomFieldData extends Data
         public CustomFieldSectionData $section,
         public bool $active = true,
         public bool $systemDefined = false,
+        public bool $usesEntityColumn = false,
         public CustomFieldWidth $width = CustomFieldWidth::_100,
         public ?string $entityType = null,
         public ?array $options = null,
