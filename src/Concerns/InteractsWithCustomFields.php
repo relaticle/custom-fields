@@ -34,7 +34,6 @@ trait InteractsWithCustomFields
         return $table->modifyQueryUsing(function (Builder $query): void {
             $query->with('customFieldValues.customField');
         })
-            ->deferFilters(false)
             ->pushColumns($columns)
             ->pushFilters($filters);
     }
