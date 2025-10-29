@@ -31,6 +31,7 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\CustomFieldValid
 use Relaticle\CustomFields\Filament\Management\Forms\Components\TypeField;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Services\TenantContextService;
 
 class FieldForm implements FormInterface
 {
@@ -121,7 +122,7 @@ class FieldForm implements FormInterface
                 array $data
             ): array {
                 if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                    $data[config('custom-fields.database.column_names.tenant_foreign_key')] = Filament::getTenant()?->getKey();
+                    $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
                 }
 
                 return $data;
@@ -208,7 +209,7 @@ class FieldForm implements FormInterface
                                             config(
                                                 'custom-fields.database.column_names.tenant_foreign_key'
                                             ),
-                                            Filament::getTenant()?->getKey()
+                                            TenantContextService::getCurrentTenantId()
                                         )
                                     )
                             )
@@ -268,7 +269,7 @@ class FieldForm implements FormInterface
                                             config(
                                                 'custom-fields.database.column_names.tenant_foreign_key'
                                             ),
-                                            Filament::getTenant()?->getKey()
+                                            TenantContextService::getCurrentTenantId()
                                         )
                                     )
                             )

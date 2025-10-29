@@ -145,7 +145,9 @@ class CustomField extends Model
     public function options(): HasMany
     {
         /** @var HasMany<CustomFieldOption, self> */
-        return $this->hasMany(CustomFields::optionModel());
+        return $this->hasMany(CustomFields::optionModel())
+            ->with('customField')
+            ->orderBy('sort_order');
     }
 
     public function typeData(): Attribute

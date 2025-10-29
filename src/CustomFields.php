@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields;
 
+use Closure;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Services\TenantContextService;
 
 final class CustomFields
 {
@@ -149,5 +151,26 @@ final class CustomFields
         static::$sectionModel = $model;
 
         return new self;
+    }
+
+    /**
+     * Register a custom tenant resolver callback.
+     *
+     * This allows developers to provide their own tenant resolution logic
+     * when they extend the CustomField models with custom tenant handling.
+     *
+     * The resolver will be called whenever the package needs to determine
+     * the current tenant context (validation, queries, scopes, etc.).
+     *
+     * Example:
+     * ```
+     * CustomFields::resolveTenantUsing(fn() => auth()->user()?->company_id);
+     * ```
+     *
+     * @param  Closure(): (int|string|null)  $callback
+     */
+    public static function resolveTenantUsing(Closure $callback): void
+    {
+        TenantContextService::setTenantResolver($callback);
     }
 }
