@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Management\Schemas;
 
 use Exception;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -371,7 +370,7 @@ class FieldForm implements FormInterface
                                     ->visible(
                                         fn (
                                             Get $get
-                                        ): bool => CustomFieldsType::getFieldType($get('type'))->searchable
+                                        ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
                                     )
                                     ->disabled(
                                         fn (Get $get): bool => $get(

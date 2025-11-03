@@ -7,8 +7,4 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class CustomFieldSectionSettingsData extends Data
-{
-    public function __construct(
-    ) {}
-}
+class CustomFieldSectionSettingsData extends Data {}

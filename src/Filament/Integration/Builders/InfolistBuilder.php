@@ -49,7 +49,7 @@ final class InfolistBuilder extends BaseBuilder
 
         $createField = fn (CustomField $customField) => $fieldInfolistsFactory->create($customField)
             ->hiddenLabel($this->hiddenLabels)
-            ->when($this->visibleWhenFilled, fn (Entry $field): Entry => $field->visible(fn (mixed $state) => filled($state)));
+            ->when($this->visibleWhenFilled, fn (Entry $field): Entry => $field->visible(fn (mixed $state): bool => filled($state)));
 
         $getVisibleFields = fn (CustomFieldSection $section) => $backendVisibilityService
             ->getVisibleFields($this->model, $section->fields)

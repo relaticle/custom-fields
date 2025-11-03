@@ -38,7 +38,7 @@ trait ConfiguresColorOptions
     protected function getColoredOptions(CustomField $customField): array
     {
         return $customField->options
-            ->filter(fn (mixed $option): bool => $option->settings->color ?? false)
+            ->filter(fn (mixed $option): bool => filled($option->settings->color ?? null))
             ->mapWithKeys(fn (mixed $option): array => [$option->id => $option->name])
             ->all();
     }
@@ -51,7 +51,7 @@ trait ConfiguresColorOptions
     protected function getColorMapping(CustomField $customField): array
     {
         return $customField->options
-            ->filter(fn (mixed $option): bool => $option->settings->color ?? false)
+            ->filter(fn (mixed $option): bool => filled($option->settings->color ?? null))
             ->mapWithKeys(fn (mixed $option): array => [$option->id => $option->settings->color])
             ->all();
     }

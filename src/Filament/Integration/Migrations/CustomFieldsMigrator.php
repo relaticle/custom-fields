@@ -263,7 +263,7 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
     ): void {
         $customField->options()->createMany(
             collect($options)
-                ->map(function (mixed $value, mixed $key) {
+                ->map(function (mixed $value, mixed $key): array {
                     // Handle both formats:
                     // 1. Simple: ['M' => 'Male', 'F' => 'Female']
                     // 2. Detailed: [['value' => 'M', 'label' => 'Male'], ...]

@@ -6,7 +6,6 @@ namespace Relaticle\CustomFields\Filament\Management\Pages;
 
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Size;
@@ -25,6 +24,7 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\Utils;
 
 class CustomFieldsManagementPage extends Page
@@ -67,7 +67,7 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function currentEntityLabel(): string
     {
-        if ($this->currentEntityType === null || $this->currentEntityType === '' || $this->currentEntityType === '0') {
+        if (in_array($this->currentEntityType, [null, '', '0'], true)) {
             return '';
         }
 
@@ -79,7 +79,7 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function currentEntityIcon(): string
     {
-        if ($this->currentEntityType === null || $this->currentEntityType === '' || $this->currentEntityType === '0') {
+        if (in_array($this->currentEntityType, [null, '', '0'], true)) {
             return 'heroicon-o-document';
         }
 
@@ -136,7 +136,7 @@ class CustomFieldsManagementPage extends Page
     private function storeSection(array $data): CustomFieldSection
     {
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-            $data[config('custom-fields.database.column_names.tenant_foreign_key')] = Filament::getTenant()?->getKey();
+            $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
         }
 
         $data['type'] ??= CustomFieldSectionType::SECTION->value;

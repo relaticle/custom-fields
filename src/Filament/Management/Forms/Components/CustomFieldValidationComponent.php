@@ -215,7 +215,7 @@ final class CustomFieldValidationComponent extends Component
                 ) && $rule->value !== $currentRuleName
             )
             ->mapWithKeys(
-                fn (ValidationRule $rule) => [
+                fn (ValidationRule $rule): array => [
                     $rule->value => $rule->getLabel(),
                 ]
             )
@@ -249,7 +249,7 @@ final class CustomFieldValidationComponent extends Component
 
         $set('parameters', []);
 
-        if ($state === null || $state === '' || $state === '0') {
+        if (in_array($state, [null, '', '0'], true)) {
             return;
         }
 

@@ -159,7 +159,7 @@ final class EntityCollection extends Collection
      */
     public function toOptions(bool $usePlural = true): array
     {
-        return $this->mapWithKeys(fn (EntityConfigurationData $entity) => [
+        return $this->mapWithKeys(fn (EntityConfigurationData $entity): array => [
             $entity->getAlias() => $usePlural
                 ? $entity->getLabelPlural()
                 : $entity->getLabelSingular(),
@@ -171,7 +171,7 @@ final class EntityCollection extends Collection
      */
     public function toDetailedOptions(): array
     {
-        return $this->mapWithKeys(fn (EntityConfigurationData $entity) => [
+        return $this->mapWithKeys(fn (EntityConfigurationData $entity): array => [
             $entity->getAlias() => [
                 'label' => $entity->getLabelPlural(),
                 'icon' => $entity->getIcon(),

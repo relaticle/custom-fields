@@ -161,7 +161,7 @@ enum VisibilityOperator: string
     public static function options(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn (self $operator) => [$operator->value => $operator->getLabel()])
+            ->mapWithKeys(fn (self $operator): array => [$operator->value => $operator->getLabel()])
             ->toArray();
     }
 

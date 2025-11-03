@@ -16,6 +16,7 @@ use Filament\Support\SupportServiceProvider;
 use Filament\Tables\TablesServiceProvider;
 use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Kirschbaum\PowerJoins\PowerJoinsServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
@@ -43,6 +44,12 @@ class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // Clear booted models to ensure event listeners are properly registered
+        // This fixes an issue where models booted during test environment setup
+        // don't have their Eloquent events properly wired to the event dispatcher
+        Post::clearBootedModels();
+        User::clearBootedModels();
+
         Factory::guessFactoryNamesUsing(
             fn (string $modelName): string => match ($modelName) {
                 User::class => UserFactory::class,
@@ -66,6 +73,7 @@ class TestCase extends BaseTestCase
             InfolistsServiceProvider::class,
             LivewireServiceProvider::class,
             NotificationsServiceProvider::class,
+            PowerJoinsServiceProvider::class,
             SchemasServiceProvider::class,
             SupportServiceProvider::class,
             TablesServiceProvider::class,
@@ -141,7 +149,7 @@ class TestCase extends BaseTestCase
 
         // Fix Spatie Laravel Data configuration for testing
         config()->set('data.throw_when_max_depth_reached', false);
-        config()->set('data.max_transformation_depth', null);
+        config()->set('data.max_transformation_depth');
         config()->set('data.validation_strategy', 'only_requests');
     }
 

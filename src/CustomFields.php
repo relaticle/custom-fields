@@ -70,7 +70,7 @@ final class CustomFields
      */
     public static function valueModel(): string
     {
-        return static::$valueModel;
+        return self::$valueModel;
     }
 
     /**
@@ -88,7 +88,7 @@ final class CustomFields
      */
     public static function useValueModel(string $model): static
     {
-        static::$valueModel = $model;
+        self::$valueModel = $model;
 
         return new self;
     }
@@ -100,7 +100,7 @@ final class CustomFields
      */
     public static function optionModel(): string
     {
-        return static::$optionModel;
+        return self::$optionModel;
     }
 
     /**
@@ -118,7 +118,7 @@ final class CustomFields
      */
     public static function useOptionModel(string $model): static
     {
-        static::$optionModel = $model;
+        self::$optionModel = $model;
 
         return new self;
     }
@@ -130,7 +130,7 @@ final class CustomFields
      */
     public static function sectionModel(): string
     {
-        return static::$sectionModel;
+        return self::$sectionModel;
     }
 
     /**
@@ -148,7 +148,7 @@ final class CustomFields
      */
     public static function useSectionModel(string $model): static
     {
-        static::$sectionModel = $model;
+        self::$sectionModel = $model;
 
         return new self;
     }

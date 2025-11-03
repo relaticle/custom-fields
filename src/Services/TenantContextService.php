@@ -23,7 +23,7 @@ final class TenantContextService
      * Set the tenant ID in the context.
      * This will persist across queue jobs and other async operations.
      */
-    public static function setTenantId(null | int | string $tenantId): void
+    public static function setTenantId(null|int|string $tenantId): void
     {
         if ($tenantId !== null) {
             Context::addHidden(self::TENANT_ID_KEY, $tenantId);
@@ -60,10 +60,10 @@ final class TenantContextService
      * 3. Filament tenant (works in web requests)
      * 4. null (no tenant)
      */
-    public static function getCurrentTenantId(): null | int | string
+    public static function getCurrentTenantId(): null|int|string
     {
         // First priority: custom resolver
-        if (self::$tenantResolver !== null) {
+        if (self::$tenantResolver instanceof Closure) {
             return (self::$tenantResolver)();
         }
 
@@ -75,6 +75,7 @@ final class TenantContextService
 
         // Third priority: Filament tenant (works in web requests)
         $filamentTenant = Filament::getTenant();
+
         return $filamentTenant?->getKey();
     }
 
@@ -93,7 +94,7 @@ final class TenantContextService
     /**
      * Execute a callback with a specific tenant context.
      */
-    public static function withTenant(null | int | string $tenantId, callable $callback): mixed
+    public static function withTenant(null|int|string $tenantId, callable $callback): mixed
     {
         $originalTenantId = self::getCurrentTenantId();
 

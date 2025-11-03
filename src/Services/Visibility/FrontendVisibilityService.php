@@ -11,7 +11,6 @@ use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Models\CustomFieldOption;
 
 /**
  * Frontend Visibility Service
@@ -157,7 +156,7 @@ final readonly class FrontendVisibilityService
             $targetField
         );
 
-        if ($expression === null || $expression === '' || $expression === '0') {
+        if (in_array($expression, [null, '', '0'], true)) {
             return null;
         }
 
@@ -467,7 +466,7 @@ final readonly class FrontendVisibilityService
         return rescue(function () use ($value, $targetField) {
             if (is_string($value) && $targetField->options->isNotEmpty()) {
                 return $targetField->options->first(
-                    fn (CustomFieldOption $opt): bool => Str::lower(trim((string) $opt->name)) ===
+                    fn (mixed $opt): bool => Str::lower(trim((string) $opt->name)) ===
                         Str::lower(trim($value))
                 )->id ?? $value;
             }

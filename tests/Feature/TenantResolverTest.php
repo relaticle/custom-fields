@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Context;
 use Relaticle\CustomFields\CustomFields;
-use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
@@ -24,7 +22,7 @@ describe('Custom Tenant Resolver', function (): void {
     it('allows registering a custom tenant resolver', function (): void {
         $expectedTenantId = 42;
 
-        CustomFields::resolveTenantUsing(fn () => $expectedTenantId);
+        CustomFields::resolveTenantUsing(fn (): int => $expectedTenantId);
 
         expect(TenantContextService::getCurrentTenantId())->toBe($expectedTenantId);
     });
@@ -37,7 +35,7 @@ describe('Custom Tenant Resolver', function (): void {
         TenantContextService::setTenantId($contextTenantId);
 
         // Register custom resolver
-        CustomFields::resolveTenantUsing(fn () => $customTenantId);
+        CustomFields::resolveTenantUsing(fn (): int => $customTenantId);
 
         // Custom resolver should win
         expect(TenantContextService::getCurrentTenantId())->toBe($customTenantId);
@@ -56,7 +54,7 @@ describe('Custom Tenant Resolver', function (): void {
     });
 
     it('can clear custom resolver', function (): void {
-        CustomFields::resolveTenantUsing(fn () => 999);
+        CustomFields::resolveTenantUsing(fn (): int => 999);
 
         expect(TenantContextService::getCurrentTenantId())->toBe(999);
 
@@ -85,7 +83,7 @@ describe('Tenant Resolver with Context Service', function (): void {
     it('resolver can access closure variables', function (): void {
         $companyId = 999;
 
-        CustomFields::resolveTenantUsing(fn () => $companyId);
+        CustomFields::resolveTenantUsing(fn (): int => $companyId);
 
         expect(TenantContextService::getCurrentTenantId())->toBe($companyId);
     });
@@ -94,33 +92,33 @@ describe('Tenant Resolver with Context Service', function (): void {
         $tenant1 = 111;
         $tenant2 = 222;
 
-        CustomFields::resolveTenantUsing(fn () => $tenant1);
+        CustomFields::resolveTenantUsing(fn (): int => $tenant1);
         expect(TenantContextService::getCurrentTenantId())->toBe($tenant1);
 
-        CustomFields::resolveTenantUsing(fn () => $tenant2);
+        CustomFields::resolveTenantUsing(fn (): int => $tenant2);
         expect(TenantContextService::getCurrentTenantId())->toBe($tenant2);
     });
 
     it('resolver can return string tenant IDs', function (): void {
         $tenantUuid = 'org_12345';
 
-        CustomFields::resolveTenantUsing(fn () => $tenantUuid);
+        CustomFields::resolveTenantUsing(fn (): string => $tenantUuid);
 
         expect(TenantContextService::getCurrentTenantId())->toBe($tenantUuid);
     });
 
     it('resolver can return null for no tenant', function (): void {
-        CustomFields::resolveTenantUsing(fn () => null);
+        CustomFields::resolveTenantUsing(fn (): null => null);
 
         expect(TenantContextService::getCurrentTenantId())->toBeNull();
     });
 
     it('handles resolver exceptions gracefully', function (): void {
-        CustomFields::resolveTenantUsing(function () {
-            throw new \RuntimeException('Tenant resolution failed');
+        CustomFields::resolveTenantUsing(function (): void {
+            throw new RuntimeException('Tenant resolution failed');
         });
 
-        expect(fn () => TenantContextService::getCurrentTenantId())
-            ->toThrow(\RuntimeException::class, 'Tenant resolution failed');
+        expect(fn (): int|string|null => TenantContextService::getCurrentTenantId())
+            ->toThrow(RuntimeException::class, 'Tenant resolution failed');
     });
 });

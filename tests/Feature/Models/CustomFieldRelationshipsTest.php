@@ -23,16 +23,18 @@ describe('CustomField Relationships', function (): void {
 
         // Access customField on each option - should not trigger new queries
         // if eager loading is working correctly
-        $options->each(fn (CustomFieldOption $option): ?string => $option->customField->name);
+        $options->each(fn (CustomFieldOption $option): ?string => $option->customField?->name);
 
         $queries = DB::getQueryLog();
 
         // Assert
-        // Should only be 2 queries:
+        // Should be 3 queries:
         // 1. SELECT * FROM custom_fields WHERE id = ?
         // 2. SELECT * FROM custom_field_options WHERE custom_field_id = ? ORDER BY sort_order
-        //    (with eager load of customField relationship)
-        expect($queries)->toHaveCount(2);
+        // 3. SELECT * FROM custom_fields WHERE id IN (?) AND active = ? (eager load customField on options)
+        //    Note: The third query is due to eager loading the customField relationship on options
+        //    with the CustomFieldsActivableScope applied
+        expect($queries)->toHaveCount(3);
     });
 
     it('orders options by sort_order when accessing them', function (): void {
@@ -43,23 +45,23 @@ describe('CustomField Relationships', function (): void {
         CustomFieldOption::factory()->create([
             'custom_field_id' => $customField->id,
             'sort_order' => 3,
-            'label' => 'Third',
+            'name' => 'Third',
         ]);
         CustomFieldOption::factory()->create([
             'custom_field_id' => $customField->id,
             'sort_order' => 1,
-            'label' => 'First',
+            'name' => 'First',
         ]);
         CustomFieldOption::factory()->create([
             'custom_field_id' => $customField->id,
             'sort_order' => 2,
-            'label' => 'Second',
+            'name' => 'Second',
         ]);
 
         // Act
         $options = $customField->fresh()->options;
 
         // Assert
-        expect($options->pluck('label')->toArray())->toBe(['First', 'Second', 'Third']);
+        expect($options->pluck('name')->toArray())->toBe(['First', 'Second', 'Third']);
     });
 });

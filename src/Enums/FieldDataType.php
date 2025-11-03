@@ -87,7 +87,7 @@ enum FieldDataType: string
     public function getCompatibleOperatorOptions(): array
     {
         return collect($this->getCompatibleOperators())
-            ->mapWithKeys(fn (VisibilityOperator $operator) => [$operator->value => $operator->getLabel()])
+            ->mapWithKeys(fn (VisibilityOperator $operator): array => [$operator->value => $operator->getLabel()])
             ->toArray();
     }
 }

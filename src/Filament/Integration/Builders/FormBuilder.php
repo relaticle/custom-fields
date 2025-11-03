@@ -8,9 +8,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldComponentFactory;
-use Relaticle\CustomFields\Filament\Integration\Factories\SectionComponentFactory;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Models\CustomFieldSection;
 
 class FormBuilder extends BaseBuilder
 {
@@ -42,14 +40,21 @@ class FormBuilder extends BaseBuilder
     public function values(): Collection
     {
         $fieldComponentFactory = app(FieldComponentFactory::class);
-        $sectionComponentFactory = app(SectionComponentFactory::class);
 
         $allFields = $this->getFilteredSections()->flatMap(fn (mixed $section) => $section->fields);
         $dependentFieldCodes = $this->getDependentFieldCodes($allFields);
 
-        return $this->getFilteredSections()
-            ->map(fn (CustomFieldSection $section) => $sectionComponentFactory->create($section)->schema(
-                fn () => $section->fields->map(fn (CustomField $customField) => $fieldComponentFactory->create($customField, $dependentFieldCodes, $allFields))->toArray()
-            ));
+        // Return fields directly without Section/Fieldset wrappers
+        // This ensures the flat structure: custom_fields.{field_code}
+        // Note: We skip section grouping to avoid nested paths like custom_fields.{section_code}.{field_code}
+        // which causes issues with Filament v4's child schema nesting behavior.
+        // Visual grouping can be added later using alternative methods if needed.
+        return $allFields->map(
+            fn (CustomField $customField) => $fieldComponentFactory->create(
+                $customField,
+                $dependentFieldCodes,
+                $allFields
+            )
+        );
     }
 }

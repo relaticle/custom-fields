@@ -47,7 +47,7 @@ class CustomFieldSection extends Model
     use HasFactory;
 
     /**
-     * @var array<string>|bool
+     * @var array<string>
      */
     protected $guarded = [];
 

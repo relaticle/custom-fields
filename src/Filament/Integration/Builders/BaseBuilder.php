@@ -82,16 +82,6 @@ abstract class BaseBuilder
      */
     protected function getFilteredSections(): Collection
     {
-        // Use a static cache within the request to prevent duplicate queries
-        static $sectionsCache = [];
-
-        $cacheKey = get_class($this).':'.$this->model::class.':'.
-            hash('xxh128', serialize($this->only).serialize($this->except));
-
-        if (isset($sectionsCache[$cacheKey])) {
-            return $sectionsCache[$cacheKey];
-        }
-
         /** @var Collection<int, CustomFieldSection> $sections */
         $sections = $this->sections
             ->with(['fields' => function (mixed $query): mixed {
@@ -105,16 +95,12 @@ abstract class BaseBuilder
             }])
             ->get();
 
-        $filteredSections = $sections
+        return $sections
             ->map(function (CustomFieldSection $section): CustomFieldSection {
                 $section->setRelation('fields', $section->fields->filter(fn (CustomField $field): bool => $field->typeData !== null));
 
                 return $section;
             })
             ->filter(fn (CustomFieldSection $section) => $section->fields->isNotEmpty());
-
-        $sectionsCache[$cacheKey] = $filteredSections;
-
-        return $filteredSections;
     }
 }

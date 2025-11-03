@@ -164,7 +164,7 @@ enum ValidationRule: string implements HasLabel
      */
     private static function isEmptyRule(mixed $rule): bool
     {
-        return $rule === null || $rule === '' || $rule === '0';
+        return in_array($rule, [null, '', '0'], true);
     }
 
     public static function hasParameterForRule(?string $rule): bool

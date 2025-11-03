@@ -124,8 +124,12 @@ final class FieldManager
         return $this->cachedFieldTypes;
     }
 
-    public function getFieldType(string $fieldType): ?FieldTypeData
+    public function getFieldType(?string $fieldType): ?FieldTypeData
     {
+        if ($fieldType === null) {
+            return null;
+        }
+
         return $this->toCollection()->firstWhere('key', $fieldType);
     }
 

@@ -339,8 +339,7 @@ final class VisibilityComponent extends Component
         }
 
         return rescue(
-            fn () => CustomFieldsType::getFieldType($field->type),
-            null
+            fn () => CustomFieldsType::getFieldType($field->type)
         );
     }
 
@@ -356,7 +355,7 @@ final class VisibilityComponent extends Component
                 ->forMorphEntity($entityType)
                 ->where('code', $fieldCode)
                 ->first();
-        }, null);
+        });
     }
 
     private function getEntityType(Get $get): ?string

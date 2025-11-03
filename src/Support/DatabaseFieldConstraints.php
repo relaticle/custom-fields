@@ -51,7 +51,7 @@ final class DatabaseFieldConstraints
         'float_value' => [
             'max_digits' => 30,
             'max_decimals' => 15,
-            'rules' => ['numeric', 'digits_between:1,30', 'decimal:0,15'],
+            'rules' => ['numeric', 'decimal:0,15'],
         ],
         'json_value' => [
             'max_items' => 500,

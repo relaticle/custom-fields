@@ -77,7 +77,7 @@ class EntityServiceProvider extends ServiceProvider
             return;
         }
 
-        $manager->register(function () use ($entities) {
+        $manager->register(function () use ($entities): array {
             $configurations = [];
 
             foreach ($entities as $alias => $config) {
