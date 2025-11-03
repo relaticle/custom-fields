@@ -30,6 +30,7 @@ class LinkFieldType extends BaseFieldType
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
                 ValidationRule::URL,
+                ValidationRule::REGEX,
                 ValidationRule::STARTS_WITH,
             ]);
     }

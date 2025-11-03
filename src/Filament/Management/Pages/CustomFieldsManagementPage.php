@@ -29,7 +29,7 @@ use Relaticle\CustomFields\Support\Utils;
 
 class CustomFieldsManagementPage extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-m-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-m-document-text';
 
     protected string $view = 'custom-fields::filament.pages.custom-fields-management';
 

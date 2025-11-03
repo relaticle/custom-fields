@@ -536,6 +536,16 @@ dataset('field_type_validation_compatibility', fn (): array => [
         'allowedRules' => ['required', 'min', 'max', 'between', 'regex', 'alpha', 'alpha_num', 'alpha_dash', 'string', 'email', 'starts_with'],
         'disallowedRules' => ['numeric', 'integer', 'boolean', 'array', 'date'],
     ],
+    'textarea_field_rules' => [
+        'fieldType' => 'textarea',
+        'allowedRules' => ['required', 'min', 'max', 'regex'],
+        'disallowedRules' => ['numeric', 'integer', 'boolean', 'array', 'date', 'email'],
+    ],
+    'markdown_editor_field_rules' => [
+        'fieldType' => 'markdown-editor',
+        'allowedRules' => ['required', 'min', 'max', 'regex'],
+        'disallowedRules' => ['numeric', 'integer', 'boolean', 'array', 'date', 'email'],
+    ],
     'number_field_rules' => [
         'fieldType' => 'number',
         'allowedRules' => ['required', 'numeric', 'min', 'max', 'between', 'integer', 'starts_with'],
@@ -573,12 +583,17 @@ dataset('field_type_validation_compatibility', fn (): array => [
     ],
     'rich-editor_field_rules' => [
         'fieldType' => 'rich-editor',
-        'allowedRules' => ['required', 'string', 'min', 'max', 'between', 'starts_with'],
+        'allowedRules' => ['required', 'string', 'min', 'max', 'between', 'regex', 'starts_with'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],
     ],
     'url_field_rules' => [
         'fieldType' => 'link',
-        'allowedRules' => ['required', 'url', 'starts_with'],
+        'allowedRules' => ['required', 'url', 'regex', 'starts_with'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],
+    ],
+    'color_picker_field_rules' => [
+        'fieldType' => 'color-picker',
+        'allowedRules' => ['required', 'regex', 'starts_with'],
+        'disallowedRules' => ['numeric', 'integer', 'boolean', 'array', 'date', 'email'],
     ],
 ]);

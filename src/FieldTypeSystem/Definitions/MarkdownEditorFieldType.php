@@ -31,6 +31,7 @@ class MarkdownEditorFieldType extends BaseFieldType
                 ValidationRule::REQUIRED,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
+                ValidationRule::REGEX,
             ]);
     }
 }

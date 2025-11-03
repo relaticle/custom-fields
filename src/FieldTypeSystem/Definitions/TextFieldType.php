@@ -36,6 +36,7 @@ class TextFieldType extends BaseFieldType
                 ValidationRule::ALPHA_NUM,
                 ValidationRule::ALPHA_DASH,
                 ValidationRule::EMAIL,
+                ValidationRule::REGEX,
                 ValidationRule::STARTS_WITH,
                 ValidationRule::ENDS_WITH,
             ]);

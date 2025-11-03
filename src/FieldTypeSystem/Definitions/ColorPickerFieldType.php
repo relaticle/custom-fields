@@ -29,6 +29,7 @@ class ColorPickerFieldType extends BaseFieldType
             ->priority(90)
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
+                ValidationRule::REGEX,
                 ValidationRule::STARTS_WITH,
             ]);
     }

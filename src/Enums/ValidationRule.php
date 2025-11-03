@@ -130,7 +130,8 @@ enum ValidationRule: string implements HasLabel
             self::SIZE, self::MAX, self::MIN, self::DIGITS, self::DATE_EQUALS,
             self::DATE_FORMAT, self::AFTER, self::AFTER_OR_EQUAL, self::BEFORE,
             self::BEFORE_OR_EQUAL, self::EXISTS, self::UNIQUE, self::GT, self::GTE,
-            self::LT, self::LTE, self::MAX_DIGITS, self::MIN_DIGITS, self::MULTIPLE_OF => 1,
+            self::LT, self::LTE, self::MAX_DIGITS, self::MIN_DIGITS, self::MULTIPLE_OF,
+            self::REGEX, self::NOT_REGEX => 1,
 
             // Default case for any unspecified rules
             default => 0

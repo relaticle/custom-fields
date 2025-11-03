@@ -31,6 +31,7 @@ final class RichEditorFieldType extends BaseFieldType
                 ValidationRule::REQUIRED,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
+                ValidationRule::REGEX,
             ]);
     }
 }

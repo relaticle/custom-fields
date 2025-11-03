@@ -28,7 +28,7 @@ class PostResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Blog';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     protected static ?string $recordTitleAttribute = 'title';
 
