@@ -23,7 +23,7 @@ final class SectionComponentFactory
                 ->columnSpanFull()
                 ->label($customFieldSection->name)
                 ->columns(12),
-            CustomFieldSectionType::HEADLESS => Grid::make(12),
+            CustomFieldSectionType::HEADLESS => Grid::make(12)->columnSpanFull(),
         };
     }
 }
