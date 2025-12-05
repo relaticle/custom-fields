@@ -16,17 +16,17 @@
                     wire:click="$parent.setWidth(fieldId, width)"
                     class="h-6 flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 transition-colors"
                     :class="{
-                    'rounded-l-md': index === 0,
-                    'rounded-r-md': index === widths.length - 1
+                    'rounded-s-md': index === 0,
+                    'rounded-e-md': index === widths.length - 1
                 }"
                 >
                     <div
                         class="h-full w-full border-gray-300 transition-colors duration-200"
                         :class="{
                         'bg-primary-600 hover:bg-primary-600/80': isSelected(width),
-                        'rounded-l-md': index === 0 && isSelected(width),
-                        'rounded-r-md': index === widths.length - 1 && isSelected(width),
-                        'border-r': index !== widths.length - 1
+                        'rounded-s-md': index === 0 && isSelected(width),
+                        'rounded-e-md': index === widths.length - 1 && isSelected(width),
+                        'border-s': index !== widths.length - 1
                     }"
                     ></div>
                 </div>
