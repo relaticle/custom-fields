@@ -14,6 +14,9 @@ enum CustomFieldsFeature: string
     case FIELD_CONDITIONAL_VISIBILITY = 'field_conditional_visibility';
     case FIELD_ENCRYPTION = 'field_encryption';
     case FIELD_OPTION_COLORS = 'field_option_colors';
+    case FIELD_CODE_AUTO_GENERATE = 'field_code_auto_generate';
+    case FIELD_MULTI_VALUE = 'field_multi_value';
+    case FIELD_UNIQUE_VALUE = 'field_unique_value';
 
     // Table/UI integration features
     case UI_TABLE_COLUMNS = 'ui_table_columns';
@@ -24,4 +27,5 @@ enum CustomFieldsFeature: string
     // System-level features
     case SYSTEM_MANAGEMENT_INTERFACE = 'system_management_interface';
     case SYSTEM_MULTI_TENANCY = 'system_multi_tenancy';
+    case SYSTEM_SECTIONS_DISABLED = 'system_sections_disabled';
 }
