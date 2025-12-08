@@ -19,7 +19,7 @@ class EmailFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
     {
-        return FieldSchema::string()
+        return FieldSchema::multiChoice()
             ->key('email')
             ->label('Email')
             ->icon('heroicon-o-envelope')
@@ -27,18 +27,15 @@ class EmailFieldType extends BaseFieldType
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
             ->priority(15)
-            ->encryptable()
-            ->searchable()
             ->sortable()
-            ->defaultValidationRules([ValidationRule::EMAIL])
+            ->supportsMultiValue()
+            ->withArbitraryValues()
+            ->withoutUserOptions()
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
-                ValidationRule::EMAIL,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
-                ValidationRule::REGEX,
                 ValidationRule::UNIQUE,
-                ValidationRule::EXISTS,
             ]);
     }
 }
