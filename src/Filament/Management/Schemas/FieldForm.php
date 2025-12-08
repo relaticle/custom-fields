@@ -14,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
@@ -131,157 +132,89 @@ class FieldForm implements FormInterface
                     Tab::make(
                         __('custom-fields::custom-fields.field.form.general')
                     )->schema([
-                        Select::make('entity_type')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.entity_type'
-                                )
-                            )
-                            ->options(Entities::getOptions(onlyCustomFields: true))
-                            ->disabled()
+                        Hidden::make('entity_type')
                             ->default(
                                 fn () => request(
                                     'entityType',
                                     (Entities::withCustomFields()->first()?->getAlias()) ?? ''
                                 )
-                            )
-                            ->required(),
-                        TypeField::make('type')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.type'
-                                )
-                            )
-                            ->disabled(
-                                fn (
-                                    ?CustomField $record
-                                ): bool => (bool) $record?->exists
-                            )
-                            ->live()
-                            ->afterStateHydrated(function (
-                                Select $component,
-                                mixed $state,
-                                ?CustomField $record
-                            ): void {
-                                if (blank($state)) {
-                                    $component->state(
-                                        $record->type ?? CustomFieldsType::toCollection()->first()->key
-                                    );
-                                }
-                            })
-                            ->required(),
-                        TextInput::make('name')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.name'
-                                )
-                            )
-                            ->helperText(
-                                __(
-                                    'custom-fields::custom-fields.field.form.name_helper_text'
-                                )
-                            )
-                            ->live(onBlur: true)
-                            ->required()
-                            ->maxLength(50)
-                            ->disabled(
-                                fn (
-                                    ?CustomField $record
-                                ): bool => (bool) $record?->system_defined
-                            )
-                            ->unique(
-                                table: CustomFields::customFieldModel(),
-                                column: 'name',
-                                ignoreRecord: true,
-                                modifyRuleUsing: fn (
-                                    Unique $rule,
-                                    Get $get
-                                ) => $rule
-                                    ->where('entity_type', $get('entity_type'))
-                                    ->when(
-                                        FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                        fn (Unique $rule) => $rule->where(
-                                            config(
-                                                'custom-fields.database.column_names.tenant_foreign_key'
-                                            ),
-                                            TenantContextService::getCurrentTenantId()
-                                        )
+                            ),
+                        Grid::make()
+                            ->columns(fn (): int => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) ? 2 : 3)
+                            ->columnSpanFull()
+                            ->schema([
+                                TypeField::make('type')
+                                    ->label(__('custom-fields::custom-fields.field.form.type'))
+                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
+                                    ->live()
+                                    ->afterStateHydrated(function (
+                                        Select $component,
+                                        mixed $state,
+                                        ?CustomField $record
+                                    ): void {
+                                        if (blank($state)) {
+                                            $component->state(
+                                                $record->type ?? CustomFieldsType::toCollection()->first()->key
+                                            );
+                                        }
+                                    })
+                                    ->required(),
+                                TextInput::make('name')
+                                    ->label(__('custom-fields::custom-fields.field.form.name'))
+                                    ->live(onBlur: true)
+                                    ->required()
+                                    ->maxLength(50)
+                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                                    ->unique(
+                                        table: CustomFields::customFieldModel(),
+                                        column: 'name',
+                                        ignoreRecord: true,
+                                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                            ->where('entity_type', $get('entity_type'))
+                                            ->when(
+                                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                                fn (Unique $rule) => $rule->where(
+                                                    config('custom-fields.database.column_names.tenant_foreign_key'),
+                                                    TenantContextService::getCurrentTenantId()
+                                                )
+                                            )
                                     )
-                            )
-                            ->afterStateUpdated(function (
-                                Get $get,
-                                Set $set,
-                                ?string $old,
-                                ?string $state
-                            ): void {
-                                $old ??= '';
-                                $state ??= '';
+                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
+                                        $old ??= '';
+                                        $state ??= '';
 
-                                if (
-                                    ($get('code') ?? '') !==
-                                    Str::of($old)->slug('_')->toString()
-                                ) {
-                                    return;
-                                }
+                                        if (($get('code') ?? '') !== Str::of($old)->slug('_')->toString()) {
+                                            return;
+                                        }
 
-                                $set(
-                                    'code',
-                                    Str::of($state)->slug('_')->toString()
-                                );
-                            }),
-                        TextInput::make('code')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.code'
-                                )
-                            )
-                            ->helperText(
-                                __(
-                                    'custom-fields::custom-fields.field.form.code_helper_text'
-                                )
-                            )
-                            ->live(onBlur: true)
-                            ->required(
-                                fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE)
-                            )
-                            ->alphaDash()
-                            ->maxLength(50)
-                            ->disabled(
-                                fn (
-                                    ?CustomField $record
-                                ): bool => (bool) $record?->system_defined
-                            )
-                            ->visible(
-                                fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE)
-                            )
-                            ->unique(
-                                table: CustomFields::customFieldModel(),
-                                column: 'code',
-                                ignoreRecord: true,
-                                modifyRuleUsing: fn (
-                                    Unique $rule,
-                                    Get $get
-                                ) => $rule
-                                    ->where('entity_type', $get('entity_type'))
-                                    ->when(
-                                        FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                        fn (Unique $rule) => $rule->where(
-                                            config(
-                                                'custom-fields.database.column_names.tenant_foreign_key'
-                                            ),
-                                            TenantContextService::getCurrentTenantId()
-                                        )
+                                        $set('code', Str::of($state)->slug('_')->toString());
+                                    }),
+                                TextInput::make('code')
+                                    ->label(__('custom-fields::custom-fields.field.form.code'))
+                                    ->live(onBlur: true)
+                                    ->required(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
+                                    ->alphaDash()
+                                    ->maxLength(50)
+                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                                    ->visible(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
+                                    ->unique(
+                                        table: CustomFields::customFieldModel(),
+                                        column: 'code',
+                                        ignoreRecord: true,
+                                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                            ->where('entity_type', $get('entity_type'))
+                                            ->when(
+                                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                                fn (Unique $rule) => $rule->where(
+                                                    config('custom-fields.database.column_names.tenant_foreign_key'),
+                                                    TenantContextService::getCurrentTenantId()
+                                                )
+                                            )
                                     )
-                            )
-                            ->afterStateUpdated(function (
-                                Set $set,
-                                ?string $state
-                            ): void {
-                                $set(
-                                    'code',
-                                    Str::of($state)->slug('_')->toString()
-                                );
-                            }),
+                                    ->afterStateUpdated(function (Set $set, ?string $state): void {
+                                        $set('code', Str::of($state)->slug('_')->toString());
+                                    }),
+                            ]),
                         Fieldset::make(
                             __(
                                 'custom-fields::custom-fields.field.form.settings'

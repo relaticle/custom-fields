@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Migrates email field values from string_value to json_value format.
@@ -25,12 +26,10 @@ class MigrateEmailFieldValuesCommand extends Command
     {
         $isDryRun = $this->option('dry-run');
 
-        if (app()->isProduction() && ! $isDryRun && ! $this->option('force')) {
-            if (! $this->confirm('You are running in production. Are you sure you want to continue?')) {
-                $this->info('Migration cancelled.');
+        if (app()->isProduction() && ! $isDryRun && ! $this->option('force') && ! $this->confirm('You are running in production. Are you sure you want to continue?')) {
+            $this->info('Migration cancelled.');
 
-                return self::SUCCESS;
-            }
+            return self::SUCCESS;
         }
 
         $fieldTable = config('custom-fields.database.table_names.custom_fields');
@@ -54,7 +53,7 @@ class MigrateEmailFieldValuesCommand extends Command
             ->whereIn('custom_field_id', $emailFields)
             ->whereNotNull('string_value')
             ->where('string_value', '!=', '')
-            ->where(function ($query) {
+            ->where(function ($query): void {
                 $query->whereNull('json_value')
                     ->orWhere('json_value', '=', '[]')
                     ->orWhere('json_value', '=', 'null');
@@ -75,7 +74,7 @@ class MigrateEmailFieldValuesCommand extends Command
 
             $this->table(
                 ['ID', 'Entity Type', 'Entity ID', 'Current Value', 'New Format'],
-                $valuesToMigrate->map(fn ($value) => [
+                $valuesToMigrate->map(fn ($value): array => [
                     $value->id,
                     $value->entity_type,
                     $value->entity_id,
@@ -103,7 +102,7 @@ class MigrateEmailFieldValuesCommand extends Command
                     ]);
 
                 $migrated++;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->newLine();
                 $this->error(sprintf('Failed to migrate value ID %d: %s', $value->id, $e->getMessage()));
                 $errors++;
