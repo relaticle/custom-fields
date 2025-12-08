@@ -17,21 +17,16 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
+use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
 use Relaticle\CustomFields\Models\CustomFieldSection;
-use Relaticle\CustomFields\Services\TenantContextService;
-use Relaticle\CustomFields\Support\CodeGenerator;
 
 /**
  * Livewire component for managing custom fields when sections are disabled.
- *
- * This component displays fields in a flat grid without any section wrapper,
- * while the default hidden section is managed in the background.
  */
 final class ManageFieldsWithoutSections extends Component implements HasActions, HasForms
 {
+    use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
 
@@ -96,45 +91,9 @@ final class ManageFieldsWithoutSections extends Component implements HasActions,
             ])
             ->model(CustomFields::customFieldModel())
             ->schema(FieldForm::schema(withOptionsRelationship: false))
-            ->fillForm([
-                'entity_type' => $this->entityType,
-            ])
-            ->mutateDataUsing(function (array $data): array {
-                if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                    $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
-                }
-
-                if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) && blank($data['code'] ?? null)) {
-                    $data['code'] = CodeGenerator::generateUniqueFieldCode(
-                        $data['name'],
-                        $this->entityType
-                    );
-                }
-
-                return [
-                    ...$data,
-                    'entity_type' => $this->entityType,
-                    'custom_field_section_id' => $this->section->getKey(),
-                ];
-            })
-            ->action(function (array $data): void {
-                $options = collect($data['options'] ?? [])
-                    ->filter()
-                    ->map(function (array $option): array {
-                        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                            $option[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
-                        }
-
-                        return $option;
-                    })
-                    ->values();
-
-                unset($data['options']);
-
-                $customField = CustomFields::newCustomFieldModel()->create($data);
-
-                $customField->options()->createMany($options);
-            })
+            ->fillForm(['entity_type' => $this->entityType])
+            ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType, $this->section->getKey()))
+            ->action(fn (array $data) => $this->storeField($data))
             ->modalWidth(Width::ScreenLarge)
             ->slideOver();
     }
