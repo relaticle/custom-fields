@@ -26,7 +26,6 @@ use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Observers\CustomFieldObserver;
 use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\DataCollection;
 
 /**
@@ -172,33 +171,5 @@ class CustomField extends Model
     public function getFieldName(): string
     {
         return 'custom_fields.'.$this->code;
-    }
-
-    /**
-     * Get field-type-specific settings as a typed Data object.
-     *
-     * This retrieves settings from the `settings.additional.type_settings` path
-     * and deserializes them using the field type's configured settings data class.
-     *
-     * @return Data|null The typed settings data object, or null if not configured
-     */
-    public function getTypeSettings(): ?Data
-    {
-        $typeData = $this->typeData;
-
-        if ($typeData === null || $typeData->settingsDataClass === null) {
-            return null;
-        }
-
-        $typeSettingsData = $this->settings->additional['type_settings'] ?? [];
-
-        if ($typeSettingsData === []) {
-            return null;
-        }
-
-        /** @var class-string<Data> $dataClass */
-        $dataClass = $typeData->settingsDataClass;
-
-        return $dataClass::from($typeSettingsData);
     }
 }
