@@ -12,26 +12,65 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
-use Relaticle\CustomFields\Livewire\Concerns\ManagesFields;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
 /**
  * Livewire component for managing custom fields when sections are disabled.
+ *
+ * Shows ALL fields for the entity type regardless of which section they belong to.
+ * New fields are created in the default section.
  */
 final class ManageFieldsWithoutSections extends Component implements HasActions, HasForms
 {
     use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
-    use ManagesFields;
 
     public string $entityType;
 
+    /** The default section used for creating new fields */
     public CustomFieldSection $section;
+
+    /**
+     * Get ALL fields for the entity type, regardless of section.
+     */
+    #[Computed]
+    public function fields(): Collection
+    {
+        return CustomFields::newCustomFieldModel()
+            ->newQuery()
+            ->withDeactivated()
+            ->where('entity_type', $this->entityType)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    #[On('field-width-updated')]
+    public function fieldWidthUpdated(int|string $fieldId, int $width): void
+    {
+        $model = CustomFields::newCustomFieldModel();
+        $model->where($model->getKeyName(), $fieldId)->update(['width' => $width]);
+        unset($this->fields);
+    }
+
+    #[On('field-deleted')]
+    public function fieldDeleted(): void
+    {
+        unset($this->fields);
+    }
+
+    #[On('fields-reordered')]
+    public function fieldsReordered(): void
+    {
+        unset($this->fields);
+    }
 
     public function updateFieldsOrder(array $fields): void
     {
