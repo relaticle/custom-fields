@@ -53,6 +53,8 @@ class FieldSchema
 
     private bool $acceptsArbitraryValues = false;
 
+    private bool $supportsMultiValue = false;
+
     protected bool $withoutUserOptions = false;
 
     private ?string $settingsDataClass = null;
@@ -311,6 +313,16 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Configure whether field supports multiple values (e.g., multiple emails, phones)
+     */
+    public function supportsMultiValue(bool $supports = true): self
+    {
+        $this->supportsMultiValue = $supports;
+
+        return $this;
+    }
+
     // ========== Data Type Specific Methods (from DataTypeConfigurators) ==========
 
     /**
@@ -542,6 +554,7 @@ class FieldSchema
             encryptable: $this->encryptable,
             withoutUserOptions: $this->withoutUserOptions,
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
+            supportsMultiValue: $this->supportsMultiValue,
             validationRules: $this->availableValidationRules,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema
