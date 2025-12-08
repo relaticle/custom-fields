@@ -24,6 +24,7 @@ use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Support\CodeGenerator;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
@@ -168,6 +169,14 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->mutateDataUsing(function (array $data): array {
                 if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
                     $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
+                }
+
+                // Auto-generate code if feature is enabled and code is empty
+                if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) && blank($data['code'] ?? null)) {
+                    $data['code'] = CodeGenerator::generateUniqueFieldCode(
+                        $data['name'],
+                        $this->entityType
+                    );
                 }
 
                 return [

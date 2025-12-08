@@ -24,7 +24,9 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\DefaultSectionService;
 use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Support\CodeGenerator;
 use Relaticle\CustomFields\Support\Utils;
 
 class CustomFieldsManagementPage extends Page
@@ -46,6 +48,20 @@ class CustomFieldsManagementPage extends Page
             $firstEntity = Entities::withCustomFields()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
+
+        // When sections are disabled, ensure a default hidden section exists
+        if ($this->isSectionsDisabled() && filled($this->currentEntityType)) {
+            app(DefaultSectionService::class)->getOrCreateDefaultSection($this->currentEntityType);
+        }
+    }
+
+    /**
+     * Check if sections are disabled (single hidden section mode).
+     */
+    #[Computed]
+    public function isSectionsDisabled(): bool
+    {
+        return FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_DISABLED);
     }
 
     #[Computed]
@@ -97,6 +113,11 @@ class CustomFieldsManagementPage extends Page
     public function setCurrentEntityType(?string $entityType): void
     {
         $this->currentEntityType = $entityType;
+
+        // When sections are disabled, ensure a default hidden section exists for the new entity type
+        if ($this->isSectionsDisabled() && filled($entityType)) {
+            app(DefaultSectionService::class)->getOrCreateDefaultSection($entityType);
+        }
     }
 
     public function createSectionAction(): Action
@@ -108,6 +129,7 @@ class CustomFieldsManagementPage extends Page
             ->color('gray')
             ->button()
             ->outlined()
+            ->visible(fn (): bool => ! $this->isSectionsDisabled())
             ->extraAttributes([
                 'class' => 'flex justify-center items-center rounded-lg border-gray-300 hover:border-gray-400 border-dashed',
             ])
@@ -141,6 +163,14 @@ class CustomFieldsManagementPage extends Page
 
         $data['type'] ??= CustomFieldSectionType::SECTION->value;
         $data['entity_type'] = $this->currentEntityType;
+
+        // Auto-generate code if feature is enabled and code is empty
+        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) && blank($data['code'] ?? null)) {
+            $data['code'] = CodeGenerator::generateUniqueSectionCode(
+                $data['name'],
+                $this->currentEntityType
+            );
+        }
 
         return CustomFieldsModel::newSectionModel()->create($data);
     }
