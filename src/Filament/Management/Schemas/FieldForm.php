@@ -26,7 +26,6 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\CustomFieldValidationComponent;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\TypeField;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
@@ -42,8 +41,6 @@ class FieldForm implements FormInterface
      */
     private static function getTypeSettingsSchema(): array
     {
-        $fieldManager = app(FieldManager::class);
-
         $components = [];
 
         foreach (CustomFieldsType::toCollection() as $fieldTypeData) {
