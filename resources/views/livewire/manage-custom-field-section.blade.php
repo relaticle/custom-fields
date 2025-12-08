@@ -40,8 +40,8 @@
 
         @if(!count($this->fields))
             <div class="fi-grid-col" style="--col-span-default: span 12 / span 12;">
-                <div class="fi-ta-empty-state py-12">
-                    <div class="fi-ta-empty-state-content mx-auto grid max-w-xs justify-items-center text-center">
+                <div class="py-12">
+                    <div class="mx-auto grid max-w-xs justify-items-center text-center">
                         <div class="fi-ta-empty-state-icon-ctn mb-4 rounded-full bg-gray-50 p-3 dark:bg-gray-800/50">
                             <x-filament::icon
                                 icon="{{ __('custom-fields::custom-fields.empty_states.fields.icon') }}"
