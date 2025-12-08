@@ -27,6 +27,7 @@ class EmailFieldType extends BaseFieldType
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
             ->priority(15)
+            ->searchable()
             ->sortable()
             ->supportsMultiValue()
             ->withArbitraryValues()
