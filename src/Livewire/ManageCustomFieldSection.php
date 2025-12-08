@@ -13,14 +13,12 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
+use Relaticle\CustomFields\Livewire\Concerns\ManagesFields;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
@@ -28,39 +26,11 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
+    use ManagesFields;
 
     public string $entityType;
 
     public CustomFieldSection $section;
-
-    #[Computed]
-    public function fields(): Collection
-    {
-        return $this->section->fields()->withDeactivated()->orderBy('sort_order')->get();
-    }
-
-    #[On('field-width-updated')]
-    public function fieldWidthUpdated(int|string $fieldId, int $width): void
-    {
-        // Update the width
-        $model = CustomFields::newCustomFieldModel();
-        $model->where($model->getKeyName(), $fieldId)->update(['width' => $width]);
-
-        // Re-fetch the fields
-        $this->section->refresh();
-    }
-
-    #[On('field-deleted')]
-    public function fieldDeleted(): void
-    {
-        $this->section->refresh();
-    }
-
-    #[On('fields-reordered')]
-    public function fieldsReordered(): void
-    {
-        unset($this->fields);
-    }
 
     public function updateFieldsOrder(int|string $sectionId, array $fields): void
     {
