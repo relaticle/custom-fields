@@ -27,6 +27,7 @@ class TextFieldType extends BaseFieldType
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
             ->encryptable()
+            ->supportsUniqueConstraint()
             ->priority(10)
             ->availableValidationRules([
                 ValidationRule::REQUIRED,

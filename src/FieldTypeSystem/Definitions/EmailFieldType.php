@@ -30,6 +30,7 @@ class EmailFieldType extends BaseFieldType
             ->searchable()
             ->sortable()
             ->supportsMultiValue()
+            ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
             ->availableValidationRules([

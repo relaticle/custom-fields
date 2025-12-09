@@ -405,7 +405,8 @@ class FieldForm implements FormInterface
                                         )
                                     )
                                     ->visible(
-                                        fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE)
+                                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
+                                            CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
                                     )
                                     ->default(false),
                             ]),
