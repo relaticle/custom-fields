@@ -23,9 +23,9 @@ enum CustomFieldsFeature: string
     case UI_TABLE_FILTERS = 'ui_table_filters';
     case UI_TOGGLEABLE_COLUMNS = 'ui_toggleable_columns';
     case UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT = 'ui_toggleable_columns_hidden_default';
+    case UI_FLAT_FIELD_LAYOUT = 'ui_flat_field_layout';
 
     // System-level features
     case SYSTEM_MANAGEMENT_INTERFACE = 'system_management_interface';
     case SYSTEM_MULTI_TENANCY = 'system_multi_tenancy';
-    case SYSTEM_SECTIONS_DISABLED = 'system_sections_disabled';
 }
