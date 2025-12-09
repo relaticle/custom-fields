@@ -3,7 +3,7 @@
         <div
             x-sortable
             x-sortable-group="fields"
-            class="fi-sc fi-sc-has-gap fi-grid lg:fi-grid-cols"
+            class="fi-sc fi-sc-has-gap fi-sc-dense fi-grid lg:fi-grid-cols"
             style="--cols-lg: repeat(12, minmax(0, 12fr)); --cols-default: repeat(2, minmax(0, 1fr));"
             @end.stop="$wire.updateFieldsOrder($event.to.sortable.toArray())"
         >
