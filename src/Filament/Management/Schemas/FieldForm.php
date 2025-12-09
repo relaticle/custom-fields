@@ -357,22 +357,17 @@ class FieldForm implements FormInterface
                                 Toggle::make('settings.allow_multiple')
                                     ->inline(false)
                                     ->live()
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.allow_multiple'
-                                        )
-                                    )
-                                    ->helperText(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.allow_multiple_help'
-                                        )
-                                    )
+                                    ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
+                                    ->helperText(__('custom-fields::custom-fields.field.form.allow_multiple_help'))
                                     ->visible(
-                                        fn (
-                                            Get $get
-                                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
                                             CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
                                     )
+                                    ->afterStateUpdated(function (Set $set, bool $state): void {
+                                        if ($state) {
+                                            $set('settings.max_values', 2);
+                                        }
+                                    })
                                     ->default(false),
                                 TextInput::make('settings.max_values')
                                     ->label(
