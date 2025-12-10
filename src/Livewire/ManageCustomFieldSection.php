@@ -13,55 +13,24 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
+use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
+use Relaticle\CustomFields\Livewire\Concerns\ManagesFields;
 use Relaticle\CustomFields\Models\CustomFieldSection;
-use Relaticle\CustomFields\Services\TenantContextService;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
+    use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
+    use ManagesFields;
 
     public string $entityType;
 
     public CustomFieldSection $section;
-
-    #[Computed]
-    public function fields(): Collection
-    {
-        return $this->section->fields()->withDeactivated()->orderBy('sort_order')->get();
-    }
-
-    #[On('field-width-updated')]
-    public function fieldWidthUpdated(int|string $fieldId, int $width): void
-    {
-        // Update the width
-        $model = CustomFields::newCustomFieldModel();
-        $model->where($model->getKeyName(), $fieldId)->update(['width' => $width]);
-
-        // Re-fetch the fields
-        $this->section->refresh();
-    }
-
-    #[On('field-deleted')]
-    public function fieldDeleted(): void
-    {
-        $this->section->refresh();
-    }
-
-    #[On('fields-reordered')]
-    public function fieldsReordered(): void
-    {
-        unset($this->fields);
-    }
 
     public function updateFieldsOrder(int|string $sectionId, array $fields): void
     {
@@ -162,38 +131,9 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->label(__('custom-fields::custom-fields.field.form.add_field'))
             ->model(CustomFields::customFieldModel())
             ->schema(FieldForm::schema(withOptionsRelationship: false))
-            ->fillForm([
-                'entity_type' => $this->entityType,
-            ])
-            ->mutateDataUsing(function (array $data): array {
-                if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                    $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
-                }
-
-                return [
-                    ...$data,
-                    'entity_type' => $this->entityType,
-                    'custom_field_section_id' => $this->section->getKey(),
-                ];
-            })
-            ->action(function (array $data): void {
-                $options = collect($data['options'] ?? [])
-                    ->filter()
-                    ->map(function (array $option): array {
-                        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                            $option[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
-                        }
-
-                        return $option;
-                    })
-                    ->values();
-
-                unset($data['options']);
-
-                $customField = CustomFields::newCustomFieldModel()->create($data);
-
-                $customField->options()->createMany($options);
-            })
+            ->fillForm(['entity_type' => $this->entityType])
+            ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType, $this->section->getKey()))
+            ->action(fn (array $data) => $this->storeField($data))
             ->modalWidth(Width::ScreenLarge)
             ->slideOver();
     }

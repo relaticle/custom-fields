@@ -15,6 +15,7 @@ use Illuminate\Filesystem\Filesystem;
 use Livewire\Livewire;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
+use Relaticle\CustomFields\Console\Commands\MigrateEmailFieldValuesCommand;
 use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
 use Relaticle\CustomFields\Contracts\ValueResolvers;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -23,6 +24,7 @@ use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldWidth;
+use Relaticle\CustomFields\Livewire\ManageFieldsWithoutSections;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Providers\EntityServiceProvider;
@@ -73,6 +75,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         Livewire::component('manage-custom-field-section', ManageCustomFieldSection::class);
         Livewire::component('manage-custom-field', ManageCustomField::class);
         Livewire::component('manage-custom-field-width', ManageCustomFieldWidth::class);
+        Livewire::component('manage-fields-without-sections', ManageFieldsWithoutSections::class);
     }
 
     public function configurePackage(Package $package): void
@@ -166,6 +169,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         return [
             MakeCustomFieldsMigrationCommand::class,
             MakeFieldTypeCommand::class,
+            MigrateEmailFieldValuesCommand::class,
         ];
     }
 

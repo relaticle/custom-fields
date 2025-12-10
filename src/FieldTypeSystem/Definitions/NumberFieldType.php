@@ -26,6 +26,7 @@ class NumberFieldType extends BaseFieldType
             ->formComponent(NumberComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
+            ->supportsUniqueConstraint()
             ->priority(20)
             ->availableValidationRules([
                 ValidationRule::REQUIRED,

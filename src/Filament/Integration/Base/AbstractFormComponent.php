@@ -66,7 +66,12 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     filled($state)
             )
             ->required($this->validationService->isRequired($customField))
-            ->rules($this->validationService->getValidationRules($customField))
+            ->rules(
+                fn (Field $component): array => $this->validationService->getValidationRules(
+                    $customField,
+                    $component->getRecord()?->getKey()
+                )
+            )
             ->columnSpan($customField->width->getSpanValue())
             ->when(
                 FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY) &&

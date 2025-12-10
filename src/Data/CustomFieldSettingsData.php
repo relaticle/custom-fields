@@ -20,6 +20,9 @@ class CustomFieldSettingsData extends Data
         public bool $searchable = false,
         public bool $encrypted = false,
         public bool $enable_option_colors = false,
+        public bool $allow_multiple = false,
+        public int $max_values = 1,
+        public bool $unique_per_entity_type = false,
         public VisibilityData $visibility = new VisibilityData,
         public array $additional = [],
     ) {

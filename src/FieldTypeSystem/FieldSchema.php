@@ -53,6 +53,10 @@ class FieldSchema
 
     private bool $acceptsArbitraryValues = false;
 
+    private bool $supportsMultiValue = false;
+
+    private bool $supportsUniqueConstraint = false;
+
     protected bool $withoutUserOptions = false;
 
     private ?string $settingsDataClass = null;
@@ -311,6 +315,26 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Configure whether field supports multiple values (e.g., multiple emails, phones)
+     */
+    public function supportsMultiValue(bool $supports = true): self
+    {
+        $this->supportsMultiValue = $supports;
+
+        return $this;
+    }
+
+    /**
+     * Configure whether field supports unique value constraint per entity type
+     */
+    public function supportsUniqueConstraint(bool $supports = true): self
+    {
+        $this->supportsUniqueConstraint = $supports;
+
+        return $this;
+    }
+
     // ========== Data Type Specific Methods (from DataTypeConfigurators) ==========
 
     /**
@@ -542,6 +566,8 @@ class FieldSchema
             encryptable: $this->encryptable,
             withoutUserOptions: $this->withoutUserOptions,
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
+            supportsMultiValue: $this->supportsMultiValue,
+            supportsUniqueConstraint: $this->supportsUniqueConstraint,
             validationRules: $this->availableValidationRules,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema

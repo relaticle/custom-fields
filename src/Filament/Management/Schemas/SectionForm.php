@@ -78,14 +78,21 @@ class SectionForm implements FormInterface, SectionFormInterface
 
                         $set('code', Str::of($state)->slug('_')->toString());
                     })
-                    ->columnSpan(6),
+                    ->columnSpan(
+                        fn (): int => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) ? 12 : 6
+                    ),
                 TextInput::make('code')
                     ->label(
                         __('custom-fields::custom-fields.section.form.code')
                     )
-                    ->required()
+                    ->required(
+                        fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE)
+                    )
                     ->alphaDash()
                     ->maxLength(50)
+                    ->visible(
+                        fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE)
+                    )
                     ->unique(
                         table: CustomFields::sectionModel(),
                         column: 'code',

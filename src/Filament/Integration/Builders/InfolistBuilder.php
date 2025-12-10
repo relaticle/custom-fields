@@ -21,17 +21,23 @@ final class InfolistBuilder extends BaseBuilder
 
     private bool $visibleWhenFilled = false;
 
-    private bool $withoutSections = false;
+    private ?bool $withoutSections = null;
 
     public function build(): Component
     {
-        return InfolistContainer::make()
+        $container = InfolistContainer::make()
             ->forModel($this->explicitModel ?? null)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
-            ->withoutSections($this->withoutSections)
             ->only($this->only)
             ->except($this->except);
+
+        // Only set withoutSections if explicitly configured
+        if ($this->withoutSections !== null) {
+            $container->withoutSections($this->withoutSections);
+        }
+
+        return $container;
     }
 
     /**

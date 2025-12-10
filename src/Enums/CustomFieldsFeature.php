@@ -14,12 +14,16 @@ enum CustomFieldsFeature: string
     case FIELD_CONDITIONAL_VISIBILITY = 'field_conditional_visibility';
     case FIELD_ENCRYPTION = 'field_encryption';
     case FIELD_OPTION_COLORS = 'field_option_colors';
+    case FIELD_CODE_AUTO_GENERATE = 'field_code_auto_generate';
+    case FIELD_MULTI_VALUE = 'field_multi_value';
+    case FIELD_UNIQUE_VALUE = 'field_unique_value';
 
     // Table/UI integration features
     case UI_TABLE_COLUMNS = 'ui_table_columns';
     case UI_TABLE_FILTERS = 'ui_table_filters';
     case UI_TOGGLEABLE_COLUMNS = 'ui_toggleable_columns';
     case UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT = 'ui_toggleable_columns_hidden_default';
+    case UI_FLAT_FIELD_LAYOUT = 'ui_flat_field_layout';
 
     // System-level features
     case SYSTEM_MANAGEMENT_INTERFACE = 'system_management_interface';
