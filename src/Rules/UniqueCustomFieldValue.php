@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -43,9 +44,13 @@ final class UniqueCustomFieldValue implements ValidationRule
                 continue;
             }
 
+            // Resolve the morph alias for the entity type (e.g., 'App\Models\People' -> 'people')
+            $entityType = $this->customField->entity_type;
+            $morphAlias = Relation::getMorphAlias($entityType) ?? (new $entityType)->getMorphClass();
+
             $query = $valueModel->newQuery()
                 ->where('custom_field_id', $this->customField->getKey())
-                ->where('entity_type', $this->customField->entity_type);
+                ->where('entity_type', $morphAlias);
 
             // Check the appropriate value column based on field type's storage column
             if ($valueColumn === 'json_value') {
