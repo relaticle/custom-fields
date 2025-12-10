@@ -351,4 +351,8 @@ return [
         'add_email_placeholder' => 'Add email address...',
     ],
 
+    'link' => [
+        'add_link_placeholder' => 'Add URL...',
+    ],
+
 ];
