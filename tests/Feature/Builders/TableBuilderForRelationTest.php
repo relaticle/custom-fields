@@ -113,14 +113,6 @@ describe('TableBuilder filters() with forRelation()', function (): void {
 
 describe('Integration usage pattern', function (): void {
     it('demonstrates the intended usage in relation managers', function (): void {
-        // This demonstrates the usage pattern from the feature request:
-        // In a RegistrationRelationManager, displaying Member custom fields:
-        // 
-        // CustomFields::table()
-        //     ->forModel(Member::class)
-        //     ->forRelation('member')
-        //     ->columns()
-        
         // For this test, we use Post with 'author' relation
         $columns = CustomFieldsFacade::table()
             ->forModel(Post::class)
@@ -129,12 +121,6 @@ describe('Integration usage pattern', function (): void {
 
         // Verify that columns were generated
         expect($columns)->toBeInstanceOf(\Illuminate\Support\Collection::class);
-        
-        // The generated columns will:
-        // - Resolve state by navigating through the relation: $record->author->getCustomFieldValue($field)
-        // - Handle sorting on related custom fields
-        // - Handle searching on related custom fields
-        // - Support visibility conditions on the related model
     });
 
     it('can be used with only() and except() methods', function (): void {
