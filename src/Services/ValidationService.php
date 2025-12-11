@@ -211,6 +211,25 @@ final class ValidationService
     }
 
     /**
+     * Get validation rules for individual items in multi-value fields.
+     * For single-value fields, returns empty array.
+     *
+     * @param  CustomField  $customField  The custom field
+     * @return array<int, string> Array of item validation rules
+     */
+    public function getItemValidationRules(CustomField $customField): array
+    {
+        $fieldTypeManager = app(FieldManager::class);
+        $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
+
+        if ($fieldTypeInstance) {
+            return $fieldTypeInstance->configure()->getDefaultItemValidationRules();
+        }
+
+        return [];
+    }
+
+    /**
      * Merge field type defaults, user rules, and database constraints with proper precedence.
      * Field type defaults are always applied, user rules can add additional constraints,
      * database constraints provide system-level limits.

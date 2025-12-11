@@ -42,6 +42,8 @@ class FieldSchema
 
     private array $defaultValidationRules = [];
 
+    private array $defaultItemValidationRules = [];
+
     // Capabilities
     private bool $searchable = true;
 
@@ -263,6 +265,30 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Set default validation rules for individual items in multi-value fields.
+     * Only available for MULTI_CHOICE data type.
+     *
+     * @param  array<ValidationRule|string>  $rules
+     *
+     * @throws InvalidArgumentException if used with non-MULTI_CHOICE data type
+     */
+    public function defaultItemValidationRules(array $rules): self
+    {
+        if ($this->dataType !== FieldDataType::MULTI_CHOICE) {
+            throw new InvalidArgumentException(
+                'defaultItemValidationRules is only available for multi-value field types (MULTI_CHOICE)'
+            );
+        }
+
+        $this->defaultItemValidationRules = array_map(
+            fn (ValidationRule|string $rule): string => $rule instanceof ValidationRule ? $rule->value : $rule,
+            $rules
+        );
+
+        return $this;
+    }
+
     // ========== Common Capability Methods ==========
 
     /**
@@ -440,6 +466,16 @@ class FieldSchema
     public function getDefaultValidationRules(): array
     {
         return $this->defaultValidationRules;
+    }
+
+    /**
+     * Get the default validation rules for individual items in multi-value fields.
+     *
+     * @return array<int, string>
+     */
+    public function getDefaultItemValidationRules(): array
+    {
+        return $this->defaultItemValidationRules;
     }
 
     /**

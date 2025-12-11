@@ -33,6 +33,7 @@ class EmailFieldType extends BaseFieldType
             ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
+            ->defaultItemValidationRules(['email', 'max:254'])
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
                 ValidationRule::MIN,
