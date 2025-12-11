@@ -28,20 +28,28 @@ final class TableBuilder extends BaseBuilder
 
         // Get all fields for visibility evaluation
         $allFields = $this->getFilteredSections()->flatMap(fn (mixed $section): Collection => $section->fields);
+        $relationName = $this->getRelationName();
 
         return $this->getFilteredSections()
             ->flatMap(fn (mixed $section): Collection => $section->fields)
             ->filter(fn (CustomField $field): bool => $field->typeData->tableColumn !== null)
-            ->map(function (CustomField $field) use ($fieldColumnFactory, $backendVisibilityService, $allFields) {
-                $column = $fieldColumnFactory->create($field);
+            ->map(function (CustomField $field) use ($fieldColumnFactory, $backendVisibilityService, $allFields, $relationName) {
+                $column = $fieldColumnFactory->create($field, $relationName);
 
                 if (! method_exists($column, 'formatStateUsing')) {
                     return $column;
                 }
 
                 // Wrap the existing state with visibility check
-                $column->formatStateUsing(function (mixed $state, mixed $record) use ($field, $backendVisibilityService, $allFields): mixed {
-                    if (! $backendVisibilityService->isFieldVisible($record, $field, $allFields)) {
+                $column->formatStateUsing(function (mixed $state, mixed $record) use ($field, $backendVisibilityService, $allFields, $relationName): mixed {
+                    // When using relations, resolve the related record for visibility check
+                    $targetRecord = $relationName !== null ? data_get($record, $relationName) : $record;
+                    
+                    if ($targetRecord === null) {
+                        return null;
+                    }
+
+                    if (! $backendVisibilityService->isFieldVisible($targetRecord, $field, $allFields)) {
                         return null; // Return null or empty value when field should be hidden
                     }
 
@@ -60,11 +68,12 @@ final class TableBuilder extends BaseBuilder
         }
 
         $fieldFilterFactory = app(FieldFilterFactory::class);
+        $relationName = $this->getRelationName();
 
         return $this->getFilteredSections()
             ->flatMap(fn (mixed $section): Collection => $section->fields)
             ->filter(fn (CustomField $field): bool => $field->isFilterable() && $field->typeData->tableFilter !== null)
-            ->map(fn (CustomField $field) => $fieldFilterFactory->create($field))
+            ->map(fn (CustomField $field) => $fieldFilterFactory->create($field, $relationName))
             ->filter()
             ->values();
     }

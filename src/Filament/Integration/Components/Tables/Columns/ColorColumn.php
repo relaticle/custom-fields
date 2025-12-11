@@ -18,13 +18,13 @@ final class ColorColumn extends AbstractTableColumn
     use ConfiguresColumnState;
     use ConfiguresSearchable;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?string $relationName = null): BaseColumn
     {
         $column = BaseColorColumn::make($customField->getFieldName());
 
         $this->configureLabel($column, $customField);
-        $this->configureSearchable($column, $customField);
-        $this->configureState($column, $customField);
+        $this->configureSearchable($column, $customField, $relationName);
+        $this->configureState($column, $customField, $relationName);
 
         return $column;
     }

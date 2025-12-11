@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Models\CustomField;
 
 final class FieldColumnFactory
 {
-    public function create(CustomField $customField): Column
+    public function create(CustomField $customField, ?string $relationName = null): Column
     {
         $tableColumnDefinition = $customField->typeData->tableColumn;
 
@@ -27,7 +27,7 @@ final class FieldColumnFactory
         } else {
             // Handle traditional component class
             $component = app($tableColumnDefinition);
-            $column = $component->make($customField);
+            $column = $component->make($customField, $relationName);
         }
 
         return $column

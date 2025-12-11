@@ -22,15 +22,31 @@ final class SingleChoiceColumn extends AbstractTableColumn
 
     public function __construct(public LookupSingleValueResolver $valueResolver) {}
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?string $relationName = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 
         $this->configureLabel($column, $customField);
-        $this->configureSortable($column, $customField);
+        $this->configureSortable($column, $customField, $relationName);
 
         $column
-            ->getStateUsing(fn (HasCustomFields $record): string => $this->valueResolver->resolve($record, $customField))
+            ->getStateUsing(function (mixed $record) use ($customField, $relationName): string {
+                // If a relation is specified, navigate to the related model
+                if ($relationName !== null) {
+                    $record = data_get($record, $relationName);
+                    
+                    if ($record === null) {
+                        return '';
+                    }
+                }
+
+                // Ensure the record implements HasCustomFields
+                if (! $record instanceof HasCustomFields) {
+                    return '';
+                }
+
+                return $this->valueResolver->resolve($record, $customField);
+            })
             ->searchable(false);
 
         return $this->applyBadgeColorsIfEnabled($column, $customField);

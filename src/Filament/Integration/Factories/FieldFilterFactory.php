@@ -15,7 +15,7 @@ final class FieldFilterFactory
     /**
      * @throws BindingResolutionException
      */
-    public function create(CustomField $customField): BaseFilter
+    public function create(CustomField $customField, ?string $relationName = null): BaseFilter
     {
         $tableFilterDefinition = $customField->typeData->tableFilter;
 
@@ -31,6 +31,6 @@ final class FieldFilterFactory
         // Handle traditional component class
         $component = app($tableFilterDefinition);
 
-        return $component->make($customField);
+        return $component->make($customField, $relationName);
     }
 }

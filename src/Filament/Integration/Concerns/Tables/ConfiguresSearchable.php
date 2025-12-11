@@ -18,11 +18,11 @@ trait ConfiguresSearchable
     /**
      * Configure searchable behavior for a column.
      */
-    protected function configureSearchable(Column $column, CustomField $customField): Column
+    protected function configureSearchable(Column $column, CustomField $customField, ?string $relationName = null): Column
     {
         return $column->searchable(
             condition: $customField->settings->searchable,
-            query: fn (Builder $query, string $search): Builder => (new ColumnSearchableQuery)->builder($query, $customField, $search)
+            query: fn (Builder $query, string $search): Builder => (new ColumnSearchableQuery)->builder($query, $customField, $search, $relationName)
         );
     }
 }

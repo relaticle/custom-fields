@@ -9,5 +9,5 @@ use Relaticle\CustomFields\Models\CustomField;
 
 interface TableFilterInterface
 {
-    public function make(CustomField $customField): BaseFilter;
+    public function make(CustomField $customField, ?string $relationName = null): BaseFilter;
 }

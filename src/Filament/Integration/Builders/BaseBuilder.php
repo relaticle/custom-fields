@@ -27,6 +27,8 @@ abstract class BaseBuilder
 
     protected array $only = [];
 
+    protected ?string $relationName = null;
+
     public function forSchema(Schema $schema): static
     {
         /** @var Model & HasCustomFields $model */
@@ -75,6 +77,28 @@ abstract class BaseBuilder
         $this->only = $fieldCodes;
 
         return $this;
+    }
+
+    /**
+     * Specify the relation name to resolve custom fields from.
+     * 
+     * This allows displaying custom fields from a related model in a table.
+     * For example, in a RegistrationRelationManager, you can display Member custom fields:
+     * CustomFields::table()->forModel(Member::class)->forRelation('member')->columns()
+     */
+    public function forRelation(string $relationName): static
+    {
+        $this->relationName = $relationName;
+
+        return $this;
+    }
+
+    /**
+     * Get the relation name if set.
+     */
+    public function getRelationName(): ?string
+    {
+        return $this->relationName;
     }
 
     /**

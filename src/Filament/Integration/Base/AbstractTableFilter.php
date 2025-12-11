@@ -17,5 +17,5 @@ abstract class AbstractTableFilter implements TableFilterInterface
     /**
      * Create and configure a table filter.
      */
-    abstract public function make(CustomField $customField): BaseFilter;
+    abstract public function make(CustomField $customField, ?string $relationName = null): BaseFilter;
 }

@@ -21,15 +21,24 @@ class DateTimeColumn extends AbstractTableColumn
 
     protected ?Closure $locale = null;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?string $relationName = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 
         $this->configureLabel($column, $customField);
-        $this->configureSortable($column, $customField);
-        $this->configureSearchable($column, $customField);
+        $this->configureSortable($column, $customField, $relationName);
+        $this->configureSearchable($column, $customField, $relationName);
 
-        $column->getStateUsing(function (mixed $record) use ($customField) {
+        $column->getStateUsing(function (mixed $record) use ($customField, $relationName) {
+            // If a relation is specified, navigate to the related model
+            if ($relationName !== null) {
+                $record = data_get($record, $relationName);
+                
+                if ($record === null) {
+                    return null;
+                }
+            }
+
             $value = $record->getCustomFieldValue($customField);
 
             if ($this->locale instanceof Closure) {

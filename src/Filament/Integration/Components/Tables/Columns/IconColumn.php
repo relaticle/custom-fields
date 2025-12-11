@@ -17,16 +17,32 @@ class IconColumn extends AbstractTableColumn
     use ConfiguresColumnLabel;
     use ConfiguresSortable;
 
-    public function make(CustomField $customField): Column
+    public function make(CustomField $customField, ?string $relationName = null): Column
     {
         $column = BaseIconColumn::make($customField->getFieldName())->boolean();
 
         $this->configureLabel($column, $customField);
-        $this->configureSortable($column, $customField);
+        $this->configureSortable($column, $customField, $relationName);
 
         $column
             ->searchable(false)
-            ->getStateUsing(fn (HasCustomFields $record): mixed => $record->getCustomFieldValue($customField) ?? false);
+            ->getStateUsing(function (mixed $record) use ($customField, $relationName): mixed {
+                // If a relation is specified, navigate to the related model
+                if ($relationName !== null) {
+                    $record = data_get($record, $relationName);
+                    
+                    if ($record === null) {
+                        return false;
+                    }
+                }
+
+                // Ensure the record implements HasCustomFields
+                if (! $record instanceof HasCustomFields) {
+                    return false;
+                }
+
+                return $record->getCustomFieldValue($customField) ?? false;
+            });
 
         return $column;
     }

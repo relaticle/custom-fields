@@ -19,7 +19,7 @@ final class SelectFilter extends AbstractTableFilter
     /**
      * @throws Throwable
      */
-    public function make(CustomField $customField): FilamentSelectFilter
+    public function make(CustomField $customField, ?string $relationName = null): FilamentSelectFilter
     {
         $filter = FilamentSelectFilter::make($customField->getFieldName())
             ->multiple()
@@ -34,14 +34,27 @@ final class SelectFilter extends AbstractTableFilter
         }
 
         $filter->query(
-            fn (array $data, Builder $query): Builder => $query->when(
-                ! empty($data['values']),
-                fn (Builder $query): Builder => $query->whereHas('customFieldValues', function (Builder $query) use ($customField, $data): void {
+            function (array $data, Builder $query) use ($customField, $relationName): Builder {
+                if (empty($data['values'])) {
+                    return $query;
+                }
+
+                if ($relationName !== null) {
+                    return $query->whereHas($relationName, function (Builder $relatedQuery) use ($customField, $data): void {
+                        $relatedQuery->whereHas('customFieldValues', function (Builder $valueQuery) use ($customField, $data): void {
+                            $valueQuery->where('custom_field_id', $customField->id)
+                                ->when($customField->getValueColumn() === 'json_value', fn (Builder $q) => $q->whereJsonContains($customField->getValueColumn(), $data['values']))
+                                ->when($customField->getValueColumn() !== 'json_value', fn (Builder $q) => $q->whereIn($customField->getValueColumn(), $data['values']));
+                        });
+                    });
+                }
+
+                return $query->whereHas('customFieldValues', function (Builder $query) use ($customField, $data): void {
                     $query->where('custom_field_id', $customField->id)
                         ->when($customField->getValueColumn() === 'json_value', fn (Builder $query) => $query->whereJsonContains($customField->getValueColumn(), $data['values']))
                         ->when($customField->getValueColumn() !== 'json_value', fn (Builder $query) => $query->whereIn($customField->getValueColumn(), $data['values']));
-                }),
-            )
+                });
+            }
         );
 
         return $filter;

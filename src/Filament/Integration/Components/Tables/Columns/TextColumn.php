@@ -20,14 +20,14 @@ final class TextColumn extends AbstractTableColumn
     use ConfiguresSearchable;
     use ConfiguresSortable;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?string $relationName = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 
         $this->configureLabel($column, $customField);
-        $this->configureSortable($column, $customField);
-        $this->configureSearchable($column, $customField);
-        $this->configureState($column, $customField);
+        $this->configureSortable($column, $customField, $relationName);
+        $this->configureSearchable($column, $customField, $relationName);
+        $this->configureState($column, $customField, $relationName);
 
         return $column;
     }

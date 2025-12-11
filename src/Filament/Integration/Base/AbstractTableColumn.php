@@ -17,5 +17,5 @@ abstract class AbstractTableColumn implements TableColumnInterface
     /**
      * Create and configure a table column.
      */
-    abstract public function make(CustomField $customField): BaseColumn;
+    abstract public function make(CustomField $customField, ?string $relationName = null): BaseColumn;
 }

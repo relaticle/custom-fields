@@ -20,7 +20,7 @@ final class MultiChoiceColumn extends AbstractTableColumn
 
     public function __construct(public LookupMultiValueResolver $valueResolver) {}
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?string $relationName = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 
@@ -29,7 +29,23 @@ final class MultiChoiceColumn extends AbstractTableColumn
         $column
             ->sortable(false)
             ->searchable(false)
-            ->getStateUsing(fn (HasCustomFields $record): array => $this->valueResolver->resolve($record, $customField));
+            ->getStateUsing(function (mixed $record) use ($customField, $relationName): array {
+                // If a relation is specified, navigate to the related model
+                if ($relationName !== null) {
+                    $record = data_get($record, $relationName);
+                    
+                    if ($record === null) {
+                        return [];
+                    }
+                }
+
+                // Ensure the record implements HasCustomFields
+                if (! $record instanceof HasCustomFields) {
+                    return [];
+                }
+
+                return $this->valueResolver->resolve($record, $customField);
+            });
 
         return $this->applyBadgeColorsIfEnabled($column, $customField);
     }
