@@ -39,6 +39,11 @@ class DateTimeColumn extends AbstractTableColumn
                 }
             }
 
+            // Ensure the record implements HasCustomFields
+            if (! $record instanceof \Relaticle\CustomFields\Models\Contracts\HasCustomFields) {
+                return null;
+            }
+
             $value = $record->getCustomFieldValue($customField);
 
             if ($this->locale instanceof Closure) {
