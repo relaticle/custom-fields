@@ -230,6 +230,21 @@ final class ValidationService
     }
 
     /**
+     * Check if a custom field supports multiple values.
+     */
+    public function isMultiValueField(CustomField $customField): bool
+    {
+        $fieldTypeManager = app(FieldManager::class);
+        $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
+
+        if ($fieldTypeInstance) {
+            return $fieldTypeInstance->configure()->data()->supportsMultiValue;
+        }
+
+        return false;
+    }
+
+    /**
      * Merge field type defaults, user rules, and database constraints with proper precedence.
      * Field type defaults are always applied, user rules can add additional constraints,
      * database constraints provide system-level limits.
