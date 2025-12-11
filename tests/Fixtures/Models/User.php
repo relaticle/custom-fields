@@ -15,13 +15,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
+use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Tests\Database\Factories\UserFactory;
 use Relaticle\CustomFields\Tests\Models\Team;
 
-class User extends Authenticatable implements FilamentUser, HasTenants, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasCustomFields, HasTenants, MustVerifyEmail
 {
     use HasFactory;
     use Notifiable;
+    use UsesCustomFields;
 
     protected $guarded = [];
 
