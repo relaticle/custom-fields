@@ -47,12 +47,9 @@ final class EntityModel
             throw new InvalidArgumentException(sprintf('Resource class %s does not exist', $resourceClass));
         }
 
-        /** @var Model $model */
-        $model = new $modelClass;
-
         return [
             'modelClass' => $modelClass,
-            'alias' => $alias ?? $model->getMorphClass(),
+            'alias' => $alias, // null if not provided, resolved lazily by EntityConfigurator
             'labelSingular' => $labelSingular ?? Str::headline(class_basename($modelClass)),
             'labelPlural' => $labelPlural ?? Str::plural($labelSingular ?? Str::headline(class_basename($modelClass))),
             'icon' => $icon,
@@ -93,7 +90,7 @@ final class EntityModel
 
         return [
             'modelClass' => $modelClass,
-            'alias' => $model->getMorphClass(),
+            'alias' => null, // Resolved lazily by EntityConfigurator when getEntities() is called
             'labelSingular' => $labelSingular,
             'labelPlural' => Str::plural($labelSingular),
             'icon' => 'heroicon-o-document',

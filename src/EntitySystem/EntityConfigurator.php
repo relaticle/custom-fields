@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\EntitySystem;
 
+use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\EntityConfigurationInterface;
 
@@ -124,12 +125,9 @@ final class EntityConfigurator implements EntityConfigurationInterface
                 throw new InvalidArgumentException('All models must be configuration arrays');
             }
 
-            // Validate required keys
-            $required = ['modelClass', 'alias'];
-            foreach ($required as $key) {
-                if (! isset($entityModel[$key])) {
-                    throw new InvalidArgumentException('Entity configuration missing required key: '.$key);
-                }
+            // Validate required keys (alias can be null - resolved lazily)
+            if (! isset($entityModel['modelClass'])) {
+                throw new InvalidArgumentException('Entity configuration missing required key: modelClass');
             }
 
             // Merge configurations instead of replacing
@@ -140,14 +138,26 @@ final class EntityConfigurator implements EntityConfigurationInterface
     }
 
     /**
-     * Build the entities array from configured entity arrays
+     * Build the entities array from configured entity arrays.
+     *
+     * Resolves aliases lazily - if alias is null, we call getMorphClass() at runtime
+     * when the morph map has been registered via Relation::enforceMorphMap().
      */
     private function buildEntitiesArray(): array
     {
         $entities = [];
 
         foreach ($this->entityModels as $entityModel) {
-            $entities[$entityModel['alias']] = $entityModel;
+            // Lazy resolve alias if null (deferred from config loading time)
+            $alias = $entityModel['alias'] ?? null;
+            if ($alias === null && isset($entityModel['modelClass'])) {
+                /** @var Model $model */
+                $model = new $entityModel['modelClass'];
+                $alias = $model->getMorphClass();
+                $entityModel['alias'] = $alias;
+            }
+
+            $entities[$alias] = $entityModel;
         }
 
         return $entities;
