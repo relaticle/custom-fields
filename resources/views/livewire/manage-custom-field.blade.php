@@ -10,13 +10,11 @@
         <x-filament::icon-button
                 icon="heroicon-m-bars-3"
                 color="gray"
-                class="ml-0.5 text-gray-500"
-                size="xs"
         />
 
         <x-filament::icon
                 :icon="$field->typeData?->icon ?? 'heroicon-o-document-text'"
-                class="h-4.5 w-4.5 text-neutral-700 dark:text-neutral-400 ml-2"
+                class="h-5 w-5 text-gray-500 dark:text-gray-400"
                 :aria-label="$field->name"
         />
 

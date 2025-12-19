@@ -14,7 +14,7 @@
             <template x-for="(width, index) in widths" :key="index">
                 <div
                     wire:click="$parent.setWidth(fieldId, width)"
-                    class="h-6 flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                    class="h-6 flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 transition-colors"
                     :class="{
                     'rounded-s-md': index === 0,
                     'rounded-e-md': index === widths.length - 1
@@ -26,12 +26,12 @@
                         'bg-primary-600 hover:bg-primary-600/80': isSelected(width),
                         'rounded-s-md': index === 0 && isSelected(width),
                         'rounded-e-md': index === widths.length - 1 && isSelected(width),
-                        'border-s': index !== widths.length && index !== 0,
+                        'border-s': index !== widths.length - 1
                     }"
                     ></div>
                 </div>
             </template>
         </div>
-        <div class="absolute w-full h-full font-semibold text-sm flex items-center justify-center text-gray-900 dark:text-white">{{ $selectedWidth }}%</div>
+        <div class="absolute w-full h-full font-semibold text-sm flex items-center justify-center text-black">{{ $selectedWidth }}%</div>
     </div>
 </div>

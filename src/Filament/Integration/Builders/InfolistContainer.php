@@ -5,8 +5,6 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 
 final class InfolistContainer extends Grid
 {
@@ -20,7 +18,7 @@ final class InfolistContainer extends Grid
 
     private bool $visibleWhenFilled = false;
 
-    private ?bool $withoutSections = null;
+    private bool $withoutSections = false;
 
     public static function make(array|int|null $columns = 12): static
     {
@@ -86,17 +84,13 @@ final class InfolistContainer extends Grid
             return []; // Graceful fallback
         }
 
-        // Use explicit setting if provided, otherwise check feature flag
-        $withoutSections = $this->withoutSections
-            ?? FeatureManager::isEnabled(CustomFieldsFeature::UI_FLAT_FIELD_LAYOUT);
-
         $builder = app(InfolistBuilder::class)
             ->forModel($model)
             ->only($this->only)
             ->except($this->except)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
-            ->withoutSections($withoutSections);
+            ->withoutSections($this->withoutSections);
 
         return $builder->values()->toArray();
     }
