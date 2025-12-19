@@ -27,7 +27,7 @@ final readonly class LinkComponent extends AbstractFormComponent
             ->nestedRecursiveRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/'])
             ->rules(['array', 'max:'.$maxValues])
             ->dehydrateStateUsing(static fn (mixed $state): array => collect($state)
-                ->map(fn ($v) => preg_replace('#^https?://#i', '', trim((string) $v)))
+                ->map(fn ($v): ?string => preg_replace('#^https?://#i', '', trim((string) $v)))
                 ->filter(fn ($v) => filled($v))
                 ->values()
                 ->all()

@@ -66,7 +66,7 @@ final class CodeGenerator
         $counter = 1;
 
         while (self::codeExists($code, $entityType, $type, $ignoreId)) {
-            $code = "{$baseCode}_{$counter}";
+            $code = sprintf('%s_%d', $baseCode, $counter);
             $counter++;
         }
 
