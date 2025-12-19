@@ -26,7 +26,6 @@ final class TextareaFieldType extends BaseFieldType
             ->formComponent(TextareaFormComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
-            ->supportsUniqueConstraint()
             ->priority(15)
             ->availableValidationRules([
                 ValidationRule::REQUIRED,

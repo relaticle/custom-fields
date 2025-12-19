@@ -26,7 +26,6 @@ class LinkFieldType extends BaseFieldType
             ->formComponent(LinkComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
-            ->supportsUniqueConstraint()
             ->priority(60)
             ->availableValidationRules([
                 ValidationRule::REQUIRED,

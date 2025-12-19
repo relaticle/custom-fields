@@ -24,7 +24,6 @@ return [
         'default' => [
             'new_section' => 'New Section',
         ],
-        'default_section_name' => 'Default',
     ],
 
     'field' => [
@@ -66,12 +65,6 @@ return [
             ],
             'add_field' => 'Add Field',
             'system_defined_cannot_delete' => 'System-defined fields cannot be deleted.',
-            'allow_multiple' => 'Allow Multiple Values',
-            'allow_multiple_help' => 'When enabled, users can enter multiple values for this field.',
-            'max_values' => 'Maximum Values',
-            'max_values_help' => 'The maximum number of values that can be entered.',
-            'unique_per_entity_type' => 'Unique Per Entity Type',
-            'unique_per_entity_type_help' => 'Each value can only be assigned to one record of this entity type.',
             'validation' => [
                 'label' => 'Validation',
                 'rules' => 'Validation Rules',
@@ -322,7 +315,6 @@ return [
         'multi_parameter_missing' => 'This validation rule requires multiple parameters. Please add all required parameters.',
         'parameter_missing' => 'This validation rule requires exactly :count parameter(s). Please add all required parameters.',
         'invalid_rule_for_field_type' => 'The selected rule is not valid for this field type.',
-        'unique_value' => 'The value ":value" is already assigned to another record.',
     ],
 
     'empty_states' => [
@@ -336,19 +328,9 @@ return [
             'description' => 'Drag and drop fields here or click the button below to add your first field.',
             'icon' => 'heroicon-o-squares-plus',
         ],
-        'fields_no_sections' => [
-            'heading' => 'No custom fields yet',
-            'description' => 'Click the button below to add your first custom field.',
-            'icon' => 'heroicon-o-squares-plus',
-        ],
     ],
 
     'common' => [
         'inactive' => 'Inactive',
     ],
-
-    'email' => [
-        'add_email_placeholder' => 'Add email address...',
-    ],
-
 ];

@@ -9,7 +9,6 @@ use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
-use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
 use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 use Spatie\LaravelData\DataCollection;
 
@@ -22,16 +21,14 @@ final class ValidationService
      * Get all validation rules for a custom field, applying both:
      * - User-defined validation rules from the field configuration
      * - Database field constraints based on field type
-     * - Type-specific settings (e.g., unique per entity type for email fields)
      * - Special handling for numeric values to prevent database errors
      *
      * Returns a combined array of validation rules in Laravel validator format.
      *
      * @param  CustomField  $customField  The custom field to get validation rules for
-     * @param  int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
-     * @return array<int, mixed> Combined array of validation rules
+     * @return array<int, string> Combined array of validation rules
      */
-    public function getValidationRules(CustomField $customField, ?int $ignoreEntityId = null): array
+    public function getValidationRules(CustomField $customField): array
     {
         // Convert user rules to Laravel validator format
         $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
@@ -44,12 +41,7 @@ final class ValidationService
         $databaseRules = $this->getDatabaseValidationRules($customField->type, $isEncrypted);
 
         // Merge all rule types: field defaults + user rules + database constraints
-        $rules = $this->mergeAllValidationRules($fieldTypeDefaultRules, $userRules, $databaseRules, $customField->type);
-
-        // Add type-specific rules based on settings
-        $typeSpecificRules = $this->getTypeSpecificRules($customField, $ignoreEntityId);
-
-        return array_merge($rules, $typeSpecificRules);
+        return $this->mergeAllValidationRules($fieldTypeDefaultRules, $userRules, $databaseRules, $customField->type);
     }
 
     /**
@@ -189,25 +181,6 @@ final class ValidationService
         }
 
         return [];
-    }
-
-    /**
-     * Get type-specific validation rules based on field settings.
-     *
-     * @param  CustomField  $customField  The custom field
-     * @param  int|null  $ignoreEntityId  Entity ID to ignore for unique checks
-     * @return array<int, mixed> Type-specific validation rules
-     */
-    private function getTypeSpecificRules(CustomField $customField, ?int $ignoreEntityId = null): array
-    {
-        $rules = [];
-
-        // Handle unique per entity type setting (available for any field type)
-        if ($customField->settings->unique_per_entity_type) {
-            $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId);
-        }
-
-        return $rules;
     }
 
     /**

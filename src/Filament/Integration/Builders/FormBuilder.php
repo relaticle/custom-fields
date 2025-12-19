@@ -14,21 +14,15 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 
 class FormBuilder extends BaseBuilder
 {
-    private ?bool $withoutSections = null;
+    private bool $withoutSections = false;
 
     public function build(): Grid
     {
-        $container = FormContainer::make()
+        return FormContainer::make()
             ->forModel($this->explicitModel ?? null)
+            ->withoutSections($this->withoutSections)
             ->only($this->only)
             ->except($this->except);
-
-        // Only set withoutSections if explicitly configured
-        if ($this->withoutSections !== null) {
-            $container->withoutSections($this->withoutSections);
-        }
-
-        return $container;
     }
 
     public function withoutSections(bool $withoutSections = true): static

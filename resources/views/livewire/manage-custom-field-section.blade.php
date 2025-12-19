@@ -10,8 +10,6 @@
                 <x-filament::icon-button
                         icon="heroicon-m-bars-4"
                         color="gray"
-                        class="text-gray-500"
-                        size="xs"
                         x-sortable-handle
                 />
 
@@ -32,7 +30,7 @@
             x-sortable-group="fields"
             data-section-id="{{ $section->id }}"
             default="12"
-            class="fi-sc  fi-sc-has-gap fi-sc-dense fi-grid lg:fi-grid-cols"
+            class="fi-sc  fi-sc-has-gap fi-grid lg:fi-grid-cols"
             style="--cols-lg: repeat(12, minmax(0, 12fr)); --cols-default: repeat(2, minmax(0, 1fr));"
             @end.stop="$wire.updateFieldsOrder($event.to.getAttribute('data-section-id'), $event.to.sortable.toArray())"
     >
@@ -42,8 +40,8 @@
 
         @if(!count($this->fields))
             <div class="fi-grid-col" style="--col-span-default: span 12 / span 12;">
-                <div class="py-12">
-                    <div class="mx-auto grid max-w-xs justify-items-center text-center">
+                <div class="fi-ta-empty-state py-12">
+                    <div class="fi-ta-empty-state-content mx-auto grid max-w-xs justify-items-center text-center">
                         <div class="fi-ta-empty-state-icon-ctn mb-4 rounded-full bg-gray-50 p-3 dark:bg-gray-800/50">
                             <x-filament::icon
                                 icon="{{ __('custom-fields::custom-fields.empty_states.fields.icon') }}"

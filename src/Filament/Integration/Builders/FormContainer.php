@@ -4,8 +4,6 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
 use Filament\Schemas\Components\Grid;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 
 final class FormContainer extends Grid
 {
@@ -15,7 +13,7 @@ final class FormContainer extends Grid
 
     private array $only = [];
 
-    private ?bool $withoutSections = null;
+    private bool $withoutSections = false;
 
     public static function make(array|int|null $columns = 12): static
     {
@@ -64,15 +62,11 @@ final class FormContainer extends Grid
             return []; // Graceful fallback
         }
 
-        // Use explicit setting if provided, otherwise check feature flag
-        $withoutSections = $this->withoutSections
-            ?? FeatureManager::isEnabled(CustomFieldsFeature::UI_FLAT_FIELD_LAYOUT);
-
         $builder = app(FormBuilder::class);
 
         return $builder
             ->forModel($model)
-            ->withoutSections($withoutSections)
+            ->withoutSections($this->withoutSections)
             ->only($this->only)
             ->except($this->except)
             ->values()
