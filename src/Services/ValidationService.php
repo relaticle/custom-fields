@@ -28,10 +28,10 @@ final class ValidationService
      * Returns a combined array of validation rules in Laravel validator format.
      *
      * @param  CustomField  $customField  The custom field to get validation rules for
-     * @param  int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
+     * @param  string|int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
      * @return array<int, mixed> Combined array of validation rules
      */
-    public function getValidationRules(CustomField $customField, ?int $ignoreEntityId = null): array
+    public function getValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
         // Convert user rules to Laravel validator format
         $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
@@ -195,10 +195,10 @@ final class ValidationService
      * Get type-specific validation rules based on field settings.
      *
      * @param  CustomField  $customField  The custom field
-     * @param  int|null  $ignoreEntityId  Entity ID to ignore for unique checks
+     * @param  string|int|null  $ignoreEntityId  Entity ID to ignore for unique checks
      * @return array<int, mixed> Type-specific validation rules
      */
-    private function getTypeSpecificRules(CustomField $customField, ?int $ignoreEntityId = null): array
+    private function getTypeSpecificRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
         $rules = [];
 

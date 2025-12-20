@@ -24,7 +24,7 @@ final class UniqueCustomFieldValue implements ValidationRule
 {
     public function __construct(
         private readonly CustomField $customField,
-        private readonly ?int $ignoreEntityId = null,
+        private readonly string|int|null $ignoreEntityId = null,
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
