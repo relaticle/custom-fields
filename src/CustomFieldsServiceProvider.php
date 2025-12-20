@@ -15,7 +15,6 @@ use Illuminate\Filesystem\Filesystem;
 use Livewire\Livewire;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
-use Relaticle\CustomFields\Console\Commands\MigrateEmailFieldValuesCommand;
 use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
 use Relaticle\CustomFields\Contracts\ValueResolvers;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -169,7 +168,6 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         return [
             MakeCustomFieldsMigrationCommand::class,
             MakeFieldTypeCommand::class,
-            MigrateEmailFieldValuesCommand::class,
         ];
     }
 
