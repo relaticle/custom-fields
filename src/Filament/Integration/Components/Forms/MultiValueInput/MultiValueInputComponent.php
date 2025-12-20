@@ -63,7 +63,7 @@ class MultiValueInputComponent extends Field implements HasNestedRecursiveValida
             }
 
             // Filter out empty values
-            return array_values(array_filter($state, fn ($value) => filled($value)));
+            return array_values(array_filter($state, fn (mixed $value): bool => filled($value)));
         });
     }
 
