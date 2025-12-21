@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\ColorColumn as BaseColorColumn;
-use Filament\Tables\Columns\Column as BaseColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnState;
@@ -18,7 +17,7 @@ final class ColorColumn extends AbstractTableColumn
     use ConfiguresColumnState;
     use ConfiguresSearchable;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField): BaseColorColumn
     {
         $column = BaseColorColumn::make($customField->getFieldName());
 

@@ -16,7 +16,7 @@ final readonly class RadioComponent extends AbstractFormComponent
     use ConfiguresColorOptions;
     use ConfiguresLookups;
 
-    public function create(CustomField $customField): Field
+    public function create(CustomField $customField): Radio
     {
         $field = Radio::make($customField->getFieldName())->inline(false);
 

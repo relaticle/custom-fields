@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
 use Filament\Infolists\Components\Entry;
-use Filament\Schemas\Components\Component;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldInfolistsFactory;
@@ -23,7 +22,7 @@ final class InfolistBuilder extends BaseBuilder
 
     private ?bool $withoutSections = null;
 
-    public function build(): Component
+    public function build(): InfolistContainer
     {
         $container = InfolistContainer::make()
             ->forModel($this->explicitModel ?? null)

@@ -14,7 +14,7 @@ final readonly class TagsInputComponent extends AbstractFormComponent
 {
     use ConfiguresLookups;
 
-    public function create(CustomField $customField): Field
+    public function create(CustomField $customField): TagsInput
     {
         $field = TagsInput::make($customField->getFieldName());
 

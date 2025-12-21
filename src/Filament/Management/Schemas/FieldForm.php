@@ -126,379 +126,393 @@ class FieldForm implements FormInterface
 
         $optionsRepeater->reorderable()->orderColumn('sort_order');
 
+        // Build general schema
+        $generalSchema = [
+            Hidden::make('entity_type')
+                ->default(
+                    fn () => request(
+                        'entityType',
+                        (Entities::withCustomFields()->first()?->getAlias()) ?? ''
+                    )
+                ),
+            Grid::make()
+                ->columns(fn (): int => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) ? 2 : 3)
+                ->columnSpanFull()
+                ->schema([
+                    TypeField::make('type')
+                        ->label(__('custom-fields::custom-fields.field.form.type'))
+                        ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
+                        ->live()
+                        ->afterStateHydrated(function (
+                            Select $component,
+                            mixed $state,
+                            ?CustomField $record
+                        ): void {
+                            if (blank($state)) {
+                                $component->state(
+                                    $record->type ?? CustomFieldsType::toCollection()->first()->key
+                                );
+                            }
+                        })
+                        ->required(),
+                    TextInput::make('name')
+                        ->label(__('custom-fields::custom-fields.field.form.name'))
+                        ->live(onBlur: true)
+                        ->required()
+                        ->maxLength(50)
+                        ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                        ->unique(
+                            table: CustomFields::customFieldModel(),
+                            column: 'name',
+                            ignoreRecord: true,
+                            modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                ->where('entity_type', $get('entity_type'))
+                                ->when(
+                                    FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                    fn (Unique $rule) => $rule->where(
+                                        config('custom-fields.database.column_names.tenant_foreign_key'),
+                                        TenantContextService::getCurrentTenantId()
+                                    )
+                                )
+                        )
+                        ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
+                            $old ??= '';
+                            $state ??= '';
+
+                            if (($get('code') ?? '') !== Str::of($old)->slug('_')->toString()) {
+                                return;
+                            }
+
+                            $set('code', Str::of($state)->slug('_')->toString());
+                        }),
+                    TextInput::make('code')
+                        ->label(__('custom-fields::custom-fields.field.form.code'))
+                        ->live(onBlur: true)
+                        ->required(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
+                        ->alphaDash()
+                        ->maxLength(50)
+                        ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                        ->visible(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
+                        ->unique(
+                            table: CustomFields::customFieldModel(),
+                            column: 'code',
+                            ignoreRecord: true,
+                            modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                ->where('entity_type', $get('entity_type'))
+                                ->when(
+                                    FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                    fn (Unique $rule) => $rule->where(
+                                        config('custom-fields.database.column_names.tenant_foreign_key'),
+                                        TenantContextService::getCurrentTenantId()
+                                    )
+                                )
+                        )
+                        ->afterStateUpdated(function (Set $set, ?string $state): void {
+                            $set('code', Str::of($state)->slug('_')->toString());
+                        }),
+                ]),
+            Fieldset::make(
+                __(
+                    'custom-fields::custom-fields.field.form.settings'
+                )
+            )
+                ->columnSpanFull()
+                ->columns(2)
+                ->schema([
+                    // Visibility settings
+                    Toggle::make('settings.visible_in_list')
+                        ->inline(false)
+                        ->live()
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.visible_in_list'
+                            )
+                        )
+                        ->afterStateHydrated(function (
+                            Toggle $component,
+                            ?Model $record
+                        ): void {
+                            if (is_null($record)) {
+                                $component->state(true);
+                            }
+                        }),
+                    Toggle::make('settings.visible_in_view')
+                        ->inline(false)
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.visible_in_view'
+                            )
+                        )
+                        ->afterStateHydrated(function (
+                            Toggle $component,
+                            ?Model $record
+                        ): void {
+                            if (is_null($record)) {
+                                $component->state(true);
+                            }
+                        }),
+                    Toggle::make('settings.list_toggleable_hidden')
+                        ->inline(false)
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.list_toggleable_hidden'
+                            )
+                        )
+                        ->helperText(
+                            __(
+                                'custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'
+                            )
+                        )
+                        ->visible(
+                            fn (Get $get): bool => $get(
+                                'settings.visible_in_list'
+                            ) &&
+                                FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS)
+                        )
+                        ->afterStateHydrated(function (
+                            Toggle $component,
+                            ?Model $record
+                        ): void {
+                            if (is_null($record)) {
+                                $component->state(
+                                    FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT)
+                                );
+                            }
+                        }),
+                    // Data settings
+                    Toggle::make('settings.searchable')
+                        ->inline(false)
+                        ->visible(
+                            fn (
+                                Get $get
+                            ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
+                        )
+                        ->disabled(
+                            fn (Get $get): bool => $get(
+                                'settings.encrypted'
+                            ) === true
+                        )
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.searchable'
+                            )
+                        )
+                        ->afterStateHydrated(function (
+                            Toggle $component,
+                            mixed $state
+                        ): void {
+                            if (is_null($state)) {
+                                $component->state(false);
+                            }
+                        }),
+                    Toggle::make('settings.encrypted')
+                        ->inline(false)
+                        ->live()
+                        ->disabled(
+                            fn (
+                                ?CustomField $record
+                            ): bool => (bool) $record?->exists
+                        )
+                        ->dehydrated()
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.encrypted'
+                            )
+                        )
+                        ->visible(
+                            fn (
+                                Get $get
+                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION) &&
+                                CustomFieldsType::getFieldType($get('type'))->encryptable
+                        )
+                        ->default(false),
+                    // Appearance settings
+                    Toggle::make('settings.enable_option_colors')
+                        ->inline(false)
+                        ->live()
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.enable_option_colors'
+                            )
+                        )
+                        ->helperText(
+                            __(
+                                'custom-fields::custom-fields.field.form.enable_option_colors_help'
+                            )
+                        )
+                        ->visible(
+                            fn (
+                                Get $get
+                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
+                                in_array((string) $get('type'), [
+                                    'select',
+                                    'multi_select',
+                                ])
+                        ),
+                    // Multi-value settings
+                    Toggle::make('settings.allow_multiple')
+                        ->inline(false)
+                        ->live()
+                        ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
+                        ->helperText(__('custom-fields::custom-fields.field.form.allow_multiple_help'))
+                        ->visible(
+                            fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                                CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
+                        )
+                        ->afterStateUpdated(function (Set $set, bool $state): void {
+                            if ($state) {
+                                $set('settings.max_values', 2);
+                            }
+                        })
+                        ->default(false),
+                    TextInput::make('settings.max_values')
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.max_values'
+                            )
+                        )
+                        ->helperText(
+                            __(
+                                'custom-fields::custom-fields.field.form.max_values_help'
+                            )
+                        )
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(20)
+                        ->default(5)
+                        ->visible(
+                            fn (
+                                Get $get
+                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                                CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true &&
+                                $get('settings.allow_multiple') === true
+                        ),
+                    // Uniqueness constraint
+                    Toggle::make('settings.unique_per_entity_type')
+                        ->inline(false)
+                        ->label(
+                            __(
+                                'custom-fields::custom-fields.field.form.unique_per_entity_type'
+                            )
+                        )
+                        ->helperText(
+                            __(
+                                'custom-fields::custom-fields.field.form.unique_per_entity_type_help'
+                            )
+                        )
+                        ->visible(
+                            fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
+                                CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
+                        )
+                        ->default(false),
+                ]),
+
+            // Dynamic type-specific settings from field type definition
+            ...self::getTypeSettingsSchema(),
+
+            Select::make('options_lookup_type')
+                ->label(
+                    __(
+                        'custom-fields::custom-fields.field.form.options_lookup_type.label'
+                    )
+                )
+                ->visible(
+                    fn (Get $get): bool => $get('type') !== null
+                        && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
+                        && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
+                )
+                ->disabled(
+                    fn (
+                        ?CustomField $record
+                    ): bool => (bool) $record?->system_defined
+                )
+                ->live()
+                ->options([
+                    'options' => __(
+                        'custom-fields::custom-fields.field.form.options_lookup_type.options'
+                    ),
+                    'lookup' => __(
+                        'custom-fields::custom-fields.field.form.options_lookup_type.lookup'
+                    ),
+                ])
+                ->afterStateHydrated(function (
+                    Select $component,
+                    mixed $state,
+                    ?CustomField $record,
+                    Get $get
+                ): void {
+                    if (blank($state)) {
+                        $optionsLookupType = $record?->lookup_type
+                            ? 'lookup'
+                            : 'options';
+
+                        $component->state($optionsLookupType);
+                    }
+                })
+                ->afterStateUpdated(function (
+                    Select $component,
+                    ?string $state,
+                    Set $set,
+                    ?CustomField $record
+                ): void {
+                    if ($state === 'options') {
+                        $set('lookup_type', null, true, true);
+                    } else {
+                        $set(
+                            'lookup_type',
+                            $record->lookup_type ??
+                            (Entities::asLookupSources()->first()?->getAlias()) ?? ''
+                        );
+                    }
+                })
+                ->dehydrated(false)
+                ->required(),
+            Select::make('lookup_type')
+                ->label(
+                    __(
+                        'custom-fields::custom-fields.field.form.lookup_type.label'
+                    )
+                )
+                ->visible(
+                    fn (Get $get): bool => $get(
+                        'options_lookup_type'
+                    ) === 'lookup'
+                )
+                ->live()
+                ->options(Entities::getLookupOptions())
+                ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
+                ->required(),
+            Hidden::make('lookup_type'),
+            $optionsRepeater,
+        ];
+
+        // Build additional tabs based on feature flags
+        $additionalTabs = [];
+
+        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
+            $additionalTabs[] = Tab::make('Visibility')
+                ->schema([VisibilityComponent::make()]);
+        }
+
+        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
+            $additionalTabs[] = Tab::make(
+                __('custom-fields::custom-fields.field.form.validation.label')
+            )->schema([CustomFieldValidationComponent::make()]);
+        }
+
+        // If no additional tabs, return schema directly without tabs wrapper
+        if ($additionalTabs === []) {
+            return $generalSchema;
+        }
+
+        // Otherwise, wrap in tabs component
         return [
             Tabs::make()
                 ->tabs([
                     Tab::make(
                         __('custom-fields::custom-fields.field.form.general')
-                    )->schema([
-                        Hidden::make('entity_type')
-                            ->default(
-                                fn () => request(
-                                    'entityType',
-                                    (Entities::withCustomFields()->first()?->getAlias()) ?? ''
-                                )
-                            ),
-                        Grid::make()
-                            ->columns(fn (): int => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) ? 2 : 3)
-                            ->columnSpanFull()
-                            ->schema([
-                                TypeField::make('type')
-                                    ->label(__('custom-fields::custom-fields.field.form.type'))
-                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
-                                    ->live()
-                                    ->afterStateHydrated(function (
-                                        Select $component,
-                                        mixed $state,
-                                        ?CustomField $record
-                                    ): void {
-                                        if (blank($state)) {
-                                            $component->state(
-                                                $record->type ?? CustomFieldsType::toCollection()->first()->key
-                                            );
-                                        }
-                                    })
-                                    ->required(),
-                                TextInput::make('name')
-                                    ->label(__('custom-fields::custom-fields.field.form.name'))
-                                    ->live(onBlur: true)
-                                    ->required()
-                                    ->maxLength(50)
-                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
-                                    ->unique(
-                                        table: CustomFields::customFieldModel(),
-                                        column: 'name',
-                                        ignoreRecord: true,
-                                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                                            ->where('entity_type', $get('entity_type'))
-                                            ->when(
-                                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                                fn (Unique $rule) => $rule->where(
-                                                    config('custom-fields.database.column_names.tenant_foreign_key'),
-                                                    TenantContextService::getCurrentTenantId()
-                                                )
-                                            )
-                                    )
-                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
-                                        $old ??= '';
-                                        $state ??= '';
-
-                                        if (($get('code') ?? '') !== Str::of($old)->slug('_')->toString()) {
-                                            return;
-                                        }
-
-                                        $set('code', Str::of($state)->slug('_')->toString());
-                                    }),
-                                TextInput::make('code')
-                                    ->label(__('custom-fields::custom-fields.field.form.code'))
-                                    ->live(onBlur: true)
-                                    ->required(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
-                                    ->alphaDash()
-                                    ->maxLength(50)
-                                    ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
-                                    ->visible(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
-                                    ->unique(
-                                        table: CustomFields::customFieldModel(),
-                                        column: 'code',
-                                        ignoreRecord: true,
-                                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                                            ->where('entity_type', $get('entity_type'))
-                                            ->when(
-                                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                                fn (Unique $rule) => $rule->where(
-                                                    config('custom-fields.database.column_names.tenant_foreign_key'),
-                                                    TenantContextService::getCurrentTenantId()
-                                                )
-                                            )
-                                    )
-                                    ->afterStateUpdated(function (Set $set, ?string $state): void {
-                                        $set('code', Str::of($state)->slug('_')->toString());
-                                    }),
-                            ]),
-                        Fieldset::make(
-                            __(
-                                'custom-fields::custom-fields.field.form.settings'
-                            )
-                        )
-                            ->columnSpanFull()
-                            ->columns(2)
-                            ->schema([
-                                // Visibility settings
-                                Toggle::make('settings.visible_in_list')
-                                    ->inline(false)
-                                    ->live()
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.visible_in_list'
-                                        )
-                                    )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        ?Model $record
-                                    ): void {
-                                        if (is_null($record)) {
-                                            $component->state(true);
-                                        }
-                                    }),
-                                Toggle::make('settings.visible_in_view')
-                                    ->inline(false)
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.visible_in_view'
-                                        )
-                                    )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        ?Model $record
-                                    ): void {
-                                        if (is_null($record)) {
-                                            $component->state(true);
-                                        }
-                                    }),
-                                Toggle::make('settings.list_toggleable_hidden')
-                                    ->inline(false)
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.list_toggleable_hidden'
-                                        )
-                                    )
-                                    ->helperText(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'
-                                        )
-                                    )
-                                    ->visible(
-                                        fn (Get $get): bool => $get(
-                                            'settings.visible_in_list'
-                                        ) &&
-                                            FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS)
-                                    )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        ?Model $record
-                                    ): void {
-                                        if (is_null($record)) {
-                                            $component->state(
-                                                FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT)
-                                            );
-                                        }
-                                    }),
-                                // Data settings
-                                Toggle::make('settings.searchable')
-                                    ->inline(false)
-                                    ->visible(
-                                        fn (
-                                            Get $get
-                                        ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
-                                    )
-                                    ->disabled(
-                                        fn (Get $get): bool => $get(
-                                            'settings.encrypted'
-                                        ) === true
-                                    )
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.searchable'
-                                        )
-                                    )
-                                    ->afterStateHydrated(function (
-                                        Toggle $component,
-                                        mixed $state
-                                    ): void {
-                                        if (is_null($state)) {
-                                            $component->state(false);
-                                        }
-                                    }),
-                                Toggle::make('settings.encrypted')
-                                    ->inline(false)
-                                    ->live()
-                                    ->disabled(
-                                        fn (
-                                            ?CustomField $record
-                                        ): bool => (bool) $record?->exists
-                                    )
-                                    ->dehydrated()
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.encrypted'
-                                        )
-                                    )
-                                    ->visible(
-                                        fn (
-                                            Get $get
-                                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION) &&
-                                            CustomFieldsType::getFieldType($get('type'))->encryptable
-                                    )
-                                    ->default(false),
-                                // Appearance settings
-                                Toggle::make('settings.enable_option_colors')
-                                    ->inline(false)
-                                    ->live()
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.enable_option_colors'
-                                        )
-                                    )
-                                    ->helperText(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.enable_option_colors_help'
-                                        )
-                                    )
-                                    ->visible(
-                                        fn (
-                                            Get $get
-                                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
-                                            in_array((string) $get('type'), [
-                                                'select',
-                                                'multi_select',
-                                            ])
-                                    ),
-                                // Multi-value settings
-                                Toggle::make('settings.allow_multiple')
-                                    ->inline(false)
-                                    ->live()
-                                    ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
-                                    ->helperText(__('custom-fields::custom-fields.field.form.allow_multiple_help'))
-                                    ->visible(
-                                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                                            CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
-                                    )
-                                    ->afterStateUpdated(function (Set $set, bool $state): void {
-                                        if ($state) {
-                                            $set('settings.max_values', 2);
-                                        }
-                                    })
-                                    ->default(false),
-                                TextInput::make('settings.max_values')
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.max_values'
-                                        )
-                                    )
-                                    ->helperText(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.max_values_help'
-                                        )
-                                    )
-                                    ->numeric()
-                                    ->minValue(1)
-                                    ->maxValue(20)
-                                    ->default(5)
-                                    ->visible(
-                                        fn (
-                                            Get $get
-                                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                                            CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true &&
-                                            $get('settings.allow_multiple') === true
-                                    ),
-                                // Uniqueness constraint
-                                Toggle::make('settings.unique_per_entity_type')
-                                    ->inline(false)
-                                    ->label(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.unique_per_entity_type'
-                                        )
-                                    )
-                                    ->helperText(
-                                        __(
-                                            'custom-fields::custom-fields.field.form.unique_per_entity_type_help'
-                                        )
-                                    )
-                                    ->visible(
-                                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
-                                            CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
-                                    )
-                                    ->default(false),
-                            ]),
-
-                        // Dynamic type-specific settings from field type definition
-                        ...self::getTypeSettingsSchema(),
-
-                        Select::make('options_lookup_type')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.options_lookup_type.label'
-                                )
-                            )
-                            ->visible(
-                                fn (Get $get): bool => $get('type') !== null
-                                    && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
-                                    && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
-                            )
-                            ->disabled(
-                                fn (
-                                    ?CustomField $record
-                                ): bool => (bool) $record?->system_defined
-                            )
-                            ->live()
-                            ->options([
-                                'options' => __(
-                                    'custom-fields::custom-fields.field.form.options_lookup_type.options'
-                                ),
-                                'lookup' => __(
-                                    'custom-fields::custom-fields.field.form.options_lookup_type.lookup'
-                                ),
-                            ])
-                            ->afterStateHydrated(function (
-                                Select $component,
-                                mixed $state,
-                                ?CustomField $record,
-                                Get $get
-                            ): void {
-                                if (blank($state)) {
-                                    $optionsLookupType = $record?->lookup_type
-                                        ? 'lookup'
-                                        : 'options';
-
-                                    $component->state($optionsLookupType);
-                                }
-                            })
-                            ->afterStateUpdated(function (
-                                Select $component,
-                                ?string $state,
-                                Set $set,
-                                ?CustomField $record
-                            ): void {
-                                if ($state === 'options') {
-                                    $set('lookup_type', null, true, true);
-                                } else {
-                                    $set(
-                                        'lookup_type',
-                                        $record->lookup_type ??
-                                        (Entities::asLookupSources()->first()?->getAlias()) ?? ''
-                                    );
-                                }
-                            })
-                            ->dehydrated(false)
-                            ->required(),
-                        Select::make('lookup_type')
-                            ->label(
-                                __(
-                                    'custom-fields::custom-fields.field.form.lookup_type.label'
-                                )
-                            )
-                            ->visible(
-                                fn (Get $get): bool => $get(
-                                    'options_lookup_type'
-                                ) === 'lookup'
-                            )
-                            ->live()
-                            ->options(Entities::getLookupOptions())
-                            ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
-                            ->required(),
-                        Hidden::make('lookup_type'),
-                        $optionsRepeater,
-                    ]),
-                    Tab::make('Visibility')
-                        ->visible(
-                            fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
-                        )
-                        ->schema([VisibilityComponent::make()]),
-                    Tab::make(
-                        __(
-                            'custom-fields::custom-fields.field.form.validation.label'
-                        )
-                    )->schema([CustomFieldValidationComponent::make()]),
+                    )->schema($generalSchema),
+                    ...$additionalTabs,
                 ])
                 ->columns(2)
                 ->columnSpanFull()

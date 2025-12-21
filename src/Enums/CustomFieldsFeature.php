@@ -17,6 +17,7 @@ enum CustomFieldsFeature: string
     case FIELD_CODE_AUTO_GENERATE = 'field_code_auto_generate';
     case FIELD_MULTI_VALUE = 'field_multi_value';
     case FIELD_UNIQUE_VALUE = 'field_unique_value';
+    case FIELD_VALIDATION_RULES = 'field_validation_rules';
 
     // Table/UI integration features
     case UI_TABLE_COLUMNS = 'ui_table_columns';

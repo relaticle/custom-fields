@@ -14,7 +14,7 @@ final readonly class ToggleButtonsComponent extends AbstractFormComponent
 {
     use ConfiguresColorOptions;
 
-    public function create(CustomField $customField): Field
+    public function create(CustomField $customField): ToggleButtons
     {
         $field = ToggleButtons::make($customField->getFieldName())->inline(false);
 

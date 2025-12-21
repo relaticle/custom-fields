@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
-use Filament\Tables\Columns\Column as BaseColumn;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -20,7 +19,7 @@ final class TextColumn extends AbstractTableColumn
     use ConfiguresSearchable;
     use ConfiguresSortable;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 

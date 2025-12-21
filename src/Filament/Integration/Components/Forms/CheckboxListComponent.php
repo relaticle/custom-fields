@@ -16,7 +16,7 @@ final readonly class CheckboxListComponent extends AbstractFormComponent
     use ConfiguresColorOptions;
     use ConfiguresLookups;
 
-    public function create(CustomField $customField): Field
+    public function create(CustomField $customField): CheckboxList
     {
         $field = CheckboxList::make($customField->getFieldName());
 
