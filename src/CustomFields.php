@@ -114,6 +114,16 @@ final class CustomFields
     }
 
     /**
+     * @return bool
+     */
+    public static function optionModelUsesStringKeys(): bool
+    {
+        $optionModel = self::newOptionModel();
+
+        return $optionModel->getKeyType() === 'string';
+    }
+
+    /**
      * Specify the custom field option model that should be used by Custom Fields.
      */
     public static function useOptionModel(string $model): static

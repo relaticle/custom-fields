@@ -12,6 +12,7 @@ use Exception;
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\Data\ValidationRuleData;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\CustomField;
@@ -200,7 +201,7 @@ final class ImportColumnConfigurator
      */
     private function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int {
+        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int|string {
             if (blank($state)) {
                 return $multiple ? [] : null;
             }
@@ -220,11 +221,11 @@ final class ImportColumnConfigurator
     /**
      * Resolve a single choice value.
      */
-    private function resolveChoiceValue(CustomField $customField, mixed $value): ?int
+    private function resolveChoiceValue(CustomField $customField, mixed $value): int|string|null
     {
         // If already numeric, assume it's a choice ID
         if (is_numeric($value)) {
-            return (int) $value;
+            return CustomFields::optionModelUsesStringKeys() ? (string) $value : (int) $value;
         }
 
         // Try exact match
@@ -244,7 +245,9 @@ final class ImportColumnConfigurator
             );
         }
 
-        return $choice->getKey();
+        $key = $choice->getKey();
+
+        return CustomFields::optionModelUsesStringKeys() ? (string) $key : $key;
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Support;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Relaticle\CustomFields\CustomFields;
 
 /**
  * Handles safe conversion of values to database-compatible formats
@@ -34,7 +35,10 @@ class SafeValueConverter
     {
         // Handle field types by string value
         return match ($fieldType) {
-            'number', 'radio', 'select' => self::toSafeInteger($value),
+            'number' => self::toSafeInteger($value),
+            'radio', 'select' => CustomFields::optionModelUsesStringKeys()
+                ? self::toSafeString($value)
+                : self::toSafeInteger($value),
             'currency' => self::toSafeFloat($value),
             'checkbox_list', 'toggle_buttons', 'tags_input', 'multi_select' => self::toSafeArray($value),
             default => $value,
@@ -115,6 +119,21 @@ class SafeValueConverter
         }
 
         return null;
+    }
+
+    /**
+     * Convert a value to a safe string.
+     *
+     * @param  mixed  $value  The value to convert
+     * @return string|null The string value or null if empty
+     */
+    public static function toSafeString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
     }
 
     /**

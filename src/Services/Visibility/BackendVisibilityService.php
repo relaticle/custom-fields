@@ -176,19 +176,13 @@ final readonly class BackendVisibilityService
 
         // Single value optionable fields
         if (! $field->isMultiChoiceField()) {
-            return is_numeric($value)
-                ? $options->get($value)->name ?? $value
-                : $value;
+            return $options->get($value)?->name ?? $value;
         }
 
         // Multi-value optionable fields
         if (is_array($value)) {
             return collect($value)
-                ->map(
-                    fn (mixed $id) => is_numeric($id)
-                        ? $options->get($id)->name ?? $id
-                        : $id
-                )
+                ->map(fn (mixed $id) => $options->get($id)?->name ?? $id)
                 ->all();
         }
 
