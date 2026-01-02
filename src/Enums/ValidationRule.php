@@ -44,6 +44,7 @@ enum ValidationRule: string implements HasLabel
     case DOESNT_START_WITH = 'doesnt_start_with';
     case DOESNT_END_WITH = 'doesnt_end_with';
     case EMAIL = 'email';
+    case PHONE = 'phone';
     case ENDS_WITH = 'ends_with';
     case ENUM = 'enum';
     case EXCLUDE = 'exclude';
@@ -130,7 +131,8 @@ enum ValidationRule: string implements HasLabel
             self::SIZE, self::MAX, self::MIN, self::DIGITS, self::DATE_EQUALS,
             self::DATE_FORMAT, self::AFTER, self::AFTER_OR_EQUAL, self::BEFORE,
             self::BEFORE_OR_EQUAL, self::EXISTS, self::UNIQUE, self::GT, self::GTE,
-            self::LT, self::LTE, self::MAX_DIGITS, self::MIN_DIGITS, self::MULTIPLE_OF => 1,
+            self::LT, self::LTE, self::MAX_DIGITS, self::MIN_DIGITS, self::MULTIPLE_OF,
+            self::PHONE => 1,
 
             // Default case for any unspecified rules
             default => 0
@@ -266,7 +268,9 @@ enum ValidationRule: string implements HasLabel
                 },
             ],
 
-            // File rules
+            // Phone rule - country codes are optional (e.g., "US,CA,GB" or empty for AUTO)
+            self::PHONE => ['nullable', 'string', 'max:50', 'regex:/^[A-Z]{2}(,[A-Z]{2})*$/'],
+
             // Default for all other rules
             default => ['required', 'string', 'max:255'],
         };
@@ -314,6 +318,7 @@ enum ValidationRule: string implements HasLabel
             self::MIMES => __('custom-fields::custom-fields.validation.parameter_help.mimes'),
             self::REGEX => __('custom-fields::custom-fields.validation.parameter_help.regex'),
             self::EXISTS => __('custom-fields::custom-fields.validation.parameter_help.exists'),
+            self::PHONE => __('custom-fields::custom-fields.validation.parameter_help.phone'),
             default => __('custom-fields::custom-fields.validation.parameter_help.default'),
         };
     }

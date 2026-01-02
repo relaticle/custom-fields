@@ -107,6 +107,9 @@ return [
     ],
 
     'validation' => [
+        'messages' => [
+            'phone' => 'The :attribute must be a valid phone number.',
+        ],
         'labels' => [
             'ACCEPTED' => 'Accepted',
             'ACCEPTED_IF' => 'Accepted if',
@@ -138,6 +141,7 @@ return [
             'DOESNT_START_WITH' => 'Doesn\'t start with',
             'DOESNT_END_WITH' => 'Doesn\'t end with',
             'EMAIL' => 'Email',
+            'PHONE' => 'Phone Number',
             'ENDS_WITH' => 'Ends with',
             'ENUM' => 'Enum',
             'EXCLUDE' => 'Exclude',
@@ -224,6 +228,7 @@ return [
             'DOESNT_START_WITH' => 'The field must not start with one of the given values.',
             'DOESNT_END_WITH' => 'The field must not end with one of the given values.',
             'EMAIL' => 'The field must be a valid email address.',
+            'PHONE' => 'The field must be a valid phone number.',
             'ENDS_WITH' => 'The field must end with one of the given values.',
             'ENUM' => 'The field must be a valid enum value.',
             'EXCLUDE' => 'The field must be excluded from the data.',
@@ -307,6 +312,7 @@ return [
             'in' => 'Enter a comma-separated list of allowed values.',
             'regex' => 'Enter a valid regular expression pattern without delimiters.',
             'exists' => 'Enter a table name or table.column format.',
+            'phone' => 'Enter country codes (e.g., US,CA,GB) or leave empty for auto-detection.',
             'end_with' => 'Enter a value that the field must end with. Add multiple parameters for multiple possibilities.',
             'mimes' => 'Enter a file extension (without the dot). Add multiple parameters for multiple allowed types.',
         ],
@@ -353,6 +359,21 @@ return [
 
     'link' => [
         'add_link_placeholder' => 'Add URL...',
+    ],
+
+    'phone' => [
+        'add_phone_placeholder' => 'Add phone number...',
+        'search_country' => 'Search country...',
+        'no_results' => 'No countries found',
+        'one_result' => '1 country found',
+        'results_available' => 'countries available',
+        'country_list' => 'Country list',
+        'change_country' => 'Change country',
+        'phone_number' => 'Phone number',
+        'manage_phone_numbers' => 'Manage phone numbers',
+        'edit_phone_numbers' => 'Edit phone numbers',
+        'phone_numbers_list' => 'Phone numbers list',
+        'remove_phone_number' => 'Remove phone number',
     ],
 
 ];

@@ -13,13 +13,14 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextCo
 
 /**
  * ABOUTME: Field type definition for phone number input fields
- * ABOUTME: Provides specialized phone input with formatting and international support
+ * ABOUTME: Provides specialized phone input with country selector and E.164 formatting
+ * ABOUTME: Supports multiple phone numbers like email field
  */
 class PhoneFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
     {
-        return FieldSchema::string()
+        return FieldSchema::multiChoice()
             ->key('phone')
             ->label('Phone Number')
             ->icon('heroicon-o-phone')
@@ -30,14 +31,16 @@ class PhoneFieldType extends BaseFieldType
             ->encryptable()
             ->searchable()
             ->sortable()
+            ->supportsMultiValue()
+            ->supportsUniqueConstraint()
+            ->withArbitraryValues()
+            ->withoutUserOptions()
+            ->defaultItemValidationRules(['phone:AUTO'])
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
-                ValidationRule::REGEX,
-                ValidationRule::STARTS_WITH,
                 ValidationRule::UNIQUE,
-                ValidationRule::EXISTS,
             ]);
     }
 }

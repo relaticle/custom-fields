@@ -97,6 +97,18 @@ dataset('validation_rules_with_parameters', fn (): array => [
         'validValue' => 'test@example.com',
         'invalidValue' => 'not-an-email',
     ],
+    'phone' => [
+        'rule' => ValidationRule::PHONE->value,
+        'parameters' => [],
+        'validValue' => '+14155551234',
+        'invalidValue' => 'not-a-phone',
+    ],
+    'phone_with_country' => [
+        'rule' => ValidationRule::PHONE->value,
+        'parameters' => ['US'],
+        'validValue' => '+14155551234',
+        'invalidValue' => '+442071234567',
+    ],
     'file' => [
         'rule' => ValidationRule::FILE->value,
         'parameters' => [],
@@ -579,6 +591,11 @@ dataset('field_type_validation_compatibility', fn (): array => [
     'url_field_rules' => [
         'fieldType' => 'link',
         'allowedRules' => ['required', 'url', 'starts_with'],
+        'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],
+    ],
+    'phone_field_rules' => [
+        'fieldType' => 'phone',
+        'allowedRules' => ['required', 'phone', 'min', 'max', 'regex', 'starts_with', 'unique', 'exists'],
         'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],
     ],
 ]);
