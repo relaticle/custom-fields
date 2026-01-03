@@ -4,7 +4,7 @@
         <div class="flex gap-6">
             {{-- Left side: Vertical entity tabs --}}
             <div class="shrink-0 min-w-48">
-                <x-filament::tabs label="Entity tabs" vertical contained>
+                <x-filament::tabs label="Entity tabs" vertical>
                     @foreach ($this->entityTypes as $key => $label)
                         <x-filament::tabs.item
                             :active="$key === $this->currentEntityType"
