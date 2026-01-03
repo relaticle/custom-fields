@@ -239,7 +239,7 @@
                                 <div
                                     x-sortable
                                     x-on:end.stop="reorderValues($event)"
-                                    class="max-h-[280px] overflow-y-auto rounded-t-lg [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
+                                    class="max-h-[280px] overflow-y-auto overflow-x-auto rounded-t-lg"
                                 >
                                     <template x-for="(value, index) in state" :key="`${value}-${index}`">
                                         <div

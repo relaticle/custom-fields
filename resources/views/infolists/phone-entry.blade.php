@@ -42,10 +42,11 @@
         class="flex flex-wrap gap-x-3 gap-y-1"
     >
         @forelse ($entries as $index => $entry)
-            <div class="group relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <div class="group relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors max-w-full">
                 <a
                     href="tel:{{ $entry['tel'] }}"
-                    class="text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
+                    class="text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[250px]"
+                    title="{{ $entry['display'] }}"
                 >
                     {{ $entry['display'] }}
                 </a>

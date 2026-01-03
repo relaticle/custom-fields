@@ -9,7 +9,7 @@ use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\PhoneEntry;
-use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\PhoneColumn;
 
 /**
  * ABOUTME: Field type definition for phone number input fields
@@ -25,7 +25,7 @@ class PhoneFieldType extends BaseFieldType
             ->label('Phone Number')
             ->icon('heroicon-o-phone')
             ->formComponent(PhoneComponent::class)
-            ->tableColumn(TextColumn::class)
+            ->tableColumn(PhoneColumn::class)
             ->infolistEntry(PhoneEntry::class)
             ->priority(16)
             ->encryptable()
