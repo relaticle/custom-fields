@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
-use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -15,7 +14,7 @@ final class EmailColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
 
-    public function make(CustomField $customField): Column
+    public function make(CustomField $customField): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName())
             ->view('custom-fields::tables.columns.email-column');
@@ -33,7 +32,7 @@ final class EmailColumn extends AbstractTableColumn
                     $value = filled($value) ? [$value] : [];
                 }
 
-                return array_filter($value, fn ($v) => ! empty($v));
+                return array_filter($value, fn ($v): bool => ! empty($v));
             });
 
         return $column;

@@ -23,12 +23,48 @@ use Throwable;
  *
  * This service provides PHP-based evaluation of visibility conditions.
  */
-final readonly class BackendVisibilityService
+final class BackendVisibilityService
 {
+    /**
+     * Request-scoped cache of fields by entity type.
+     *
+     * @var array<string, Collection<string, CustomField>>
+     */
+    private static array $fieldCache = [];
+
     public function __construct(
-        private CoreVisibilityLogicService $coreLogic,
-        private ComponentOptionsExtractor $optionsExtractor,
+        private readonly CoreVisibilityLogicService $coreLogic,
+        private readonly ComponentOptionsExtractor $optionsExtractor,
     ) {}
+
+    /**
+     * Get cached fields for an entity type (O(1) lookup by code).
+     *
+     * @return Collection<string, CustomField>
+     */
+    private function getCachedFieldsForEntity(string $entityType): Collection
+    {
+        if (! isset(self::$fieldCache[$entityType])) {
+            self::$fieldCache[$entityType] = CustomFields::newCustomFieldModel()::forMorphEntity($entityType)
+                ->with('options')
+                ->get()
+                ->keyBy('code');
+        }
+
+        return self::$fieldCache[$entityType];
+    }
+
+    /**
+     * Clear field cache (call on field create/update/delete).
+     */
+    public static function clearCache(?string $entityType = null): void
+    {
+        if ($entityType === null) {
+            self::$fieldCache = [];
+        } else {
+            unset(self::$fieldCache[$entityType]);
+        }
+    }
 
     /**
      * Extract field values from a record for visibility evaluation.
@@ -210,10 +246,8 @@ final readonly class BackendVisibilityService
         string $fieldCode,
         string $entityType
     ): array {
-        $field = CustomFields::newCustomFieldModel()::forMorphEntity($entityType)
-            ->where('code', $fieldCode)
-            ->with('options')
-            ->first();
+        // Use cached fields for O(1) lookup
+        $field = $this->getCachedFieldsForEntity($entityType)->get($fieldCode);
 
         if (! $field || ! $field->isChoiceField()) {
             return [];
@@ -250,10 +284,8 @@ final readonly class BackendVisibilityService
         string $fieldCode,
         string $entityType
     ): ?array {
-        $field = CustomFields::newCustomFieldModel()::forMorphEntity($entityType)
-            ->where('code', $fieldCode)
-            ->with('options')
-            ->first();
+        // Use cached fields for O(1) lookup
+        $field = $this->getCachedFieldsForEntity($entityType)->get($fieldCode);
 
         if (! $field) {
             return null;

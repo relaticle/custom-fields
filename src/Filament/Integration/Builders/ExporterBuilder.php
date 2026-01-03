@@ -26,11 +26,10 @@ final class ExporterBuilder extends BaseBuilder
         $exportColumnFactory = app(ExportColumnFactory::class);
         $backendVisibilityService = app(BackendVisibilityService::class);
 
-        // Get all fields for visibility evaluation
-        $allFields = $this->getFilteredSections()->flatMap(fn (mixed $section) => $section->fields);
+        // Get all fields using the most efficient method
+        $allFields = $this->getAllFields();
 
-        return $this->getFilteredSections()
-            ->flatMap(fn (mixed $section) => $section->fields)
+        return $allFields
             ->filter(fn (CustomField $field): bool => $field->settings->visible_in_list ?? true)
             ->map(function (CustomField $field) use ($exportColumnFactory, $backendVisibilityService, $allFields) {
                 $column = $exportColumnFactory->create($field);

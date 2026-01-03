@@ -12,6 +12,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -20,13 +21,12 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Models\CustomFieldSection;
 
 /**
- * Livewire component for managing custom fields in a table layout.
+ * Livewire component for managing custom fields in a flat table layout.
  *
  * Shows ALL fields for the entity type with search, reordering, and inline editing.
- * Used when sections are disabled (DISABLE_FIELD_SECTIONS feature).
+ * Used when sections are disabled (SYSTEM_SECTIONS_ENABLED = false).
  */
 final class ManageFieldsTable extends Component implements HasActions, HasForms
 {
@@ -36,50 +36,43 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
 
     public string $entityType;
 
-    /** The default section used for creating new fields */
-    public CustomFieldSection $section;
-
     public string $search = '';
 
     /** @return Collection<int, CustomField> */
     #[Computed]
     public function activeFields(): Collection
     {
-        return $this->getFieldsQuery()
-            ->where('active', true)
-            ->get();
+        return $this->getFieldsQuery()->where('active', true)->get();
     }
 
     /** @return Collection<int, CustomField> */
     #[Computed]
     public function inactiveFields(): Collection
     {
-        return $this->getFieldsQuery()
-            ->where('active', false)
-            ->get();
+        return $this->getFieldsQuery()->where('active', false)->get();
     }
 
-    protected function getFieldsQuery(): \Illuminate\Database\Eloquent\Builder
+    private function getFieldsQuery(): Builder
     {
-        $query = CustomFields::newCustomFieldModel()
+        return CustomFields::newCustomFieldModel()
             ->newQuery()
             ->withDeactivated()
             ->where('entity_type', $this->entityType)
+            ->when($this->search, fn (Builder $q, string $s): Builder => $q->where('name', 'like', sprintf('%%%s%%', $s)))
             ->orderBy('sort_order');
-
-        if ($this->search !== '') {
-            $query->where('name', 'like', "%{$this->search}%");
-        }
-
-        return $query;
     }
 
-    protected function findField(string $fieldId): ?CustomField
+    private function findField(string $fieldId): ?CustomField
     {
         return CustomFields::newCustomFieldModel()
             ->newQuery()
             ->withDeactivated()
             ->find($fieldId);
+    }
+
+    private function resetFieldsCache(): void
+    {
+        unset($this->activeFields, $this->inactiveFields);
     }
 
     public function updateFieldsOrder(array $order): void
@@ -90,12 +83,12 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
                 ->update(['sort_order' => $index]);
         }
 
-        unset($this->activeFields, $this->inactiveFields);
+        $this->resetFieldsCache();
     }
 
     public function updatedSearch(): void
     {
-        unset($this->activeFields, $this->inactiveFields);
+        $this->resetFieldsCache();
     }
 
     public function editFieldAction(): Action
@@ -109,7 +102,7 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->fillForm(fn (CustomField $record): array => $record->toArray())
             ->action(function (array $data, CustomField $record): void {
                 $record->update($data);
-                unset($this->activeFields, $this->inactiveFields);
+                $this->resetFieldsCache();
             })
             ->modalWidth(Width::ScreenLarge)
             ->slideOver();
@@ -121,9 +114,8 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->label(__('custom-fields::custom-fields.field.actions.activate'))
             ->icon('heroicon-o-archive-box')
             ->action(function (array $arguments): void {
-                $field = $this->findField($arguments['fieldId']);
-                $field?->activate();
-                unset($this->activeFields, $this->inactiveFields);
+                $this->findField($arguments['fieldId'])?->activate();
+                $this->resetFieldsCache();
             });
     }
 
@@ -134,10 +126,11 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->icon('heroicon-o-archive-box-x-mark')
             ->action(function (array $arguments): void {
                 $field = $this->findField($arguments['fieldId']);
-                if ($field && ! $field->isSystemDefined()) {
+                if ($field?->isSystemDefined() === false) {
                     $field->deactivate();
-                    unset($this->activeFields, $this->inactiveFields);
                 }
+
+                $this->resetFieldsCache();
             });
     }
 
@@ -150,10 +143,11 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->color('danger')
             ->action(function (array $arguments): void {
                 $field = $this->findField($arguments['fieldId']);
-                if ($field && ! $field->isSystemDefined()) {
+                if ($field?->isSystemDefined() === false) {
                     $field->delete();
-                    unset($this->activeFields, $this->inactiveFields);
                 }
+
+                $this->resetFieldsCache();
             });
     }
 
@@ -162,19 +156,14 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
     {
         $model = CustomFields::newCustomFieldModel();
         $model->where($model->getKeyName(), $fieldId)->update(['width' => $width]);
-        unset($this->activeFields, $this->inactiveFields);
+        $this->resetFieldsCache();
     }
 
     #[On('field-deleted')]
-    public function fieldDeleted(): void
-    {
-        unset($this->activeFields, $this->inactiveFields);
-    }
-
     #[On('fields-reordered')]
-    public function fieldsReordered(): void
+    public function refreshFields(): void
     {
-        unset($this->activeFields, $this->inactiveFields);
+        $this->resetFieldsCache();
     }
 
     public function createFieldAction(): Action
@@ -192,10 +181,10 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->model(CustomFields::customFieldModel())
             ->schema(FieldForm::schema(withOptionsRelationship: false))
             ->fillForm(['entity_type' => $this->entityType])
-            ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType, $this->section->getKey()))
+            ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType))
             ->action(function (array $data): void {
                 $this->storeField($data);
-                unset($this->activeFields, $this->inactiveFields);
+                $this->resetFieldsCache();
             })
             ->modalWidth(Width::ScreenLarge)
             ->slideOver();

@@ -26,11 +26,10 @@ final class TableBuilder extends BaseBuilder
         $fieldColumnFactory = app(FieldColumnFactory::class);
         $backendVisibilityService = app(BackendVisibilityService::class);
 
-        // Get all fields for visibility evaluation
-        $allFields = $this->getFilteredSections()->flatMap(fn (mixed $section): Collection => $section->fields);
+        // Get all fields using the most efficient method
+        $allFields = $this->getAllFields();
 
-        return $this->getFilteredSections()
-            ->flatMap(fn (mixed $section): Collection => $section->fields)
+        return $allFields
             ->filter(fn (CustomField $field): bool => $field->typeData->tableColumn !== null)
             ->map(function (CustomField $field) use ($fieldColumnFactory, $backendVisibilityService, $allFields) {
                 $column = $fieldColumnFactory->create($field);
@@ -61,8 +60,7 @@ final class TableBuilder extends BaseBuilder
 
         $fieldFilterFactory = app(FieldFilterFactory::class);
 
-        return $this->getFilteredSections()
-            ->flatMap(fn (mixed $section): Collection => $section->fields)
+        return $this->getAllFields()
             ->filter(fn (CustomField $field): bool => $field->isFilterable() && $field->typeData->tableFilter !== null)
             ->map(fn (CustomField $field) => $fieldFilterFactory->create($field))
             ->filter()

@@ -20,7 +20,7 @@
         <div class="overflow-x-auto">
             <div class="min-w-[600px]">
                 {{-- Table Header --}}
-                <div class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_48px] border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                <div class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
                     <div></div>
                     <div class="flex items-center gap-2 px-3 py-3 text-sm font-semibold text-gray-950 dark:text-white">
                         <x-filament::icon icon="heroicon-o-tag" class="h-4 w-4 text-gray-400 shrink-0" />
@@ -52,7 +52,7 @@
                         <div
                             x-sortable-item="{{ $field->getKey() }}"
                             wire:key="field-{{ $field->getKey() }}"
-                            class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_48px] items-center hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
+                            class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
                         >
                             {{-- Drag Handle --}}
                             <div class="flex items-center justify-center py-3">
@@ -91,7 +91,7 @@
                             </div>
 
                             {{-- Properties --}}
-                            <div class="px-3 py-3">
+                            <div class="px-3 py-3 flex items-center min-h-[28px]">
                                 @if($field->system_defined)
                                     <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400 whitespace-nowrap">
                                         <x-filament::icon icon="heroicon-o-cog-6-tooth" class="h-3 w-3 shrink-0" />
@@ -149,7 +149,7 @@
                             @foreach($this->inactiveFields as $field)
                                 <div
                                     wire:key="inactive-field-{{ $field->getKey() }}"
-                                    class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_48px] items-center hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
+                                    class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
                                 >
                                     {{-- Empty (no drag handle) --}}
                                     <div></div>
@@ -177,7 +177,7 @@
                                     </div>
 
                                     {{-- Properties --}}
-                                    <div class="px-3 py-3 opacity-60">
+                                    <div class="px-3 py-3 flex items-center min-h-[28px] opacity-60">
                                         @if($field->system_defined)
                                             <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400 whitespace-nowrap">
                                                 <x-filament::icon icon="heroicon-o-cog-6-tooth" class="h-3 w-3 shrink-0" />

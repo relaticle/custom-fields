@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage as CustomFieldsPage;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
@@ -12,6 +14,11 @@ use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
+    // Skip if sections are disabled (these tests require sections)
+    if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        $this->markTestSkipped('Sections feature must be enabled for these tests.');
+    }
+
     // Arrange: Create authenticated user for all tests
     $this->user = User::factory()->create();
     $this->actingAs($this->user);

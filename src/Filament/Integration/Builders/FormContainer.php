@@ -66,7 +66,7 @@ final class FormContainer extends Grid
 
         // Use explicit setting if provided, otherwise check feature flag
         $withoutSections = $this->withoutSections
-            ?? FeatureManager::isEnabled(CustomFieldsFeature::UI_FLAT_FIELD_LAYOUT);
+            ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
 
         $builder = app(FormBuilder::class);
 

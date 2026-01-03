@@ -55,10 +55,11 @@ return [
             CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
             CustomFieldsFeature::UI_TABLE_FILTERS,
             CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL,
-            CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE
+            CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
+            CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED,
         )
         ->disable(
-            CustomFieldsFeature::SYSTEM_MULTI_TENANCY
+            CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
         ),
 
     /*

@@ -327,7 +327,7 @@ describe('Enhanced field management with datasets', function (): void {
     });
 
     it('validates field deletion restrictions correctly', function (): void {
-        // System-defined field cannot be deleted
+        // System-defined field cannot be deleted - action is hidden
         $systemField = CustomField::factory()
             ->ofType('text')
             ->systemDefined()
@@ -339,8 +339,7 @@ describe('Enhanced field management with datasets', function (): void {
 
         livewire(ManageCustomField::class, [
             'field' => $systemField,
-        ])->assertActionVisible('delete')
-            ->assertActionDisabled('delete');
+        ])->assertActionHidden('delete');
 
         // Active field cannot be deleted
         $activeField = CustomField::factory()

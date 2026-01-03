@@ -14,54 +14,60 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $sectionsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+
         /**
-         * Custom Field Sections
+         * Custom Field Sections (only created when SYSTEM_SECTIONS_ENABLED)
          */
-        Schema::create(config('custom-fields.database.table_names.custom_field_sections'), function (Blueprint $table): void {
-            $uniqueColumns = ['entity_type', 'code'];
+        if ($sectionsEnabled) {
+            Schema::create(config('custom-fields.database.table_names.custom_field_sections'), function (Blueprint $table): void {
+                $uniqueColumns = ['entity_type', 'code'];
 
-            $table->id();
+                $table->id();
 
-            if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
-                $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
-            }
+                if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
+                    $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
+                    $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
+                }
 
-            $table->string('width')->nullable();
+                $table->string('width')->nullable();
 
-            $table->string('code');
-            $table->string('name');
-            $table->string('type');
-            $table->string('entity_type');
-            $table->unsignedBigInteger('sort_order')->nullable();
+                $table->string('code');
+                $table->string('name');
+                $table->string('type');
+                $table->string('entity_type');
+                $table->unsignedBigInteger('sort_order')->nullable();
 
-            $table->string('description')->nullable();
+                $table->string('description')->nullable();
 
-            $table->boolean('active')->default(true);
-            $table->boolean('system_defined')->default(false);
+                $table->boolean('active')->default(true);
+                $table->boolean('system_defined')->default(false);
 
-            $table->json('settings')->nullable();
+                $table->json('settings')->nullable();
 
-            $table->unique($uniqueColumns);
+                $table->unique($uniqueColumns);
 
-            if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                $table->index([config('custom-fields.database.column_names.tenant_foreign_key'), 'entity_type', 'active'], 'custom_field_sections_tenant_entity_active_idx');
-            } else {
-                $table->index(['entity_type', 'active'], 'custom_field_sections_entity_active_idx');
-            }
+                if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
+                    $table->index([config('custom-fields.database.column_names.tenant_foreign_key'), 'entity_type', 'active'], 'custom_field_sections_tenant_entity_active_idx');
+                } else {
+                    $table->index(['entity_type', 'active'], 'custom_field_sections_entity_active_idx');
+                }
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
 
         /**
          * Custom Fields
          */
-        Schema::create(config('custom-fields.database.table_names.custom_fields'), function (Blueprint $table): void {
+        Schema::create(config('custom-fields.database.table_names.custom_fields'), function (Blueprint $table) use ($sectionsEnabled): void {
             $uniqueColumns = ['code', 'entity_type'];
 
             $table->id();
 
-            $table->unsignedBigInteger('custom_field_section_id')->nullable();
+            if ($sectionsEnabled) {
+                $table->unsignedBigInteger('custom_field_section_id')->nullable();
+            }
             $table->string('width')->nullable();
 
             if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
@@ -163,6 +169,9 @@ return new class extends Migration
         Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_values'));
         Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_options'));
         Schema::dropIfExists(config('custom-fields.database.table_names.custom_fields'));
-        Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_sections'));
+
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+            Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_sections'));
+        }
     }
 };

@@ -73,7 +73,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->record($this->section)
             ->schema(SectionForm::entityType($this->entityType)->schema())
             ->fillForm($this->section->toArray())
-            ->action(fn (array $data) => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
+            ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
             ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())
             ->modalWidth(Width::TwoExtraLarge);
     }

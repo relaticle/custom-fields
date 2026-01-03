@@ -16,14 +16,11 @@
                 </x-filament::tabs>
             </div>
 
-            {{-- Right side: Fields --}}
+            {{-- Right side: Fields (no sections needed) --}}
             <div class="flex-1 min-w-0">
-                @if($this->sections->first())
-                    @livewire('manage-fields-table', [
-                        'entityType' => $this->currentEntityType,
-                        'section' => $this->sections->first(),
-                    ], key('manage-fields-table-' . $this->currentEntityType))
-                @endif
+                @livewire('manage-fields-table', [
+                    'entityType' => $this->currentEntityType,
+                ], key('manage-fields-table-' . $this->currentEntityType))
             </div>
         </div>
     @else

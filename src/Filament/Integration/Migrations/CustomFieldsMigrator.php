@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldData;
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Exceptions\CustomFieldAlreadyExistsException;
 use Relaticle\CustomFields\Exceptions\CustomFieldDoesNotExistException;
@@ -54,7 +55,11 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
     ): CustomFieldsMigrator {
         $entityType = (Entities::getEntity($model)?->getAlias()) ?? $model;
         $fieldData->entityType = $entityType;
-        $fieldData->section->entityType = $entityType;
+
+        // Only set section entityType when sections are enabled
+        if ($fieldData->section instanceof CustomFieldSectionData && FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+            $fieldData->section->entityType = $entityType;
+        }
 
         $this->customFieldData = $fieldData;
 
@@ -114,25 +119,31 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
                 ->except('section', 'options')
                 ->toArray();
 
-            $sectionData = $this->customFieldData->section->toArray();
-            $sectionAttributes = [
-                'entity_type' => $this->customFieldData->entityType,
-                'code' => $this->customFieldData->section->code,
-            ];
-
             if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
                 $data[config('custom-fields.database.column_names.tenant_foreign_key')] =
                     $this->tenantId;
-                $sectionData[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->tenantId;
-                $sectionAttributes[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->tenantId;
             }
 
-            $section = CustomFields::newSectionModel()->updateOrCreate(
-                $sectionAttributes,
-                $sectionData
-            );
+            // Only create/update section when sections are enabled
+            if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED) && $this->customFieldData->section instanceof CustomFieldSectionData) {
+                $sectionData = $this->customFieldData->section->toArray();
+                $sectionAttributes = [
+                    'entity_type' => $this->customFieldData->entityType,
+                    'code' => $this->customFieldData->section->code,
+                ];
 
-            $data['custom_field_section_id'] = $section->getKey();
+                if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
+                    $sectionData[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->tenantId;
+                    $sectionAttributes[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->tenantId;
+                }
+
+                $section = CustomFields::newSectionModel()->updateOrCreate(
+                    $sectionAttributes,
+                    $sectionData
+                );
+
+                $data['custom_field_section_id'] = $section->getKey();
+            }
 
             $customField = CustomFields::newCustomFieldModel()
                 ->query()
