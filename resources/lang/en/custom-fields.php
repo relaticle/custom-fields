@@ -105,6 +105,10 @@ return [
                 'hide_when_expression_help' => 'Hide field when this expression evaluates to true',
             ],
         ],
+        'actions' => [
+            'activate' => 'Activate',
+            'deactivate' => 'Deactivate',
+        ],
     ],
 
     'validation' => [
@@ -354,6 +358,15 @@ return [
 
     'common' => [
         'inactive' => 'Inactive',
+        'active_fields' => 'Active Fields',
+        'inactive_fields' => 'Inactive Fields',
+        'system_defined' => 'System Defined',
+        'constraints' => 'Constraints',
+        'properties' => 'Properties',
+        'unique' => 'Unique',
+        'required' => 'Required',
+        'system' => 'System',
+        'archived' => 'Archived',
     ],
 
     'email' => [

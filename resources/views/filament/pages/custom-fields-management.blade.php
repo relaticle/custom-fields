@@ -19,10 +19,10 @@
             {{-- Right side: Fields --}}
             <div class="flex-1 min-w-0">
                 @if($this->sections->first())
-                    @livewire('manage-fields-without-sections', [
+                    @livewire('manage-fields-table', [
                         'entityType' => $this->currentEntityType,
                         'section' => $this->sections->first(),
-                    ], key('fields-without-sections-' . $this->currentEntityType))
+                    ], key('manage-fields-table-' . $this->currentEntityType))
                 @endif
             </div>
         </div>
