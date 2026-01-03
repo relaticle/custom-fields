@@ -530,7 +530,14 @@
                                     >
                                         {{-- Drag Handle --}}
                                         <div x-sortable-handle class="shrink-0 cursor-grab active:cursor-grabbing" x-show="filledEntries.length > 1">
-                                            <x-heroicon-m-ellipsis-vertical class="size-4 text-gray-400" aria-hidden="true" />
+                                            <svg class="size-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <circle cx="7" cy="5" r="1.5"/>
+                                                <circle cx="13" cy="5" r="1.5"/>
+                                                <circle cx="7" cy="10" r="1.5"/>
+                                                <circle cx="13" cy="10" r="1.5"/>
+                                                <circle cx="7" cy="15" r="1.5"/>
+                                                <circle cx="13" cy="15" r="1.5"/>
+                                            </svg>
                                         </div>
 
                                         {{-- Formatted Phone (Click to Copy) --}}
