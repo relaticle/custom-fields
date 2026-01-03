@@ -78,6 +78,7 @@ final class EntityModel
 
     /**
      * Set smart defaults based on the model class
+     * Icon is resolved lazily in EntityConfigurationData::getIcon() at runtime
      */
     private static function setSmartDefaults(string $modelClass): array
     {
@@ -90,10 +91,10 @@ final class EntityModel
 
         return [
             'modelClass' => $modelClass,
-            'alias' => null, // Resolved lazily by EntityConfigurator when getEntities() is called
+            'alias' => null, // Resolved lazily by EntityConfigurator
             'labelSingular' => $labelSingular,
             'labelPlural' => Str::plural($labelSingular),
-            'icon' => 'heroicon-o-document',
+            'icon' => 'heroicon-o-document', // Resolved lazily from Filament resource in EntityConfigurationData::getIcon()
             'primaryAttribute' => $primaryAttribute,
             'searchAttributes' => self::guessSearchAttributes($primaryAttribute),
             'resourceClass' => null,

@@ -3,11 +3,17 @@
         {{-- Flat layout mode: vertical tabs left, fields right --}}
         <div class="flex gap-6">
             {{-- Left side: Vertical entity tabs --}}
-            <div class="shrink-0 min-w-48">
+            <div class="shrink-0 min-w-48 [&_.fi-badge]:ml-auto">
                 <x-filament::tabs label="Entity tabs" vertical>
                     @foreach ($this->entityTypes as $key => $label)
+                        @php
+                            $entity = \Relaticle\CustomFields\Facades\Entities::getEntity($key);
+                            $fieldCount = $this->entityFieldCounts[$key] ?? 0;
+                        @endphp
                         <x-filament::tabs.item
+                            :icon="$entity?->getIcon() ?? 'heroicon-o-document'"
                             :active="$key === $this->currentEntityType"
+                            :badge="$fieldCount"
                             wire:click="setCurrentEntityType('{{ addslashes($key) }}')"
                         >
                             {{ $label }}

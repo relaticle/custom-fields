@@ -8,6 +8,9 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use BackedEnum;
+use Exception;
+use Filament\Facades\Filament;
+use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -103,29 +106,73 @@ final class EntityConfigurationData extends Data
 
     public function getIcon(): string
     {
-        $icon = $this->icon;
+        return once(function (): string {
+            $icon = $this->icon;
 
-        // Handle different icon types
-        if (is_string($icon)) {
-            return $icon;
+            // Handle Filament Heroicon enums
+            if ($icon instanceof BackedEnum) {
+                return $icon->value;
+            }
+
+            // For any objects with a name property
+            if (is_object($icon) && property_exists($icon, 'name')) {
+                return $icon->name;
+            }
+
+            // For any objects with a value property
+            if (is_object($icon) && property_exists($icon, 'value')) {
+                return $icon->value;
+            }
+
+            // If icon is already set to something other than default, return it
+            if (is_string($icon) && $icon !== 'heroicon-o-document') {
+                return $icon;
+            }
+
+            // Lazily resolve icon from Filament resource
+            $resolvedIcon = $this->resolveIconFromFilamentResource();
+            if ($resolvedIcon !== null) {
+                return $resolvedIcon;
+            }
+
+            return 'heroicon-o-document';
+        });
+    }
+
+    /**
+     * Try to find and get icon from the Filament resource for this model
+     */
+    private function resolveIconFromFilamentResource(): ?string
+    {
+        try {
+            $resources = Filament::getResources();
+        } catch (Exception) {
+            return null;
         }
 
-        // Handle Filament Heroicon enums
-        if ($icon instanceof BackedEnum) {
-            return $icon->value;
+        foreach ($resources as $resourceClass) {
+            try {
+                if (! class_exists($resourceClass) || ! is_subclass_of($resourceClass, Resource::class)) {
+                    continue;
+                }
+
+                if ($resourceClass::getModel() !== $this->modelClass) {
+                    continue;
+                }
+
+                $icon = $resourceClass::getNavigationIcon();
+
+                if ($icon instanceof BackedEnum) {
+                    return $icon->value;
+                }
+
+                return is_string($icon) ? $icon : null;
+            } catch (Exception) {
+                continue;
+            }
         }
 
-        // For any objects with a name property
-        if (is_object($icon) && property_exists($icon, 'name')) {
-            return $icon->name;
-        }
-
-        // For any objects with a value property
-        if (is_object($icon) && property_exists($icon, 'value')) {
-            return $icon->value;
-        }
-
-        return 'heroicon-o-document';
+        return null;
     }
 
     public function getPrimaryAttribute(): string

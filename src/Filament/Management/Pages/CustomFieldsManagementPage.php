@@ -109,6 +109,26 @@ class CustomFieldsManagementPage extends Page
         return collect(Entities::getOptions(onlyCustomFields: true));
     }
 
+    /**
+     * Get field counts per entity type for display in tabs
+     *
+     * @return array<string, int>
+     */
+    #[Computed]
+    public function entityFieldCounts(): array
+    {
+        $model = CustomFieldsModel::newCustomFieldModel();
+        $tenantColumn = config('custom-fields.database.column_names.tenant_foreign_key');
+        $tenantId = TenantContextService::getCurrentTenantId();
+
+        return $model->newQueryWithoutScopes()
+            ->when($tenantId, fn ($q) => $q->where($tenantColumn, $tenantId))
+            ->selectRaw('entity_type, COUNT(*) as count')
+            ->groupBy('entity_type')
+            ->pluck('count', 'entity_type')
+            ->toArray();
+    }
+
     public function setCurrentEntityType(?string $entityType): void
     {
         $this->currentEntityType = $entityType;
@@ -211,6 +231,12 @@ class CustomFieldsManagementPage extends Page
     public function getHeading(): string
     {
         return __('custom-fields::custom-fields.heading.title');
+    }
+
+    #[Override]
+    public function getSubheading(): ?string
+    {
+        return __('custom-fields::custom-fields.heading.description');
     }
 
     #[Override]

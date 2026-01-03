@@ -3,6 +3,7 @@
 return [
     'heading' => [
         'title' => 'Custom Fields',
+        'description' => 'Create and manage custom fields to capture additional data for your entities.',
     ],
 
     'nav' => [
