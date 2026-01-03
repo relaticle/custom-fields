@@ -222,12 +222,12 @@ describe('ManageCustomFieldSection - Section Actions', function (): void {
             ->forEntityType($this->userEntityType)
             ->create();
 
-        // Act & Assert
+        // Act & Assert - delete and deactivate actions are hidden for system-defined sections
         livewire(ManageCustomFieldSection::class, [
             'section' => $systemSection,
             'entityType' => $this->userEntityType,
-        ])->assertActionVisible('delete')
-            ->assertActionDisabled('delete');
+        ])->assertActionHidden('delete')
+            ->assertActionHidden('deactivate');
     });
 
     it('cannot delete a section containing system-defined fields', function (): void {

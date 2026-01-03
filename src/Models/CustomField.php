@@ -163,6 +163,29 @@ class CustomField extends Model
         return $this->system_defined === true;
     }
 
+    /**
+     * Deactivate the field if it's not system-defined.
+     */
+    public function deactivate(): bool
+    {
+        if ($this->isSystemDefined()) {
+            return false;
+        }
+
+        // Call the trait's deactivate logic directly
+        if ($this->fireModelEvent('deactivating') === false) {
+            return false;
+        }
+
+        $this->{$this->getActiveColumn()} = false;
+
+        $result = $this->save();
+
+        $this->fireModelEvent('deactivated', false);
+
+        return $result;
+    }
+
     public function getValueColumn(): string
     {
         return CustomFields::newValueModel()::getValueColumn($this->type);

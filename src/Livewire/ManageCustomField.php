@@ -65,8 +65,8 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->icon('heroicon-o-archive-box-x-mark')
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
-            ->visible(fn (CustomField $record): bool => $record->isActive())
-            ->action(fn (): bool => $this->field->deactivate());
+            ->visible(fn (CustomField $record): bool => $record->isActive() && ! $record->isSystemDefined())
+            ->action(fn (): bool => ! $this->field->isSystemDefined() && $this->field->deactivate());
     }
 
     public function deleteAction(): Action
@@ -77,12 +77,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->model(CustomFields::customFieldModel())
             ->defaultColor('danger')
             ->record($this->field)
-            ->visible(fn (CustomField $record): bool => ! $record->isActive())
-            ->disabled(fn (CustomField $record): bool => $record->isSystemDefined())
-            ->tooltip(fn (CustomField $record): string => $record->isSystemDefined()
-                    ? __('custom-fields::custom-fields.field.form.system_defined_cannot_delete')
-                    : ''
-            )
+            ->visible(fn (CustomField $record): bool => ! $record->isActive() && ! $record->isSystemDefined())
             ->action(function (): bool {
                 if ($this->field->isSystemDefined()) {
                     $this->addError('system_defined', __('custom-fields::custom-fields.field.form.system_defined_cannot_delete'));
