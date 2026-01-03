@@ -68,19 +68,18 @@
             @endif
         </div>
 
-        {{-- Expanded Popover - All values, uses floating UI --}}
+        {{-- Expanded Popover - All values, overlays cell --}}
         @if ($hiddenCount > 0)
             <div
                 x-cloak
                 x-show="isOpen"
-                x-float.placement.bottom-start.flip.teleport.offset="{ offset: 4 }"
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
-                class="z-50 w-[180px] rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                class="absolute left-0 top-0 z-50 w-[180px] rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
             >
                 <div class="py-1 max-h-[280px] overflow-y-auto overflow-x-auto">
                     @foreach ($entries as $index => $entry)
