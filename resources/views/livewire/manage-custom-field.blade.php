@@ -40,11 +40,13 @@
 
     <div class="flex items-center gap-x-1 py-0.5">
 
-        <livewire:manage-custom-field-width
-                :selected-width="$field->width"
-                :field-id="$field->id"
-                wire:key="manage-custom-field-width-{{ $field->id }}"
-        />
+        @if(\Relaticle\CustomFields\FeatureSystem\FeatureManager::isEnabled(\Relaticle\CustomFields\Enums\CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL))
+            <livewire:manage-custom-field-width
+                    :selected-width="$field->width"
+                    :field-id="$field->id"
+                    wire:key="manage-custom-field-width-{{ $field->id }}"
+            />
+        @endif
 
         {{ $this->actions() }}
     </div>
