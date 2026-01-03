@@ -38,6 +38,9 @@ final class ManageFieldsWithoutSections extends Component implements HasActions,
     /** The default section used for creating new fields */
     public CustomFieldSection $section;
 
+    /** Search query for filtering fields */
+    public string $search = '';
+
     /**
      * Get ALL fields for the entity type, regardless of section.
      */
@@ -48,8 +51,14 @@ final class ManageFieldsWithoutSections extends Component implements HasActions,
             ->newQuery()
             ->withDeactivated()
             ->where('entity_type', $this->entityType)
+            ->when($this->search, fn ($query) => $query->where('name', 'like', "%{$this->search}%"))
             ->orderBy('sort_order')
             ->get();
+    }
+
+    public function updatedSearch(): void
+    {
+        unset($this->fields);
     }
 
     #[On('field-width-updated')]

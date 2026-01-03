@@ -1,8 +1,15 @@
-@php use Illuminate\Support\HtmlString; @endphp
+@php
+    use Illuminate\Support\HtmlString;
+    use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+    use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+
+    $widthEnabled = FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL);
+    $spanValue = $widthEnabled ? $field->width->getSpanValue() : 12;
+@endphp
 <div
         id="{{ $field->id }}"
         class="fi-section !px-2 fi-compact !py-2 shadow-none fi-grid-col flex justify-between"
-        style="--col-span-default: span {{ $field->width->getSpanValue() }} / span 12;"
+        style="--col-span-default: span {{ $spanValue }} / span 12;"
         x-sortable-item="{{ $field->id }}"
         compact
 >
@@ -40,7 +47,7 @@
 
     <div class="flex items-center gap-x-1 py-0.5">
 
-        @if(\Relaticle\CustomFields\FeatureSystem\FeatureManager::isEnabled(\Relaticle\CustomFields\Enums\CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL))
+        @if($widthEnabled)
             <livewire:manage-custom-field-width
                     :selected-width="$field->width"
                     :field-id="$field->id"

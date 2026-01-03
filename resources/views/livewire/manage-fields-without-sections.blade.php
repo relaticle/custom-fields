@@ -1,4 +1,13 @@
-<div class="flex flex-col gap-y-6">
+<div class="flex flex-col gap-y-4">
+    {{-- Search input --}}
+    <x-filament::input.wrapper prefix-icon="heroicon-m-magnifying-glass">
+        <x-filament::input
+            type="search"
+            wire:model.live.debounce.300ms="search"
+            placeholder="{{ __('custom-fields::custom-fields.field.form.search_placeholder') }}"
+        />
+    </x-filament::input.wrapper>
+
     @if(count($this->fields))
         <div
             x-sortable

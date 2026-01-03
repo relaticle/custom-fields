@@ -65,6 +65,7 @@ return [
                 'add' => 'Add Option',
             ],
             'add_field' => 'Add Field',
+            'search_placeholder' => 'Search fields...',
             'system_defined_cannot_delete' => 'System-defined fields cannot be deleted.',
             'allow_multiple' => 'Allow Multiple Values',
             'allow_multiple_help' => 'When enabled, users can enter multiple values for this field.',
