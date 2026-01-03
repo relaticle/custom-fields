@@ -8,7 +8,7 @@ use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\EmailComponent;
-use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
+use Relaticle\CustomFields\Filament\Integration\Components\Infolists\EmailEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
 
 /**
@@ -25,7 +25,7 @@ class EmailFieldType extends BaseFieldType
             ->icon('heroicon-o-envelope')
             ->formComponent(EmailComponent::class)
             ->tableColumn(TextColumn::class)
-            ->infolistEntry(TextEntry::class)
+            ->infolistEntry(EmailEntry::class)
             ->priority(15)
             ->searchable()
             ->sortable()

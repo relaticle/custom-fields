@@ -36,42 +36,49 @@
                 defaultCountry: @js($defaultCountry),
                 countryOptions: @js($countryOptions),
                 countryOptionsWithNames: @js($countryOptionsWithNames),
-                maxVisiblePills: 2,
+                maxVisibleEntries: 2,
+                componentId: @js($componentId),
                 countrySearch: '',
                 activeCountryDropdown: null,
                 highlightedIndex: -1,
-                componentId: @js($componentId),
+                newEntry: { country: @js($defaultCountry), number: '' },
+                copiedIndex: null,
 
                 init() {
                     if (!Array.isArray(this.state)) {
                         this.state = this.state ? [this.state] : [];
                     }
-                    if (this.state.length === 0) {
+                    if (this.state.length === 0 && !this.allowMultiple) {
                         this.state = [{ country: this.defaultCountry, number: '' }];
                     }
-                    this.state = this.state.map(entry => {
-                        return {
-                            country: entry?.country || this.defaultCountry,
-                            number: entry?.number || ''
-                        };
-                    });
+                    // Normalize entries to ensure they have country and number
+                    this.state = this.state.map((entry) => ({
+                        country: entry?.country || this.defaultCountry,
+                        number: entry?.number || ''
+                    }));
                 },
 
                 get canAddMore() {
-                    return this.allowMultiple && this.state.length < this.maxValues;
+                    if (!this.allowMultiple) {
+                        return false;
+                    }
+                    return this.filledEntries.length < this.maxValues;
+                },
+
+                get filledEntries() {
+                    return this.state.filter(entry => entry.number && entry.number.trim() !== '');
                 },
 
                 get hasValues() {
-                    return this.state.some(entry => entry.number && entry.number.trim() !== '');
+                    return this.filledEntries.length > 0;
                 },
 
                 get visibleEntries() {
-                    return this.state.filter(entry => entry.number && entry.number.trim() !== '').slice(0, this.maxVisiblePills);
+                    return this.filledEntries.slice(0, this.maxVisibleEntries);
                 },
 
                 get hiddenCount() {
-                    const filledCount = this.state.filter(entry => entry.number && entry.number.trim() !== '').length;
-                    return Math.max(0, filledCount - this.maxVisiblePills);
+                    return Math.max(0, this.filledEntries.length - this.maxVisibleEntries);
                 },
 
                 get filteredCountries() {
@@ -89,7 +96,7 @@
                         return null;
                     }
                     const [code] = this.filteredCountries[this.highlightedIndex];
-                    return this.getOptionId(this.activeCountryDropdown, code);
+                    return `${this.componentId}-country-option-${this.activeCountryDropdown}-${code}`;
                 },
 
                 getOptionId(index, code) {
@@ -135,6 +142,7 @@
                     this.activeCountryDropdown = null;
                     this.countrySearch = '';
                     this.highlightedIndex = -1;
+                    this.newEntry = { country: this.defaultCountry, number: '' };
                 },
 
                 toggle() {
@@ -155,8 +163,16 @@
                 },
 
                 selectCountry(index, code) {
-                    this.updateEntry(index, 'country', code);
-                    this.closeCountryDropdown();
+                    if (index === 'new') {
+                        this.newEntry.country = code;
+                        this.closeCountryDropdown();
+                        this.$nextTick(() => {
+                            this.$refs.newPhoneInput?.focus();
+                        });
+                    } else {
+                        this.updateEntry(index, 'country', code);
+                        this.closeCountryDropdown();
+                    }
                 },
 
                 selectHighlightedCountry(index) {
@@ -271,9 +287,19 @@
                 },
 
                 addEntry() {
-                    if (this.canAddMore) {
-                        this.state = [...this.state, { country: this.defaultCountry, number: '' }];
-                    }
+                    const number = this.newEntry.number.trim();
+                    if (!number || !this.canAddMore) return;
+
+                    this.state.push({
+                        country: this.newEntry.country,
+                        number: number
+                    });
+
+                    this.newEntry = { country: this.defaultCountry, number: '' };
+
+                    this.$nextTick(() => {
+                        this.$refs.newPhoneInput?.focus();
+                    });
                 },
 
                 updateEntry(index, field, value) {
@@ -284,12 +310,33 @@
                     }
                 },
 
-                removeEntry(index) {
+                deleteEntry(entryToDelete) {
                     if (this.state.length > 1) {
-                        this.state = this.state.filter((_, i) => i !== index);
+                        this.state = this.state.filter((e) => e !== entryToDelete);
                     } else {
                         this.state = [{ country: this.defaultCountry, number: '' }];
                     }
+                },
+
+                reorderEntries(event) {
+                    const filled = this.filledEntries;
+                    const movedEntry = filled[event.oldIndex];
+                    const targetEntry = filled[event.newIndex];
+
+                    const oldStateIndex = this.state.indexOf(movedEntry);
+                    const newStateIndex = this.state.indexOf(targetEntry);
+
+                    const reordered = this.state.splice(oldStateIndex, 1)[0];
+                    this.state.splice(newStateIndex, 0, reordered);
+                    this.state = [...this.state];
+                },
+
+                copyToClipboard(text, index) {
+                    window.navigator.clipboard.writeText(text);
+                    this.copiedIndex = index;
+                    setTimeout(() => {
+                        this.copiedIndex = null;
+                    }, 2000);
                 }
             }"
             x-on:click.outside="close()"
@@ -323,7 +370,7 @@
                             x-on:click.stop="activeCountryDropdown === 0 ? closeCountryDropdown() : openCountryDropdown(0)"
                             x-on:keydown="handleButtonKeydown($event, 0)"
                             :disabled="isDisabled"
-                            class="flex items-center gap-1 py-1.5 pl-3 pr-1.5 text-sm text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-l-lg"
+                            class="flex items-center gap-1 py-1.5 pl-3 pr-1.5 text-sm text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-l-lg w-20"
                         >
                             <span x-text="getCountryLabel(state[0]?.country)" class="font-medium text-xs"></span>
                             <x-heroicon-m-chevron-down class="size-3.5 text-gray-400" x-bind:class="{ 'rotate-180': activeCountryDropdown === 0 }" aria-hidden="true" />
@@ -431,18 +478,20 @@
                         aria-label="{{ __('custom-fields::custom-fields.phone.manage_phone_numbers') }}"
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded-lg"
                     >
-                        <div class="flex flex-1 items-center gap-1.5 overflow-hidden">
+                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
                             <template x-if="!hasValues">
                                 <span class="text-sm text-gray-400 dark:text-gray-500">{{ $emptyStateLabel }}</span>
                             </template>
-                            <template x-for="(entry, index) in visibleEntries" :key="'pill-' + index">
-                                <span class="inline-flex items-center gap-x-1 rounded-md bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 ring-1 ring-inset ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20 truncate max-w-[140px]">
-                                    <span x-text="formatDisplay(entry)" class="truncate"></span>
-                                </span>
+                            <template x-for="(entry, index) in visibleEntries" :key="'visible-' + index">
+                                <span
+                                    x-on:click.stop="copyToClipboard(formatDisplay(entry), 'trigger-' + index)"
+                                    class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[140px] rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    x-text="formatDisplay(entry)"
+                                ></span>
                             </template>
                             <template x-if="hiddenCount > 0">
-                                <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20">
-                                    +<span x-text="hiddenCount"></span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    +<span x-text="hiddenCount"></span> more
                                 </span>
                             </template>
                         </div>
@@ -464,136 +513,182 @@
                         aria-label="{{ __('custom-fields::custom-fields.phone.edit_phone_numbers') }}"
                         class="absolute left-0 right-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
                     >
-                        <div class="max-h-[280px] overflow-y-auto" role="list" aria-label="{{ __('custom-fields::custom-fields.phone.phone_numbers_list') }}">
-                            <template x-for="(entry, index) in state" :key="'edit-' + index">
-                                <div class="group flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" role="listitem">
-                                    {{-- Country Selector --}}
-                                    <div class="relative shrink-0">
+                        <div wire:ignore>
+                            <div
+                                x-show="filledEntries.length > 0"
+                                x-sortable
+                                x-on:end.stop="reorderEntries($event)"
+                                class="max-h-[280px] overflow-y-auto rounded-t-lg [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-gray-600"
+                                role="list"
+                                aria-label="{{ __('custom-fields::custom-fields.phone.phone_numbers_list') }}"
+                            >
+                                <template x-for="(entry, index) in filledEntries" :key="`${entry.number}-${index}`">
+                                    <div
+                                        :x-sortable-item="index"
+                                        class="group flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                                        role="listitem"
+                                    >
+                                        {{-- Drag Handle --}}
+                                        <div x-sortable-handle class="shrink-0 cursor-grab active:cursor-grabbing" x-show="filledEntries.length > 1">
+                                            <x-heroicon-m-ellipsis-vertical class="size-4 text-gray-400" aria-hidden="true" />
+                                        </div>
+
+                                        {{-- Formatted Phone (Click to Copy) --}}
+                                        <div
+                                            x-on:click="copyToClipboard(formatDisplay(entry), index)"
+                                            class="inline-flex items-center gap-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        >
+                                            <span
+                                                class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
+                                                x-text="formatDisplay(entry)"
+                                            ></span>
+                                            <x-heroicon-m-clipboard-document
+                                                x-show="copiedIndex !== index"
+                                                class="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                aria-hidden="true"
+                                            />
+                                            <x-heroicon-m-check
+                                                x-show="copiedIndex === index"
+                                                x-cloak
+                                                class="size-4 text-green-500 shrink-0"
+                                                aria-hidden="true"
+                                            />
+                                        </div>
+
+                                        <div class="flex-1"></div>
+
+                                        {{-- Delete Button --}}
                                         <button
                                             type="button"
-                                            role="combobox"
-                                            :aria-expanded="activeCountryDropdown === index"
-                                            :aria-controls="getListboxId(index)"
-                                            :aria-activedescendant="activeCountryDropdown === index ? highlightedOptionId : null"
-                                            :aria-label="getCountryAriaLabel(entry.country)"
-                                            aria-haspopup="listbox"
-                                            aria-autocomplete="list"
-                                            x-on:click.stop="activeCountryDropdown === index ? closeCountryDropdown() : openCountryDropdown(index)"
-                                            x-on:keydown="handleButtonKeydown($event, index)"
-                                            class="flex items-center gap-1 rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1"
+                                            x-on:click="deleteEntry(entry)"
+                                            aria-label="{{ __('custom-fields::custom-fields.phone.remove_phone_number') }}"
+                                            class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                                         >
-                                            <span x-text="getCountryLabel(entry.country)" class="max-w-[70px] truncate"></span>
-                                            <x-heroicon-m-chevron-down class="size-3 text-gray-400" x-bind:class="{ 'rotate-180': activeCountryDropdown === index }" aria-hidden="true" />
+                                            <x-heroicon-m-trash class="size-4" aria-hidden="true" />
                                         </button>
-
-                                        {{-- Country Dropdown with teleport --}}
-                                        <div
-                                            x-cloak
-                                            x-show="activeCountryDropdown === index"
-                                            x-float.placement.bottom-start.flip.teleport.offset="{ offset: 4 }"
-                                            x-on:click.outside="closeCountryDropdown()"
-                                            x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-75"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
-                                        >
-                                            <div class="border-b border-gray-100 dark:border-gray-800">
-                                                <div class="relative">
-                                                    <x-heroicon-m-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
-                                                    <input
-                                                        type="text"
-                                                        role="searchbox"
-                                                        x-model="countrySearch"
-                                                        x-on:click.stop
-                                                        x-on:keydown="handleSearchKeydown($event, index)"
-                                                        x-ref="multiCountrySearch"
-                                                        :aria-controls="getListboxId(index)"
-                                                        :aria-activedescendant="highlightedOptionId"
-                                                        aria-label="{{ __('custom-fields::custom-fields.phone.search_country') }}"
-                                                        aria-autocomplete="list"
-                                                        placeholder="{{ __('custom-fields::custom-fields.phone.search_country') }}"
-                                                        class="w-full border-0 bg-transparent py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none dark:text-white dark:placeholder:text-gray-500"
-                                                        x-init="$watch('activeCountryDropdown', value => { if (value === index) $nextTick(() => $el?.focus()) })"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <ul
-                                                :id="getListboxId(index)"
-                                                role="listbox"
-                                                aria-label="{{ __('custom-fields::custom-fields.phone.country_list') }}"
-                                                tabindex="-1"
-                                                class="max-h-48 overflow-y-auto p-1"
-                                            >
-                                                <template x-for="([code, label], optIndex) in filteredCountries" :key="'multi-' + index + '-' + code">
-                                                    <li
-                                                        :id="getOptionId(index, code)"
-                                                        role="option"
-                                                        :aria-selected="entry.country === code"
-                                                        tabindex="-1"
-                                                    >
-                                                        <button
-                                                            type="button"
-                                                            x-on:click.stop="selectCountry(index, code)"
-                                                            x-on:mouseenter="highlightedIndex = optIndex"
-                                                            x-on:focus="highlightedIndex = optIndex"
-                                                            class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors focus:outline-none"
-                                                            :class="{
-                                                                'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400': entry.country === code,
-                                                                'bg-gray-100 dark:bg-gray-800': highlightedIndex === optIndex && entry.country !== code,
-                                                                'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5': entry.country !== code && highlightedIndex !== optIndex
-                                                            }"
-                                                        >
-                                                            <span x-text="label" class="truncate"></span>
-                                                            <x-heroicon-m-check x-show="entry.country === code" class="ml-auto size-4 shrink-0 text-primary-600 dark:text-primary-400" x-cloak aria-hidden="true" />
-                                                        </button>
-                                                    </li>
-                                                </template>
-                                                <template x-if="filteredCountries.length === 0">
-                                                    <li class="px-2 py-3 text-center text-sm text-gray-500 dark:text-gray-400" role="status">
-                                                        {{ __('custom-fields::custom-fields.phone.no_results') }}
-                                                    </li>
-                                                </template>
-                                            </ul>
-                                        </div>
                                     </div>
-
-                                    <input
-                                        type="tel"
-                                        inputmode="tel"
-                                        autocomplete="tel"
-                                        x-model="entry.number"
-                                        x-on:input="updateEntry(index, 'number', $event.target.value)"
-                                        :aria-label="`{{ __('custom-fields::custom-fields.phone.phone_number') }} ${index + 1}`"
-                                        class="min-w-0 flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
-                                        placeholder="{{ $placeholder }}"
-                                    />
-
-                                    <button
-                                        type="button"
-                                        x-on:click="removeEntry(index)"
-                                        x-show="state.length > 1 || entry.number"
-                                        :aria-label="`{{ __('custom-fields::custom-fields.phone.remove_phone_number') }} ${index + 1}`"
-                                        class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                                    >
-                                        <x-heroicon-m-x-mark class="size-4" aria-hidden="true" />
-                                    </button>
-                                </div>
-                            </template>
+                                </template>
+                            </div>
                         </div>
 
+                        {{-- Add New Phone Row --}}
                         <template x-if="canAddMore">
-                            <div class="border-t border-gray-100 dark:border-gray-800 px-3 py-2">
+                            <div class="flex items-center gap-2 py-2 px-3 border-t border-gray-100 dark:border-gray-800">
+                                {{-- Country Selector --}}
+                                <div class="relative shrink-0">
+                                    <button
+                                        type="button"
+                                        role="combobox"
+                                        :aria-expanded="activeCountryDropdown === 'new'"
+                                        :aria-controls="getListboxId('new')"
+                                        :aria-activedescendant="activeCountryDropdown === 'new' ? highlightedOptionId : null"
+                                        :aria-label="getCountryAriaLabel(newEntry.country)"
+                                        aria-haspopup="listbox"
+                                        aria-autocomplete="list"
+                                        x-on:click.stop="activeCountryDropdown === 'new' ? closeCountryDropdown() : openCountryDropdown('new')"
+                                        x-on:keydown="handleButtonKeydown($event, 'new')"
+                                        :disabled="isDisabled"
+                                        class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span x-text="getCountryLabel(newEntry.country)"></span>
+                                        <x-heroicon-m-chevron-down class="size-3 text-gray-400" x-bind:class="{ 'rotate-180': activeCountryDropdown === 'new' }" aria-hidden="true" />
+                                    </button>
+
+                                    {{-- Country Dropdown --}}
+                                    <div
+                                        x-cloak
+                                        x-show="activeCountryDropdown === 'new'"
+                                        x-float.placement.bottom-start.flip.teleport.offset="{ offset: 4 }"
+                                        x-on:click.outside="closeCountryDropdown()"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="opacity-100 scale-100"
+                                        x-transition:leave-end="opacity-0 scale-95"
+                                        class="z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                                    >
+                                        <div class="border-b border-gray-100 dark:border-gray-800">
+                                            <div class="relative">
+                                                <x-heroicon-m-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" aria-hidden="true" />
+                                                <input
+                                                    type="text"
+                                                    role="searchbox"
+                                                    x-model="countrySearch"
+                                                    x-on:click.stop
+                                                    x-on:keydown="handleSearchKeydown($event, 'new')"
+                                                    x-ref="newCountrySearch"
+                                                    x-init="$watch('activeCountryDropdown', value => { if (value === 'new') $nextTick(() => $refs.newCountrySearch?.focus()) })"
+                                                    :aria-controls="getListboxId('new')"
+                                                    :aria-activedescendant="highlightedOptionId"
+                                                    aria-label="{{ __('custom-fields::custom-fields.phone.search_country') }}"
+                                                    aria-autocomplete="list"
+                                                    placeholder="{{ __('custom-fields::custom-fields.phone.search_country') }}"
+                                                    class="w-full border-0 bg-transparent py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none dark:text-white dark:placeholder:text-gray-500"
+                                                />
+                                            </div>
+                                        </div>
+                                        <ul
+                                            :id="getListboxId('new')"
+                                            role="listbox"
+                                            aria-label="{{ __('custom-fields::custom-fields.phone.country_list') }}"
+                                            tabindex="-1"
+                                            class="max-h-48 overflow-y-auto p-1"
+                                        >
+                                            <template x-for="([code, label], optIndex) in filteredCountries" :key="'new-' + code">
+                                                <li
+                                                    :id="getOptionId('new', code)"
+                                                    role="option"
+                                                    :aria-selected="newEntry.country === code"
+                                                    tabindex="-1"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        x-on:click.stop="selectCountry('new', code)"
+                                                        x-on:mouseenter="highlightedIndex = optIndex"
+                                                        x-on:focus="highlightedIndex = optIndex"
+                                                        class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors focus:outline-none"
+                                                        :class="{
+                                                            'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400': newEntry.country === code,
+                                                            'bg-gray-100 dark:bg-gray-800': highlightedIndex === optIndex && newEntry.country !== code,
+                                                            'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5': newEntry.country !== code && highlightedIndex !== optIndex
+                                                        }"
+                                                    >
+                                                        <span x-text="label" class="truncate"></span>
+                                                        <x-heroicon-m-check x-show="newEntry.country === code" class="ml-auto size-4 shrink-0 text-primary-600 dark:text-primary-400" x-cloak aria-hidden="true" />
+                                                    </button>
+                                                </li>
+                                            </template>
+                                            <template x-if="filteredCountries.length === 0">
+                                                <li class="px-2 py-3 text-center text-sm text-gray-500 dark:text-gray-400" role="status">
+                                                    {{ __('custom-fields::custom-fields.phone.no_results') }}
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {{-- Phone Input --}}
+                                <input
+                                    type="tel"
+                                    inputmode="tel"
+                                    x-model="newEntry.number"
+                                    x-ref="newPhoneInput"
+                                    x-on:keydown.enter.prevent="addEntry()"
+                                    :disabled="isDisabled"
+                                    class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
+                                    placeholder="{{ $addLabel }}..."
+                                />
+
+                                {{-- Add Button --}}
                                 <button
                                     type="button"
                                     x-on:click="addEntry()"
+                                    :disabled="isDisabled || !newEntry.number.trim()"
+                                    class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     aria-label="{{ $addLabel }}"
-                                    class="flex w-full items-center gap-2 text-sm text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded"
                                 >
-                                    <x-heroicon-m-plus class="size-4" aria-hidden="true" />
-                                    {{ $addLabel }}
+                                    <x-heroicon-m-arrow-right class="size-4" aria-hidden="true" />
                                 </button>
                             </div>
                         </template>

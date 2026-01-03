@@ -8,7 +8,7 @@ use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
-use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
+use Relaticle\CustomFields\Filament\Integration\Components\Infolists\PhoneEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
 
 /**
@@ -26,7 +26,7 @@ class PhoneFieldType extends BaseFieldType
             ->icon('heroicon-o-phone')
             ->formComponent(PhoneComponent::class)
             ->tableColumn(TextColumn::class)
-            ->infolistEntry(TextEntry::class)
+            ->infolistEntry(PhoneEntry::class)
             ->priority(16)
             ->encryptable()
             ->searchable()
