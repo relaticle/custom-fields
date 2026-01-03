@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
-use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -20,7 +19,7 @@ final class PhoneColumn extends AbstractTableColumn
         private readonly CountryPhoneService $phoneService,
     ) {}
 
-    public function make(CustomField $customField): Column
+    public function make(CustomField $customField): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName())
             ->view('custom-fields::tables.columns.phone-column');
@@ -56,7 +55,7 @@ final class PhoneColumn extends AbstractTableColumn
     {
         $defaultCountry = $this->phoneService->detectCountryFromLocale();
 
-        if (is_string($entry) && ! empty($entry)) {
+        if (is_string($entry) && ($entry !== '' && $entry !== '0')) {
             // E.164 string format
             $parsed = $this->phoneService->parseE164($entry, $defaultCountry);
 

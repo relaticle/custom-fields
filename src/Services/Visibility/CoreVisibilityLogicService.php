@@ -82,6 +82,23 @@ final readonly class CoreVisibilityLogicService
      */
     public function evaluateVisibilityWithCascading(CustomField $field, array $fieldValues, Collection $allFields): bool
     {
+        // Create keyed collection once for O(1) lookups during recursion
+        $fieldsByCode = $allFields->keyBy('code');
+
+        return $this->evaluateVisibilityWithCascadingInternal($field, $fieldValues, $fieldsByCode);
+    }
+
+    /**
+     * Internal recursive method using keyed collection for O(1) lookups.
+     *
+     * @param  array<string, mixed>  $fieldValues
+     * @param  Collection<string, CustomField>  $fieldsByCode  Keyed by field code
+     */
+    private function evaluateVisibilityWithCascadingInternal(
+        CustomField $field,
+        array $fieldValues,
+        Collection $fieldsByCode
+    ): bool {
         // First check if the field itself should be visible
         if (! $this->evaluateVisibility($field, $fieldValues)) {
             return false;
@@ -96,14 +113,14 @@ final readonly class CoreVisibilityLogicService
         $dependentFields = $this->getDependentFields($field);
 
         foreach ($dependentFields as $dependentFieldCode) {
-            $parentField = $allFields->firstWhere('code', $dependentFieldCode);
+            $parentField = $fieldsByCode->get($dependentFieldCode);
 
             if (! $parentField) {
                 continue; // Skip if parent field doesn't exist
             }
 
             // Recursively check parent visibility
-            if (! $this->evaluateVisibilityWithCascading($parentField, $fieldValues, $allFields)) {
+            if (! $this->evaluateVisibilityWithCascadingInternal($parentField, $fieldValues, $fieldsByCode)) {
                 return false;
             }
         }
@@ -171,17 +188,17 @@ final readonly class CoreVisibilityLogicService
     {
         $dependencies = [];
 
+        // Create keyed collection for O(1) lookups
+        $fieldsByCode = $allFields->keyBy('code');
+
         foreach ($allFields as $field) {
             $dependentFieldCodes = $this->getDependentFields($field);
 
             foreach ($dependentFieldCodes as $dependentCode) {
-                // Check if the dependent field exists in our collection
-                if ($allFields->firstWhere('code', $dependentCode)) {
+                // Check if the dependent field exists in our collection (O(1) lookup)
+                if ($fieldsByCode->has($dependentCode)) {
                     // Map: source field code -> array of fields that depend on it
-                    if (! isset($dependencies[$dependentCode])) {
-                        $dependencies[$dependentCode] = [];
-                    }
-
+                    $dependencies[$dependentCode] ??= [];
                     $dependencies[$dependentCode][] = $field->code;
                 }
             }

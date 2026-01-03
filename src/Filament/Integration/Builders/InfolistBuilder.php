@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Infolists\Components\Entry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldInfolistsFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionInfolistsFactory;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
@@ -56,16 +58,22 @@ final class InfolistBuilder extends BaseBuilder
             ->hiddenLabel($this->hiddenLabels)
             ->when($this->visibleWhenFilled, fn (Entry $field): Entry => $field->visible(fn (mixed $state): bool => filled($state)));
 
+        // Check if sections are disabled
+        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+
+        // When sections disabled, get fields directly without section context
+        if ($this->withoutSections || $sectionsDisabled) {
+            return $backendVisibilityService
+                ->getVisibleFields($this->model, $this->getAllFields())
+                ->filter(fn (CustomField $field): bool => $field->typeData->infolistEntry !== null)
+                ->map($createField)
+                ->filter();
+        }
+
         $getVisibleFields = fn (CustomFieldSection $section) => $backendVisibilityService
             ->getVisibleFields($this->model, $section->fields)
             ->filter(fn (CustomField $field): bool => $field->typeData->infolistEntry !== null)
             ->map($createField);
-
-        if ($this->withoutSections) {
-            return $this->getFilteredSections()
-                ->flatMap($getVisibleFields)
-                ->filter();
-        }
 
         return $this->getFilteredSections()
             ->map(function (CustomFieldSection $section) use ($sectionInfolistsFactory, $getVisibleFields) {

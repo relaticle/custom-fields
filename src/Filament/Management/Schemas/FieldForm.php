@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Schemas;
 
+use Closure;
 use Exception;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Hidden;
@@ -35,6 +36,14 @@ use Relaticle\CustomFields\Services\TenantContextService;
 
 class FieldForm implements FormInterface
 {
+    /**
+     * Disable field when editing a system-defined custom field.
+     */
+    private static function disabledForSystemFields(): Closure
+    {
+        return fn (?CustomField $record): bool => $record?->isSystemDefined() ?? false;
+    }
+
     /**
      * Get type-specific settings schema components.
      *
@@ -160,7 +169,7 @@ class FieldForm implements FormInterface
                         ->live(onBlur: true)
                         ->required()
                         ->maxLength(50)
-                        ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                        ->disabled(self::disabledForSystemFields())
                         ->unique(
                             table: CustomFields::customFieldModel(),
                             column: 'name',
@@ -191,7 +200,7 @@ class FieldForm implements FormInterface
                         ->required(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
                         ->alphaDash()
                         ->maxLength(50)
-                        ->disabled(fn (?CustomField $record): bool => (bool) $record?->system_defined)
+                        ->disabled(self::disabledForSystemFields())
                         ->visible(fn (): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE))
                         ->unique(
                             table: CustomFields::customFieldModel(),
@@ -404,6 +413,7 @@ class FieldForm implements FormInterface
                             fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
                                 CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
                         )
+                        ->disabled(self::disabledForSystemFields())
                         ->default(false),
                 ]),
 
@@ -421,11 +431,7 @@ class FieldForm implements FormInterface
                         && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
                         && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
                 )
-                ->disabled(
-                    fn (
-                        ?CustomField $record
-                    ): bool => (bool) $record?->system_defined
-                )
+                ->disabled(self::disabledForSystemFields())
                 ->live()
                 ->options([
                     'options' => __(

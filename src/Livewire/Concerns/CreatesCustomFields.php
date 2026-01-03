@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Support\CodeGenerator;
  */
 trait CreatesCustomFields
 {
-    protected function mutateFieldData(array $data, string $entityType, int|string $sectionId): array
+    protected function mutateFieldData(array $data, string $entityType, int|string|null $sectionId = null): array
     {
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
             $data[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
@@ -25,11 +25,17 @@ trait CreatesCustomFields
             $data['code'] = CodeGenerator::generateUniqueFieldCode($data['name'], $entityType);
         }
 
-        return [
+        $result = [
             ...$data,
             'entity_type' => $entityType,
-            'custom_field_section_id' => $sectionId,
         ];
+
+        // Only include section_id when sections are enabled
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED) && $sectionId !== null) {
+            $result['custom_field_section_id'] = $sectionId;
+        }
+
+        return $result;
     }
 
     protected function storeField(array $data): void

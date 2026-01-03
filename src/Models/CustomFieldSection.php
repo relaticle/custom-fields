@@ -105,4 +105,26 @@ class CustomFieldSection extends Model
     {
         return $this->fields()->withDeactivated()->where('system_defined', true)->exists();
     }
+
+    /**
+     * Deactivate the section if it's not system-defined.
+     */
+    public function deactivate(): bool
+    {
+        if ($this->isSystemDefined()) {
+            return false;
+        }
+
+        if ($this->fireModelEvent('deactivating') === false) {
+            return false;
+        }
+
+        $this->{$this->getActiveColumn()} = false;
+
+        $result = $this->save();
+
+        $this->fireModelEvent('deactivated', false);
+
+        return $result;
+    }
 }

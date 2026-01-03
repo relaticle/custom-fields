@@ -278,11 +278,10 @@ describe('ManageCustomField - Field Actions', function (): void {
                 'type' => 'text',
             ]);
 
-        // Act & Assert
+        // Act & Assert - delete action is hidden for system-defined fields
         livewire(ManageCustomField::class, [
             'field' => $systemField,
-        ])->assertActionVisible('delete')
-            ->assertActionDisabled('delete');
+        ])->assertActionHidden('delete');
     });
 
     it('dispatches width update event', function (): void {
@@ -328,7 +327,7 @@ describe('Enhanced field management with datasets', function (): void {
     });
 
     it('validates field deletion restrictions correctly', function (): void {
-        // System-defined field cannot be deleted
+        // System-defined field cannot be deleted - action is hidden
         $systemField = CustomField::factory()
             ->ofType('text')
             ->systemDefined()
@@ -340,8 +339,7 @@ describe('Enhanced field management with datasets', function (): void {
 
         livewire(ManageCustomField::class, [
             'field' => $systemField,
-        ])->assertActionVisible('delete')
-            ->assertActionDisabled('delete');
+        ])->assertActionHidden('delete');
 
         // Active field cannot be deleted
         $activeField = CustomField::factory()
@@ -712,15 +710,16 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
 
         expect(CustomField::find($userField->id))->toBeNull();
 
-        // Test that system field cannot be deleted (action should be hidden)
+        // Test that system field cannot be deactivated or deleted (actions are hidden)
         livewire(ManageCustomField::class, [
             'field' => $systemField,
         ])
-            ->callAction('deactivate')
-            ->assertSuccessful()
-            ->assertActionDisabled('delete');
+            ->assertActionHidden('deactivate')
+            ->assertActionHidden('delete');
 
-        // System field should still exist since delete action is disabled
-        expect($systemField->fresh())->not->toBeNull();
+        // System field should still exist and remain active
+        expect($systemField->fresh())
+            ->not->toBeNull()
+            ->active->toBeTrue();
     });
 });

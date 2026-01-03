@@ -36,3 +36,19 @@ it('handles feature enabling and disabling', function (): void {
 
     expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION))->toBeFalse();
 });
+
+it('can toggle UI_FIELD_WIDTH_CONTROL feature', function (): void {
+    $config = FeatureConfigurator::configure()
+        ->enable(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL);
+
+    config(['custom-fields.features' => $config]);
+
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL))->toBeTrue();
+
+    $config = FeatureConfigurator::configure()
+        ->disable(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL);
+
+    config(['custom-fields.features' => $config]);
+
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL))->toBeFalse();
+});

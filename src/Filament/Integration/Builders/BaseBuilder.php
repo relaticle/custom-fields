@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -21,7 +23,7 @@ abstract class BaseBuilder
 
     protected Model|string|null $explicitModel = null;
 
-    protected Builder $sections;
+    protected ?Builder $sections = null;
 
     protected array $except = [];
 
@@ -56,9 +58,12 @@ abstract class BaseBuilder
         $this->model = $model;
         $this->explicitModel = $model;
 
-        $this->sections = CustomFields::newSectionModel()->query()
-            ->forEntityType($model::class)
-            ->orderBy('sort_order');
+        // Only initialize sections query when sections are enabled
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+            $this->sections = CustomFields::newSectionModel()->query()
+                ->forEntityType($model::class)
+                ->orderBy('sort_order');
+        }
 
         return $this;
     }
@@ -82,6 +87,11 @@ abstract class BaseBuilder
      */
     protected function getFilteredSections(): Collection
     {
+        // Return empty collection when sections are disabled
+        if (! $this->sections instanceof Builder) {
+            return collect();
+        }
+
         /** @var Collection<int, CustomFieldSection> $sections */
         $sections = $this->sections
             ->with(['fields' => function (mixed $query): mixed {
@@ -102,5 +112,41 @@ abstract class BaseBuilder
                 return $section;
             })
             ->filter(fn (CustomFieldSection $section) => $section->fields->isNotEmpty());
+    }
+
+    /**
+     * Get all fields directly, bypassing the section table.
+     * More efficient when simplified management mode is enabled.
+     *
+     * @return Collection<int, CustomField>
+     */
+    protected function getFieldsDirectly(): Collection
+    {
+        return CustomFields::newCustomFieldModel()::forMorphEntity($this->model::class)
+            ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInList())
+            ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInView())
+            ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
+            ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
+            ->with('options')
+            ->orderBy('sort_order')
+            ->get()
+            ->filter(fn (CustomField $field): bool => $field->typeData !== null);
+    }
+
+    /**
+     * Get all fields, using the most efficient method based on configuration.
+     * Uses direct query when sections disabled, otherwise extracts from sections.
+     *
+     * @return Collection<int, CustomField>
+     */
+    protected function getAllFields(): Collection
+    {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+            return $this->getFieldsDirectly();
+        }
+
+        return $this->getFilteredSections()->flatMap(
+            fn (CustomFieldSection $section): Collection => $section->fields
+        );
     }
 }

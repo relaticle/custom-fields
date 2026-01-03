@@ -31,7 +31,9 @@ class CustomFieldQueryBuilder extends Builder
     /** @return CustomFieldQueryBuilder<TModelClass> */
     public function forMorphEntity(string $entity): self
     {
-        return $this->where('entity_type', $entity);
+        $entityType = (Entities::getEntity($entity)?->getAlias()) ?? $entity;
+
+        return $this->where('entity_type', $entityType);
     }
 
     /** @return CustomFieldQueryBuilder<TModelClass> */

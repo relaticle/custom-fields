@@ -49,14 +49,19 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         $this->dispatch('fields-reordered')->to('manage-custom-field-section');
     }
 
-    public function actions(): ActionGroup
+    public function actions(): ?ActionGroup
     {
+        if ($this->section->hasSystemDefinedFields()) {
+            return null;
+        }
+
         return ActionGroup::make([
             $this->editAction(),
             $this->activateAction(),
             $this->deactivateAction(),
             $this->deleteAction(),
-        ])->dropdownPlacement('bottom-end');
+        ])
+            ->dropdownPlacement('bottom-end');
     }
 
     public function editAction(): Action
@@ -64,10 +69,12 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         return Action::make('edit')
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::sectionModel())
+            ->slideOver(false)
             ->record($this->section)
             ->schema(SectionForm::entityType($this->entityType)->schema())
             ->fillForm($this->section->toArray())
-            ->action(fn (array $data) => $this->section->update($data))
+            ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
+            ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())
             ->modalWidth(Width::TwoExtraLarge);
     }
 
@@ -87,8 +94,8 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->icon('heroicon-o-archive-box-x-mark')
             ->model(CustomFields::sectionModel())
             ->record($this->section)
-            ->visible(fn (CustomFieldSection $record): bool => $record->isActive())
-            ->action(fn (): bool => $this->section->deactivate());
+            ->visible(fn (CustomFieldSection $record): bool => $record->isActive() && ! $record->hasSystemDefinedFields())
+            ->action(fn (): bool => ! $this->section->hasSystemDefinedFields() && $this->section->deactivate());
     }
 
     public function deleteAction(): Action
@@ -99,13 +106,11 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->model(CustomFields::sectionModel())
             ->defaultColor('danger')
             ->record($this->section)
-            ->visible(fn (CustomFieldSection $record): bool => ! $record->isActive())
-            ->disabled(fn (CustomFieldSection $record): bool => $record->isSystemDefined() || $record->hasSystemDefinedFields())
-            ->tooltip(fn (CustomFieldSection $record): string => $record->isSystemDefined()
-                    ? __('custom-fields::custom-fields.section.form.system_defined_cannot_delete')
-                    : ($record->hasSystemDefinedFields()
-                        ? __('custom-fields::custom-fields.section.form.contains_system_fields_cannot_delete')
-                        : '')
+            ->visible(fn (CustomFieldSection $record): bool => ! $record->isActive() && ! $record->isSystemDefined())
+            ->disabled(fn (CustomFieldSection $record): bool => $record->hasSystemDefinedFields())
+            ->tooltip(fn (CustomFieldSection $record): string => $record->hasSystemDefinedFields()
+                    ? __('custom-fields::custom-fields.section.form.contains_system_fields_cannot_delete')
+                    : ''
             )
             ->action(function (): bool {
                 if ($this->section->isSystemDefined()) {

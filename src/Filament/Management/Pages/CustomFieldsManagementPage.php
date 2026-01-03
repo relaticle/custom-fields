@@ -24,7 +24,6 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Models\CustomFieldSection;
-use Relaticle\CustomFields\Services\DefaultSectionService;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\CodeGenerator;
 use Relaticle\CustomFields\Support\Utils;
@@ -48,25 +47,25 @@ class CustomFieldsManagementPage extends Page
             $firstEntity = Entities::withCustomFields()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
-
-        // When sections are disabled, ensure a default hidden section exists
-        if ($this->isSectionsDisabled() && filled($this->currentEntityType)) {
-            app(DefaultSectionService::class)->getOrCreateDefaultSection($this->currentEntityType);
-        }
     }
 
     /**
-     * Check if sections are disabled (single hidden section mode).
+     * Check if sections are disabled (flat field list mode).
      */
     #[Computed]
     public function isSectionsDisabled(): bool
     {
-        return FeatureManager::isEnabled(CustomFieldsFeature::UI_FLAT_FIELD_LAYOUT);
+        return ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
     }
 
     #[Computed]
     public function sections(): Collection
     {
+        // Return empty collection when sections are disabled
+        if ($this->isSectionsDisabled()) {
+            return collect();
+        }
+
         return CustomFieldsModel::newSectionModel()->query()
             ->withDeactivated()
             ->forEntityType($this->currentEntityType)
@@ -113,11 +112,6 @@ class CustomFieldsManagementPage extends Page
     public function setCurrentEntityType(?string $entityType): void
     {
         $this->currentEntityType = $entityType;
-
-        // When sections are disabled, ensure a default hidden section exists for the new entity type
-        if ($this->isSectionsDisabled() && filled($entityType)) {
-            app(DefaultSectionService::class)->getOrCreateDefaultSection($entityType);
-        }
     }
 
     public function createSectionAction(): Action

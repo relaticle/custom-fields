@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
 use Filament\Schemas\Components\Grid;
 use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldComponentFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionComponentFactory;
 use Relaticle\CustomFields\Models\CustomField;
@@ -60,7 +62,8 @@ class FormBuilder extends BaseBuilder
         $fieldComponentFactory = app(FieldComponentFactory::class);
         $sectionComponentFactory = app(SectionComponentFactory::class);
 
-        $allFields = $this->getFilteredSections()->flatMap(fn (mixed $section) => $section->fields);
+        // Use getAllFields() which handles sectionless mode properly
+        $allFields = $this->getAllFields();
         $dependentFieldCodes = $this->getDependentFieldCodes($allFields);
 
         $createField = fn (CustomField $customField) => $fieldComponentFactory->create(
@@ -69,7 +72,9 @@ class FormBuilder extends BaseBuilder
             $allFields
         );
 
-        if ($this->withoutSections) {
+        // Return flat fields if sections are disabled or withoutSections is set
+        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+        if ($this->withoutSections || $sectionsDisabled) {
             return $allFields->map($createField);
         }
 

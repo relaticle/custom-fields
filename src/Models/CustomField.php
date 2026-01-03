@@ -17,8 +17,10 @@ use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldFactory;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\Concerns\Activable;
 use Relaticle\CustomFields\Models\Concerns\HasFieldType;
 use Relaticle\CustomFields\Models\Scopes\CustomFieldsActivableScope;
@@ -120,10 +122,14 @@ class CustomField extends Model
     }
 
     /**
-     * @return BelongsTo<CustomFieldSection, self>
+     * @return ?BelongsTo<CustomFieldSection, self>
      */
-    public function section(): BelongsTo
+    public function section(): ?BelongsTo
     {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+            return null;
+        }
+
         /** @var BelongsTo<CustomFieldSection, self> */
         return $this->belongsTo(CustomFields::sectionModel(), 'custom_field_section_id');
     }
@@ -161,6 +167,29 @@ class CustomField extends Model
     public function isSystemDefined(): bool
     {
         return $this->system_defined === true;
+    }
+
+    /**
+     * Deactivate the field if it's not system-defined.
+     */
+    public function deactivate(): bool
+    {
+        if ($this->isSystemDefined()) {
+            return false;
+        }
+
+        // Call the trait's deactivate logic directly
+        if ($this->fireModelEvent('deactivating') === false) {
+            return false;
+        }
+
+        $this->{$this->getActiveColumn()} = false;
+
+        $result = $this->save();
+
+        $this->fireModelEvent('deactivated', false);
+
+        return $result;
     }
 
     public function getValueColumn(): string

@@ -49,8 +49,8 @@
                     <div class="mx-auto grid max-w-xs justify-items-center text-center">
                         <div class="fi-ta-empty-state-icon-ctn mb-4 rounded-full bg-gray-50 p-3 dark:bg-gray-800/50">
                             <x-filament::icon
-                                icon="{{ __('custom-fields::custom-fields.empty_states.fields.icon') }}"
-                                class="fi-ta-empty-state-icon h-6 w-6 text-gray-400 dark:text-gray-500"
+                                    icon="{{ __('custom-fields::custom-fields.empty_states.fields.icon') }}"
+                                    class="fi-ta-empty-state-icon h-6 w-6 text-gray-400 dark:text-gray-500"
                             />
                         </div>
 
