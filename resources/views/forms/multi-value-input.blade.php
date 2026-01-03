@@ -167,7 +167,7 @@
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none"
                     >
                         {{-- Content area (empty state or values) --}}
-                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
+                        <div class="flex flex-1 items-center gap-x-3 overflow-hidden">
                             {{-- Empty State --}}
                             <template x-if="!hasValues">
                                 <span class="text-sm text-gray-400 dark:text-gray-500">
@@ -176,12 +176,32 @@
                             </template>
 
                             {{-- Visible Values (underlined, copiable) --}}
-                            <template x-for="(value, index) in visibleValues" :key="`${value}-${index}`">
-                                <span
-                                    x-on:click.stop="copyToClipboard(value, index)"
-                                    class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[140px] rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    x-text="value"
-                                ></span>
+                            <template x-for="(value, index) in visibleValues" :key="`trigger-${value}-${index}`">
+                                <div class="group/item relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <a
+                                        :href="'mailto:' + value"
+                                        x-on:click.stop
+                                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[120px]"
+                                        x-text="value"
+                                    ></a>
+                                    <button
+                                        type="button"
+                                        x-on:click.stop="copyToClipboard(value, 'trigger-' + index)"
+                                        class="absolute right-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                    >
+                                        <x-heroicon-m-clipboard-document
+                                            x-show="copiedIndex !== 'trigger-' + index"
+                                            class="size-3.5 text-primary-500"
+                                            aria-hidden="true"
+                                        />
+                                        <x-heroicon-m-check
+                                            x-show="copiedIndex === 'trigger-' + index"
+                                            x-cloak
+                                            class="size-3.5 text-green-500"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                </div>
                             </template>
 
                             {{-- "+N more" indicator --}}
@@ -238,26 +258,30 @@
                                                 </svg>
                                             </div>
 
-                                            {{-- Value (Click to Copy) --}}
-                                            <div
-                                                x-on:click="copyToClipboard(value, index)"
-                                                class="inline-flex items-center gap-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                            >
-                                                <span
+                                            {{-- Value with mailto link and copy button --}}
+                                            <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                                <a
+                                                    :href="'mailto:' + value"
                                                     class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
                                                     x-text="value"
-                                                ></span>
-                                                <x-heroicon-m-clipboard-document
-                                                    x-show="copiedIndex !== index"
-                                                    class="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                                    aria-hidden="true"
-                                                />
-                                                <x-heroicon-m-check
-                                                    x-show="copiedIndex === index"
-                                                    x-cloak
-                                                    class="size-4 text-green-500 shrink-0"
-                                                    aria-hidden="true"
-                                                />
+                                                ></a>
+                                                <button
+                                                    type="button"
+                                                    x-on:click.stop="copyToClipboard(value, index)"
+                                                    class="absolute right-0 opacity-0 group-hover/value:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                                >
+                                                    <x-heroicon-m-clipboard-document
+                                                        x-show="copiedIndex !== index"
+                                                        class="size-4 text-primary-500"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <x-heroicon-m-check
+                                                        x-show="copiedIndex === index"
+                                                        x-cloak
+                                                        class="size-4 text-green-500"
+                                                        aria-hidden="true"
+                                                    />
+                                                </button>
                                             </div>
 
                                             <div class="flex-1"></div>

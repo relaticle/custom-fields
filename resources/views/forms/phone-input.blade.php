@@ -122,6 +122,13 @@
                     return '';
                 },
 
+                getTelLink(entry) {
+                    if (!entry.number) return '';
+                    const countryCode = this.getCallingCode(entry.country);
+                    const digitsOnly = entry.number.replace(/[^0-9]/g, '');
+                    return 'tel:+' + countryCode + digitsOnly;
+                },
+
                 getCountryLabel(country) {
                     return this.countryOptions[country] || country;
                 },
@@ -491,16 +498,36 @@
                         aria-label="{{ __('custom-fields::custom-fields.phone.manage_phone_numbers') }}"
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded-lg"
                     >
-                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
+                        <div class="flex flex-1 items-center gap-x-3 overflow-hidden">
                             <template x-if="!hasValues">
                                 <span class="text-sm text-gray-400 dark:text-gray-500">{{ $emptyStateLabel }}</span>
                             </template>
                             <template x-for="(entry, index) in visibleEntries" :key="'visible-' + index">
-                                <span
-                                    x-on:click.stop="copyToClipboard(formatDisplay(entry), 'trigger-' + index)"
-                                    class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[140px] rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    x-text="formatDisplay(entry)"
-                                ></span>
+                                <div class="group/item relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <a
+                                        :href="getTelLink(entry)"
+                                        x-on:click.stop
+                                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[120px]"
+                                        x-text="formatDisplay(entry)"
+                                    ></a>
+                                    <button
+                                        type="button"
+                                        x-on:click.stop="copyToClipboard(formatDisplay(entry), 'trigger-' + index)"
+                                        class="absolute right-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                    >
+                                        <x-heroicon-m-clipboard-document
+                                            x-show="copiedIndex !== 'trigger-' + index"
+                                            class="size-3.5 text-primary-500"
+                                            aria-hidden="true"
+                                        />
+                                        <x-heroicon-m-check
+                                            x-show="copiedIndex === 'trigger-' + index"
+                                            x-cloak
+                                            class="size-3.5 text-green-500"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                </div>
                             </template>
                             <template x-if="hiddenCount > 0">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">
@@ -553,26 +580,30 @@
                                             </svg>
                                         </div>
 
-                                        {{-- Formatted Phone (Click to Copy) --}}
-                                        <div
-                                            x-on:click="copyToClipboard(formatDisplay(entry), index)"
-                                            class="inline-flex items-center gap-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <span
+                                        {{-- Formatted Phone with tel link and copy button --}}
+                                        <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                            <a
+                                                :href="getTelLink(entry)"
                                                 class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
                                                 x-text="formatDisplay(entry)"
-                                            ></span>
-                                            <x-heroicon-m-clipboard-document
-                                                x-show="copiedIndex !== index"
-                                                class="size-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                                aria-hidden="true"
-                                            />
-                                            <x-heroicon-m-check
-                                                x-show="copiedIndex === index"
-                                                x-cloak
-                                                class="size-4 text-green-500 shrink-0"
-                                                aria-hidden="true"
-                                            />
+                                            ></a>
+                                            <button
+                                                type="button"
+                                                x-on:click.stop="copyToClipboard(formatDisplay(entry), index)"
+                                                class="absolute right-0 opacity-0 group-hover/value:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                            >
+                                                <x-heroicon-m-clipboard-document
+                                                    x-show="copiedIndex !== index"
+                                                    class="size-4 text-primary-500"
+                                                    aria-hidden="true"
+                                                />
+                                                <x-heroicon-m-check
+                                                    x-show="copiedIndex === index"
+                                                    x-cloak
+                                                    class="size-4 text-green-500"
+                                                    aria-hidden="true"
+                                                />
+                                            </button>
                                         </div>
 
                                         <div class="flex-1"></div>

@@ -39,10 +39,10 @@
                 }, 2000);
             }
         }"
-        class="flex flex-wrap gap-x-2 gap-y-1"
+        class="flex flex-wrap gap-x-3 gap-y-1"
     >
         @forelse ($entries as $index => $entry)
-            <div class="group inline-flex items-center gap-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <div class="group relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <a
                     href="tel:{{ $entry['tel'] }}"
                     class="text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
@@ -52,17 +52,17 @@
                 <button
                     type="button"
                     x-on:click="copyToClipboard(@js($entry['display']), {{ $index }}, $event)"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                    class="absolute duration-300 right-0 opacity-0 group-hover:opacity-100 transition-opacity py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-800/0 dark:via-gray-800/70 dark:to-gray-800"
                 >
                     <x-heroicon-m-clipboard-document
                         x-show="copiedIndex !== {{ $index }}"
-                        class="size-4 text-gray-400"
+                        class="size-3.5 text-primary-500"
                         aria-hidden="true"
                     />
                     <x-heroicon-m-check
                         x-show="copiedIndex === {{ $index }}"
                         x-cloak
-                        class="size-4 text-green-500"
+                        class="size-3.5 text-green-500"
                         aria-hidden="true"
                     />
                 </button>
