@@ -113,9 +113,6 @@ final class CustomFields
         return new $model;
     }
 
-    /**
-     * @return bool
-     */
     public static function optionModelUsesStringKeys(): bool
     {
         $optionModel = self::newOptionModel();

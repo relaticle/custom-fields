@@ -7,13 +7,16 @@
     <x-slot name="heading">
         <div class="flex justify-between">
             <div class="flex items-center gap-x-1">
-                <x-filament::icon-button
-                        icon="heroicon-m-bars-4"
-                        color="gray"
-                        class="text-gray-500"
-                        size="xs"
-                        x-sortable-handle
-                />
+                <div x-sortable-handle class="shrink-0 ml-0.5 text-gray-500 cursor-grab active:cursor-grabbing">
+                    <svg class="size-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <circle cx="7" cy="5" r="1.5"/>
+                        <circle cx="13" cy="5" r="1.5"/>
+                        <circle cx="7" cy="10" r="1.5"/>
+                        <circle cx="13" cy="10" r="1.5"/>
+                        <circle cx="7" cy="15" r="1.5"/>
+                        <circle cx="13" cy="15" r="1.5"/>
+                    </svg>
+                </div>
 
                 {{$section->name }}
 

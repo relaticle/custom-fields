@@ -23,7 +23,7 @@ final readonly class EmailComponent extends AbstractFormComponent
             ->maxValues($maxValues)
             ->addLabel(__('custom-fields::custom-fields.email.add_email_placeholder'))
             ->placeholder(__('custom-fields::custom-fields.email.add_email_placeholder'))
-            ->nestedRecursiveRules(['email', 'max:254'])
+            ->nestedRecursiveRules(['email', 'max:254', 'distinct'])
             ->rules(['array', 'max:'.$maxValues]);
     }
 }

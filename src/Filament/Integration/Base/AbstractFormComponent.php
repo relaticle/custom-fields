@@ -57,7 +57,10 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             ->label($customField->name)
             ->afterStateHydrated(
                 fn (mixed $component, mixed $state, mixed $record): mixed => $component->state(
-                    $this->getFieldValue($customField, $state, $record)
+                    $this->transformHydratedValue(
+                        $this->getFieldValue($customField, $state, $record),
+                        $customField
+                    )
                 )
             )
             ->dehydrated(
@@ -106,6 +109,17 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                 )
                 : $value;
         });
+    }
+
+    /**
+     * Transform the hydrated value before setting component state.
+     *
+     * Override this method in subclasses to transform stored values
+     * into the format expected by the component (e.g., E.164 to objects).
+     */
+    protected function transformHydratedValue(mixed $value, CustomField $customField): mixed
+    {
+        return $value;
     }
 
     private function hasVisibilityConditions(CustomField $customField): bool

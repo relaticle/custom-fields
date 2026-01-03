@@ -32,12 +32,14 @@
                 allowMultiple: @js($allowMultiple),
                 maxValues: @js($maxValues),
                 isDisabled: @js($isDisabled),
-                maxVisiblePills: 3,
+                maxVisibleValues: 3,
+                copiedIndex: null,
 
                 init() {
                     if (!Array.isArray(this.state)) {
                         this.state = this.state ? [this.state] : [];
                     }
+                    this.state = this.state.filter(v => v && v.trim() !== '');
                 },
 
                 get canAddMore() {
@@ -55,20 +57,19 @@
                     return this.state[0] || '';
                 },
 
-                get visiblePills() {
-                    return this.state.slice(0, this.maxVisiblePills);
+                get visibleValues() {
+                    return this.state.slice(0, this.maxVisibleValues);
                 },
 
                 get hiddenCount() {
-                    return Math.max(0, this.state.length - this.maxVisiblePills);
+                    return Math.max(0, this.state.length - this.maxVisibleValues);
                 },
 
                 open() {
                     if (!this.isDisabled) {
                         this.isOpen = true;
                         this.$nextTick(() => {
-                            const firstInput = this.$refs.panel?.querySelector('input');
-                            if (firstInput) firstInput.focus();
+                            this.$refs.newInput?.focus();
                         });
                     }
                 },
@@ -86,10 +87,16 @@
                     const value = this.newValue.trim();
                     if (!value || !this.canAddMore) return;
 
-                    if (!this.state.includes(value)) {
-                        this.state = [...this.state, value];
+                    if (this.state.includes(value)) {
+                        new FilamentNotification()
+                            .title('{{ __('custom-fields::custom-fields.validation.duplicate_value') }}')
+                            .body('{{ __('custom-fields::custom-fields.validation.value_already_exists') }}')
+                            .warning()
+                            .send();
+                        return;
                     }
 
+                    this.state.push(value);
                     this.newValue = '';
 
                     if (!this.allowMultiple) {
@@ -106,21 +113,8 @@
                     this.state = trimmed ? [trimmed] : [];
                 },
 
-                updateValue(index, newVal) {
-                    const value = newVal.trim();
-                    if (!value) {
-                        this.removeValue(index);
-                        return;
-                    }
-                    if (this.state[index] !== value) {
-                        const updated = [...this.state];
-                        updated[index] = value;
-                        this.state = updated;
-                    }
-                },
-
-                removeValue(index) {
-                    this.state = this.state.filter((_, i) => i !== index);
+                deleteValue(valueToDelete) {
+                    this.state = this.state.filter((v) => v !== valueToDelete);
                     if (this.state.length === 0 && !this.allowMultiple) {
                         this.close();
                     }
@@ -129,6 +123,20 @@
                 handleEnter(e) {
                     e.preventDefault();
                     this.addValue();
+                },
+
+                reorderValues(event) {
+                    const reordered = this.state.splice(event.oldIndex, 1)[0];
+                    this.state.splice(event.newIndex, 0, reordered);
+                    this.state = [...this.state];
+                },
+
+                copyToClipboard(text, index) {
+                    window.navigator.clipboard.writeText(text);
+                    this.copiedIndex = index;
+                    setTimeout(() => {
+                        this.copiedIndex = null;
+                    }, 2000);
                 }
             }"
             x-on:click.outside="close()"
@@ -148,7 +156,7 @@
                 />
             </template>
 
-            {{-- Multiple Values Mode OR Single mode with legacy data: Pills with popover --}}
+            {{-- Multiple Values Mode OR Single mode with legacy data: Values with popover --}}
             <template x-if="allowMultiple || state.length > 1">
                 <div>
                     {{-- Trigger Area --}}
@@ -158,8 +166,8 @@
                         :disabled="isDisabled"
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none"
                     >
-                        {{-- Content area (empty state or pills) --}}
-                        <div class="flex flex-1 items-center gap-1.5 overflow-hidden">
+                        {{-- Content area (empty state or values) --}}
+                        <div class="flex flex-1 items-center gap-x-3 overflow-hidden">
                             {{-- Empty State --}}
                             <template x-if="!hasValues">
                                 <span class="text-sm text-gray-400 dark:text-gray-500">
@@ -167,35 +175,49 @@
                                 </span>
                             </template>
 
-                            {{-- Visible Pills --}}
-                            <template x-for="(value, index) in visiblePills" :key="'pill-' + index">
-                                <span
-                                    class="inline-flex items-center gap-x-1 rounded-md bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 ring-1 ring-inset ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20 truncate max-w-[140px]"
-                                >
-                                    <span x-text="value" class="truncate"></span>
-                                </span>
+                            {{-- Visible Values (underlined, copiable) --}}
+                            <template x-for="(value, index) in visibleValues" :key="`trigger-${value}-${index}`">
+                                <div class="group/item relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <a
+                                        :href="'mailto:' + value"
+                                        x-on:click.stop
+                                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[120px]"
+                                        x-text="value"
+                                    ></a>
+                                    <button
+                                        type="button"
+                                        x-on:click.stop="copyToClipboard(value, 'trigger-' + index)"
+                                        class="absolute right-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                    >
+                                        <x-heroicon-m-clipboard-document
+                                            x-show="copiedIndex !== 'trigger-' + index"
+                                            class="size-3.5 text-primary-500"
+                                            aria-hidden="true"
+                                        />
+                                        <x-heroicon-m-check
+                                            x-show="copiedIndex === 'trigger-' + index"
+                                            x-cloak
+                                            class="size-3.5 text-green-500"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                </div>
                             </template>
 
-                            {{-- "+N more" badge --}}
+                            {{-- "+N more" indicator --}}
                             <template x-if="hiddenCount > 0">
-                                <span
-                                    class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20"
-                                >
-                                    +<span x-text="hiddenCount"></span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    +<span x-text="hiddenCount"></span> more
                                 </span>
                             </template>
                         </div>
 
                         {{-- Chevron indicator --}}
-                        <svg
+                        <x-heroicon-m-chevron-down
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                            :class="{ 'rotate-180': isOpen }"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                        </svg>
+                            x-bind:class="{ 'rotate-180': isOpen }"
+                            aria-hidden="true"
+                        />
                     </button>
 
                     {{-- Popover Panel --}}
@@ -212,38 +234,78 @@
                         class="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
                     >
                         {{-- Existing Values List --}}
-                        <template x-if="hasValues">
-                            <div class="max-h-[240px] overflow-y-auto m-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-gray-600">
-                                <template x-for="(value, index) in state" :key="'edit-' + index">
-                                    <div
-                                        class="group flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                                    >
-                                        <input
-                                            type="text"
-                                            inputmode="{{ $inputmode }}"
-                                            :value="value"
-                                            x-on:blur="updateValue(index, $event.target.value)"
-                                            x-on:keydown.enter.prevent="$event.target.blur()"
-                                            class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
-                                            placeholder="{{ $placeholder }}"
-                                        />
-                                        <button
-                                            type="button"
-                                            x-on:click="removeValue(index)"
-                                            class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                        <div wire:ignore>
+                            <template x-if="hasValues">
+                                <div
+                                    x-sortable
+                                    x-on:end.stop="reorderValues($event)"
+                                    class="max-h-[280px] overflow-y-auto overflow-x-auto rounded-t-lg"
+                                >
+                                    <template x-for="(value, index) in state" :key="`${value}-${index}`">
+                                        <div
+                                            :x-sortable-item="index"
+                                            class="group flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 first:rounded-t-lg last:rounded-b-lg transition-colors"
                                         >
-                                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
+                                            {{-- Drag Handle --}}
+                                            <div x-sortable-handle class="shrink-0 cursor-grab active:cursor-grabbing" x-show="state.length > 1">
+                                                <svg class="size-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <circle cx="7" cy="5" r="1.5"/>
+                                                    <circle cx="13" cy="5" r="1.5"/>
+                                                    <circle cx="7" cy="10" r="1.5"/>
+                                                    <circle cx="13" cy="10" r="1.5"/>
+                                                    <circle cx="7" cy="15" r="1.5"/>
+                                                    <circle cx="13" cy="15" r="1.5"/>
+                                                </svg>
+                                            </div>
+
+                                            {{-- Value with mailto link and copy button --}}
+                                            <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                                <a
+                                                    :href="'mailto:' + value"
+                                                    class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
+                                                    x-text="value"
+                                                ></a>
+                                                <button
+                                                    type="button"
+                                                    x-on:click.stop="copyToClipboard(value, index)"
+                                                    class="absolute right-0 opacity-0 group-hover/value:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                                >
+                                                    <x-heroicon-m-clipboard-document
+                                                        x-show="copiedIndex !== index"
+                                                        class="size-4 text-primary-500"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <x-heroicon-m-check
+                                                        x-show="copiedIndex === index"
+                                                        x-cloak
+                                                        class="size-4 text-green-500"
+                                                        aria-hidden="true"
+                                                    />
+                                                </button>
+                                            </div>
+
+                                            <div class="flex-1"></div>
+
+                                            {{-- Delete Button --}}
+                                            <button
+                                                type="button"
+                                                x-on:click="deleteValue(value)"
+                                                class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                                            >
+                                                <x-heroicon-m-trash class="size-4" aria-hidden="true" />
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
 
                         {{-- Add New Value --}}
                         <template x-if="canAddMore">
                             <div class="flex items-center gap-2 px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+                                {{-- Plus Icon (Left) --}}
+                                <x-heroicon-m-plus class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
+
                                 <input
                                     type="text"
                                     inputmode="{{ $inputmode }}"
@@ -256,11 +318,10 @@
                                 <button
                                     type="button"
                                     x-on:click="addValue()"
-                                    class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all"
+                                    :disabled="!newValue.trim()"
+                                    class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                                    </svg>
+                                    <x-heroicon-m-arrow-right class="size-4" aria-hidden="true" />
                                 </button>
                             </div>
                         </template>

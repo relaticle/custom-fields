@@ -22,6 +22,7 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Override;
 use Postare\BladeMdi\BladeMdiServiceProvider;
+use Propaganistas\LaravelPhone\PhoneServiceProvider;
 use Relaticle\CustomFields\CustomFieldsServiceProvider;
 use Relaticle\CustomFields\EntitySystem\EntityConfigurator;
 use Relaticle\CustomFields\EntitySystem\EntityModel;
@@ -73,6 +74,7 @@ class TestCase extends BaseTestCase
             InfolistsServiceProvider::class,
             LivewireServiceProvider::class,
             NotificationsServiceProvider::class,
+            PhoneServiceProvider::class,
             PowerJoinsServiceProvider::class,
             SchemasServiceProvider::class,
             SupportServiceProvider::class,
