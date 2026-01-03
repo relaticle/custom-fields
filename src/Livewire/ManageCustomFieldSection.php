@@ -62,7 +62,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     public function editAction(): Action
     {
         return Action::make('edit')
-            ->icon('heroicon-o-pencil')
+            ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::sectionModel())
             ->record($this->section)
             ->schema(SectionForm::entityType($this->entityType)->schema())

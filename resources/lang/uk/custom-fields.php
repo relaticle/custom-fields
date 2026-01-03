@@ -97,6 +97,8 @@ return [
     ],
 
     'validation' => [
+        'duplicate_value' => 'Дублікат',
+        'value_already_exists' => 'Це значення вже існує у списку.',
         'labels' => [
             'ACCEPTED' => 'Прийнято',
             'ACCEPTED_IF' => 'Прийнято, якщо',
@@ -329,5 +331,9 @@ return [
 
     'common' => [
         'inactive' => 'Неактивний',
+    ],
+
+    'phone' => [
+        'number_already_exists' => 'Цей номер телефону вже існує у списку.',
     ],
 ];

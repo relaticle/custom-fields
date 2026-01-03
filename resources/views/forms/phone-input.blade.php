@@ -290,6 +290,19 @@
                     const number = this.newEntry.number.trim();
                     if (!number || !this.canAddMore) return;
 
+                    const isDuplicate = this.state.some(entry =>
+                        entry.country === this.newEntry.country && entry.number === number
+                    );
+
+                    if (isDuplicate) {
+                        new FilamentNotification()
+                            .title('{{ __('custom-fields::custom-fields.validation.duplicate_value') }}')
+                            .body('{{ __('custom-fields::custom-fields.phone.number_already_exists') }}')
+                            .warning()
+                            .send();
+                        return;
+                    }
+
                     this.state.push({
                         country: this.newEntry.country,
                         number: number

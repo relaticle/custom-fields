@@ -87,10 +87,16 @@
                     const value = this.newValue.trim();
                     if (!value || !this.canAddMore) return;
 
-                    if (!this.state.includes(value)) {
-                        this.state.push(value);
+                    if (this.state.includes(value)) {
+                        new FilamentNotification()
+                            .title('{{ __('custom-fields::custom-fields.validation.duplicate_value') }}')
+                            .body('{{ __('custom-fields::custom-fields.validation.value_already_exists') }}')
+                            .warning()
+                            .send();
+                        return;
                     }
 
+                    this.state.push(value);
                     this.newValue = '';
 
                     if (!this.allowMultiple) {

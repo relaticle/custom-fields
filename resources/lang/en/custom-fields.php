@@ -107,6 +107,8 @@ return [
     ],
 
     'validation' => [
+        'duplicate_value' => 'Duplicate Value',
+        'value_already_exists' => 'This value already exists in the list.',
         'messages' => [
             'phone' => 'The :attribute must be a valid phone number.',
         ],
@@ -374,6 +376,7 @@ return [
         'edit_phone_numbers' => 'Edit phone numbers',
         'phone_numbers_list' => 'Phone numbers list',
         'remove_phone_number' => 'Remove phone number',
+        'number_already_exists' => 'This phone number already exists in the list.',
     ],
 
 ];

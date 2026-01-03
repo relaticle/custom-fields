@@ -39,7 +39,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
     public function editAction(): Action
     {
         return Action::make('edit')
-            ->icon('heroicon-o-pencil')
+            ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
             ->schema(FieldForm::schema())

@@ -23,7 +23,7 @@ final readonly class PhoneComponent extends AbstractFormComponent
             ->maxValues($maxValues)
             ->addLabel(__('custom-fields::custom-fields.phone.add_phone_placeholder'))
             ->placeholder(__('custom-fields::custom-fields.phone.add_phone_placeholder'))
-            ->nestedRecursiveRules(['phone:AUTO'])
+            ->nestedRecursiveRules(['phone:AUTO', 'distinct'])
             ->rules(['array', 'max:'.$maxValues]);
     }
 
