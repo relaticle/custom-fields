@@ -355,6 +355,11 @@ return [
             'description' => 'Click the button below to add your first custom field.',
             'icon' => 'heroicon-o-squares-plus',
         ],
+        'search_no_results' => [
+            'heading' => 'No matching fields',
+            'description' => 'No fields match your search criteria.',
+            'icon' => 'heroicon-m-magnifying-glass',
+        ],
     ],
 
     'common' => [

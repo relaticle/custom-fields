@@ -19,6 +19,7 @@ use Livewire\Attributes\Url;
 use Override;
 use Relaticle\CustomFields\CustomFields as CustomFieldsModel;
 use Relaticle\CustomFields\CustomFieldsPlugin;
+use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\Entities;
@@ -45,7 +46,7 @@ class CustomFieldsManagementPage extends Page
     public function mount(): void
     {
         if (blank($this->currentEntityType)) {
-            $firstEntity = Entities::withCustomFields()->first();
+            $firstEntity = Entities::withCustomFields()->sortedByPriority()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
     }
@@ -107,7 +108,11 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function entityTypes(): Collection
     {
-        return collect(Entities::getOptions(onlyCustomFields: true));
+        return Entities::withCustomFields()
+            ->sortedByPriority()
+            ->mapWithKeys(fn (EntityConfigurationData $entity): array => [
+                $entity->getAlias() => $entity->getLabelPlural(),
+            ]);
     }
 
     /**
