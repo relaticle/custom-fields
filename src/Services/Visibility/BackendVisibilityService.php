@@ -212,13 +212,13 @@ final class BackendVisibilityService
 
         // Single value optionable fields
         if (! $field->isMultiChoiceField()) {
-            return $options->get($value)?->name ?? $value;
+            return $options->get($value)->name ?? $value;
         }
 
         // Multi-value optionable fields
         if (is_array($value)) {
             return collect($value)
-                ->map(fn (mixed $id) => $options->get($id)?->name ?? $id)
+                ->map(fn (mixed $id) => $options->get($id)->name ?? $id)
                 ->all();
         }
 

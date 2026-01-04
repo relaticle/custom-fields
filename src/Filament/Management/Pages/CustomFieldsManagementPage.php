@@ -10,6 +10,7 @@ use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -122,7 +123,7 @@ class CustomFieldsManagementPage extends Page
         $tenantId = TenantContextService::getCurrentTenantId();
 
         return $model->newQueryWithoutScopes()
-            ->when($tenantId, fn ($q) => $q->where($tenantColumn, $tenantId))
+            ->when($tenantId, fn (Builder $q): Builder => $q->where($tenantColumn, $tenantId))
             ->selectRaw('entity_type, COUNT(*) as count')
             ->groupBy('entity_type')
             ->pluck('count', 'entity_type')

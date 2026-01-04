@@ -15,8 +15,7 @@ final class ImporterBuilder extends BaseBuilder
 {
     public function columns(): Collection
     {
-        return $this->getFilteredSections()
-            ->flatMap(fn (mixed $section) => $section->fields)
+        return $this->getAllFields()
             ->map(fn (CustomField $field): ImportColumn => $this->createColumn($field))
             ->values();
     }

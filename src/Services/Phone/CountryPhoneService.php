@@ -91,7 +91,7 @@ final class CountryPhoneService
         if (function_exists('locale_get_region')) {
             $regionCode = locale_get_region($locale);
 
-            if ($regionCode !== '' && $regionCode !== false && $this->isValidRegion($regionCode)) {
+            if ($regionCode !== '' && $this->isValidRegion($regionCode)) {
                 return $regionCode;
             }
         }

@@ -152,7 +152,11 @@ final class EntityConfigurationData extends Data
 
         foreach ($resources as $resourceClass) {
             try {
-                if (! class_exists($resourceClass) || ! is_subclass_of($resourceClass, Resource::class)) {
+                if (! class_exists($resourceClass)) {
+                    continue;
+                }
+
+                if (! is_subclass_of($resourceClass, Resource::class)) {
                     continue;
                 }
 
