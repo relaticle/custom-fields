@@ -327,6 +327,16 @@ return [
             'description' => 'Перетягніть і скиньте поля сюди або натисніть кнопку нижче, щоб додати своє перше поле.',
             'icon' => 'heroicon-o-squares-plus',
         ],
+        'fields_no_sections' => [
+            'heading' => 'Користувацьких полів ще немає',
+            'description' => 'Натисніть кнопку вище, щоб додати своє перше користувацьке поле.',
+            'icon' => 'heroicon-o-squares-plus',
+        ],
+        'search_no_results' => [
+            'heading' => 'Поля не знайдено',
+            'description' => 'Жодне поле не відповідає вашим критеріям пошуку.',
+            'icon' => 'heroicon-m-magnifying-glass',
+        ],
     ],
 
     'common' => [

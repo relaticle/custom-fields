@@ -3,6 +3,7 @@
 return [
     'heading' => [
         'title' => 'Custom Fields',
+        'description' => 'Create and manage custom fields to capture additional data for your entities.',
     ],
 
     'nav' => [
@@ -353,6 +354,11 @@ return [
             'heading' => 'No custom fields yet',
             'description' => 'Click the button below to add your first custom field.',
             'icon' => 'heroicon-o-squares-plus',
+        ],
+        'search_no_results' => [
+            'heading' => 'No matching fields',
+            'description' => 'No fields match your search criteria.',
+            'icon' => 'heroicon-m-magnifying-glass',
         ],
     ],
 

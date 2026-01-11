@@ -32,7 +32,7 @@ final class EmailColumn extends AbstractTableColumn
                     $value = filled($value) ? [$value] : [];
                 }
 
-                return array_filter($value, fn ($v): bool => ! empty($v));
+                return array_filter($value, fn (mixed $v): bool => ! empty($v));
             });
 
         return $column;

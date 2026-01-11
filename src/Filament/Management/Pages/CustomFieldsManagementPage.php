@@ -10,6 +10,7 @@ use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -18,6 +19,7 @@ use Livewire\Attributes\Url;
 use Override;
 use Relaticle\CustomFields\CustomFields as CustomFieldsModel;
 use Relaticle\CustomFields\CustomFieldsPlugin;
+use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\Entities;
@@ -44,7 +46,7 @@ class CustomFieldsManagementPage extends Page
     public function mount(): void
     {
         if (blank($this->currentEntityType)) {
-            $firstEntity = Entities::withCustomFields()->first();
+            $firstEntity = Entities::withCustomFields()->sortedByPriority()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
     }
@@ -106,7 +108,31 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function entityTypes(): Collection
     {
-        return collect(Entities::getOptions(onlyCustomFields: true));
+        return Entities::withCustomFields()
+            ->sortedByPriority()
+            ->mapWithKeys(fn (EntityConfigurationData $entity): array => [
+                $entity->getAlias() => $entity->getLabelPlural(),
+            ]);
+    }
+
+    /**
+     * Get field counts per entity type for display in tabs
+     *
+     * @return array<string, int>
+     */
+    #[Computed]
+    public function entityFieldCounts(): array
+    {
+        $model = CustomFieldsModel::newCustomFieldModel();
+        $tenantColumn = config('custom-fields.database.column_names.tenant_foreign_key');
+        $tenantId = TenantContextService::getCurrentTenantId();
+
+        return $model->newQueryWithoutScopes()
+            ->when($tenantId, fn (Builder $q): Builder => $q->where($tenantColumn, $tenantId))
+            ->selectRaw('entity_type, COUNT(*) as count')
+            ->groupBy('entity_type')
+            ->pluck('count', 'entity_type')
+            ->toArray();
     }
 
     public function setCurrentEntityType(?string $entityType): void
@@ -211,6 +237,12 @@ class CustomFieldsManagementPage extends Page
     public function getHeading(): string
     {
         return __('custom-fields::custom-fields.heading.title');
+    }
+
+    #[Override]
+    public function getSubheading(): ?string
+    {
+        return __('custom-fields::custom-fields.heading.description');
     }
 
     #[Override]
