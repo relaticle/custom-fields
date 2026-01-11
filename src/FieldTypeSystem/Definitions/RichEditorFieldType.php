@@ -9,7 +9,7 @@ use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RichEditorComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\HtmlEntry;
-use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\RichTextColumn;
 
 /**
  * ABOUTME: Field type definition for Rich Editor fields
@@ -24,7 +24,7 @@ final class RichEditorFieldType extends BaseFieldType
             ->label('Rich Editor')
             ->icon('mdi-format-text')
             ->formComponent(RichEditorComponent::class)
-            ->tableColumn(TextColumn::class)
+            ->tableColumn(RichTextColumn::class)
             ->infolistEntry(HtmlEntry::class)
             ->priority(80)
             ->availableValidationRules([
