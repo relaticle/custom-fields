@@ -14,6 +14,7 @@ use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
@@ -34,7 +35,7 @@ final class ImportColumnConfigurator
     public function configure(ImportColumn $column, CustomField $customField): ImportColumn
     {
         // First, check if field type implements custom import/export behavior
-        if ($this->configureViaFieldType()) {
+        if ($this->configureViaFieldType($column, $customField)) {
             return $this->finalize($column, $customField);
         }
 
@@ -52,12 +53,31 @@ final class ImportColumnConfigurator
     }
 
     /**
-     * Check if field type implements custom import/export interface and configure accordingly.
+     * Check if field type implements custom import transformer and configure accordingly.
      */
-    private function configureViaFieldType(): bool
+    private function configureViaFieldType(ImportColumn $column, CustomField $customField): bool
     {
-        // Import configuration is not currently supported for field types
-        return false;
+        $fieldTypeInstance = CustomFieldsType::getFieldTypeInstance($customField->typeData->key);
+
+        if (! $fieldTypeInstance) {
+            return false;
+        }
+
+        $schema = $fieldTypeInstance->configure();
+        $transformer = $schema->getImportTransformer();
+
+        if ($transformer === null) {
+            return false;
+        }
+
+        $column->castStateUsing($transformer);
+
+        $example = $schema->getImportExample();
+        if ($example !== null) {
+            $column->example($example);
+        }
+
+        return true;
     }
 
     /**

@@ -31,6 +31,27 @@ final class RichEditorFieldType extends BaseFieldType
                 ValidationRule::REQUIRED,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
-            ]);
+            ])
+            ->importExample('Sample rich text content')
+            ->importTransformer(function (mixed $state): ?string {
+                if (blank($state)) {
+                    return null;
+                }
+
+                if (is_array($state)) {
+                    return json_encode($state);
+                }
+
+                $text = (string) $state;
+
+                if (str_starts_with(trim($text), '<')) {
+                    return $text;
+                }
+
+                $lines = preg_split('/\r\n|\r|\n/', $text);
+                $paragraphs = array_map(fn (string $line): string => '<p>'.e($line).'</p>', $lines);
+
+                return implode('', $paragraphs);
+            });
     }
 }
