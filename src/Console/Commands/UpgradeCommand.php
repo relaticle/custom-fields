@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\Command;
-use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ClearCachesStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateEmailFormatStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateLookupFieldsStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigratePhoneFormatStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ValidateSchemaStep;
+use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
+use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 
 /**
  * Main upgrade command for custom-fields 2.x → 3.x migration.
@@ -91,8 +91,7 @@ final class UpgradeCommand extends Command
     {
         $results = [];
         $stepNumber = 1;
-        $activeSteps = array_diff_key(self::STEPS, array_flip($stepsToSkip));
-        $totalSteps = count($activeSteps);
+        $totalSteps = count(self::STEPS) - count($stepsToSkip);
 
         foreach (self::STEPS as $key => $stepClass) {
             if (in_array($key, $stepsToSkip, true)) {
@@ -196,12 +195,6 @@ final class UpgradeCommand extends Command
      */
     private function hasErrors(array $results): bool
     {
-        foreach ($results as $result) {
-            if (! $result->success) {
-                return true;
-            }
-        }
-
-        return false;
+        return collect($results)->contains(fn (UpgradeStepResult $result): bool => ! $result->success);
     }
 }
