@@ -480,9 +480,8 @@ class FieldForm implements FormInterface
                     )
                 )
                 ->visible(
-                    fn (Get $get): bool => $get(
-                        'options_lookup_type'
-                    ) === 'lookup'
+                    fn (Get $get): bool => $get('options_lookup_type') === 'lookup'
+                        || ($get('type') !== null && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true)
                 )
                 ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
                 ->live()

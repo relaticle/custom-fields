@@ -61,6 +61,8 @@ class FieldSchema
 
     protected bool $withoutUserOptions = false;
 
+    private bool $requiresLookupType = false;
+
     private ?string $settingsDataClass = null;
 
     private string|Closure|null $settingsSchema = null;
@@ -402,6 +404,17 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Field requires lookup_type selection (entity type selector)
+     * This shows the entity selector directly without the options toggle
+     */
+    public function requiresLookupType(bool $requires = true): self
+    {
+        $this->requiresLookupType = $requires;
+
+        return $this;
+    }
+
     // ========== Export Configuration ==========
 
     /**
@@ -601,6 +614,7 @@ class FieldSchema
             filterable: $this->filterable,
             encryptable: $this->encryptable,
             withoutUserOptions: $this->withoutUserOptions,
+            requiresLookupType: $this->requiresLookupType,
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
             supportsMultiValue: $this->supportsMultiValue,
             supportsUniqueConstraint: $this->supportsUniqueConstraint,

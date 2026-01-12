@@ -26,6 +26,7 @@ final class FieldTypeData extends Data implements Stringable
         public bool $filterable = false,
         public bool $encryptable = false,
         public bool $withoutUserOptions = false,
+        public bool $requiresLookupType = false,
         public bool $acceptsArbitraryValues = false,
         public bool $supportsMultiValue = false,
         public bool $supportsUniqueConstraint = false,

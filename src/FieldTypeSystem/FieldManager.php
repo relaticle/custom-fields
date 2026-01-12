@@ -23,6 +23,7 @@ use Relaticle\CustomFields\FieldTypeSystem\Definitions\MultiSelectFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\NumberFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\PhoneFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RadioFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\RecordFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RichEditorFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\SelectFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\TagsInputFieldType;
@@ -56,6 +57,7 @@ final class FieldManager
         DateTimeFieldType::class,
         SelectFieldType::class,
         MultiSelectFieldType::class,
+        RecordFieldType::class,
         FileUploadFieldType::class,
     ];
 
