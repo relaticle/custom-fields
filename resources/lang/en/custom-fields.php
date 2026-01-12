@@ -399,4 +399,9 @@ return [
         'number_already_exists' => 'This phone number already exists in the list.',
     ],
 
+    'record' => [
+        'search_placeholder' => 'Search records...',
+        'add_record_placeholder' => 'Add record...',
+    ],
+
 ];
