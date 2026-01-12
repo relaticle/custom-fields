@@ -168,6 +168,16 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     }
 
     /**
+     * Get options from custom field's configured options.
+     *
+     * @return array<int|string, string>
+     */
+    protected function getCustomFieldOptions(CustomField $customField): array
+    {
+        return $customField->options->pluck('name', 'id')->all();
+    }
+
+    /**
      * Create the specific Filament field component.
      *
      * Concrete implementations should create the appropriate Filament component

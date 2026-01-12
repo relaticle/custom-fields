@@ -85,7 +85,8 @@ final class ImportColumnConfigurator
      */
     private function configureSingleChoice(ImportColumn $column, CustomField $customField): void
     {
-        if ($customField->lookup_type) {
+        // Lookup fields (Record type) handle entity references
+        if ($customField->typeData->requiresLookupType) {
             $this->configureLookup($column, $customField, false);
         } else {
             $this->configureChoices($column, $customField, false);
@@ -116,7 +117,8 @@ final class ImportColumnConfigurator
 
             $column->example('tag1, tag2, tag3');
             $column->helperText('Separate multiple values with commas');
-        } elseif ($customField->lookup_type) {
+        } elseif ($customField->typeData->requiresLookupType) {
+            // Lookup fields (Record type) handle entity references
             $this->configureLookup($column, $customField, true);
         } else {
             $this->configureChoices($column, $customField, true);

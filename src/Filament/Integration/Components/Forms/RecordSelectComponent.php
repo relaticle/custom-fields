@@ -10,12 +10,12 @@ use Relaticle\CustomFields\Models\CustomField;
 
 final readonly class RecordSelectComponent extends AbstractFormComponent
 {
+    private const MAX_MULTIPLE_RECORDS = 100;
+
     public function create(CustomField $customField): RecordSelectInputComponent
     {
         $allowMultiple = $customField->settings->allow_multiple ?? false;
-        $maxValues = $allowMultiple
-            ? ($customField->settings->max_values ?? 10)
-            : 1;
+        $maxValues = $allowMultiple ? self::MAX_MULTIPLE_RECORDS : 1;
 
         return RecordSelectInputComponent::make($customField->getFieldName())
             ->lookupType($customField->lookup_type)

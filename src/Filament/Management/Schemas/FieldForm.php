@@ -114,10 +114,10 @@ class FieldForm implements FormInterface
             ->columnSpanFull()
             ->label(__('custom-fields::custom-fields.field.form.options.label'))
             ->visible(
-                fn (Get $get): bool => $get('options_lookup_type') === 'options'
-                    && $get('type') !== null
+                fn (Get $get): bool => $get('type') !== null
                     && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
                     && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
+                    && ! CustomFieldsType::getFieldType($get('type'))->requiresLookupType
             )
             ->mutateRelationshipDataBeforeCreateUsing(function (
                 array $data
@@ -389,13 +389,14 @@ class FieldForm implements FormInterface
                         ->minValue(1)
                         ->maxValue(20)
                         ->default(5)
-                        ->visible(
-                            fn (
-                                Get $get
-                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                                CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true &&
-                                $get('settings.allow_multiple') === true
-                        ),
+                        ->visible(function (Get $get): bool {
+                            $fieldType = CustomFieldsType::getFieldType($get('type'));
+
+                            return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                                $fieldType?->supportsMultiValue === true &&
+                                $fieldType->requiresLookupType !== true &&
+                                $get('settings.allow_multiple') === true;
+                        }),
                     // Uniqueness constraint
                     Toggle::make('settings.unique_per_entity_type')
                         ->inline(false)
@@ -420,75 +421,16 @@ class FieldForm implements FormInterface
             // Dynamic type-specific settings from field type definition
             ...self::getTypeSettingsSchema(),
 
-            Select::make('options_lookup_type')
-                ->label(
-                    __(
-                        'custom-fields::custom-fields.field.form.options_lookup_type.label'
-                    )
-                )
+            Select::make('lookup_type')
+                ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
                 ->visible(
                     fn (Get $get): bool => $get('type') !== null
-                        && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
-                        && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
+                        && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true
                 )
                 ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
-                ->live()
-                ->options([
-                    'options' => __(
-                        'custom-fields::custom-fields.field.form.options_lookup_type.options'
-                    ),
-                    'lookup' => __(
-                        'custom-fields::custom-fields.field.form.options_lookup_type.lookup'
-                    ),
-                ])
-                ->afterStateHydrated(function (
-                    Select $component,
-                    mixed $state,
-                    ?CustomField $record,
-                    Get $get
-                ): void {
-                    if (blank($state)) {
-                        $optionsLookupType = $record?->lookup_type
-                            ? 'lookup'
-                            : 'options';
-
-                        $component->state($optionsLookupType);
-                    }
-                })
-                ->afterStateUpdated(function (
-                    Select $component,
-                    ?string $state,
-                    Set $set,
-                    ?CustomField $record
-                ): void {
-                    if ($state === 'options') {
-                        $set('lookup_type', null, true, true);
-                    } else {
-                        $set(
-                            'lookup_type',
-                            $record->lookup_type ??
-                            (Entities::asLookupSources()->first()?->getAlias()) ?? ''
-                        );
-                    }
-                })
-                ->dehydrated(false)
-                ->required(),
-            Select::make('lookup_type')
-                ->label(
-                    __(
-                        'custom-fields::custom-fields.field.form.lookup_type.label'
-                    )
-                )
-                ->visible(
-                    fn (Get $get): bool => $get('options_lookup_type') === 'lookup'
-                        || ($get('type') !== null && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true)
-                )
-                ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
-                ->live()
                 ->options(Entities::getLookupOptions())
                 ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
                 ->required(),
-            Hidden::make('lookup_type'),
             $optionsRepeater,
         ];
 

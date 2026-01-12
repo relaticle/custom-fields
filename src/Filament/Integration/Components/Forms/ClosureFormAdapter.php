@@ -9,7 +9,6 @@ use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Forms\ConfiguresColorOptions;
-use Relaticle\CustomFields\Filament\Integration\Concerns\Forms\ConfiguresLookups;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValidationService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
@@ -27,7 +26,6 @@ use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
 final readonly class ClosureFormAdapter extends AbstractFormComponent
 {
     use ConfiguresColorOptions;
-    use ConfiguresLookups;
 
     public function __construct(
         private Closure $closure,
@@ -49,11 +47,6 @@ final readonly class ClosureFormAdapter extends AbstractFormComponent
         // Apply built-in features automatically for choice fields
         if ($customField->isChoiceField() && ! $customField->typeData->withoutUserOptions) {
             $field = $this->applyUserDefinedOptions($field, $customField);
-        }
-
-        // Apply lookup configuration if field uses lookup type
-        if ($this->usesLookupType($customField)) {
-            $field = $this->configureAdvancedLookup($field, $customField->lookup_type);
         }
 
         // Apply color options if enabled

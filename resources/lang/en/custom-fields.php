@@ -53,11 +53,6 @@ return [
             'visibility_settings' => 'Visibility',
             'data_settings' => 'Data Handling',
             'appearance_settings' => 'Appearance',
-            'options_lookup_type' => [
-                'label' => 'Options Lookup Type',
-                'options' => 'Options',
-                'lookup' => 'Lookup',
-            ],
             'lookup_type' => [
                 'label' => 'Lookup Type',
             ],
