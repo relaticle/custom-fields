@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\EntitySystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Relaticle\CustomFields\Data\AvatarConfiguration;
+use Relaticle\CustomFields\Enums\AvatarShape;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
 /**
@@ -39,7 +41,8 @@ final class EntityModel
         ?string $resourceClass = null,
         array $features = [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE],
         int $priority = 999,
-        array $metadata = []
+        array $metadata = [],
+        ?AvatarConfiguration $avatarConfiguration = null,
     ): array {
         self::validateModelClass($modelClass);
 
@@ -59,7 +62,19 @@ final class EntityModel
             'features' => array_map(fn (mixed $feature) => $feature instanceof EntityFeature ? $feature->value : $feature, $features),
             'priority' => max(0, $priority),
             'metadata' => $metadata,
+            'avatarConfiguration' => $avatarConfiguration,
         ];
+    }
+
+    /**
+     * Create avatar configuration for an entity
+     */
+    public static function avatar(?string $attribute = null, AvatarShape $shape = AvatarShape::Circle): AvatarConfiguration
+    {
+        return new AvatarConfiguration(
+            attribute: $attribute,
+            shape: $shape,
+        );
     }
 
     /**
@@ -101,6 +116,7 @@ final class EntityModel
             'features' => [EntityFeature::CUSTOM_FIELDS->value, EntityFeature::LOOKUP_SOURCE->value],
             'priority' => 999,
             'metadata' => [],
+            'avatarConfiguration' => null,
         ];
     }
 

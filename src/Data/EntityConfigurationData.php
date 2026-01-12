@@ -33,6 +33,7 @@ final class EntityConfigurationData extends Data
         public ?Collection $features = null,
         public int $priority = 999,
         public array $metadata = [],
+        public ?AvatarConfiguration $avatarConfiguration = null,
     ) {
         $this->features ??= collect([
             EntityFeature::CUSTOM_FIELDS,
@@ -219,6 +220,11 @@ final class EntityConfigurationData extends Data
         return $this->metadata;
     }
 
+    public function getAvatarConfiguration(): ?AvatarConfiguration
+    {
+        return $this->avatarConfiguration;
+    }
+
     /**
      * Create a new model instance
      */
@@ -302,7 +308,8 @@ final class EntityConfigurationData extends Data
             resourceClass: $properties['resourceClass'] ?? null,
             features: $properties['features'] ?? collect(),
             priority: $properties['priority'] ?? 999,
-            metadata: $properties['metadata'] ?? []
+            metadata: $properties['metadata'] ?? [],
+            avatarConfiguration: $properties['avatarConfiguration'] ?? null,
         );
     }
 }
