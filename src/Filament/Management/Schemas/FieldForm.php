@@ -431,7 +431,7 @@ class FieldForm implements FormInterface
                         && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
                         && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
                 )
-                ->disabled(self::disabledForSystemFields())
+                ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
                 ->live()
                 ->options([
                     'options' => __(
@@ -484,6 +484,7 @@ class FieldForm implements FormInterface
                         'options_lookup_type'
                     ) === 'lookup'
                 )
+                ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
                 ->live()
                 ->options(Entities::getLookupOptions())
                 ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
