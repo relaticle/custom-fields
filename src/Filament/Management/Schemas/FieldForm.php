@@ -356,6 +356,7 @@ class FieldForm implements FormInterface
                                 in_array((string) $get('type'), [
                                     'select',
                                     'multi_select',
+                                    'tags-input',
                                 ])
                         ),
                     // Multi-value settings

@@ -10,6 +10,7 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TagsInputComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\MultiChoiceEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiChoiceColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters\TagsFilter;
 
 /**
  * ABOUTME: Field type definition for Tags Input fields
@@ -25,6 +26,9 @@ final class TagsInputFieldType extends BaseFieldType
             ->icon('mdi-tag-multiple')
             ->formComponent(TagsInputComponent::class)
             ->tableColumn(MultiChoiceColumn::class)
+            ->tableFilter(TagsFilter::class)
+            ->filterable()
+            ->searchable(false)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(70)
             ->availableValidationRules([
