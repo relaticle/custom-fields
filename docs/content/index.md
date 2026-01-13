@@ -6,131 +6,46 @@ seo:
 ---
 
 ::u-page-hero
----
-orientation: horizontal
----
 #title
 Custom Fields
 
 #description
 Add dynamic custom fields to your Filament admin panels without writing database migrations.
 
+Perfect for multi-tenant SaaS applications and enterprise admin panels.
+
 #links
   :::u-button
   ---
-  color: primary
+  color: neutral
   size: xl
   to: /getting-started/installation
   trailing-icon: i-lucide-arrow-right
   ---
-  Get Started
+  Get started
   :::
 
   :::u-button
   ---
   color: neutral
-  variant: outline
+  icon: simple-icons:github
   size: xl
   to: https://github.com/relaticle/custom-fields
-  icon: i-simple-icons-github
-  target: _blank
+  variant: outline
   ---
   GitHub
   :::
+::
 
-#default
-  :::div{class="w-full"}
-  <div class="aspect-video w-full rounded-lg overflow-hidden shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800">
-    <iframe
-      width="100%"
-      height="100%"
-      src="https://www.youtube.com/embed/6iVfeS7VixA?si=3L8H22mbMayEuHs8"
-      title="Custom Fields Demo"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allowfullscreen>
-    </iframe>
+<div class="text-center max-w-4xl mx-auto">
+  <div class="aspect-video rounded-lg shadow-lg overflow-hidden">
+    <iframe width="100%" height="100%" src="https://www.youtube.com/embed/6iVfeS7VixA?si=3L8H22mbMayEuHs8" title="Custom Fields Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
   </div>
-  :::
-::
-
-::u-page-section
----
-headline: The Problem
-title: Stop Writing Migrations for Custom Fields
-description: Every custom field request becomes a development bottleneck that slows down your entire team.
----
-
-#default
-  :::u-page-grid
-    ::::u-page-card
-    ---
-    icon: i-lucide-file-code
-    title: Write Migrations
-    description: Create and test database migrations for every new field request.
-    ---
-    ::::
-
-    ::::u-page-card
-    ---
-    icon: i-lucide-git-branch
-    title: Coordinate Deploys
-    description: Sync schema changes across development, staging, and production.
-    ---
-    ::::
-
-    ::::u-page-card
-    ---
-    icon: i-lucide-alert-triangle
-    title: Risk Production
-    description: Hope nothing breaks with each database schema modification.
-    ---
-    ::::
-
-    ::::u-page-card
-    ---
-    icon: i-lucide-repeat
-    title: Repeat Forever
-    description: Do it all again for every field change request from stakeholders.
-    ---
-    ::::
-  :::
-::
-
-::u-page-section
----
-headline: The Solution
-title: Two Lines of Code
-description: Let users create their own fields through the admin panel. No migrations. No deployments.
----
-
-#default
-<div class="max-w-4xl mx-auto">
-
-```php
-// 1. Add to your model
-class Product extends Model implements HasCustomFields
-{
-    use UsesCustomFields;
-}
-
-// 2. Add to your Filament resource
-public function form(Schema $schema): Schema
-{
-    return $schema->components([
-        ...CustomFields::form()->forSchema($schema)->columns(),
-    ]);
-}
-```
-
 </div>
-::
 
 ::u-page-section
----
-title: Why Custom Fields?
----
+#title
+Why choose Custom Fields?
 
 #features
   :::u-page-feature
@@ -201,32 +116,36 @@ title: Why Custom Fields?
 ::
 
 ::u-page-section
----
-headline: Ecosystem
-title: Build More with Less
-description: Extend your Laravel applications with our complementary tools
----
+#title
+Our Ecosystem
+
+#description
+Extend your Laravel applications with our ecosystem of complementary tools
 
 #default
-  :::u-page-grid
-    ::::u-page-card
+  ::card-group
+    :::card
     ---
-    icon: i-simple-icons-laravel
     title: FilaForms
-    description: Visual form builder for all your public-facing forms.
+    icon: i-simple-icons-laravel
     to: https://filaforms.app
     target: _blank
     ---
-    ::::
+    :img{src="https://filaforms.app/img/og-image.png" alt="FilaForms" class="mb-4 rounded-lg w-full pointer-events-none"}
 
-    ::::u-page-card
+    Visual form builder for all your public-facing forms.
+    :::
+
+    :::card
     ---
-    icon: i-lucide-layout-kanban
     title: Flowforge
-    description: Transform any Laravel model into drag-and-drop Kanban boards.
+    icon: i-lucide-columns-3
     to: https://relaticle.github.io/flowforge/
     target: _blank
     ---
-    ::::
-  :::
+    :img{src="https://relaticle.github.io/flowforge/preview.png" alt="Flowforge" class="mb-4 rounded-lg w-full pointer-events-none"}
+
+    Transform any Laravel model into drag-and-drop Kanban boards.
+    :::
+  ::
 ::
