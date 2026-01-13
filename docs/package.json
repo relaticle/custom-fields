@@ -1,0 +1,19 @@
+{
+    "name": "custom-fields-docs",
+    "scripts": {
+        "dev": "nuxt dev --extends docus",
+        "build": "nuxt build --extends docus",
+        "generate": "nuxt build --preset github_pages",
+        "preview": "nuxt preview"
+    },
+    "dependencies": {
+        "@nuxt/image": "^1.11.0",
+        "@nuxt/scripts": "^0.12.1",
+        "@nuxt/ui": "^4.0.0",
+        "@unhead/vue": "^2.0.17",
+        "better-sqlite3": "^12.4.1",
+        "docus": "latest",
+        "nuxt": "^4.1.2",
+        "typescript": "^5.9.2"
+    }
+}
