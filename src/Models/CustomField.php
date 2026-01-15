@@ -35,7 +35,7 @@ use Spatie\LaravelData\DataCollection;
  * @property string $code
  * @property string $type
  * @property string $entity_type
- * @property string $lookup_type
+ * @property ?string $lookup_type
  * @property DataCollection<int, ValidationRuleData> $validation_rules
  * @property CustomFieldSettingsData $settings
  * @property int $sort_order

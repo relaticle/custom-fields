@@ -26,7 +26,7 @@ use Relaticle\CustomFields\Observers\CustomFieldSectionObserver;
  * @property string $description
  * @property CustomFieldSectionType $type
  * @property string $entity_type
- * @property string $lookup_type
+ * @property ?string $lookup_type
  * @property CustomFieldSectionSettingsData $settings
  * @property int $sort_order
  * @property bool $active
