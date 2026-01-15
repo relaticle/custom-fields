@@ -16,7 +16,6 @@ use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\ListPosts;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\PostResource;
 use Spatie\LaravelData\DataCollection;
 
-use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();

@@ -11,7 +11,6 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
-use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     // Skip if sections are disabled (these tests require sections)

@@ -7,7 +7,6 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
-use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     // Arrange: Create authenticated user for all tests

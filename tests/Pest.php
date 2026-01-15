@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Pest\Expectation;
 use Relaticle\CustomFields\Tests\TestCase;
 
 // Apply base test configuration to all tests
 uses(TestCase::class, RefreshDatabase::class)->in(__DIR__);
+
+/**
+ * Livewire testing helper - replacement for pest-plugin-livewire.
+ *
+ * @param  class-string  $component
+ * @param  array<string, mixed>  $params
+ */
+function livewire(string $component, array $params = []): \Livewire\Features\SupportTesting\Testable
+{
+    return Livewire::test($component, $params);
+}
 
 expect()->extend('toBeSameModel', fn (Model $model) => $this
     ->is($model)->toBeTrue());

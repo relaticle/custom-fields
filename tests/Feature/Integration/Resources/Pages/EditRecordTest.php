@@ -14,7 +14,6 @@ use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\EditPost;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\PostResource;
 
 use function Pest\Laravel\assertSoftDeleted;
-use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();

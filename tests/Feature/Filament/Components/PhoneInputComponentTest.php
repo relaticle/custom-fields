@@ -9,7 +9,6 @@ use Relaticle\CustomFields\Services\Phone\CountryPhoneService;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
 
-use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->service = app(CountryPhoneService::class);
