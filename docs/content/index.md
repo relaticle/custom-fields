@@ -2,7 +2,7 @@
 seo:
   title: Custom Fields - Dynamic Fields Without Migrations
   description: Add dynamic custom fields to your Filament admin panels without writing database migrations. Perfect for multi-tenant SaaS and admin panels.
-  ogImage: /preview.png
+  ogImage: /og-image.png
 ---
 
 ::u-page-hero
@@ -143,7 +143,7 @@ Extend your Laravel applications with our ecosystem of complementary tools
     to: https://relaticle.github.io/flowforge/
     target: _blank
     ---
-    :img{src="https://relaticle.github.io/flowforge/preview.png" alt="Flowforge" class="mb-4 rounded-lg w-full pointer-events-none"}
+    :img{src="https://relaticle.github.io/flowforge/og-image.png" alt="Flowforge" class="mb-4 rounded-lg w-full pointer-events-none"}
 
     Transform any Laravel model into drag-and-drop Kanban boards.
     :::
