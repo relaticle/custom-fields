@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\Enums\FieldDataType;
 
@@ -29,11 +28,6 @@ class MakeFieldTypeCommand extends GeneratorCommand
      * The type of class being generated.
      */
     protected $type = 'FieldType';
-
-    public function __construct(Filesystem $files)
-    {
-        parent::__construct($files);
-    }
 
     /**
      * Get the stub file for the generator.

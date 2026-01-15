@@ -14,5 +14,8 @@ parameters:
     ignoreErrors:
         # Ignore unused trait warnings for library traits meant to be consumed by package users
         - identifier: trait.unused
+        # Filament v5 uses view-string PHPStan type for view paths - our package views are valid
+        - identifier: argument.type
+          path: src/Filament/Integration/Components/*/
     parallel:
     		maximumNumberOfProcesses: 3

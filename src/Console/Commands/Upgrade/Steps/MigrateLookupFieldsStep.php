@@ -9,6 +9,7 @@ use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Models\CustomField;
 use Throwable;
 
 /**
@@ -49,12 +50,12 @@ final class MigrateLookupFieldsStep implements UpgradeStep
 
         $command->table(
             ['ID', 'Name', 'Current Type', 'Lookup Type', 'Will Become'],
-            $fieldsToMigrate->map(fn ($field): array => [
+            $fieldsToMigrate->map(fn (CustomField $field): array => [
                 $field->getKey(),
                 $field->name,
                 $field->type,
                 $field->lookup_type,
-                'record' . (in_array($field->type, self::MULTI_VALUE_TYPES, true) ? ' (multi)' : ' (single)'),
+                'record'.(in_array($field->type, self::MULTI_VALUE_TYPES, true) ? ' (multi)' : ' (single)'),
             ])->toArray()
         );
 
@@ -75,7 +76,7 @@ final class MigrateLookupFieldsStep implements UpgradeStep
 
                 $settings = $field->settings instanceof CustomFieldSettingsData
                     ? $field->settings
-                    : new CustomFieldSettingsData();
+                    : new CustomFieldSettingsData;
 
                 $settings->allow_multiple = $isMultiValue;
                 $field->settings = $settings;

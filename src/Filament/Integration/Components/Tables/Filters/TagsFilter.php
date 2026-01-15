@@ -55,7 +55,7 @@ final class TagsFilter extends AbstractTableFilter
                 ->map(function (string $tag) use ($customField, $optionColors): Indicator {
                     $hexColor = $optionColors[$tag] ?? null;
 
-                    return Indicator::make("{$customField->name}: {$tag}")
+                    return Indicator::make(sprintf('%s: %s', $customField->name, $tag))
                         ->color($hexColor !== null ? Color::hex($hexColor) : 'gray');
                 })
                 ->all();

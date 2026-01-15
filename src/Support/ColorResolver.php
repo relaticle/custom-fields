@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+use Exception;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Support\View\Components\BadgeComponent;
@@ -38,7 +39,7 @@ final class ColorResolver
 
         try {
             return Color::hex($hexColor);
-        } catch (\Exception) {
+        } catch (Exception) {
             return null;
         }
     }

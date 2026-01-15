@@ -43,7 +43,7 @@ final class ClearCachesStep implements UpgradeStep
             $command->line('  <info>✓</info> Config cache cleared');
             $cleared++;
         } catch (Throwable $throwable) {
-            $errors[] = 'Config cache: ' . $throwable->getMessage();
+            $errors[] = 'Config cache: '.$throwable->getMessage();
             $command->line(sprintf('  <error>✗</error> Config cache: %s', $throwable->getMessage()));
         }
 
@@ -53,7 +53,7 @@ final class ClearCachesStep implements UpgradeStep
             $command->line('  <info>✓</info> Application cache cleared');
             $cleared++;
         } catch (Throwable $throwable) {
-            $errors[] = 'Application cache: ' . $throwable->getMessage();
+            $errors[] = 'Application cache: '.$throwable->getMessage();
             $command->line(sprintf('  <error>✗</error> Application cache: %s', $throwable->getMessage()));
         }
 
@@ -64,7 +64,7 @@ final class ClearCachesStep implements UpgradeStep
             $command->line('  <info>✓</info> Custom-fields cache cleared');
             $cleared++;
         } catch (Throwable $throwable) {
-            $errors[] = 'Custom-fields cache: ' . $throwable->getMessage();
+            $errors[] = 'Custom-fields cache: '.$throwable->getMessage();
             $command->line(sprintf('  <error>✗</error> Custom-fields cache: %s', $throwable->getMessage()));
         }
 

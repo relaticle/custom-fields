@@ -13,7 +13,6 @@ final class ValidationRuleData extends Data
      *
      * @param  string  $name  The name of the validation rule.
      * @param  array<string, string>  $parameters  The parameters to be passed to the validation rule.
-     * @return void
      */
     public function __construct(
         public string $name,

@@ -44,7 +44,7 @@ final class SelectFilter extends AbstractTableFilter
                     ->map(function (mixed $option) use ($customField): Indicator {
                         $hexColor = $option->settings->color ?? null;
 
-                        return Indicator::make("{$customField->name}: {$option->name}")
+                        return Indicator::make(sprintf('%s: %s', $customField->name, $option->name))
                             ->color($hexColor !== null ? Color::hex($hexColor) : 'gray');
                     })
                     ->all();

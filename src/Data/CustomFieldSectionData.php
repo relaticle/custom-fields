@@ -17,7 +17,6 @@ final class CustomFieldSectionData extends Data
      *
      * @param  string  $name  The name of the custom field.
      * @param  string  $code  The code of the custom field.
-     * @return void
      */
     public function __construct(
         public string $name,

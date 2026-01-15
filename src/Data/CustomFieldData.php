@@ -18,7 +18,6 @@ final class CustomFieldData extends Data
      * @param  string  $name  The name of the custom field.
      * @param  string  $code  The code of the custom field.
      * @param  array<int|string, mixed>|null  $options  The field options array.
-     * @return void
      */
     public function __construct(
         public string $name,

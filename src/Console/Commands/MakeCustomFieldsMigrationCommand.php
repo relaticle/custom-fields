@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
 /**
@@ -29,11 +28,6 @@ class MakeCustomFieldsMigrationCommand extends GeneratorCommand
      * The type of class being generated.
      */
     protected $type = 'CustomFieldsMigration';
-
-    public function __construct(Filesystem $files)
-    {
-        parent::__construct($files);
-    }
 
     /**
      * Get the destination class path.

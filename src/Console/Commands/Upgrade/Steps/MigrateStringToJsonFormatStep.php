@@ -21,12 +21,12 @@ abstract class MigrateStringToJsonFormatStep implements UpgradeStep
 
     public function name(): string
     {
-        return "Migrate {$this->fieldTypeLabel()} Format";
+        return sprintf('Migrate %s Format', $this->fieldTypeLabel());
     }
 
     public function description(): string
     {
-        return "Convert {$this->fieldType()} field values from single string to array format";
+        return sprintf('Convert %s field values from single string to array format', $this->fieldType());
     }
 
     public function execute(bool $dryRun, Command $command): UpgradeStepResult
@@ -41,7 +41,7 @@ abstract class MigrateStringToJsonFormatStep implements UpgradeStep
             ->get();
 
         if ($fields->isEmpty()) {
-            return UpgradeStepResult::skipped("No {$fieldType} fields found");
+            return UpgradeStepResult::skipped(sprintf('No %s fields found', $fieldType));
         }
 
         $valuesToMigrate = $customFieldValueModel::query()
@@ -53,7 +53,7 @@ abstract class MigrateStringToJsonFormatStep implements UpgradeStep
             ->get();
 
         if ($valuesToMigrate->isEmpty()) {
-            return UpgradeStepResult::skipped("No legacy {$fieldType} values found");
+            return UpgradeStepResult::skipped(sprintf('No legacy %s values found', $fieldType));
         }
 
         $command->line(sprintf('  Found %d %s value(s) to migrate', $valuesToMigrate->count(), $fieldType));
