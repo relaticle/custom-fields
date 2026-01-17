@@ -26,28 +26,26 @@ Choose your installation method based on your license type:
 
 ### For commercial/private projects
 
-<steps>
-
-### Purchase a license
+**Step 1: Purchase a license**
 
 [Choose a commercial license](/community/license#commercial-license-pricing)
 
-### Add the private repository
+**Step 2: Add the private repository**
 
 Add our private Composer repository to your `composer.json`:
 
 ```json
 {
-  "repositories": [
-      {
-          "type": "composer",
-          "url": "https://satis.relaticle.com"
-      }
-  ]
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satis.relaticle.com"
+        }
+    ]
 }
 ```
 
-### Install the package
+**Step 3: Install the package**
 
 ```bash
 composer require relaticle/custom-fields:^3.0
@@ -58,24 +56,15 @@ When prompted for authentication:
 - **Username**: Your email (used for purchase)
 - **Password**: Your license key
 
-### Run the installer
+**Step 4: Run the installer**
 
 ```bash
 php artisan custom-fields:install
 ```
 
-### Include CSS assets
+**Step 5: Include CSS assets**
 
-<alert type="info">
-
-You need a custom Filament theme to include the Custom Fields styles.
-
-If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
-
-</alert>
-</steps>
-</tab>
-</tabs>
+You need a custom Filament theme to include the Custom Fields styles. If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
 
 Once you have a custom Filament theme set up, add the plugin's views to your theme CSS file:
 
@@ -85,18 +74,11 @@ Once you have a custom Filament theme set up, add the plugin's views to your the
 @source '../../../../vendor/relaticle/custom-fields/resources';
 ```
 
-::
-
-<alert type="info">
-
 Your license key will be saved in Composer's auth file for future updates.
 
-</alert>
-
-:::
+</tab>
 
 <tab label="Open Source (AGPL-3.0)">
-<alert type="warning">
 
 **AGPL-3.0 License Requirements**: This installation method requires your **entire application** to be open source and licensed under AGPL-3.0. This applies to ALL code in your project, including:
 
@@ -106,13 +88,9 @@ Your license key will be saved in Composer's auth file for future updates.
 
 If you cannot make your entire codebase public, you **must** use a [Commercial License](/community/license#commercial-license-pricing) instead.
 
-</alert>
-
 ### For open source projects
 
-<steps>
-
-### Install the package
+**Step 1: Install the package**
 
 Install directly from Packagist:
 
@@ -120,21 +98,15 @@ Install directly from Packagist:
 composer require relaticle/custom-fields:^3.0
 ```
 
-### Run the installer
+**Step 2: Run the installer**
 
 ```bash
 php artisan custom-fields:install
 ```
 
-### Include CSS assets
+**Step 3: Include CSS assets**
 
-<alert type="info">
-
-You need a custom Filament theme to include the Custom Fields styles.
-
-If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
-
-</alert>
+You need a custom Filament theme to include the Custom Fields styles. If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
 
 Once you have a custom Filament theme set up, add the plugin's views to your theme CSS file:
 
@@ -144,10 +116,8 @@ Once you have a custom Filament theme set up, add the plugin's views to your the
 @source '../../../../vendor/relaticle/custom-fields/resources';
 ```
 
-</steps>
 </tab>
-
-::
+</tabs>
 
 ## Optional Configuration
 
