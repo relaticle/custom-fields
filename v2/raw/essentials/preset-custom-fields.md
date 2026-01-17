@@ -1,0 +1,363 @@
+# Preset Custom Fields
+
+> Programmatically define and deploy custom fields using migrations
+
+Preset Custom Fields allow developers to programmatically define, deploy, and manage custom fields for Filament resources using migrations.
+
+This approach ensures consistency, version control, and easy deployment across different environments.
+
+## Creating Custom Fields Migrations
+
+To create a new custom fields migration, use the dedicated Artisan command:
+
+```bash
+php artisan make:custom-fields-migration create_general_fields_for_order
+```
+
+This command generates a new migration file in your `database/custom-fields/` directory with a timestamp prefix and the name you specified.
+
+## Field Types
+
+The system uses string-based field type identifiers. Here are the available field types:
+
+### Text Types
+
+- `'text'` - Single line text input
+- `'textarea'` - Multi-line text area
+- `'rich_editor'` - Rich text editor
+- `'markdown_editor'` - Markdown editor
+
+### Numeric Types
+
+- `'number'` - Numeric input
+- `'currency'` - Currency formatted input
+
+### Date Types
+
+- `'date'` - Date picker
+- `'datetime'` - Date and time picker
+
+### Boolean Types
+
+- `'checkbox'` - Single checkbox
+- `'toggle'` - Toggle switch
+
+### Choice Types
+
+- `'select'` - Dropdown selection
+- `'radio'` - Radio buttons
+- `'multi_select'` - Multiple selection dropdown
+- `'checkbox_list'` - Checkbox list
+- `'toggle_buttons'` - Toggle button group
+- `'tags_input'` - Tag input field
+
+### Other Types
+
+- `'color_picker'` - Color selection
+- `'link'` - URL input
+
+## Creating Fields
+
+In your migration file, use the `new()` method with `CustomFieldData` objects to create new custom fields:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Data\CustomFieldData;
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
+use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator->new(
+            model: Order::class,
+            fieldData: new CustomFieldData(
+                name: 'Additional Information',
+                code: 'additional_information',
+                type: 'text',
+                section: new CustomFieldSectionData(
+                    name: 'General',
+                    code: 'general',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_100,
+                settings: new CustomFieldSettingsData(
+                    list_toggleable_hidden: false
+                )
+            )
+        )->create();
+    }
+};
+```
+
+## Adding Options to Choice Fields
+
+For choice-based field types, add options using the `options()` method:
+
+```php
+$this->migrator->new(
+    model: Product::class,
+    fieldData: new CustomFieldData(
+        name: 'Product Status',
+        code: 'product_status',
+        type: 'select',
+        section: new CustomFieldSectionData(
+            name: 'Status',
+            code: 'status',
+            type: CustomFieldSectionType::SECTION,
+        ),
+        systemDefined: true,
+    )
+)
+->options([
+    'draft' => 'Draft',
+    'active' => 'Active',
+    'discontinued' => 'Discontinued'
+])
+->create();
+```
+
+## Adding Lookup Types
+
+For fields that reference other models, use the `lookupType()` method:
+
+```php
+$this->migrator->new(
+    model: Order::class,
+    fieldData: new CustomFieldData(
+        name: 'Sales Representative',
+        code: 'sales_rep',
+        type: 'select',
+        section: new CustomFieldSectionData(
+            name: 'Sales',
+            code: 'sales',
+            type: CustomFieldSectionType::SECTION,
+        ),
+        systemDefined: true,
+    )
+)
+->lookupType(User::class)
+->create();
+```
+
+## Field Width Options
+
+Control field layout using `CustomFieldWidth` enum:
+
+```php
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+
+// Available widths:
+CustomFieldWidth::_25    // 25% width
+CustomFieldWidth::_33    // 33% width
+CustomFieldWidth::_50    // 50% width
+CustomFieldWidth::_66    // 66% width
+CustomFieldWidth::_75    // 75% width
+CustomFieldWidth::_100   // 100% width (full width)
+```
+
+## Updating Fields
+
+To update existing fields, create a new migration and use the `update()` method:
+
+```php
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator
+            ->find(Order::class, 'additional_information')
+            ->update([
+                'name' => 'Updated Field Name',
+                'settings' => new CustomFieldSettingsData(
+                    list_toggleable_hidden: true
+                )
+            ]);
+    }
+};
+```
+
+## Deleting Fields
+
+To remove preset fields, create a migration that uses the `delete()` method:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator->find(Order::class, 'additional_information')->delete();
+    }
+};
+```
+
+<alert type="warning">
+
+Deleting a field is permanent and will result in data loss. Ensure you have backups and that no part of your application depends on the field being deleted.
+
+</alert>
+
+## Activating/Deactivating Fields
+
+Control field visibility without deletion:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        // Deactivate a field
+        $this->migrator->find(Order::class, 'field_code')->deactivate();
+
+        // Activate a field
+        $this->migrator->find(Order::class, 'field_code')->activate();
+    }
+};
+```
+
+## Complete Example
+
+Here's a comprehensive example creating multiple fields for a Customer model:
+
+```php
+<?php
+
+use App\Models\Shop\Customer;
+use App\Models\User;
+use Relaticle\CustomFields\Data\CustomFieldData;
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
+use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        // Link field
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'Company Website',
+                code: 'company_website',
+                type: 'link',
+                section: new CustomFieldSectionData(
+                    name: 'Company Info',
+                    code: 'company_info',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_50,
+            )
+        )->create();
+
+        // Choice field with options
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'Customer Type',
+                code: 'customer_type',
+                type: 'select',
+                section: new CustomFieldSectionData(
+                    name: 'Company Info',
+                    code: 'company_info',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_50,
+            )
+        )
+        ->options([
+            'individual' => 'Individual',
+            'small_business' => 'Small Business',
+            'enterprise' => 'Enterprise'
+        ])
+        ->create();
+
+        // Boolean field
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'VIP Customer',
+                code: 'is_vip',
+                type: 'toggle',
+                section: new CustomFieldSectionData(
+                    name: 'Status',
+                    code: 'status',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_25,
+                settings: new CustomFieldSettingsData(
+                    list_toggleable_hidden: false
+                )
+            )
+        )->create();
+    }
+};
+```
+
+## Running Migrations
+
+Custom fields migrations are run using Laravel's standard migration system:
+
+```bash
+# Run all custom fields migrations
+php artisan migrate --path=database/custom-fields
+
+# Run a specific migration file
+php artisan migrate --path=database/custom-fields/2025_08_15_022226_create_general_fields_for_order.php
+```
+
+## Best Practices
+
+### Naming Conventions
+
+- Use descriptive field names: `'Customer Type'` instead of `'Type'`
+- Use snake_case for codes: `'customer_type'` instead of `'CustomerType'`
+- Use descriptive section names that group related fields
+
+### System-Defined Fields
+
+- Set `systemDefined: true` for preset fields
+- This prevents users from accidentally deleting important fields through the admin interface
+
+### Field Organization
+
+- Group related fields in logical sections
+- Use consistent section codes across different models when appropriate
+- Consider field width to optimize form layout
+
+### Error Handling
+
+- Use unique field codes to avoid conflicts
+- Test migrations in development before production deployment
+- Handle dependencies between fields carefully
+
+### Migration Management
+
+1. **Naming Conventions**: Use clear, descriptive names for your migration files
+2. **Versioning**: Create separate migrations for creating, updating, and deleting fields to maintain a clear history
+3. **Documentation**: Comment your migrations to explain the purpose of each change
+4. **Data Integrity**: When updating or deleting fields, consider the impact on existing data

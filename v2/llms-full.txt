@@ -1,0 +1,2570 @@
+# Custom Fields - Dynamic Fields Without Migrations
+
+::u-page-hero
+#title
+Custom Fields
+
+#description
+Add dynamic custom fields to your Filament admin panels without writing database migrations.
+
+Perfect for multi-tenant SaaS applications and enterprise admin panels.
+
+#links
+  :::u-button
+  ---
+  color: neutral
+  size: xl
+  to: https://relaticle.github.io/custom-fields/v2/getting-started/installation
+  trailing-icon: i-lucide-arrow-right
+  ---
+  Get started
+  :::
+
+  :::u-button
+  ---
+  color: neutral
+  icon: simple-icons:github
+  size: xl
+  to: https://github.com/relaticle/custom-fields
+  variant: outline
+  ---
+  GitHub
+  :::
+::
+
+::div{.text-center.max-w-4xl.mx-auto}
+  :::div{.aspect-video.rounded-lg.shadow-lg.overflow-hidden}
+  :iframe{allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen="true" frameBorder="0" height="100%" referrerPolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/6iVfeS7VixA?si=3L8H22mbMayEuHs8" title="Custom Fields Demo" width="100%"}
+  :::
+::
+
+::u-page-section
+#title
+Why choose Custom Fields?
+
+#features
+  :::u-page-feature
+  ---
+  icon: i-lucide-database
+  ---
+  #title
+  Zero Migrations
+
+  #description
+  Users create and manage fields directly through the admin interface - no deployments required.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-building
+  ---
+  #title
+  Multi-Tenant Ready
+
+  #description
+  Complete tenant isolation with automatic scoping for SaaS applications.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-shapes
+  ---
+  #title
+  20+ Field Types
+
+  #description
+  Text, numbers, dates, selects, rich editors, tags, color pickers, and more.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-shield-check
+  ---
+  #title
+  Type-Safe Storage
+
+  #description
+  Hybrid EAV architecture with typed columns for efficient queries.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-move
+  ---
+  #title
+  Drag & Drop
+
+  #description
+  Intuitive field management with reordering, sections, and conditional visibility.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-puzzle
+  ---
+  #title
+  Full Filament Integration
+
+  #description
+  Works with forms, tables, infolists, import/export, and the complete ecosystem.
+  :::
+::
+
+::u-page-section
+  :::card-group
+    ::::card
+    ---
+    icon: i-simple-icons-laravel
+    target: _blank
+    title: FilaForms
+    to: https://filaforms.app
+    ---
+    ![FilaForms](https://filaforms.app/img/og-image.png){.mb-4.rounded-lg.w-full.pointer-events-none}
+
+    Visual form builder for all your public-facing forms.
+    ::::
+
+    ::::card
+    ---
+    icon: i-lucide-columns-3
+    target: _blank
+    title: Flowforge
+    to: https://relaticle.github.io/flowforge/
+    ---
+    ![Flowforge](https://relaticle.github.io/flowforge/preview.png){.mb-4.rounded-lg.w-full.pointer-events-none}
+
+    Transform any Laravel model into drag-and-drop Kanban boards.
+    ::::
+  :::
+
+#title
+Our Ecosystem
+
+#description
+Extend your Laravel applications with our ecosystem of complementary tools
+::
+
+
+# Installation
+
+Get started with Custom Fields in just a few steps.
+
+## Requirements
+
+- **PHP**: 8.2 or higher
+- **Laravel**: 11.28 or higher
+- **Filament**: 4.x
+- **Tailwind CSS**: 4.0 or higher
+
+## Installation
+
+Choose your installation method based on your license type:
+
+::tabs
+  :::tab{label="Commercial License"}
+  ### For commercial/private projects
+
+    ::::steps
+    ### Purchase a license
+
+    [Choose a commercial license](https://relaticle.github.io/custom-fields/v2/community/license#commercial-license-pricing)
+
+    ### Add the private repository
+
+    Add our private Composer repository to your `composer.json`:
+
+    ```json
+    {
+      "repositories": [
+          {
+              "type": "composer",
+              "url": "https://satis.relaticle.com"
+          }
+      ]
+    }
+    ```
+
+    ### Install the package
+
+    ```bash
+    composer require relaticle/custom-fields:^2.0
+    ```
+
+    When prompted for authentication:
+
+    - **Username**: Your email (used for purchase)
+    - **Password**: Your license key
+
+    ### Run the installer
+
+    ```bash
+    php artisan custom-fields:install
+    ```
+
+    ### Include CSS assets
+
+      :::::alert{type="info"}
+      You need a custom Filament theme to include the Custom Fields styles.
+
+      If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
+      :::::
+    ::::
+  :::
+::
+
+Once you have a custom Filament theme set up, add the plugin's views to your theme CSS file:
+
+**`resources/css/filament/admin/theme.css`**
+
+```css
+@source '../../../../vendor/relaticle/custom-fields/resources';
+```
+
+\::
+
+::alert{type="info"}
+Your license key will be saved in Composer's auth file for future updates.
+::
+
+\:::
+
+::tab{label="Open Source (AGPL-3.0)"}
+  :::alert{type="warning"}
+  **AGPL-3.0 License Requirements**: This installation method requires your **entire application** to be open source and licensed under AGPL-3.0. This applies to ALL code in your project, including:
+
+  - Your application code
+  - SaaS/web applications accessible over a network
+  - Any modifications or extensions
+
+  If you cannot make your entire codebase public, you **must** use a [Commercial License](https://relaticle.github.io/custom-fields/v2/community/license#commercial-license-pricing) instead.
+  :::
+
+### For open source projects
+
+  :::steps
+  ### Install the package
+
+  Install directly from Packagist:
+
+  ```bash
+  composer require relaticle/custom-fields:^2.0
+  ```
+
+  ### Run the installer
+
+  ```bash
+  php artisan custom-fields:install
+  ```
+
+  ### Include CSS assets
+
+    ::::alert{type="info"}
+    You need a custom Filament theme to include the Custom Fields styles.
+
+    If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
+    ::::
+
+  Once you have a custom Filament theme set up, add the plugin's views to your theme CSS file:
+
+  **`resources/css/filament/admin/theme.css`**
+
+  ```css
+  @source '../../../../vendor/relaticle/custom-fields/resources';
+  ```
+  :::
+::
+
+\::
+
+## Optional Configuration
+
+### Publish Configuration File
+
+```bash
+php artisan vendor:publish --tag="custom-fields-config"
+```
+
+### Publish Language Files
+
+```bash
+php artisan vendor:publish --tag="custom-fields-translations"
+```
+
+### Publish Views (for customization)
+
+```bash
+php artisan vendor:publish --tag="custom-fields-views"
+```
+
+
+# Quickstart
+
+## Register the Plugin
+
+Add the Custom Fields plugin to your panel:
+
+```php
+use Relaticle\CustomFields\CustomFieldsPlugin;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->plugins([
+            CustomFieldsPlugin::make(),
+        ]);
+}
+```
+
+## Prepare Your Model
+
+Implement the interface and use the trait:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
+use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
+
+class Customer extends Model implements HasCustomFields
+{
+    use UsesCustomFields;
+}
+```
+
+## Add to Your Form
+
+Add custom fields to your resource form:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFields;
+
+public static function form(Schema $schema): Schema
+{
+    return $schema
+        ->components([
+            // Your existing fields...
+            Forms\Components\TextInput::make('name'),
+            Forms\Components\TextInput::make('email'),
+
+            // Add Custom Fields
+            CustomFields::form()->forSchema($schema)
+                                ->build()
+                                ->columnSpanFull()
+        ]);
+}
+```
+
+## Add to Your Table
+
+Display custom fields in your table:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFields;
+
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            // Your existing columns...
+            Tables\Columns\TextColumn::make('name'),
+            Tables\Columns\TextColumn::make('email'),
+
+            // Add custom field columns
+            ...CustomFields::table()
+                ->forModel($table->getModel())
+                ->columns(),
+        ])
+        ->filters([
+            // Add custom field filters
+            ...CustomFields::table()
+                ->forModel($table->getModel())
+                ->filters(),
+        ]);
+}
+```
+
+## Add to Info Lists
+
+For view pages, include custom fields:
+
+```php
+public static function infolist(Schema $schema): Schema
+{
+    return $schema
+        ->components([
+            // Your existing components...
+
+            // Add Custom Fields
+            CustomFields::infolist()
+                ->forSchema($schema)
+                ->build(),
+        ]);
+}
+```
+
+## That's It!
+
+Your resource now has dynamic custom fields! Users can:
+
+- Add new fields through the admin panel
+- Fill out custom fields in forms
+- View and filter by custom fields in tables
+- See custom field values in detail views
+
+
+# Upgrade Guide
+
+::alert{type="info"}
+Custom Fields v2 introduces a new fluent builder API that simplifies integration while providing more flexibility.
+::
+
+## Quick Upgrade
+
+The easiest way to upgrade is using the built-in upgrade command:
+
+```bash
+composer require relaticle/custom-fields:"^2.0" -W
+vendor/bin/custom-fields-upgrade
+```
+
+This command handles all necessary migrations and cache clearing automatically.
+
+## Manual Upgrade Steps
+
+### 1. Update Composer
+
+Update your `composer.json` to require v2:
+
+```json
+{
+    "require": {
+        "relaticle/custom-fields": "^2.0"
+    }
+}
+```
+
+Then run:
+
+```bash
+composer update relaticle/custom-fields
+```
+
+### 2. Database Changes
+
+Custom Fields v2 adds one new column:
+
+- `settings` JSON column in `custom_field_options` table
+
+The upgrade command handles this automatically. If you need to create the migration manually, add a `settings` JSON column to the `custom_field_options` table.
+
+### 3. Update Your Code
+
+The main change in v2 is the move from component-based integration to a fluent builder API.
+
+#### Filament Resources - Forms
+
+::tabs
+  :::tab{label="v1"}
+  ```php
+  // Old v1 syntax
+  use Relaticle\CustomFields\Filament\Forms\Components\CustomFieldsComponent;
+  use Filament\Forms\Form;
+
+  public static function form(Form $form): Form
+  {
+      return $form
+      ->schema([
+      // Your fields
+      TextInput::make('name'),
+      TextInput::make('price'),
+
+      // Custom fields component
+      CustomFieldsComponent::make(),
+      ]);
+  }
+  ```
+  :::
+
+  :::tab{label="v2"}
+  ```php
+  // New v2 syntax
+  use Relaticle\CustomFields\Facades\CustomFields;
+  use Filament\Forms\Form;
+
+  public static function form(Form $form): Form
+  {
+      return $form
+      ->schema([
+      // Your fields
+      TextInput::make('name'),
+      TextInput::make('price'),
+
+      // Custom fields using builder
+      CustomFields::form()
+      ->forModel($form->getRecord())
+      ->build(),
+      ]);
+  }
+  ```
+  :::
+::
+
+#### Filament Resources - Tables
+
+::tabs
+  :::tab{label="v1"}
+  ```php
+  // Old v1 syntax
+  use Relaticle\CustomFields\Filament\Tables\Concerns\InteractsWithCustomFields;
+  use Filament\Resources\Pages\ListRecords;
+
+  class ListProducts extends ListRecords
+  {
+      use InteractsWithCustomFields;
+
+      // Custom fields are automatically added
+  }
+  ```
+  :::
+
+  :::tab{label="v2 - Builder API (Recommended)"}
+  ```php
+  // New v2 syntax - Direct integration in Resource
+  use Relaticle\CustomFields\Facades\CustomFields;
+  use Filament\Tables\Table;
+
+  public static function table(Table $table): Table
+  {
+      return $table
+      ->columns([
+      // Your columns
+      TextColumn::make('name'),
+      TextColumn::make('price'),
+
+      // Custom field columns (spread operator required)
+      ...CustomFields::table()
+      ->forModel($table->getModel())
+      ->columns(),
+      ])
+      ->filters([
+      // Custom field filters (optional, spread operator required)
+      ...CustomFields::table()
+      ->forModel($table->getModel())
+      ->filters(),
+      ]);
+  }
+  ```
+  :::
+
+  :::tab{label="v2 - Trait (Still Works)"}
+  ```php
+  // v2 with trait - Just update the namespace
+  use Relaticle\CustomFields\Concerns\InteractsWithCustomFields;
+  use Filament\Resources\Pages\ListRecords;
+
+  class ListProducts extends ListRecords
+  {
+      use InteractsWithCustomFields;
+
+      // Custom fields are automatically added
+  }
+  ```
+  :::
+::
+
+#### Filament Resources - Infolists
+
+::tabs
+  :::tab{label="v1"}
+  ```php
+  // Old v1 syntax - Using CustomFieldsInfolists component
+  use Relaticle\CustomFields\Filament\Infolists\CustomFieldsInfolists;
+  use Filament\Infolists\Infolist;
+
+  public static function infolist(Infolist $infolist): Infolist
+  {
+      return $infolist
+      ->schema([
+      // Your entries
+      TextEntry::make('name'),
+      TextEntry::make('price'),
+
+      // Custom fields component
+      CustomFieldsInfolists::make()
+      ->columnSpanFull(),
+      ]);
+  }
+  ```
+  :::
+
+  :::tab{label="v2"}
+  ```php
+  // New v2 syntax - Using builder API
+  use Relaticle\CustomFields\Facades\CustomFields;
+  use Filament\Infolists\Infolist;
+
+  public static function infolist(Infolist $infolist): Infolist
+  {
+      return $infolist
+      ->schema([
+      // Your entries
+      TextEntry::make('name'),
+      TextEntry::make('price'),
+
+      // Custom field entries using builder
+      CustomFields::infolist()
+      ->forModel($infolist->getRecord())
+      ->build(),
+
+      // Or get raw components with values()
+      ...CustomFields::infolist()
+      ->forModel($infolist->getRecord())
+      ->values(),
+      ]);
+  }
+  ```
+  :::
+::
+
+### 4. Configuration Updates (Required)
+
+Custom Fields v2 introduces improved field type management using fluent configurators. You **must** update your `config/custom-fields.php` to use the new configuration format:
+
+```php
+'field_type_configuration' => FieldTypeConfigurator::configure()
+    ->enabled([])                   // Empty = all enabled
+    ->disabled(['rich-editor'])     // Disable specific field types
+    ->discover(true)
+    ->cache(enabled: false, ttl: 3400),
+```
+
+### 5. Field Type Architecture Changes
+
+Custom Fields v2 now uses `BaseFieldType` with `FieldSchema` for cleaner field type definitions. If you have custom field types, update them:
+
+- **Base Class**: Extend `BaseFieldType` (instead of implementing interface directly)
+- **Configuration**: Return `FieldSchema` from `configure()` method
+- **Benefits**: Less boilerplate, better type safety, cleaner API
+
+```php
+class CustomFieldType extends BaseFieldType
+{
+    public function configure(): FieldSchema
+    {
+        return FieldSchema::string()
+            ->key('custom-field')
+            ->label('Custom Field')
+            ->icon('heroicon-o-star')
+            ->formComponent(TextInput::class)
+            ->priority(50);
+    }
+}
+```
+
+### 6. Final Steps
+
+After updating your code, clear all caches:
+
+```bash
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+php artisan filament:cache-components
+```
+
+## New Features in v2
+
+### Fluent Builder API
+
+The new builder API provides more control and flexibility:
+
+```php
+// Forms - returns a single component
+CustomFields::form()
+    ->forModel($record)
+    ->except(['field_code']) // Exclude specific fields
+    ->only(['field_code']) // Include only specific fields
+    ->build()
+
+// Tables - returns collections
+CustomFields::table()
+    ->forModel(Product::class)
+    ->columns() // Returns column collection
+
+// Filters
+CustomFields::table()
+    ->forModel(Product::class)
+    ->filters() // Returns filter collection
+
+// Infolists - flexible output
+CustomFields::infolist()
+    ->forModel($record)
+    ->build() // Returns single Grid component
+    // OR
+    ->values() // Returns collection of components
+```
+
+## Troubleshooting
+
+::accordion
+  :::accordion-item{label="Class 'CustomFieldsComponent' not found"}
+  Replace with the new builder API:
+
+  ```php
+  // Old
+  CustomFieldsComponent::make()
+
+  // New
+  CustomFields::form()
+  ->forModel($form->getRecord())
+  ->build()
+  ```
+  :::
+
+  :::accordion-item{label="Trait 'InteractsWithCustomFields' not found"}
+  The trait has moved to a new namespace:
+
+  ```php
+  // Old namespace
+  use Relaticle\CustomFields\Filament\Tables\Concerns\InteractsWithCustomFields;
+
+  // New namespace (still works!)
+  use Relaticle\CustomFields\Concerns\InteractsWithCustomFields;
+
+  // Or migrate to builder API for more control
+  ...CustomFields::table()
+  ->forModel($table->getModel())
+  ->columns()
+  ```
+  :::
+
+  :::accordion-item{label="Custom fields not appearing"}
+  Check these common issues:
+
+  - Model must implement `HasCustomFields` and use `UsesCustomFields` trait
+  - Use `forModel()` not `forResource()` in builders
+  - Clear caches after upgrading
+  - Verify custom fields exist in database
+  :::
+
+  :::accordion-item{label="Table columns or filters missing"}
+  Remember to use spread operator and call the right methods:
+
+  ```php
+  ->columns([
+  // Your columns
+  ...CustomFields::table()
+  ->forModel($table->getModel())
+  ->columns(), // Note: columns() not build()
+  ])
+  ->filters([
+  // Your filters
+  ...CustomFields::table()
+  ->forModel($table->getModel())
+  ->filters(), // Note: filters() not build()
+  ])
+  ```
+  :::
+::
+
+## Migration Checklist
+
+- Backup your application
+- Run `composer require relaticle/custom-fields:"^2.0" -W`
+- Run `vendor/bin/custom-fields-upgrade`
+- Update forms: `CustomFieldsComponent::make()` → `CustomFields::form()->forSchema($schema)->build()`
+- Update tables: Either update `InteractsWithCustomFields` namespace OR migrate to `...CustomFields::table()->forModel($model)->columns()`
+- Update infolists: `CustomFieldsInfolists::make()` → `CustomFields::infolist()->forModel($model)->build()`
+- Clear caches and test thoroughly
+
+
+# Configuration
+
+## Overriding Models
+
+The Custom Fields package allows you to replace the default models with your own implementations.
+
+### Registering Custom Models
+
+Register your custom models using the `CustomFields` class:
+
+```php
+use Relaticle\CustomFields\CustomFields;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        CustomFields::useCustomFieldModel(YourCustomField::class);
+        CustomFields::useValueModel(YourCustomFieldValue::class);
+        CustomFields::useOptionModel(YourCustomFieldOption::class);
+        CustomFields::useSectionModel(YourCustomFieldSection::class);
+    }
+}
+```
+
+## Configuration File
+
+The configuration file (`config/custom-fields.php`) allows you to customize all aspects of the Custom Fields package. It uses modern fluent configurators for type safety and better IDE support.
+
+### Entity Configuration
+
+Configure which models can have custom fields:
+
+```php
+'entity_configuration' => EntityConfigurator::configure()
+    ->discover(app_path('Models'))  // Auto-discover models in this path
+    ->cache(true),                  // Enable caching for performance
+```
+
+### Field Types Configuration
+
+Control which field types are available:
+
+```php
+'field_type_configuration' => FieldTypeConfigurator::configure()
+    ->enabled([])                   // Empty = all enabled
+    ->disabled(['file-upload'])     // Disable specific field types
+    ->discover(true)                // Auto-discover custom field types
+    ->cache(enabled: false, ttl: 3400),
+```
+
+### Features Configuration
+
+Configure package features using the enum-based system:
+
+```php
+'features' => FeatureConfigurator::configure()
+    ->enable(
+        CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
+        CustomFieldsFeature::FIELD_ENCRYPTION,
+        CustomFieldsFeature::FIELD_OPTION_COLORS,
+        CustomFieldsFeature::UI_TABLE_COLUMNS,
+        CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
+        CustomFieldsFeature::UI_TABLE_FILTERS,
+        CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE
+    )
+    ->disable(
+        CustomFieldsFeature::SYSTEM_MULTI_TENANCY
+    ),
+```
+
+### Management Interface
+
+Configure the custom fields management page:
+
+```php
+'management' => [
+    'slug' => 'custom-fields',      // URL slug
+    'navigation_sort' => -1,        // Navigation sort order
+    'navigation_group' => true,     // Group in navigation
+    'cluster' => null,              // Optional cluster assignment
+],
+```
+
+### Database Configuration
+
+Customize table names and paths:
+
+```php
+'database' => [
+    'migrations_path' => database_path('custom-fields'),
+    'table_names' => [
+        'custom_field_sections' => 'custom_field_sections',
+        'custom_fields' => 'custom_fields',
+        'custom_field_values' => 'custom_field_values',
+        'custom_field_options' => 'custom_field_options',
+    ],
+    'column_names' => [
+        'tenant_foreign_key' => 'tenant_id',
+    ],
+],
+```
+
+## Available Features
+
+The package supports these features that can be enabled/disabled:
+
+| Feature                        | Description                             |
+| ------------------------------ | --------------------------------------- |
+| `FIELD_CONDITIONAL_VISIBILITY` | Show/hide fields based on conditions    |
+| `FIELD_ENCRYPTION`             | Encrypt sensitive field values          |
+| `FIELD_OPTION_COLORS`          | Color-coded options for select fields   |
+| `UI_TABLE_COLUMNS`             | Show custom fields as table columns     |
+| `UI_TOGGLEABLE_COLUMNS`        | Allow users to toggle column visibility |
+| `UI_TABLE_FILTERS`             | Enable filtering by custom field values |
+| `SYSTEM_MANAGEMENT_INTERFACE`  | Enable the management interface         |
+| `SYSTEM_MULTI_TENANCY`         | Enable multi-tenant isolation           |
+
+::alert{type="info"}
+If your custom models include tenant-specific scoping logic, you'll need to register a 
+
+[custom tenant resolver](https://relaticle.github.io/custom-fields/v2/#custom-tenant-resolution)
+
+ to ensure validation works correctly.
+::
+
+## Configuration Examples
+
+### Restricting Field Types
+
+Limit available field types in production:
+
+```php
+'field_type_configuration' => FieldTypeConfigurator::configure()
+    ->enabled([
+        'text',
+        'textarea',
+        'number',
+        'select',
+        'checkbox',
+        'date',
+    ])
+    ->disabled([
+        'rich-editor',      // Disable rich content editors
+        'markdown-editor',  // Disable markdown editor
+        'file-upload',      // Disable file uploads
+    ]),
+```
+
+### Performance Configuration
+
+Optimize for production:
+
+```php
+'entity_configuration' => EntityConfigurator::configure()
+    ->discover(app_path('Models'))
+    ->cache(env('CUSTOM_FIELDS_CACHE', true)),  // Enable caching
+
+'field_type_configuration' => FieldTypeConfigurator::configure()
+    ->cache(enabled: true, ttl: 3600),          // Cache field types
+```
+
+### Multi-Tenancy Setup
+
+Enable tenant isolation:
+
+```php
+'features' => FeatureConfigurator::configure()
+    ->enable(
+        CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
+        // ... other features
+    ),
+
+'database' => [
+    // ... other config
+    'column_names' => [
+        'tenant_foreign_key' => 'tenant_id',  // Your tenant foreign key
+    ],
+],
+```
+
+#### Custom Tenant Resolution
+
+If you've extended the `CustomField` or `CustomFieldSection` models with custom tenant handling (e.g., custom global scopes), register a tenant resolver to ensure validation and queries respect your custom logic:
+
+```php
+use Relaticle\CustomFields\CustomFields;
+
+// In your AppServiceProvider or plugin boot method
+CustomFields::resolveTenantUsing(fn() => auth()->user()?->company_id);
+```
+
+::alert{type="success"}
+The custom resolver takes priority over Filament's built-in tenancy, giving you complete control over tenant resolution.
+::
+
+**Common Patterns:**
+
+```php
+// Auth-based tenancy
+CustomFields::resolveTenantUsing(fn() => auth()->user()?->company_id);
+
+// Header-based (APIs)
+CustomFields::resolveTenantUsing(fn() => request()->header('X-Tenant-ID'));
+
+// Session-based
+CustomFields::resolveTenantUsing(fn() => session('current_tenant_id'));
+```
+
+::alert{type="success"}
+Need help? Check that your resolver returns the correct tenant ID using 
+
+`TenantContextService::getCurrentTenantId()`
+
+ in your application.
+::
+
+## Best Practices
+
+### Performance Optimization
+
+1. **Enable Caching**: Always enable caching in production
+2. **Limit Discovery**: Only discover models you need
+3. **Restrict Field Types**: Only enable field types you use
+
+### Security Considerations
+
+1. **Disable Unused Features**: Turn off features you don't need
+2. **Restrict Field Types**: Disable potentially unsafe field types like rich editors
+3. **Enable Multi-Tenancy**: Always enable in multi-tenant applications
+
+### Development vs Production
+
+Use environment variables for flexible configuration:
+
+```php
+'entity_configuration' => EntityConfigurator::configure()
+    ->discover(app_path('Models'))
+    ->cache(env('CUSTOM_FIELDS_CACHE', !app()->isLocal())),
+
+'field_type_configuration' => FieldTypeConfigurator::configure()
+    ->cache(enabled: env('CUSTOM_FIELDS_CACHE_TYPES', true)),
+```
+
+
+# Authorization
+
+You can prevent pages from appearing in the menu by overriding the authorize() method when registering a plugin. This is useful if you want to control which users can see the page in the navigation, and also which users can visit the page directly:
+
+```php
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use Relaticle\CustomFields\CustomFieldsPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // ...
+            ->plugin(
+                CustomFieldsPlugin::make()
+                    ->authorize(fn(): bool => auth()->user()->email === 'admin@relaticle.com'),
+            );
+    }
+}
+```
+
+
+# Field Types
+
+Custom Fields comes with 20+ built-in field types and allows you to create your own custom field types for specialized functionality.
+
+## Built-in Field Types
+
+Custom Fields includes 20+ pre-configured field types:
+
+| Field Type          | Key               | Data Type     | Description                             |
+| ------------------- | ----------------- | ------------- | --------------------------------------- |
+| **Text Input**      | `text`            | String        | Basic text input with validation        |
+| **Email**           | `email`           | String        | Email input with validation             |
+| **Phone**           | `phone`           | String        | Phone number input                      |
+| **Link**            | `link`            | String        | URL validation and formatting           |
+| **Textarea**        | `textarea`        | Text          | Multi-line text input                   |
+| **Rich Editor**     | `rich-editor`     | Text          | WYSIWYG editor with formatting          |
+| **Markdown Editor** | `markdown-editor` | Text          | Markdown syntax with preview            |
+| **Number**          | `number`          | Numeric       | Numeric input with min/max validation   |
+| **Currency**        | `currency`        | Float         | Currency formatting with locale support |
+| **Tags Input**      | `tags-input`      | Multi-choice  | Multiple tags with autocomplete         |
+| **Select**          | `select`          | Single-choice | Single selection dropdown               |
+| **Multi-Select**    | `multi-select`    | Multi-choice  | Multiple selections                     |
+| **Radio**           | `radio`           | Single-choice | Single choice radio buttons             |
+| **Checkbox**        | `checkbox`        | Boolean       | Simple true/false toggle                |
+| **Checkbox List**   | `checkbox-list`   | Multi-choice  | Multiple checkboxes                     |
+| **Toggle**          | `toggle`          | Boolean       | Switch-style toggle                     |
+| **Toggle Buttons**  | `toggle-buttons`  | Single-choice | Button group selection                  |
+| **Date**            | `date`            | Date          | Date picker                             |
+| **Date Time**       | `datetime`        | DateTime      | Date and time picker                    |
+| **Color Picker**    | `color-picker`    | String        | Visual color selection                  |
+| **File Upload**     | `file-upload`     | String        | File upload with validation             |
+
+## Creating Custom Field Types
+
+You have flexible options for extending Custom Fields:
+
+- **Create entirely new field types** for specialized functionality
+- **Extend existing built-in field types** to add custom behavior
+- **Replace built-in field types** by creating custom ones with the same key
+
+This allows you to customize any field type behavior while maintaining compatibility with the existing system.
+
+### Generate a Field Type
+
+Use the Artisan command to create a new field type:
+
+```bash
+php artisan make:field-type StarRating
+```
+
+This creates a complete field type class in `app/Filament/FieldTypes/`.
+
+### Field Type Structure
+
+Custom field types extend `BaseFieldType` and use the `FieldSchema` system:
+
+```php
+<?php
+
+namespace App\Filament\FieldTypes;
+
+use Filament\Forms\Components\Select;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Enums\ValidationRule;
+use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
+use Relaticle\CustomFields\Models\CustomField;
+
+class StarRatingFieldType extends BaseFieldType
+{
+    public function configure(): FieldSchema
+    {
+        return FieldSchema::numeric()
+            ->key('star-rating')
+            ->label('Star Rating')
+            ->icon('heroicon-o-star')
+            ->formComponent(function (CustomField $customField) {
+                return Select::make($customField->getFieldName())
+                    ->options([
+                        1 => '⭐ Poor',
+                        2 => '⭐⭐ Fair',
+                        3 => '⭐⭐⭐ Good',
+                        4 => '⭐⭐⭐⭐ Very Good',
+                        5 => '⭐⭐⭐⭐⭐ Excellent',
+                    ])
+                    ->native(false);
+            })
+            ->tableColumn(function (CustomField $customField) {
+                return TextColumn::make($customField->getFieldName())
+                    ->formatStateUsing(function ($state) {
+                        if (!$state) return 'No rating';
+                        return str_repeat('⭐', (int) $state) . " ($state/5)";
+                    });
+            })
+            ->infolistEntry(function (CustomField $customField) {
+                return TextEntry::make($customField->getFieldName())
+                    ->formatStateUsing(function ($state) {
+                        if (!$state) return 'No rating provided';
+                        $rating = (int) $state;
+                        $labels = [1 => 'Poor', 2 => 'Fair', 3 => 'Good', 4 => 'Very Good', 5 => 'Excellent'];
+                        return str_repeat('⭐', $rating) . " - {$labels[$rating]} ($rating/5)";
+                    });
+            })
+            ->priority(45)
+            ->availableValidationRules([
+                ValidationRule::REQUIRED,
+                ValidationRule::MIN,
+                ValidationRule::MAX,
+            ]);
+    }
+}
+```
+
+### Register Your Field Type
+
+Register your custom field type in your Filament Panel Provider:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\FieldTypes\StarRatingFieldType;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Relaticle\CustomFields\CustomFieldsPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->plugins([
+                CustomFieldsPlugin::make()
+                    ->registerFieldTypes([
+                        StarRatingFieldType::class,
+                    ]),
+            ]);
+    }
+}
+```
+
+### Extending and Replacing Field Types
+
+You have additional flexibility with custom field types:
+
+- **Replace built-in field types**: Create a custom field type with the same key as a built-in type (e.g., `file-upload`) to completely override it with your own implementation and behavior
+
+This allows you to customize or completely replace any built-in field type behavior while maintaining system compatibility.
+
+## FieldSchema API
+
+The `FieldSchema` class provides a fluent API for configuring field types. Choose the appropriate factory method based on your field's data type:
+
+### Data Type Factory Methods
+
+```php
+// Text-based fields
+FieldSchema::text()       // For TEXT data type (long text)
+FieldSchema::string()     // For STRING data type (short text)
+
+// Numeric fields
+FieldSchema::numeric()    // For NUMERIC data type (integers)
+FieldSchema::float()      // For FLOAT data type (decimals)
+
+// Date/time fields
+FieldSchema::date()       // For DATE data type
+FieldSchema::dateTime()   // For DATE_TIME data type
+
+// Boolean fields
+FieldSchema::boolean()    // For BOOLEAN data type
+
+// Choice fields
+FieldSchema::singleChoice()  // For SINGLE_CHOICE data type
+FieldSchema::multiChoice()   // For MULTI_CHOICE data type
+```
+
+### Configuration Methods
+
+```php
+->key('field-key')                    // Unique field identifier
+->label('Field Label')                // Display name
+->icon('heroicon-o-star')            // Icon for field type
+->priority(50)                       // Sort order (lower = first)
+->formComponent($component)          // Form field component
+->tableColumn($column)               // Table column component
+->infolistEntry($entry)             // Read-only display component
+->availableValidationRules($rules)  // User-selectable validation rules
+->defaultValidationRules($rules)    // Always-applied validation rules
+->searchable()                      // Enable table search
+->sortable()                        // Enable table sorting
+->filterable()                      // Enable table filtering
+->encryptable()                     // Allow field encryption
+```
+
+### Component Types
+
+You can define components in two ways:
+
+#### 1. Class References (Simple)
+
+For basic components, reference Filament classes directly:
+
+```php
+->formComponent(TextInput::class)
+->tableColumn(TextColumn::class)
+->infolistEntry(TextEntry::class)
+```
+
+#### 2. Closures (Flexible)
+
+For customized components, use closures that return configured components:
+
+```php
+->formComponent(function (CustomField $customField) {
+    return TextInput::make($customField->getFieldName())
+        ->label($customField->name)
+        ->maxLength(255);
+})
+```
+
+### Choice Fields and Options
+
+Choice fields (select, radio, checkboxes) can handle options in different ways:
+
+#### User-Defined Options (Default)
+
+Users define their own options when creating fields:
+
+```php
+return FieldSchema::singleChoice()
+    ->key('priority-level')
+    ->formComponent(function (CustomField $customField) {
+        return Select::make($customField->getFieldName());
+        // Options automatically applied by the system
+    });
+```
+
+#### Built-in Options
+
+Field type provides predefined options:
+
+```php
+return FieldSchema::singleChoice()
+    ->key('priority-level')
+    ->withoutUserOptions()  // Disable user options
+    ->formComponent(function (CustomField $customField) {
+        return Select::make($customField->getFieldName())
+            ->options([
+                1 => 'Low',
+                2 => 'Medium',
+                3 => 'High',
+                4 => 'Critical',
+            ]);
+    });
+```
+
+#### Arbitrary Values
+
+Accept both predefined and new user-typed values:
+
+```php
+return FieldSchema::multiChoice()
+    ->key('product-tags')
+    ->withArbitraryValues()  // Allow new values
+    ->formComponent(function (CustomField $customField) {
+        return TagsInput::make($customField->getFieldName());
+    });
+```
+
+## Data Types
+
+Custom Fields supports these data types for storage optimization and validation compatibility:
+
+```php
+enum FieldDataType: string
+{
+    case STRING = 'string';          // Short text, URLs, identifiers
+    case TEXT = 'text';              // Long text, rich content, markdown
+    case NUMERIC = 'numeric';        // Integers, counts
+    case FLOAT = 'float';            // Decimal numbers, currency
+    case DATE = 'date';              // Date only
+    case DATE_TIME = 'date_time';    // Date with time
+    case BOOLEAN = 'boolean';        // True/false, checkboxes, toggles
+    case SINGLE_CHOICE = 'single_choice';  // Select, radio buttons
+    case MULTI_CHOICE = 'multi_choice';    // Multi-select, checkbox lists, tags
+}
+```
+
+## Best Practices
+
+1. **Use Existing Filament Components**: Build on Filament's components like `Select`, `TextInput`, etc.
+2. **Follow Naming Conventions**: Use kebab-case for keys (e.g., `star-rating`, `country-select`)
+3. **Choose the Right Data Type**: Select the data type that matches how your field's values should be stored
+4. **Use Closures for Flexibility**: For complex components, use closure-based definitions
+5. **Test Your Components**: Ensure your field type works in forms, tables, and infolists
+6. **Consider Validation**: Only allow validation rules that make sense for your field type
+
+## Field Type Priority
+
+Field types are ordered by priority (lower numbers appear first):
+
+- **10-20**: Common text fields
+- **30-40**: Selection fields
+- **50-60**: Specialized fields
+- **70+**: Advanced fields
+
+## Troubleshooting
+
+### Field Type Not Appearing
+
+If your custom field type doesn't appear in the dropdown:
+
+1. Ensure your field type class extends `BaseFieldType`
+2. Verify the field type is registered in your panel provider
+3. Clear Laravel's cache: `php artisan cache:clear`
+4. Check that the `configure()` method returns a valid `FieldSchema`
+
+### Components Not Rendering
+
+If your components don't render correctly:
+
+1. Verify you're using `$customField->getFieldName()` for field names
+2. For closure-based components, ensure closures return valid Filament components
+3. Test with simple components first before adding complexity
+4. Check that you're importing all necessary Filament component classes
+
+Your custom field type will now appear in the field type dropdown when creating new custom fields!
+
+
+# Preset Custom Fields
+
+Preset Custom Fields allow developers to programmatically define, deploy, and manage custom fields for Filament resources using migrations.
+
+This approach ensures consistency, version control, and easy deployment across different environments.
+
+## Creating Custom Fields Migrations
+
+To create a new custom fields migration, use the dedicated Artisan command:
+
+```bash
+php artisan make:custom-fields-migration create_general_fields_for_order
+```
+
+This command generates a new migration file in your `database/custom-fields/` directory with a timestamp prefix and the name you specified.
+
+## Field Types
+
+The system uses string-based field type identifiers. Here are the available field types:
+
+### Text Types
+
+- `'text'` - Single line text input
+- `'textarea'` - Multi-line text area
+- `'rich_editor'` - Rich text editor
+- `'markdown_editor'` - Markdown editor
+
+### Numeric Types
+
+- `'number'` - Numeric input
+- `'currency'` - Currency formatted input
+
+### Date Types
+
+- `'date'` - Date picker
+- `'datetime'` - Date and time picker
+
+### Boolean Types
+
+- `'checkbox'` - Single checkbox
+- `'toggle'` - Toggle switch
+
+### Choice Types
+
+- `'select'` - Dropdown selection
+- `'radio'` - Radio buttons
+- `'multi_select'` - Multiple selection dropdown
+- `'checkbox_list'` - Checkbox list
+- `'toggle_buttons'` - Toggle button group
+- `'tags_input'` - Tag input field
+
+### Other Types
+
+- `'color_picker'` - Color selection
+- `'link'` - URL input
+
+## Creating Fields
+
+In your migration file, use the `new()` method with `CustomFieldData` objects to create new custom fields:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Data\CustomFieldData;
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
+use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator->new(
+            model: Order::class,
+            fieldData: new CustomFieldData(
+                name: 'Additional Information',
+                code: 'additional_information',
+                type: 'text',
+                section: new CustomFieldSectionData(
+                    name: 'General',
+                    code: 'general',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_100,
+                settings: new CustomFieldSettingsData(
+                    list_toggleable_hidden: false
+                )
+            )
+        )->create();
+    }
+};
+```
+
+## Adding Options to Choice Fields
+
+For choice-based field types, add options using the `options()` method:
+
+```php
+$this->migrator->new(
+    model: Product::class,
+    fieldData: new CustomFieldData(
+        name: 'Product Status',
+        code: 'product_status',
+        type: 'select',
+        section: new CustomFieldSectionData(
+            name: 'Status',
+            code: 'status',
+            type: CustomFieldSectionType::SECTION,
+        ),
+        systemDefined: true,
+    )
+)
+->options([
+    'draft' => 'Draft',
+    'active' => 'Active',
+    'discontinued' => 'Discontinued'
+])
+->create();
+```
+
+## Adding Lookup Types
+
+For fields that reference other models, use the `lookupType()` method:
+
+```php
+$this->migrator->new(
+    model: Order::class,
+    fieldData: new CustomFieldData(
+        name: 'Sales Representative',
+        code: 'sales_rep',
+        type: 'select',
+        section: new CustomFieldSectionData(
+            name: 'Sales',
+            code: 'sales',
+            type: CustomFieldSectionType::SECTION,
+        ),
+        systemDefined: true,
+    )
+)
+->lookupType(User::class)
+->create();
+```
+
+## Field Width Options
+
+Control field layout using `CustomFieldWidth` enum:
+
+```php
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+
+// Available widths:
+CustomFieldWidth::_25    // 25% width
+CustomFieldWidth::_33    // 33% width
+CustomFieldWidth::_50    // 50% width
+CustomFieldWidth::_66    // 66% width
+CustomFieldWidth::_75    // 75% width
+CustomFieldWidth::_100   // 100% width (full width)
+```
+
+## Updating Fields
+
+To update existing fields, create a new migration and use the `update()` method:
+
+```php
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator
+            ->find(Order::class, 'additional_information')
+            ->update([
+                'name' => 'Updated Field Name',
+                'settings' => new CustomFieldSettingsData(
+                    list_toggleable_hidden: true
+                )
+            ]);
+    }
+};
+```
+
+## Deleting Fields
+
+To remove preset fields, create a migration that uses the `delete()` method:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        $this->migrator->find(Order::class, 'additional_information')->delete();
+    }
+};
+```
+
+::alert{type="warning"}
+Deleting a field is permanent and will result in data loss. Ensure you have backups and that no part of your application depends on the field being deleted.
+::
+
+## Activating/Deactivating Fields
+
+Control field visibility without deletion:
+
+```php
+<?php
+
+use App\Models\Shop\Order;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        // Deactivate a field
+        $this->migrator->find(Order::class, 'field_code')->deactivate();
+
+        // Activate a field
+        $this->migrator->find(Order::class, 'field_code')->activate();
+    }
+};
+```
+
+## Complete Example
+
+Here's a comprehensive example creating multiple fields for a Customer model:
+
+```php
+<?php
+
+use App\Models\Shop\Customer;
+use App\Models\User;
+use Relaticle\CustomFields\Data\CustomFieldData;
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
+use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+
+return new class extends CustomFieldsMigration
+{
+    public function up(): void
+    {
+        // Link field
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'Company Website',
+                code: 'company_website',
+                type: 'link',
+                section: new CustomFieldSectionData(
+                    name: 'Company Info',
+                    code: 'company_info',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_50,
+            )
+        )->create();
+
+        // Choice field with options
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'Customer Type',
+                code: 'customer_type',
+                type: 'select',
+                section: new CustomFieldSectionData(
+                    name: 'Company Info',
+                    code: 'company_info',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_50,
+            )
+        )
+        ->options([
+            'individual' => 'Individual',
+            'small_business' => 'Small Business',
+            'enterprise' => 'Enterprise'
+        ])
+        ->create();
+
+        // Boolean field
+        $this->migrator->new(
+            model: Customer::class,
+            fieldData: new CustomFieldData(
+                name: 'VIP Customer',
+                code: 'is_vip',
+                type: 'toggle',
+                section: new CustomFieldSectionData(
+                    name: 'Status',
+                    code: 'status',
+                    type: CustomFieldSectionType::SECTION,
+                ),
+                systemDefined: true,
+                width: CustomFieldWidth::_25,
+                settings: new CustomFieldSettingsData(
+                    list_toggleable_hidden: false
+                )
+            )
+        )->create();
+    }
+};
+```
+
+## Running Migrations
+
+Custom fields migrations are run using Laravel's standard migration system:
+
+```bash
+# Run all custom fields migrations
+php artisan migrate --path=database/custom-fields
+
+# Run a specific migration file
+php artisan migrate --path=database/custom-fields/2025_08_15_022226_create_general_fields_for_order.php
+```
+
+## Best Practices
+
+### Naming Conventions
+
+- Use descriptive field names: `'Customer Type'` instead of `'Type'`
+- Use snake\_case for codes: `'customer_type'` instead of `'CustomerType'`
+- Use descriptive section names that group related fields
+
+### System-Defined Fields
+
+- Set `systemDefined: true` for preset fields
+- This prevents users from accidentally deleting important fields through the admin interface
+
+### Field Organization
+
+- Group related fields in logical sections
+- Use consistent section codes across different models when appropriate
+- Consider field width to optimize form layout
+
+### Error Handling
+
+- Use unique field codes to avoid conflicts
+- Test migrations in development before production deployment
+- Handle dependencies between fields carefully
+
+### Migration Management
+
+1. **Naming Conventions**: Use clear, descriptive names for your migration files
+2. **Versioning**: Create separate migrations for creating, updating, and deleting fields to maintain a clear history
+3. **Documentation**: Comment your migrations to explain the purpose of each change
+4. **Data Integrity**: When updating or deleting fields, consider the impact on existing data
+
+
+# Import/Export
+
+The Custom Fields plugin provides robust import and export capabilities for handling custom field data. This documentation explains how to integrate custom fields with Filament's import/export actions.
+
+## Import Implementation
+
+```php
+namespace App\Filament\Imports;
+
+use App\Models\Product;
+use Filament\Actions\Imports\ImportColumn;
+use Filament\Actions\Imports\Importer;
+use Relaticle\CustomFields\Facades\CustomFields;
+
+class ProductImporter extends Importer
+{
+    protected static ?string $model = Product::class;
+
+    // Simplest implementation: Add columns in getColumns()
+    public static function getColumns(): array
+    {
+        return [
+            // Regular columns
+            ImportColumn::make('name')->requiredMapping()->rules(['required']),
+            ImportColumn::make('price')->numeric(),
+
+            // Add all custom fields
+            ...CustomFields::importer()->forModel(self::getModel())->columns(),
+        ];
+    }
+
+    // After saving model, save custom fields
+    protected function afterSave(): void
+    {
+        CustomFields::importer()->forModel($this->record)->saveValues();
+    }
+}
+```
+
+## Export Implementation
+
+```php
+namespace App\Filament\Exports;
+
+use App\Models\Product;
+use Filament\Actions\Exports\ExportColumn;
+use Filament\Actions\Exports\Exporter;
+use Relaticle\CustomFields\Facades\CustomFields;
+
+class ProductExporter extends Exporter
+{
+    protected static ?string $model = Product::class;
+
+    // Simply add your columns and spread in the custom fields
+    public static function getColumns(): array
+    {
+        return [
+            ExportColumn::make('id'),
+            ExportColumn::make('name'),
+            ExportColumn::make('price'),
+
+            // Add all custom fields
+            ...CustomFields::exporter()->forModel(self::getModel())->columns(),
+        ];
+    }
+}
+```
+
+
+# Data Model
+
+## Architecture Overview
+
+The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Type Polymorphism** design that balances flexibility with performance. Unlike traditional EAV models that suffer from type conversion overhead and poor query performance, this architecture uses typed storage columns and strategic indexing to maintain database-level optimizations while enabling dynamic field creation.
+
+```mermaid
+erDiagram
+    ENTITIES ||--o{ CUSTOM_FIELD_SECTIONS : "has sections for"
+    CUSTOM_FIELD_SECTIONS ||--o{ CUSTOM_FIELDS : contains
+    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_OPTIONS : "can have options"
+    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_VALUES : "stores values in"
+    ENTITIES ||--o{ CUSTOM_FIELD_VALUES : "has values via polymorphic"
+
+    CUSTOM_FIELD_SECTIONS {
+        bigint id PK
+        string entity_type
+        string code UK
+        string name
+        string type
+        string width
+        int sort_order
+        bool active
+        bool system_defined
+        json settings
+        bigint tenant_id FK "optional"
+        timestamps created_updated
+    }
+
+    CUSTOM_FIELDS {
+        bigint id PK
+        bigint custom_field_section_id FK
+        string entity_type
+        string code UK
+        string name
+        string type
+        string lookup_type
+        string width
+        int sort_order
+        json validation_rules
+        bool active
+        bool system_defined
+        json settings
+        bigint tenant_id FK "optional"
+        timestamps created_updated
+    }
+
+    CUSTOM_FIELD_OPTIONS {
+        bigint id PK
+        bigint custom_field_id FK
+        string name
+        int sort_order
+        json settings
+        bigint tenant_id FK "optional"
+        timestamps created_updated
+    }
+
+    CUSTOM_FIELD_VALUES {
+        bigint id PK
+        string entity_type
+        bigint entity_id
+        bigint custom_field_id FK
+        string string_value
+        text text_value
+        bool boolean_value
+        bigint integer_value
+        double float_value
+        date date_value
+        datetime datetime_value
+        json json_value
+        bigint tenant_id FK "optional"
+    }
+
+    ENTITIES {
+        bigint id PK
+        string type "polymorphic identifier"
+    }
+```
+
+## Design Philosophy
+
+### Type-Safe Flexibility
+
+The schema uses multiple typed columns in `custom_field_values` rather than a single text column. This eliminates costly type conversions, enables native database sorting/filtering, and maintains data integrity through database-level constraints. When you store an integer, it's actually stored as an integer—not a string that needs parsing.
+
+### Hierarchical Organization
+
+Fields are organized into sections, providing logical grouping essential for complex forms. This two-level hierarchy supports progressive disclosure in UIs and administrative organization without adding complexity to simple use cases.
+
+### Performance-First Indexing
+
+Strategic composite indexes optimize the most common query patterns: entity lookup, field discovery, and polymorphic joins. The schema is designed for the queries you'll actually run, not theoretical completeness.
+
+## Why This Schema Design
+
+**Polymorphic Flexibility**: Any model can have custom fields without tight coupling or migration dependencies. Add custom fields to `Product`, `User`, `Order`—anything implementing the `HasCustomFields` interface.
+
+**Multi-Tenant Isolation**: Optional tenant awareness is built into the core schema, not bolted on later. When enabled, all data is automatically isolated between tenants while maintaining query performance.
+
+**Extensible Field Types**: Field types are pluggable through a clean interface. The `settings` JSON column provides unlimited extension points without schema changes.
+
+**Efficient Querying**: Unlike traditional EAV models, this design supports efficient filtering and sorting on custom field values using native database types and proper indexing strategies.
+
+## Developer Usage Patterns
+
+### Entity Integration
+
+```php
+class Product extends Model implements HasCustomFields
+{
+    use UsesCustomFields;
+
+    // Custom fields automatically available
+    // Values properly typed on retrieval
+}
+```
+
+### Type-Safe Operations
+
+```php
+// Automatic type-safe storage
+$product->saveCustomFieldValue($field, 24); // Stored in integer_value column
+
+// Type-safe retrieval
+$value = $product->getCustomFieldValue($field); // Returns integer, not string
+```
+
+### Optimized Queries
+
+```php
+// Efficient custom field filtering
+$products = Product::withCustomFieldValues()
+    ->whereHas('customFieldValues', function($query) {
+        $query->where('custom_field_id', $fieldId)
+              ->where('integer_value', '>', 12);
+    })->get();
+```
+
+## Performance Considerations
+
+This schema excels with complex forms, multi-tenant applications, and admin interfaces requiring dynamic field management. The typed storage and strategic indexing make it suitable for production applications with significant data volumes.
+
+Consider the performance implications for sparse data (many NULL values) and plan custom queries for complex cross-field reporting needs. The architecture prioritizes the common case: efficient field definition, value storage/retrieval, and entity-centric queries.
+
+## Multi-Tenancy Support
+
+When enabled, `tenant_id` is included in all unique constraints and automatically filtered through model scopes. This ensures complete data isolation while maintaining query performance through proper indexing.
+
+
+# Support
+
+Need assistance? Encountered a bug? Have a feature request? We're here to help!
+
+- **Email**: <customfieldsnext@gmail.com>
+- **Bug Reports & Feature Requests**: [GitHub Issues](https://github.com/Relaticle/custom-fields/issues){rel="&#x22;nofollow&#x22;"}
+
+Feel free to reach out with your queries, and we'll get back to you promptly.
+
+
+# Contributing
+
+We love contributions from the community! Custom Fields is now open source, and we welcome pull requests, bug reports, and feature suggestions.
+
+## How to Contribute
+
+### 1. Getting Started
+
+- **Fork the repository** on [GitHub](https://github.com/relaticle/custom-fields){rel="&#x22;nofollow&#x22;"}
+- **Clone your fork** locally
+- **Set up your development environment** following the instructions below
+
+### 2. Development Setup
+
+```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/custom-fields.git
+cd custom-fields
+
+# Install dependencies
+composer install
+npm install
+
+# Set up testing environment
+cp phpunit.xml.dist phpunit.xml
+
+# Run tests to verify setup
+composer test
+```
+
+### 3. Making Changes
+
+::steps
+### Create a Branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+Use descriptive branch names like `feature/add-phone-field` or `fix/validation-error`
+
+### Write Your Code
+
+- Follow PSR-12 coding standards
+- Add tests for new features
+- Update documentation as needed
+- Keep commits focused and atomic
+
+### Test Your Changes
+
+```bash
+# Run all tests
+composer test
+
+# Run specific tests
+composer test:pest
+composer test:types
+```
+
+### Submit Pull Request
+
+- Push your branch to your fork
+- Create a pull request with a clear description
+- Link any related issues
+::
+
+## Contribution Guidelines
+
+### Code Quality
+
+- **Follow PSR-12** coding standards
+- **Write tests** for all new features (aim for 80%+ coverage)
+- **Use type declarations** where possible
+- **Document complex logic** with clear comments
+- **Keep methods small** and focused on a single responsibility
+
+### Testing
+
+We use Pest PHP for testing. Please ensure:
+
+- All tests pass before submitting PR
+- New features include comprehensive tests
+- Bug fixes include regression tests
+- Architecture tests remain satisfied
+
+```bash
+# Run full test suite
+composer test
+
+# Run with coverage
+composer test-coverage
+
+# Run only architecture tests
+composer test:arch
+```
+
+### Documentation
+
+- Update documentation for new features
+- Include docblocks for public methods
+- Add examples for complex features
+- Keep README up to date
+
+### Commit Messages
+
+Follow conventional commit format:
+
+```text
+type(scope): brief description
+
+Longer explanation if needed
+
+Closes #123
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+## Types of Contributions
+
+### Bug Reports
+
+Found a bug? Please open an issue with:
+
+- Clear description of the problem
+- Steps to reproduce
+- Expected vs actual behavior
+- Your environment details (PHP, Laravel, Filament versions)
+- Error messages or screenshots
+
+### Feature Requests
+
+Have an idea? We'd love to hear it! Open an issue describing:
+
+- The problem you're trying to solve
+- Your proposed solution
+- Any alternatives you've considered
+- Mockups or examples (if applicable)
+
+### Pull Requests
+
+We actively welcome pull requests for:
+
+- Bug fixes
+- New features
+- Documentation improvements
+- Additional tests
+- UI/UX improvements
+- Code refactoring
+
+### Field Type Contributions
+
+Want to add a new field type? Great! Make sure to:
+
+1. Implement the `FieldTypeDefinitionInterface`
+2. Add form, table, and infolist components
+3. Include validation rules
+4. Add comprehensive tests
+5. Update documentation
+
+Example structure:
+
+```php
+namespace Relaticle\CustomFields\FieldTypes;
+
+class PhoneFieldType implements FieldTypeDefinitionInterface
+{
+    public function getFormComponent(CustomField $field): Field
+    {
+        // Implementation
+    }
+
+    public function getTableColumn(CustomField $field): Column
+    {
+        // Implementation
+    }
+
+    // ... other required methods
+}
+```
+
+## Development Workflow
+
+### 1. Local Development
+
+```bash
+# Watch frontend assets
+npm run dev
+
+# Format code
+composer lint
+
+# Run static analysis
+composer test:types
+```
+
+### 2. Before Submitting
+
+- All tests pass
+- Code follows standards
+- Documentation updated
+- Changelog entry added (for features)
+- No debug code left
+
+### 3. Review Process
+
+- Maintainers will review your PR
+- Address any feedback
+- Once approved, it will be merged
+
+## Community Guidelines
+
+### Be Respectful
+
+- Treat everyone with respect
+- Constructive criticism only
+- No harassment or discrimination
+- Help newcomers get started
+
+### Be Collaborative
+
+- Discuss major changes first
+- Help review other PRs
+- Share knowledge and learn
+- Credit others' contributions
+
+## Licensing
+
+By contributing, you agree that your contributions will be licensed under the same dual license as Custom Fields (AGPL-3.0 + Commercial).
+
+## Recognition
+
+Contributors are recognized in:
+
+- Our README contributors section
+- Release notes for significant contributions
+- Special thanks in documentation
+
+## Need Help?
+
+- **Discord**: Join our community server
+- **Email**: <customfieldsnext@gmail.com>
+- **Issues**: [GitHub Issues](https://github.com/relaticle/custom-fields/issues){rel="&#x22;nofollow&#x22;"}
+
+Thank you for helping make Custom Fields better for everyone!
+
+
+# License
+
+::alert{type="info"}
+**Dual License Model**
+
+ \- Open source under AGPL-3.0 - Commercial licenses for private code - Transparent pricing
+::
+
+## Overview
+
+Custom Fields uses a dual licensing model designed to support both open source projects and commercial applications. This approach ensures the project remains sustainable while providing flexibility for different use cases.
+
+::card-group
+  :::card
+  ---
+  icon: i-lucide-git-branch
+  title: Open Source (AGPL-3.0)
+  to: https://relaticle.github.io/custom-fields/v2/#open-source-license-agpl-30
+  ---
+  For open source projects and those willing to share code
+  :::
+
+  :::card
+  ---
+  icon: i-lucide-building
+  title: Commercial License
+  to: https://relaticle.github.io/custom-fields/v2/#commercial-license
+  ---
+  For proprietary applications and private codebases
+  :::
+::
+
+## Open Source License (AGPL-3.0)
+
+Custom Fields is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html){rel="&#x22;nofollow&#x22;"}, a strong copyleft license designed for network software.
+
+### What is AGPL-3.0?
+
+The AGPL-3.0 is similar to the GPL-3.0 but includes an additional provision: if you run modified versions of the software on a network server, you must provide the source code to users of that server.
+
+::alert{type="warning"}
+**Important**
+
+: AGPL-3.0 requires your entire application using Custom Fields to be open source, including when used as a network service (SaaS, web applications, APIs).
+::
+
+### Key AGPL-3.0 Obligations
+
+When using Custom Fields under AGPL-3.0, you must:
+
+1. **Share Source Code**: Make your entire application's source code available under AGPL-3.0
+2. **Include License**: Preserve all copyright and license notices
+3. **State Changes**: Document any modifications you make
+4. **Network Disclosure**: Provide source code even for network/SaaS usage
+5. **No Additional Restrictions**: Cannot add terms that restrict others' AGPL rights
+
+### Who Can Use AGPL-3.0?
+
+The AGPL-3.0 license is suitable for:
+
+- Open source projects (AGPL-3.0 compatible)
+- Non-profit organizations willing to share code
+- Educational projects with public code
+- Personal learning projects with public repositories
+
+::alert{type="info"}
+Using Custom Fields under AGPL-3.0 is completely free - no payment required. However, you must comply with all AGPL-3.0 obligations.
+::
+
+## Commercial License
+
+For organizations that cannot or choose not to comply with AGPL-3.0 requirements, we offer commercial licenses that allow private use without open source obligations.
+
+### Why Choose Commercial?
+
+A commercial license is required if you:
+
+- Want to keep your application code private
+- Cannot comply with AGPL-3.0 obligations
+- Need to use Custom Fields in proprietary software
+- Operate a commercial SaaS without sharing source code
+- Require warranty or liability terms beyond AGPL-3.0
+
+### Commercial License Pricing
+
+Choose from three simple pricing plans. **All tiers include every feature** - no artificial limitations.
+
+::tabs
+  :::tab{label="Single Project"}
+  **$99/year**
+
+  - Install Custom Fields in one (non SaaS) project
+  - Includes three activations (local, CI, and production)
+  - One year of updates
+  - All features included
+  :::
+
+  :::tab{label="Unlimited Projects"}
+  **$199/year**
+
+  - Install Custom Fields in unlimited projects
+  - Including SaaS applications
+  - Unlimited license activations
+  - One year of updates
+  - All features included
+  :::
+
+  :::tab{label="Lifetime"}
+  **$399**
+
+  - Install Custom Fields in unlimited projects
+  - Including SaaS applications
+  - Unlimited license activations
+  - Lifetime updates
+  - All features included
+  :::
+::
+
+::card-group
+  :::card
+  ---
+  icon: i-lucide-credit-card
+  target: _blank
+  title: Purchase License
+  to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+  ---
+  Select your tier at checkout
+  :::
+
+  :::card
+  ---
+  icon: i-lucide-play
+  target: _blank
+  title: View Demo
+  to: https://relaticle.com/
+  ---
+  Try before you buy
+  :::
+::
+
+## Choosing Your License
+
+::steps
+### Evaluate Your Project
+
+Determine if your project can be fully open source under AGPL-3.0
+
+### Consider Obligations
+
+Review AGPL-3.0 requirements, especially the network use provision
+
+### Make Your Choice
+
+- **Choose AGPL-3.0** if you can share all source code
+- **Choose Commercial** if you need to keep code private
+::
+
+### Common Scenarios
+
+| Scenario                      | Recommended License | Suggested Tier            |
+| ----------------------------- | ------------------- | ------------------------- |
+| Single project or client work | Commercial          | Single Project ($99)      |
+| Agency with multiple clients  | Commercial          | Unlimited Projects ($199) |
+| SaaS application              | Commercial          | Unlimited Projects ($199) |
+| Long-term projects            | Commercial          | Lifetime ($399)           |
+| Open source package           | AGPL-3.0            | Free                      |
+| Educational project (public)  | AGPL-3.0            | Free                      |
+
+## Existing Customers
+
+::alert{type="info"}
+**Your licenses remain valid!**
+
+ All existing licenses, including lifetime licenses, continue to work exactly as before with no changes needed.
+::
+
+## Special Offers
+
+::alert{type="info"}
+Contact 
+
+**<customfieldsnext@gmail.com>**
+
+ with proof of eligibility to receive your discount code.
+::
+
+::card-group
+  :::card{icon="i-lucide-graduation-cap" title="Education - 50% off"}
+  Students and educators with valid .edu email
+  :::
+
+  :::card{icon="i-lucide-heart" title="Non-Profit - 40% off"}
+  Registered 501(c)(3) and equivalents
+  :::
+::
+
+## Frequently Asked Questions
+
+::accordion
+  :::accordion-item{label="What exactly is the AGPL-3.0 network provision?"}
+  The AGPL-3.0's key difference from GPL is Section 13: if users interact with your software over a network (web app, API, SaaS), you must provide them with the complete source code. This closes the "ASP loophole" where SaaS providers could use GPL software without sharing modifications.
+  :::
+
+  :::accordion-item
+  ---
+  label: Can I use Custom Fields in my agency's client projects?
+  ---
+  Yes, with a commercial license. For multiple client projects, choose the "Unlimited Projects" plan which covers unlimited projects and SaaS applications.
+  :::
+
+  :::accordion-item
+  ---
+  label: What's the difference between Single Project and Unlimited Projects?
+  ---
+  Single Project ($99) is for one non-SaaS project with three activations (local, CI, production). Unlimited Projects ($199) allows use in unlimited projects including SaaS applications with unlimited activations.
+  :::
+
+  :::accordion-item{label="What happens when my commercial license expires?"}
+  Your installations continue working forever. You only lose access to updates and support. Renew anytime to regain update access. No functionality is disabled.
+  :::
+
+  :::accordion-item{label="Can I contribute to Custom Fields?"}
+  Yes! We welcome contributions. By contributing, you agree that your contributions will be licensed under AGPL-3.0. Significant contributors may receive commercial licenses.
+  :::
+
+  :::accordion-item
+  ---
+  label: Is Custom Fields compatible with MIT/BSD licensed projects?
+  ---
+  Only if your entire project is licensed under AGPL-3.0. The AGPL-3.0 is a copyleft license that requires the entire work to be AGPL-3.0. For MIT/BSD projects, you need a commercial license.
+  :::
+::
+
+## Legal Information
+
+### Copyright Notice
+
+Custom Fields is Copyright 2024 Relaticle. All rights reserved.
+
+### License Texts
+
+- [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html){rel="&#x22;nofollow&#x22;"}
+- Commercial license terms provided upon purchase
+
+### Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+### Contact
+
+For licensing questions: &#x2A;*<customfieldsnext@gmail.com>**
+
+---
+
+::card{icon="i-lucide-lightbulb" title="Quick Summary"}
+**Custom Fields = Your Choice**
+
+- **AGPL-3.0**: Free to use, must share all code (including network use)
+- **Commercial**: Keep code private, simple project-based pricing ($99-$399)
+- All features included in both licenses
+- Choose the plan that fits your project needs
+::
+
+
+# Code Distribution
+
+## Open Source Distribution
+
+**Custom Fields** is open source! The source code is publicly available on GitHub under the AGPL-3.0 license.
+
+### Source Code Access
+
+- **GitHub Repository**: The complete source code is available at [github.com/relaticle/custom-fields](https://github.com/relaticle/custom-fields){rel="&#x22;nofollow&#x22;"}
+- **License**: AGPL-3.0 for open source use
+- **Packagist**: Available via Composer as `relaticle/custom-fields`
+
+### Distribution Guidelines
+
+#### Open Source Projects (AGPL-3.0)
+
+When using Custom Fields under the AGPL-3.0 license:
+
+**You CAN:**
+
+- Use Custom Fields in your open source projects
+- Modify and extend the codebase
+- Distribute your applications that use Custom Fields
+- Fork and create derivative works
+
+**You MUST:**
+
+- Keep your project open source under AGPL-3.0
+- Provide access to your source code
+- Include the AGPL-3.0 license
+- Preserve copyright notices
+- Document any changes you make
+
+#### Commercial Projects
+
+When using Custom Fields under a Commercial License:
+
+**You CAN:**
+
+- Use Custom Fields in closed-source applications
+- Modify the code without publishing changes
+- Distribute your application without source code
+- Keep your proprietary code private
+- Use in unlimited client projects (agencies)
+
+**You CANNOT:**
+
+- Redistribute the Custom Fields source code itself
+- Resell Custom Fields as a standalone product
+- Remove copyright or license notices
+- Share your commercial license with others
+- Exceed your license tier's revenue/team limits
+
+## Contributing
+
+We welcome contributions from the community!
+
+### How to Contribute
+
+1. **Fork the repository** on GitHub
+2. **Create a feature branch** for your changes
+3. **Submit a pull request** with a clear description
+4. **Sign the CLA** (Contributor License Agreement) if required
+
+### Contribution Guidelines
+
+- Follow the existing code style and conventions
+- Write tests for new features
+- Update documentation as needed
+- Keep pull requests focused and atomic
+
+::alert{type="info"}
+By contributing to Custom Fields, you agree that your contributions will be licensed under the same dual license model (AGPL-3.0 + Commercial).
+::
+
+## Third-Party Packages
+
+If you create packages or extensions for Custom Fields:
+
+- **Open source packages**: Must be AGPL-3.0 compatible
+- **Commercial packages**: Require end-users to have appropriate Custom Fields license
+- **Always clearly state** the licensing requirements
+
+## Questions?
+
+For questions about code distribution, licensing, or contributing:
+
+- **Email**: <customfieldsnext@gmail.com>
+- **GitHub Issues**: For technical questions and bug reports
+- **Documentation**: Check our comprehensive docs first

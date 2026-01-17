@@ -1,0 +1,114 @@
+# Quickstart
+
+> Get Custom Fields v2 working in your Filament project in under 5 minutes
+
+## Register the Plugin
+
+Add the Custom Fields plugin to your panel:
+
+```php
+use Relaticle\CustomFields\CustomFieldsPlugin;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->plugins([
+            CustomFieldsPlugin::make(),
+        ]);
+}
+```
+
+## Prepare Your Model
+
+Implement the interface and use the trait:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
+use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
+
+class Customer extends Model implements HasCustomFields
+{
+    use UsesCustomFields;
+}
+```
+
+## Add to Your Form
+
+Add custom fields to your resource form:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFields;
+
+public static function form(Schema $schema): Schema
+{
+    return $schema
+        ->components([
+            // Your existing fields...
+            Forms\Components\TextInput::make('name'),
+            Forms\Components\TextInput::make('email'),
+
+            // Add Custom Fields
+            CustomFields::form()->forSchema($schema)
+                                ->build()
+                                ->columnSpanFull()
+        ]);
+}
+```
+
+## Add to Your Table
+
+Display custom fields in your table:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFields;
+
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            // Your existing columns...
+            Tables\Columns\TextColumn::make('name'),
+            Tables\Columns\TextColumn::make('email'),
+
+            // Add custom field columns
+            ...CustomFields::table()
+                ->forModel($table->getModel())
+                ->columns(),
+        ])
+        ->filters([
+            // Add custom field filters
+            ...CustomFields::table()
+                ->forModel($table->getModel())
+                ->filters(),
+        ]);
+}
+```
+
+## Add to Info Lists
+
+For view pages, include custom fields:
+
+```php
+public static function infolist(Schema $schema): Schema
+{
+    return $schema
+        ->components([
+            // Your existing components...
+
+            // Add Custom Fields
+            CustomFields::infolist()
+                ->forSchema($schema)
+                ->build(),
+        ]);
+}
+```
+
+## That's It!
+
+Your resource now has dynamic custom fields! Users can:
+
+- Add new fields through the admin panel
+- Fill out custom fields in forms
+- View and filter by custom fields in tables
+- See custom field values in detail views
