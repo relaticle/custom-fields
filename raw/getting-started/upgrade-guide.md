@@ -2,12 +2,6 @@
 
 > Upgrade Custom Fields from v2 to v3
 
-<alert type="warning">
-
-**Upgrading from v1?** First upgrade to v2 using the [v2 upgrade guide](/custom-fields/v2/getting-started/upgrade-guide), then follow this guide.
-
-</alert>
-
 ## Requirements
 
 Custom Fields v3 requires:

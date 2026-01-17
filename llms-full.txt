@@ -419,16 +419,6 @@ Your resource now has dynamic custom fields! Users can:
 
 # Upgrade Guide
 
-::alert{type="warning"}
-**Upgrading from v1?**
-
- First upgrade to v2 using the 
-
-[v2 upgrade guide](https://relaticle.github.io/custom-fields/custom-fields/v2/getting-started/upgrade-guide)
-
-, then follow this guide.
-::
-
 ## Requirements
 
 Custom Fields v3 requires:
