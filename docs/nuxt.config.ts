@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const baseURL = process.env.NUXT_APP_BASE_URL || '/'
-const docsVersion = process.env.DOCS_VERSION || '3.x'
+const docsVersion = process.env.DOCS_VERSION || '1.x'
 
 export default defineNuxtConfig({
     extends: 'docus',
