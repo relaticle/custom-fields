@@ -21,10 +21,78 @@ Custom Fields v3 requires:
 ```bash
 composer require relaticle/custom-fields:"^3.0" -W
 php artisan migrate
-vendor/bin/custom-fields-upgrade
+php artisan custom-fields:upgrade
 ```
 
 The upgrade command automatically handles data migrations for phone fields, email fields, and lookup fields.
+
+### Command Options
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Option
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        --dry-run
+      </code>
+    </td>
+    
+    <td>
+      Show what would be migrated without making changes
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        --force
+      </code>
+    </td>
+    
+    <td>
+      Run without confirmation prompts
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        --skip=
+      </code>
+    </td>
+    
+    <td>
+      Skip specific steps (comma-separated)
+    </td>
+  </tr>
+</tbody>
+</table>
+
+**Skippable steps**: `lookup-fields`, `email-format`, `phone-format`, `validate-schema`, `clear-caches`
+
+```bash
+# Preview changes without applying them
+php artisan custom-fields:upgrade --dry-run
+
+# Run in CI/CD without prompts
+php artisan custom-fields:upgrade --force
+
+# Skip specific steps
+php artisan custom-fields:upgrade --skip=clear-caches
+php artisan custom-fields:upgrade --skip=email-format,phone-format
+```
 
 ## Breaking Changes
 
@@ -98,23 +166,24 @@ php artisan migrate
 
 The upgrade command performs these steps:
 
-1. **Validate Schema** - Checks database integrity
-2. **Migrate Phone Format** - Converts phone strings to structured JSON
-3. **Migrate Email Format** - Converts email strings to JSON arrays
-4. **Migrate Lookup Fields** - Removes lookup settings from non-record fields
+1. **Migrate Lookup Fields** - Removes lookup settings from non-record fields
+2. **Migrate Email Format** - Converts email strings to JSON arrays
+3. **Migrate Phone Format** - Converts phone strings to structured JSON
+4. **Validate Schema** - Checks database integrity
 5. **Clear Caches** - Clears all relevant caches
 
 ```bash
-vendor/bin/custom-fields-upgrade
+php artisan custom-fields:upgrade
 ```
 
-You can run individual steps if needed:
+You can skip specific steps if needed:
 
 ```bash
-vendor/bin/custom-fields-upgrade --step=migrate-phone-format
-vendor/bin/custom-fields-upgrade --step=migrate-email-format
-vendor/bin/custom-fields-upgrade --step=migrate-lookup-fields
-vendor/bin/custom-fields-upgrade --step=clear-caches
+# Run everything except cache clearing
+php artisan custom-fields:upgrade --skip=clear-caches
+
+# Run only lookup field migration
+php artisan custom-fields:upgrade --skip=email-format,phone-format,validate-schema,clear-caches
 ```
 
 ### 4. Clear Caches
@@ -168,7 +237,7 @@ If you have custom code referencing `lookup_type` on non-record fields, remove t
 - [ ] Verify PHP 8.3+, Laravel 12+, Filament 5+ requirements
 - [ ] Run `composer require relaticle/custom-fields:"^3.0" -W`
 - [ ] Run `php artisan migrate`
-- [ ] Run `vendor/bin/custom-fields-upgrade`
+- [ ] Run `php artisan custom-fields:upgrade` (use `--dry-run` first to preview)
 - [ ] Clear all caches
 - [ ] Test phone and email fields display correctly
 - [ ] Test any custom field type implementations
