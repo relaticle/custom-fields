@@ -12,9 +12,9 @@ Get started with Custom Fields in just a few steps.
 
 ## Requirements
 
-- **PHP**: 8.2 or higher
-- **Laravel**: 11.28 or higher
-- **Filament**: 4.x
+- **PHP**: 8.3 or higher
+- **Laravel**: 12 or higher
+- **Filament**: 5.x
 - **Tailwind CSS**: 4.0 or higher
 
 ## Installation
@@ -70,7 +70,7 @@ php artisan custom-fields:install
 
 You need a custom Filament theme to include the Custom Fields styles.
 
-If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme) first.
+If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
 
 </alert>
 </steps>
@@ -132,7 +132,7 @@ php artisan custom-fields:install
 
 You need a custom Filament theme to include the Custom Fields styles.
 
-If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme) first.
+If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme) first.
 
 </alert>
 

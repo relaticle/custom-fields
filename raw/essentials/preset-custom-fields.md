@@ -24,8 +24,10 @@ The system uses string-based field type identifiers. Here are the available fiel
 
 - `'text'` - Single line text input
 - `'textarea'` - Multi-line text area
-- `'rich_editor'` - Rich text editor
-- `'markdown_editor'` - Markdown editor
+- `'rich-editor'` - Rich text editor
+- `'markdown-editor'` - Markdown editor
+- `'email'` - Email input with validation
+- `'phone'` - Phone number input
 
 ### Numeric Types
 
@@ -35,7 +37,7 @@ The system uses string-based field type identifiers. Here are the available fiel
 ### Date Types
 
 - `'date'` - Date picker
-- `'datetime'` - Date and time picker
+- `'date-time'` - Date and time picker
 
 ### Boolean Types
 
@@ -46,15 +48,17 @@ The system uses string-based field type identifiers. Here are the available fiel
 
 - `'select'` - Dropdown selection
 - `'radio'` - Radio buttons
-- `'multi_select'` - Multiple selection dropdown
-- `'checkbox_list'` - Checkbox list
-- `'toggle_buttons'` - Toggle button group
-- `'tags_input'` - Tag input field
+- `'multi-select'` - Multiple selection dropdown
+- `'checkbox-list'` - Checkbox list
+- `'toggle-buttons'` - Toggle button group
+- `'tags-input'` - Tag input field
 
 ### Other Types
 
-- `'color_picker'` - Color selection
+- `'color-picker'` - Color selection
 - `'link'` - URL input
+- `'file-upload'` - File upload with validation
+- `'record'` - Polymorphic model lookup
 
 ## Creating Fields
 
@@ -126,7 +130,7 @@ $this->migrator->new(
 
 ## Adding Lookup Types
 
-For fields that reference other models, use the `lookupType()` method:
+For fields that reference other models, use the `record` field type with the `lookupType()` method:
 
 ```php
 $this->migrator->new(
@@ -134,7 +138,7 @@ $this->migrator->new(
     fieldData: new CustomFieldData(
         name: 'Sales Representative',
         code: 'sales_rep',
-        type: 'select',
+        type: 'record',
         section: new CustomFieldSectionData(
             name: 'Sales',
             code: 'sales',

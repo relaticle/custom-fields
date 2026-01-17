@@ -435,7 +435,7 @@ Custom Fields includes 20+ pre-configured field types:
     
     <td>
       <code>
-        datetime
+        date-time
       </code>
     </td>
     
@@ -489,6 +489,28 @@ Custom Fields includes 20+ pre-configured field types:
     
     <td>
       File upload with validation
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <strong>
+        Record
+      </strong>
+    </td>
+    
+    <td>
+      <code>
+        record
+      </code>
+    </td>
+    
+    <td>
+      Multi-choice
+    </td>
+    
+    <td>
+      Polymorphic model lookup
     </td>
   </tr>
 </tbody>

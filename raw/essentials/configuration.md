@@ -160,6 +160,54 @@ The package supports these features that can be enabled/disabled:
   <tr>
     <td>
       <code>
+        FIELD_CODE_AUTO_GENERATE
+      </code>
+    </td>
+    
+    <td>
+      Auto-generate field codes from names
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        FIELD_MULTI_VALUE
+      </code>
+    </td>
+    
+    <td>
+      Allow multiple values per field
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        FIELD_UNIQUE_VALUE
+      </code>
+    </td>
+    
+    <td>
+      Enforce unique constraint per entity type
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        FIELD_VALIDATION_RULES
+      </code>
+    </td>
+    
+    <td>
+      Enable validation rule configuration
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
         UI_TABLE_COLUMNS
       </code>
     </td>
@@ -184,12 +232,36 @@ The package supports these features that can be enabled/disabled:
   <tr>
     <td>
       <code>
+        UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT
+      </code>
+    </td>
+    
+    <td>
+      Hide toggleable columns by default
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
         UI_TABLE_FILTERS
       </code>
     </td>
     
     <td>
       Enable filtering by custom field values
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        UI_FIELD_WIDTH_CONTROL
+      </code>
+    </td>
+    
+    <td>
+      Custom field width per field
     </td>
   </tr>
   
@@ -214,6 +286,18 @@ The package supports these features that can be enabled/disabled:
     
     <td>
       Enable multi-tenant isolation
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        SYSTEM_SECTIONS_ENABLED
+      </code>
+    </td>
+    
+    <td>
+      Enable field grouping in sections
     </td>
   </tr>
 </tbody>

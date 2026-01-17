@@ -157,9 +157,9 @@ Get started with Custom Fields in just a few steps.
 
 ## Requirements
 
-- **PHP**: 8.2 or higher
-- **Laravel**: 11.28 or higher
-- **Filament**: 4.x
+- **PHP**: 8.3 or higher
+- **Laravel**: 12 or higher
+- **Filament**: 5.x
 - **Tailwind CSS**: 4.0 or higher
 
 ## Installation
@@ -212,7 +212,7 @@ Choose your installation method based on your license type:
       :::::alert{type="info"}
       You need a custom Filament theme to include the Custom Fields styles.
 
-      If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
+      If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
       :::::
     ::::
   :::
@@ -267,7 +267,7 @@ Your license key will be saved in Composer's auth file for future updates.
     ::::alert{type="info"}
     You need a custom Filament theme to include the Custom Fields styles.
 
-    If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/4.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
+    If you haven't set up a custom theme for Filament, follow the [Filament Docs](https://filamentphp.com/docs/5.x/panels/themes#creating-a-custom-theme){rel=""nofollow""} first.
     ::::
 
   Once you have a custom Filament theme set up, add the plugin's views to your theme CSS file:
@@ -717,16 +717,23 @@ Customize table names and paths:
 
 The package supports these features that can be enabled/disabled:
 
-| Feature                        | Description                             |
-| ------------------------------ | --------------------------------------- |
-| `FIELD_CONDITIONAL_VISIBILITY` | Show/hide fields based on conditions    |
-| `FIELD_ENCRYPTION`             | Encrypt sensitive field values          |
-| `FIELD_OPTION_COLORS`          | Color-coded options for select fields   |
-| `UI_TABLE_COLUMNS`             | Show custom fields as table columns     |
-| `UI_TOGGLEABLE_COLUMNS`        | Allow users to toggle column visibility |
-| `UI_TABLE_FILTERS`             | Enable filtering by custom field values |
-| `SYSTEM_MANAGEMENT_INTERFACE`  | Enable the management interface         |
-| `SYSTEM_MULTI_TENANCY`         | Enable multi-tenant isolation           |
+| Feature                                | Description                               |
+| -------------------------------------- | ----------------------------------------- |
+| `FIELD_CONDITIONAL_VISIBILITY`         | Show/hide fields based on conditions      |
+| `FIELD_ENCRYPTION`                     | Encrypt sensitive field values            |
+| `FIELD_OPTION_COLORS`                  | Color-coded options for select fields     |
+| `FIELD_CODE_AUTO_GENERATE`             | Auto-generate field codes from names      |
+| `FIELD_MULTI_VALUE`                    | Allow multiple values per field           |
+| `FIELD_UNIQUE_VALUE`                   | Enforce unique constraint per entity type |
+| `FIELD_VALIDATION_RULES`               | Enable validation rule configuration      |
+| `UI_TABLE_COLUMNS`                     | Show custom fields as table columns       |
+| `UI_TOGGLEABLE_COLUMNS`                | Allow users to toggle column visibility   |
+| `UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT` | Hide toggleable columns by default        |
+| `UI_TABLE_FILTERS`                     | Enable filtering by custom field values   |
+| `UI_FIELD_WIDTH_CONTROL`               | Custom field width per field              |
+| `SYSTEM_MANAGEMENT_INTERFACE`          | Enable the management interface           |
+| `SYSTEM_MULTI_TENANCY`                 | Enable multi-tenant isolation             |
+| `SYSTEM_SECTIONS_ENABLED`              | Enable field grouping in sections         |
 
 ::alert{type="info"}
 If your custom models include tenant-specific scoping logic, you'll need to register a 
@@ -909,9 +916,10 @@ Custom Fields includes 20+ pre-configured field types:
 | **Toggle**          | `toggle`          | Boolean       | Switch-style toggle                     |
 | **Toggle Buttons**  | `toggle-buttons`  | Single-choice | Button group selection                  |
 | **Date**            | `date`            | Date          | Date picker                             |
-| **Date Time**       | `datetime`        | DateTime      | Date and time picker                    |
+| **Date Time**       | `date-time`       | DateTime      | Date and time picker                    |
 | **Color Picker**    | `color-picker`    | String        | Visual color selection                  |
 | **File Upload**     | `file-upload`     | String        | File upload with validation             |
+| **Record**          | `record`          | Multi-choice  | Polymorphic model lookup                |
 
 ## Creating Custom Field Types
 
@@ -1236,8 +1244,10 @@ The system uses string-based field type identifiers. Here are the available fiel
 
 - `'text'` - Single line text input
 - `'textarea'` - Multi-line text area
-- `'rich_editor'` - Rich text editor
-- `'markdown_editor'` - Markdown editor
+- `'rich-editor'` - Rich text editor
+- `'markdown-editor'` - Markdown editor
+- `'email'` - Email input with validation
+- `'phone'` - Phone number input
 
 ### Numeric Types
 
@@ -1247,7 +1257,7 @@ The system uses string-based field type identifiers. Here are the available fiel
 ### Date Types
 
 - `'date'` - Date picker
-- `'datetime'` - Date and time picker
+- `'date-time'` - Date and time picker
 
 ### Boolean Types
 
@@ -1258,15 +1268,17 @@ The system uses string-based field type identifiers. Here are the available fiel
 
 - `'select'` - Dropdown selection
 - `'radio'` - Radio buttons
-- `'multi_select'` - Multiple selection dropdown
-- `'checkbox_list'` - Checkbox list
-- `'toggle_buttons'` - Toggle button group
-- `'tags_input'` - Tag input field
+- `'multi-select'` - Multiple selection dropdown
+- `'checkbox-list'` - Checkbox list
+- `'toggle-buttons'` - Toggle button group
+- `'tags-input'` - Tag input field
 
 ### Other Types
 
-- `'color_picker'` - Color selection
+- `'color-picker'` - Color selection
 - `'link'` - URL input
+- `'file-upload'` - File upload with validation
+- `'record'` - Polymorphic model lookup
 
 ## Creating Fields
 
@@ -1338,7 +1350,7 @@ $this->migrator->new(
 
 ## Adding Lookup Types
 
-For fields that reference other models, use the `lookupType()` method:
+For fields that reference other models, use the `record` field type with the `lookupType()` method:
 
 ```php
 $this->migrator->new(
@@ -1346,7 +1358,7 @@ $this->migrator->new(
     fieldData: new CustomFieldData(
         name: 'Sales Representative',
         code: 'sales_rep',
-        type: 'select',
+        type: 'record',
         section: new CustomFieldSectionData(
             name: 'Sales',
             code: 'sales',
