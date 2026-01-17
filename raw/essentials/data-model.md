@@ -6,78 +6,933 @@
 
 The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Type Polymorphism** design that balances flexibility with performance. Unlike traditional EAV models that suffer from type conversion overhead and poor query performance, this architecture uses typed storage columns and strategic indexing to maintain database-level optimizations while enabling dynamic field creation.
 
-```mermaid
-erDiagram
-    ENTITIES ||--o{ CUSTOM_FIELD_SECTIONS : "has sections for"
-    CUSTOM_FIELD_SECTIONS ||--o{ CUSTOM_FIELDS : contains
-    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_OPTIONS : "can have options"
-    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_VALUES : "stores values in"
-    ENTITIES ||--o{ CUSTOM_FIELD_VALUES : "has values via polymorphic"
+### Entity Relationships
 
-    CUSTOM_FIELD_SECTIONS {
-        bigint id PK
-        string entity_type
-        string code UK
-        string name
-        string type
-        string width
-        int sort_order
-        bool active
-        bool system_defined
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+<table>
+<thead>
+  <tr>
+    <th>
+      Parent
+    </th>
+    
+    <th>
+      Relationship
+    </th>
+    
+    <th>
+      Child
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
 
-    CUSTOM_FIELDS {
-        bigint id PK
-        bigint custom_field_section_id FK
-        string entity_type
-        string code UK
-        string name
-        string type
-        string lookup_type
-        string width
-        int sort_order
-        json validation_rules
-        bool active
-        bool system_defined
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+<tbody>
+  <tr>
+    <td>
+      Entity (polymorphic)
+    </td>
+    
+    <td>
+      one-to-many
+    </td>
+    
+    <td>
+      <code>
+        custom_field_sections
+      </code>
+    </td>
+    
+    <td>
+      Each entity type has its own sections
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_field_sections
+      </code>
+    </td>
+    
+    <td>
+      one-to-many
+    </td>
+    
+    <td>
+      <code>
+        custom_fields
+      </code>
+    </td>
+    
+    <td>
+      Sections contain field definitions
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_fields
+      </code>
+    </td>
+    
+    <td>
+      one-to-many
+    </td>
+    
+    <td>
+      <code>
+        custom_field_options
+      </code>
+    </td>
+    
+    <td>
+      Select/checkbox fields have options
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_fields
+      </code>
+    </td>
+    
+    <td>
+      one-to-many
+    </td>
+    
+    <td>
+      <code>
+        custom_field_values
+      </code>
+    </td>
+    
+    <td>
+      Fields store values per entity instance
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Entity (polymorphic)
+    </td>
+    
+    <td>
+      one-to-many
+    </td>
+    
+    <td>
+      <code>
+        custom_field_values
+      </code>
+    </td>
+    
+    <td>
+      Entity instances have field values
+    </td>
+  </tr>
+</tbody>
+</table>
 
-    CUSTOM_FIELD_OPTIONS {
-        bigint id PK
-        bigint custom_field_id FK
-        string name
-        int sort_order
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+### Table Schemas
 
-    CUSTOM_FIELD_VALUES {
-        bigint id PK
-        string entity_type
-        bigint entity_id
-        bigint custom_field_id FK
-        string string_value
-        text text_value
-        bool boolean_value
-        bigint integer_value
-        double float_value
-        date date_value
-        datetime datetime_value
-        json json_value
-        bigint tenant_id FK "optional"
-    }
+<tabs>
+<tab label="Sections">
+<table>
+<thead>
+  <tr>
+    <th>
+      Column
+    </th>
+    
+    <th>
+      Type
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
 
-    ENTITIES {
-        bigint id PK
-        string type "polymorphic identifier"
-    }
-```
+<tbody>
+  <tr>
+    <td>
+      <code>
+        id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Primary key
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        entity_type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Polymorphic entity class
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        code
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Unique identifier
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        name
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Display name
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Section type
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        width
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Layout width
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        sort_order
+      </code>
+    </td>
+    
+    <td>
+      int
+    </td>
+    
+    <td>
+      Display order
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        active
+      </code>
+    </td>
+    
+    <td>
+      bool
+    </td>
+    
+    <td>
+      Enabled flag
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        system_defined
+      </code>
+    </td>
+    
+    <td>
+      bool
+    </td>
+    
+    <td>
+      Protected from user deletion
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        settings
+      </code>
+    </td>
+    
+    <td>
+      json
+    </td>
+    
+    <td>
+      Additional configuration
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        tenant_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Optional multi-tenancy
+    </td>
+  </tr>
+</tbody>
+</table>
+</tab>
+
+<tab label="Fields">
+<table>
+<thead>
+  <tr>
+    <th>
+      Column
+    </th>
+    
+    <th>
+      Type
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Primary key
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_field_section_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Parent section
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        entity_type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Polymorphic entity class
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        code
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Unique identifier
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        name
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Display name
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Field type (text, number, etc.)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        lookup_type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      For lookup fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        width
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Layout width
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        sort_order
+      </code>
+    </td>
+    
+    <td>
+      int
+    </td>
+    
+    <td>
+      Display order
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        validation_rules
+      </code>
+    </td>
+    
+    <td>
+      json
+    </td>
+    
+    <td>
+      Laravel validation rules
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        active
+      </code>
+    </td>
+    
+    <td>
+      bool
+    </td>
+    
+    <td>
+      Enabled flag
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        system_defined
+      </code>
+    </td>
+    
+    <td>
+      bool
+    </td>
+    
+    <td>
+      Protected from user deletion
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        settings
+      </code>
+    </td>
+    
+    <td>
+      json
+    </td>
+    
+    <td>
+      Type-specific configuration
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        tenant_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Optional multi-tenancy
+    </td>
+  </tr>
+</tbody>
+</table>
+</tab>
+
+<tab label="Options">
+<table>
+<thead>
+  <tr>
+    <th>
+      Column
+    </th>
+    
+    <th>
+      Type
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Primary key
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_field_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Parent field
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        name
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Option label
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        sort_order
+      </code>
+    </td>
+    
+    <td>
+      int
+    </td>
+    
+    <td>
+      Display order
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        settings
+      </code>
+    </td>
+    
+    <td>
+      json
+    </td>
+    
+    <td>
+      Additional configuration
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        tenant_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Optional multi-tenancy
+    </td>
+  </tr>
+</tbody>
+</table>
+</tab>
+
+<tab label="Values">
+<table>
+<thead>
+  <tr>
+    <th>
+      Column
+    </th>
+    
+    <th>
+      Type
+    </th>
+    
+    <th>
+      Description
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Primary key
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        entity_type
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      Polymorphic entity class
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        entity_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Polymorphic entity ID
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        custom_field_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Field definition
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        string_value
+      </code>
+    </td>
+    
+    <td>
+      string
+    </td>
+    
+    <td>
+      For text fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        text_value
+      </code>
+    </td>
+    
+    <td>
+      text
+    </td>
+    
+    <td>
+      For textarea fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        boolean_value
+      </code>
+    </td>
+    
+    <td>
+      bool
+    </td>
+    
+    <td>
+      For checkbox fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        integer_value
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      For integer fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        float_value
+      </code>
+    </td>
+    
+    <td>
+      double
+    </td>
+    
+    <td>
+      For decimal fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        date_value
+      </code>
+    </td>
+    
+    <td>
+      date
+    </td>
+    
+    <td>
+      For date fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        datetime_value
+      </code>
+    </td>
+    
+    <td>
+      datetime
+    </td>
+    
+    <td>
+      For datetime fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        json_value
+      </code>
+    </td>
+    
+    <td>
+      json
+    </td>
+    
+    <td>
+      For complex/array fields
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        tenant_id
+      </code>
+    </td>
+    
+    <td>
+      bigint
+    </td>
+    
+    <td>
+      Optional multi-tenancy
+    </td>
+  </tr>
+</tbody>
+</table>
+</tab>
+</tabs>
 
 ## Design Philosophy
 

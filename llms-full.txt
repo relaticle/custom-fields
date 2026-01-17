@@ -1638,78 +1638,83 @@ class ProductExporter extends Exporter
 
 The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Type Polymorphism** design that balances flexibility with performance. Unlike traditional EAV models that suffer from type conversion overhead and poor query performance, this architecture uses typed storage columns and strategic indexing to maintain database-level optimizations while enabling dynamic field creation.
 
-```mermaid
-erDiagram
-    ENTITIES ||--o{ CUSTOM_FIELD_SECTIONS : "has sections for"
-    CUSTOM_FIELD_SECTIONS ||--o{ CUSTOM_FIELDS : contains
-    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_OPTIONS : "can have options"
-    CUSTOM_FIELDS ||--o{ CUSTOM_FIELD_VALUES : "stores values in"
-    ENTITIES ||--o{ CUSTOM_FIELD_VALUES : "has values via polymorphic"
+### Entity Relationships
 
-    CUSTOM_FIELD_SECTIONS {
-        bigint id PK
-        string entity_type
-        string code UK
-        string name
-        string type
-        string width
-        int sort_order
-        bool active
-        bool system_defined
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+| Parent                  | Relationship | Child                   | Description                             |
+| ----------------------- | ------------ | ----------------------- | --------------------------------------- |
+| Entity (polymorphic)    | one-to-many  | `custom_field_sections` | Each entity type has its own sections   |
+| `custom_field_sections` | one-to-many  | `custom_fields`         | Sections contain field definitions      |
+| `custom_fields`         | one-to-many  | `custom_field_options`  | Select/checkbox fields have options     |
+| `custom_fields`         | one-to-many  | `custom_field_values`   | Fields store values per entity instance |
+| Entity (polymorphic)    | one-to-many  | `custom_field_values`   | Entity instances have field values      |
 
-    CUSTOM_FIELDS {
-        bigint id PK
-        bigint custom_field_section_id FK
-        string entity_type
-        string code UK
-        string name
-        string type
-        string lookup_type
-        string width
-        int sort_order
-        json validation_rules
-        bool active
-        bool system_defined
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+### Table Schemas
 
-    CUSTOM_FIELD_OPTIONS {
-        bigint id PK
-        bigint custom_field_id FK
-        string name
-        int sort_order
-        json settings
-        bigint tenant_id FK "optional"
-        timestamps created_updated
-    }
+::tabs
+  :::tab{label="Sections"}
+  | Column           | Type   | Description                  |
+  | ---------------- | ------ | ---------------------------- |
+  | `id`             | bigint | Primary key                  |
+  | `entity_type`    | string | Polymorphic entity class     |
+  | `code`           | string | Unique identifier            |
+  | `name`           | string | Display name                 |
+  | `type`           | string | Section type                 |
+  | `width`          | string | Layout width                 |
+  | `sort_order`     | int    | Display order                |
+  | `active`         | bool   | Enabled flag                 |
+  | `system_defined` | bool   | Protected from user deletion |
+  | `settings`       | json   | Additional configuration     |
+  | `tenant_id`      | bigint | Optional multi-tenancy       |
+  :::
 
-    CUSTOM_FIELD_VALUES {
-        bigint id PK
-        string entity_type
-        bigint entity_id
-        bigint custom_field_id FK
-        string string_value
-        text text_value
-        bool boolean_value
-        bigint integer_value
-        double float_value
-        date date_value
-        datetime datetime_value
-        json json_value
-        bigint tenant_id FK "optional"
-    }
+  :::tab{label="Fields"}
+  | Column                    | Type   | Description                     |
+  | ------------------------- | ------ | ------------------------------- |
+  | `id`                      | bigint | Primary key                     |
+  | `custom_field_section_id` | bigint | Parent section                  |
+  | `entity_type`             | string | Polymorphic entity class        |
+  | `code`                    | string | Unique identifier               |
+  | `name`                    | string | Display name                    |
+  | `type`                    | string | Field type (text, number, etc.) |
+  | `lookup_type`             | string | For lookup fields               |
+  | `width`                   | string | Layout width                    |
+  | `sort_order`              | int    | Display order                   |
+  | `validation_rules`        | json   | Laravel validation rules        |
+  | `active`                  | bool   | Enabled flag                    |
+  | `system_defined`          | bool   | Protected from user deletion    |
+  | `settings`                | json   | Type-specific configuration     |
+  | `tenant_id`               | bigint | Optional multi-tenancy          |
+  :::
 
-    ENTITIES {
-        bigint id PK
-        string type "polymorphic identifier"
-    }
-```
+  :::tab{label="Options"}
+  | Column            | Type   | Description              |
+  | ----------------- | ------ | ------------------------ |
+  | `id`              | bigint | Primary key              |
+  | `custom_field_id` | bigint | Parent field             |
+  | `name`            | string | Option label             |
+  | `sort_order`      | int    | Display order            |
+  | `settings`        | json   | Additional configuration |
+  | `tenant_id`       | bigint | Optional multi-tenancy   |
+  :::
+
+  :::tab{label="Values"}
+  | Column            | Type     | Description              |
+  | ----------------- | -------- | ------------------------ |
+  | `id`              | bigint   | Primary key              |
+  | `entity_type`     | string   | Polymorphic entity class |
+  | `entity_id`       | bigint   | Polymorphic entity ID    |
+  | `custom_field_id` | bigint   | Field definition         |
+  | `string_value`    | string   | For text fields          |
+  | `text_value`      | text     | For textarea fields      |
+  | `boolean_value`   | bool     | For checkbox fields      |
+  | `integer_value`   | bigint   | For integer fields       |
+  | `float_value`     | double   | For decimal fields       |
+  | `date_value`      | date     | For date fields          |
+  | `datetime_value`  | datetime | For datetime fields      |
+  | `json_value`      | json     | For complex/array fields |
+  | `tenant_id`       | bigint   | Optional multi-tenancy   |
+  :::
+::
 
 ## Design Philosophy
 
