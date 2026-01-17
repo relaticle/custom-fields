@@ -1,273 +1,123 @@
 # Upgrade Guide
 
-> Learn how to upgrade your Custom Fields from version 2 to version 3
+> Upgrade Custom Fields from v2 to v3
 
-<alert type="info">
+<alert type="warning">
 
-Custom Fields v3 builds on the fluent builder API introduced in v2.
+**Upgrading from v1?** First upgrade to v2 using the [v2 upgrade guide](/custom-fields/v2/getting-started/upgrade-guide), then follow this guide.
 
 </alert>
 
-## Quick Upgrade
+## Requirements
 
-The easiest way to upgrade is using the built-in upgrade command:
+Custom Fields v3 requires:
+
+- **PHP** 8.3+
+- **Laravel** 12+
+- **Filament** 5.0+
+
+## Quick Upgrade
 
 ```bash
 composer require relaticle/custom-fields:"^3.0" -W
+php artisan migrate
 vendor/bin/custom-fields-upgrade
 ```
 
-This command handles all necessary migrations and cache clearing automatically.
+The upgrade command automatically handles data migrations for phone fields, email fields, and lookup fields.
+
+## Breaking Changes
+
+### High Impact
+
+#### Filament 5 Required
+
+Custom Fields v3 requires Filament 5. If you're still on Filament 4, upgrade Filament first following the [Filament upgrade guide](https://filamentphp.com/docs/5.x/upgrade-guide).
+
+#### Lookup Fields Removed from Non-Record Types
+
+The `lookup_type` setting has been removed from field types that don't support entity lookups. The upgrade command migrates affected fields automatically.
+
+**Affected field types**: Text, Textarea, Number, Date, DateTime, Email, Phone, and other non-relational types.
+
+If you were using `lookup_type` on these fields, they will be converted to standard fields.
+
+### Medium Impact
+
+#### Phone Field Format Changed
+
+Phone fields now store structured data with country codes:
+
+```php
+// v2 format (string)
+"+1234567890"
+
+// v3 format (JSON)
+{"country": "US", "number": "1234567890", "formatted": "+1 (234) 567-890"}
+```
+
+The upgrade command migrates existing phone values automatically.
+
+#### Email Field Format Changed
+
+Email fields now support multiple values stored as JSON:
+
+```php
+// v2 format (string)
+"user@example.com"
+
+// v3 format (JSON array)
+["user@example.com"]
+```
+
+The upgrade command migrates existing email values automatically.
+
+### Low Impact
+
+#### New Phone Validation Package
+
+v3 adds `propaganistas/laravel-phone` for phone validation. This is installed automatically with composer.
 
 ## Manual Upgrade Steps
 
-### 1. Update Composer
+If you prefer manual control over the upgrade process:
 
-Update your `composer.json` to require v3:
-
-```json
-{
-    "require": {
-        "relaticle/custom-fields": "^3.0"
-    }
-}
-```
-
-Then run:
+### 1. Update Dependencies
 
 ```bash
-composer update relaticle/custom-fields
+composer require relaticle/custom-fields:"^3.0" -W
 ```
 
-### 2. Database Changes
-
-Custom Fields v3 may add new columns to existing tables. The upgrade command handles this automatically. Run any pending migrations:
+### 2. Run Migrations
 
 ```bash
 php artisan migrate
 ```
 
-### 3. Update Your Code
+### 3. Run Upgrade Command
 
-If upgrading from v1, the main change is the move from component-based integration to a fluent builder API.
+The upgrade command performs these steps:
 
-#### Filament Resources - Forms
+1. **Validate Schema** - Checks database integrity
+2. **Migrate Phone Format** - Converts phone strings to structured JSON
+3. **Migrate Email Format** - Converts email strings to JSON arrays
+4. **Migrate Lookup Fields** - Removes lookup settings from non-record fields
+5. **Clear Caches** - Clears all relevant caches
 
-<tabs>
-<tab label="v1">
-
-```php
-// Old v1 syntax
-use Relaticle\CustomFields\Filament\Forms\Components\CustomFieldsComponent;
-use Filament\Forms\Form;
-
-public static function form(Form $form): Form
-{
-    return $form
-    ->schema([
-    // Your fields
-    TextInput::make('name'),
-    TextInput::make('price'),
-
-    // Custom fields component
-    CustomFieldsComponent::make(),
-    ]);
-}
+```bash
+vendor/bin/custom-fields-upgrade
 ```
 
-</tab>
+You can run individual steps if needed:
 
-<tab label="v2/v3">
-
-```php
-// New v2/v3 syntax
-use Relaticle\CustomFields\Facades\CustomFields;
-use Filament\Forms\Form;
-
-public static function form(Form $form): Form
-{
-    return $form
-    ->schema([
-    // Your fields
-    TextInput::make('name'),
-    TextInput::make('price'),
-
-    // Custom fields using builder
-    CustomFields::form()
-    ->forModel($form->getRecord())
-    ->build(),
-    ]);
-}
+```bash
+vendor/bin/custom-fields-upgrade --step=migrate-phone-format
+vendor/bin/custom-fields-upgrade --step=migrate-email-format
+vendor/bin/custom-fields-upgrade --step=migrate-lookup-fields
+vendor/bin/custom-fields-upgrade --step=clear-caches
 ```
 
-</tab>
-</tabs>
-
-#### Filament Resources - Tables
-
-<tabs>
-<tab label="v1">
-
-```php
-// Old v1 syntax
-use Relaticle\CustomFields\Filament\Tables\Concerns\InteractsWithCustomFields;
-use Filament\Resources\Pages\ListRecords;
-
-class ListProducts extends ListRecords
-{
-    use InteractsWithCustomFields;
-
-    // Custom fields are automatically added
-}
-```
-
-</tab>
-
-<tab label="v2/v3 - Builder API (Recommended)">
-
-```php
-// New v2/v3 syntax - Direct integration in Resource
-use Relaticle\CustomFields\Facades\CustomFields;
-use Filament\Tables\Table;
-
-public static function table(Table $table): Table
-{
-    return $table
-    ->columns([
-    // Your columns
-    TextColumn::make('name'),
-    TextColumn::make('price'),
-
-    // Custom field columns (spread operator required)
-    ...CustomFields::table()
-    ->forModel($table->getModel())
-    ->columns(),
-    ])
-    ->filters([
-    // Custom field filters (optional, spread operator required)
-    ...CustomFields::table()
-    ->forModel($table->getModel())
-    ->filters(),
-    ]);
-}
-```
-
-</tab>
-
-<tab label="v2/v3 - Trait (Still Works)">
-
-```php
-// v2/v3 with trait - Just update the namespace
-use Relaticle\CustomFields\Concerns\InteractsWithCustomFields;
-use Filament\Resources\Pages\ListRecords;
-
-class ListProducts extends ListRecords
-{
-    use InteractsWithCustomFields;
-
-    // Custom fields are automatically added
-}
-```
-
-</tab>
-</tabs>
-
-#### Filament Resources - Infolists
-
-<tabs>
-<tab label="v1">
-
-```php
-// Old v1 syntax - Using CustomFieldsInfolists component
-use Relaticle\CustomFields\Filament\Infolists\CustomFieldsInfolists;
-use Filament\Infolists\Infolist;
-
-public static function infolist(Infolist $infolist): Infolist
-{
-    return $infolist
-    ->schema([
-    // Your entries
-    TextEntry::make('name'),
-    TextEntry::make('price'),
-
-    // Custom fields component
-    CustomFieldsInfolists::make()
-    ->columnSpanFull(),
-    ]);
-}
-```
-
-</tab>
-
-<tab label="v2/v3">
-
-```php
-// New v2/v3 syntax - Using builder API
-use Relaticle\CustomFields\Facades\CustomFields;
-use Filament\Infolists\Infolist;
-
-public static function infolist(Infolist $infolist): Infolist
-{
-    return $infolist
-    ->schema([
-    // Your entries
-    TextEntry::make('name'),
-    TextEntry::make('price'),
-
-    // Custom field entries using builder
-    CustomFields::infolist()
-    ->forModel($infolist->getRecord())
-    ->build(),
-
-    // Or get raw components with values()
-    ...CustomFields::infolist()
-    ->forModel($infolist->getRecord())
-    ->values(),
-    ]);
-}
-```
-
-</tab>
-</tabs>
-
-### 4. Configuration Updates (Required)
-
-Custom Fields v3 uses improved field type management using fluent configurators. Update your `config/custom-fields.php`:
-
-```php
-'field_type_configuration' => FieldTypeConfigurator::configure()
-    ->enabled([])                   // Empty = all enabled
-    ->disabled(['rich-editor'])     // Disable specific field types
-    ->discover(true)
-    ->cache(enabled: false, ttl: 3400),
-```
-
-### 5. Field Type Architecture
-
-Custom Fields v3 uses `BaseFieldType` with `FieldSchema` for cleaner field type definitions. If you have custom field types, update them:
-
-- **Base Class**: Extend `BaseFieldType` (instead of implementing interface directly)
-- **Configuration**: Return `FieldSchema` from `configure()` method
-- **Benefits**: Less boilerplate, better type safety, cleaner API
-
-```php
-class CustomFieldType extends BaseFieldType
-{
-    public function configure(): FieldSchema
-    {
-        return FieldSchema::string()
-            ->key('custom-field')
-            ->label('Custom Field')
-            ->icon('heroicon-o-star')
-            ->formComponent(TextInput::class)
-            ->priority(50);
-    }
-}
-```
-
-### 6. Final Steps
-
-After updating your code, clear all caches:
+### 4. Clear Caches
 
 ```bash
 php artisan cache:clear
@@ -276,113 +126,49 @@ php artisan view:clear
 php artisan filament:cache-components
 ```
 
-## Fluent Builder API
-
-The builder API provides more control and flexibility:
-
-```php
-// Forms - returns a single component
-CustomFields::form()
-    ->forModel($record)
-    ->except(['field_code']) // Exclude specific fields
-    ->only(['field_code']) // Include only specific fields
-    ->build()
-
-// Tables - returns collections
-CustomFields::table()
-    ->forModel(Product::class)
-    ->columns() // Returns column collection
-
-// Filters
-CustomFields::table()
-    ->forModel(Product::class)
-    ->filters() // Returns filter collection
-
-// Infolists - flexible output
-CustomFields::infolist()
-    ->forModel($record)
-    ->build() // Returns single Grid component
-    // OR
-    ->values() // Returns collection of components
-```
-
 ## Troubleshooting
 
 <accordion>
-<accordion-item label="Class 'CustomFieldsComponent' not found">
+<accordion-item label="Phone fields showing raw JSON">
 
-Replace with the new builder API:
+Clear your views and Filament component cache:
 
-```php
-// Old
-CustomFieldsComponent::make()
-
-// New
-CustomFields::form()
-->forModel($form->getRecord())
-->build()
+```bash
+php artisan view:clear
+php artisan filament:cache-components
 ```
 
 </accordion-item>
 
-<accordion-item label="Trait 'InteractsWithCustomFields' not found">
+<accordion-item label="Upgrade command fails on phone migration">
 
-The trait has moved to a new namespace:
+Check for invalid phone numbers in your database:
 
-```php
-// Old namespace
-use Relaticle\CustomFields\Filament\Tables\Concerns\InteractsWithCustomFields;
-
-// New namespace (still works!)
-use Relaticle\CustomFields\Concerns\InteractsWithCustomFields;
-
-// Or migrate to builder API for more control
-...CustomFields::table()
-->forModel($table->getModel())
-->columns()
+```sql
+SELECT * FROM custom_field_values
+WHERE custom_field_id IN (
+  SELECT id FROM custom_fields WHERE type = 'phone'
+) AND text_value IS NOT NULL;
 ```
+
+Invalid numbers are preserved as-is with a default country code.
 
 </accordion-item>
 
-<accordion-item label="Custom fields not appearing">
+<accordion-item label="Missing lookup_type errors">
 
-Check these common issues:
-
-- Model must implement `HasCustomFields` and use `UsesCustomFields` trait
-- Use `forModel()` not `forResource()` in builders
-- Clear caches after upgrading
-- Verify custom fields exist in database
-
-</accordion-item>
-
-<accordion-item label="Table columns or filters missing">
-
-Remember to use spread operator and call the right methods:
-
-```php
-->columns([
-// Your columns
-...CustomFields::table()
-->forModel($table->getModel())
-->columns(), // Note: columns() not build()
-])
-->filters([
-// Your filters
-...CustomFields::table()
-->forModel($table->getModel())
-->filters(), // Note: filters() not build()
-])
-```
+If you have custom code referencing `lookup_type` on non-record fields, remove those references. Only the `record` field type supports lookups in v3.
 
 </accordion-item>
 </accordion>
 
 ## Migration Checklist
 
-- [ ] Backup your application
+- [ ] Backup your database
+- [ ] Verify PHP 8.3+, Laravel 12+, Filament 5+ requirements
 - [ ] Run `composer require relaticle/custom-fields:"^3.0" -W`
+- [ ] Run `php artisan migrate`
 - [ ] Run `vendor/bin/custom-fields-upgrade`
-- [ ] Update forms: `CustomFieldsComponent::make()` → `CustomFields::form()->forSchema($schema)->build()`
-- [ ] Update tables: Either update `InteractsWithCustomFields` namespace OR migrate to `...CustomFields::table()->forModel($model)->columns()`
-- [ ] Update infolists: `CustomFieldsInfolists::make()` → `CustomFields::infolist()->forModel($model)->build()`
-- [ ] Clear caches and test thoroughly
+- [ ] Clear all caches
+- [ ] Test phone and email fields display correctly
+- [ ] Test any custom field type implementations
