@@ -479,14 +479,14 @@ If you were using `lookup_type` on these fields, they will be converted to stand
 
 #### Phone Field Format Changed
 
-Phone fields now store structured data with country codes:
+Phone fields now store values as JSON arrays of E.164 strings (supporting multiple phone numbers):
 
 ```php
-// v2 format (string)
-"+1234567890"
+// v2 format (single string in string_value column)
+"+11234567890"
 
-// v3 format (JSON)
-{"country": "US", "number": "1234567890", "formatted": "+1 (234) 567-890"}
+// v3 format (JSON array in json_value column)
+["+11234567890"]
 ```
 
 The upgrade command migrates existing phone values automatically.
