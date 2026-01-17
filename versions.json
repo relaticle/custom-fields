@@ -1,0 +1,5 @@
+[
+  {"version": "3.x", "title": "v3 (Latest)", "path": "/custom-fields/", "branch": "3.x", "isLatest": true},
+  {"version": "2.x", "title": "v2", "path": "/custom-fields/v2/", "branch": "2.x", "isLatest": false},
+  {"version": "1.x", "title": "v1", "path": "/custom-fields/v1/", "branch": "1.x", "isLatest": false}
+]
