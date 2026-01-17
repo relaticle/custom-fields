@@ -1,0 +1,24 @@
+# Custom Fields
+
+## Documentation Sets
+
+- [Custom Fields](https://relaticle.github.io/custom-fields/v1/llms-full.txt)
+
+## Landing
+
+- [Custom Fields - Dynamic Fields Without Migrations](https://relaticle.github.io/custom-fields/v1): Add dynamic custom fields to your Filament admin panels without writing database migrations. Perfect for multi-tenant SaaS and admin panels.
+
+## Docs
+
+- [Installation](https://relaticle.github.io/custom-fields/v1/getting-started/installation): Get started with Custom Fields in just a few steps
+- [Quickstart](https://relaticle.github.io/custom-fields/v1/getting-started/quickstart): Get Custom Fields working in your Filament project in under 5 minutes
+- [Configuration](https://relaticle.github.io/custom-fields/v1/essentials/configuration): Configure all aspects of the Custom Fields package
+- [Authorization](https://relaticle.github.io/custom-fields/v1/essentials/authorization): Control access to the Custom Fields management interface
+- [Field Types](https://relaticle.github.io/custom-fields/v1/essentials/field-types): Built-in field types and how to create custom ones
+- [Preset Custom Fields](https://relaticle.github.io/custom-fields/v1/essentials/preset-custom-fields): Programmatically define and deploy custom fields using migrations
+- [Import/Export](https://relaticle.github.io/custom-fields/v1/essentials/import-export): Learn how to import and export custom field data with import/export actions
+- [Data Model](https://relaticle.github.io/custom-fields/v1/essentials/data-model): Understanding the Custom Fields database architecture
+- [Support](https://relaticle.github.io/custom-fields/v1/community/support): Get help with Custom Fields
+- [Contributing](https://relaticle.github.io/custom-fields/v1/community/contributing): How to contribute to Custom Fields
+- [License](https://relaticle.github.io/custom-fields/v1/community/license): Dual licensing model - AGPL-3.0 for open source, commercial for private use
+- [Code Distribution](https://relaticle.github.io/custom-fields/v1/community/code-distribution): Guidelines for distributing Custom Fields code
