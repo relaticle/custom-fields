@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const baseURL = process.env.NUXT_APP_BASE_URL || '/'
-const docsVersion = process.env.DOCS_VERSION || 'v3'
+const docsVersion = process.env.DOCS_VERSION || '3.x'
 
 export default defineNuxtConfig({
     extends: 'docus',
@@ -8,6 +8,11 @@ export default defineNuxtConfig({
     devtools: { enabled: true },
     site: {
         name: 'Custom Fields',
+    },
+    runtimeConfig: {
+        public: {
+            docsVersion,
+        },
     },
     appConfig: {
         docus: {
@@ -24,15 +29,7 @@ export default defineNuxtConfig({
             ogImage: `${baseURL}preview.png`,
         },
         github: {
-            branch: docsVersion === 'v3' ? '3.x' : docsVersion === 'v2' ? '2.x' : '1.x',
-        },
-        versioning: {
-            current: docsVersion,
-            versions: [
-                { label: 'v3 (Latest)', value: 'v3', path: '/custom-fields/' },
-                { label: 'v2', value: 'v2', path: '/custom-fields/v2/' },
-                { label: 'v1', value: 'v1', path: '/custom-fields/v1/' },
-            ],
+            branch: docsVersion,
         },
     },
     app: {
