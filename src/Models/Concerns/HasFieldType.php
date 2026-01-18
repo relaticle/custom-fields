@@ -21,6 +21,11 @@ trait HasFieldType
         return $this->typeData->dataType === FieldDataType::DATE;
     }
 
+    public function isDateTimeField(): bool
+    {
+        return $this->typeData->dataType === FieldDataType::DATE_TIME;
+    }
+
     public function isFilterable(): bool
     {
         return $this->typeData->filterable === true;
