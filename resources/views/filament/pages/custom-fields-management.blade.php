@@ -8,7 +8,25 @@
         @endforeach
     </x-filament::tabs>
 
-    <div class="custom-fields-component">
+    <div class="custom-fields-component"
+         x-data="{
+            handleDropdownClick(e) {
+                if (!this.$el.contains(e.target)) return;
+
+                const trigger = e.target.closest('.fi-dropdown-trigger');
+                if (!trigger) return;
+
+                this.$el.querySelectorAll('.fi-dropdown').forEach(dropdown => {
+                    if (!dropdown.contains(trigger)) {
+                        const panel = dropdown.querySelector('[x-ref=panel]');
+                        if (panel && typeof panel.close === 'function') {
+                            panel.close();
+                        }
+                    }
+                });
+            }
+         }"
+         @mousedown.window="handleDropdownClick($event)">
         <div
             x-sortable
             wire:end.stop="updateSectionsOrder($event.target.sortable.toArray())"
