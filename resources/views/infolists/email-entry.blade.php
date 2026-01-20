@@ -12,13 +12,22 @@
                 event.stopPropagation();
                 window.navigator.clipboard.writeText(text);
                 this.copiedIndex = index;
+                this.announceToScreenReader('Copied ' + text + ' to clipboard');
                 setTimeout(() => {
                     this.copiedIndex = null;
                 }, 2000);
+            },
+            announceToScreenReader(message) {
+                if (this.$refs.announcer) {
+                    this.$refs.announcer.textContent = message;
+                }
             }
         }"
         class="flex flex-wrap gap-x-3 gap-y-1"
     >
+        {{-- Screen reader live region --}}
+        <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
         @forelse ($entries as $index => $entry)
             @if (!empty($entry))
                 <div class="group relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors max-w-full">
@@ -32,7 +41,8 @@
                     <button
                         type="button"
                         x-on:click="copyToClipboard(@js($entry), {{ $index }}, $event)"
-                        class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-800/0 dark:via-gray-800/70 dark:to-gray-800"
+                        aria-label="Copy {{ $entry }} to clipboard"
+                        class="absolute right-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-800/0 dark:via-gray-800/70 dark:to-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                     >
                         <x-heroicon-m-clipboard-document
                             x-show="copiedIndex !== {{ $index }}"
