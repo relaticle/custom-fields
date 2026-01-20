@@ -23,6 +23,8 @@
     class="fi-fo-record-select-input-wrp"
 >
     <div
+        wire:key="{{ $key }}"
+        wire:ignore.self
         x-data="{
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
             search: '',
@@ -204,11 +206,14 @@
             },
 
             closePanel() {
+                const wasOpen = this.isOpen();
                 this.$refs.panel?.close();
                 this.search = '';
                 this.searchResults = [];
                 this.activeIndex = -1;
-                this.$refs.trigger?.focus();
+                if (wasOpen) {
+                    this.$refs.trigger?.focus();
+                }
             },
 
             onKeydown(event) {
@@ -415,7 +420,7 @@
                 <button
                     type="button"
                     x-ref="trigger"
-                    x-on:click.stop="togglePanel()"
+                    x-on:click="togglePanel()"
                     x-on:keydown.enter.prevent="togglePanel()"
                     x-on:keydown.space.prevent="togglePanel()"
                     :disabled="isDisabled"
@@ -472,7 +477,7 @@
                     <button
                         type="button"
                         x-ref="trigger"
-                        x-on:click.stop="togglePanel()"
+                        x-on:click="togglePanel()"
                         x-on:keydown.enter.prevent="togglePanel()"
                         x-on:keydown.space.prevent="togglePanel()"
                         :disabled="isDisabled"

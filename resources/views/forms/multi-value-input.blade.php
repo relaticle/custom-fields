@@ -9,6 +9,7 @@
     $emptyStateLabel = $getEmptyStateLabel();
     $placeholder = $getPlaceholder();
     $inputmode = match($inputType) { 'email' => 'email', 'url' => 'url', default => 'text' };
+    $key = $getKey();
 @endphp
 
 <x-dynamic-component
@@ -25,6 +26,8 @@
         "
     >
         <div
+            wire:key="{{ $key }}"
+            wire:ignore.self
             x-data="{
                 state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
                 newValue: '',

@@ -11,6 +11,7 @@
     $countryOptions = $getCountryOptions();
     $countryOptionsWithNames = $getCountryOptionsWithNames();
     $componentId = 'phone-input-' . str_replace('.', '-', $statePath);
+    $key = $getKey();
 @endphp
 
 <x-dynamic-component
@@ -27,6 +28,8 @@
         "
     >
         <div
+            wire:key="{{ $key }}"
+            wire:ignore.self
             x-data="{
                 state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
                 isOpen: false,
