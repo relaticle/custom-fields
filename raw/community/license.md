@@ -1,362 +1,50 @@
 # License
 
-> Dual licensing model - AGPL-3.0 for open source, commercial for private use
+> Commercial licenses for private code, AGPL-3.0 for open source
 
+## Pricing
+
+All tiers include every feature. Dev/staging environments are always free.
+
+<u-pricing-plans :compact="true" className="gap-x-3" compact="true">
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["1 domain","1 year updates"]" billing-cycle="/year" description="Personal projects & internal tools" price="$79" title="Solo">
+
+
+
+</u-pricing-plan>
+
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Up to 5 domains","1 year updates"]" billing-cycle="/year" description="Agencies & multiple client sites" price="$129" title="Pro">
+
+
+
+</u-pricing-plan>
+
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Unlimited domains","1 year updates"]" billing-cycle="/year" description="Required for SaaS & multi-tenant" price="$299" title="Business" :highlight="true">
+
+
+
+</u-pricing-plan>
+</u-pricing-plans>
+
+<div className="mt-8">
 <alert type="info">
 
-**Dual License Model** - Open source under AGPL-3.0 - Commercial licenses for private code - Transparent pricing
+**Existing customers**: Lifetime and grandfathered licenses remain valid forever.
 
 </alert>
-
-## Overview
-
-Custom Fields uses a dual licensing model designed to support both open source projects and commercial applications. This approach ensures the project remains sustainable while providing flexibility for different use cases.
-
-<card-group>
-<card icon="i-lucide-git-branch" title="Open Source (AGPL-3.0)" to="#open-source-license-agpl-30">
-
-For open source projects and those willing to share code
-
-</card>
-
-<card icon="i-lucide-building" title="Commercial License" to="#commercial-license">
-
-For proprietary applications and private codebases
-
-</card>
-</card-group>
-
-## Open Source License (AGPL-3.0)
-
-Custom Fields is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), a strong copyleft license designed for network software.
-
-### What is AGPL-3.0?
-
-The AGPL-3.0 is similar to the GPL-3.0 but includes an additional provision: if you run modified versions of the software on a network server, you must provide the source code to users of that server.
-
-<alert type="warning">
-
-**Important**: AGPL-3.0 requires your entire application using Custom Fields to be open source, including when used as a network service (SaaS, web applications, APIs).
-
-</alert>
-
-### Key AGPL-3.0 Obligations
-
-When using Custom Fields under AGPL-3.0, you must:
-
-1. **Share Source Code**: Make your entire application's source code available under AGPL-3.0
-2. **Include License**: Preserve all copyright and license notices
-3. **State Changes**: Document any modifications you make
-4. **Network Disclosure**: Provide source code even for network/SaaS usage
-5. **No Additional Restrictions**: Cannot add terms that restrict others' AGPL rights
-
-### Who Can Use AGPL-3.0?
-
-The AGPL-3.0 license is suitable for:
-
-- Open source projects (AGPL-3.0 compatible)
-- Non-profit organizations willing to share code
-- Educational projects with public code
-- Personal learning projects with public repositories
-
-<alert type="info">
-
-Using Custom Fields under AGPL-3.0 is completely free - no payment required. However, you must comply with all AGPL-3.0 obligations.
-
-</alert>
-
-## Commercial License
-
-For organizations that cannot or choose not to comply with AGPL-3.0 requirements, we offer commercial licenses that allow private use without open source obligations.
-
-### Why Choose Commercial?
-
-A commercial license is required if you:
-
-- Want to keep your application code private
-- Cannot comply with AGPL-3.0 obligations
-- Need to use Custom Fields in proprietary software
-- Operate a commercial SaaS without sharing source code
-- Require warranty or liability terms beyond AGPL-3.0
-
-### Commercial License Pricing
-
-Choose from three simple pricing plans. **All tiers include every feature** - no artificial limitations.
-
-<tabs>
-<tab label="Single Project">
-
-**$99/year**
-
-- Install Custom Fields in one (non SaaS) project
-- Includes three activations (local, CI, and production)
-- One year of updates
-- All features included
-
-</tab>
-
-<tab label="Unlimited Projects">
-
-**$199/year**
-
-- Install Custom Fields in unlimited projects
-- Including SaaS applications
-- Unlimited license activations
-- One year of updates
-- All features included
-
-</tab>
-
-<tab label="Lifetime">
-
-**$399**
-
-- Install Custom Fields in unlimited projects
-- Including SaaS applications
-- Unlimited license activations
-- Lifetime updates
-- All features included
-
-</tab>
-</tabs>
-
-<card-group>
-<card icon="i-lucide-credit-card" title="Purchase License" to="https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603" target="_blank">
-
-Select your tier at checkout
-
-</card>
-
-<card icon="i-lucide-play" title="View Demo" to="https://relaticle.com/" target="_blank">
-
-Try before you buy
-
-</card>
-</card-group>
-
-## Choosing Your License
-
-<steps>
-
-### Evaluate Your Project
-
-Determine if your project can be fully open source under AGPL-3.0
-
-### Consider Obligations
-
-Review AGPL-3.0 requirements, especially the network use provision
-
-### Make Your Choice
-
-- **Choose AGPL-3.0** if you can share all source code
-- **Choose Commercial** if you need to keep code private
-
-</steps>
-
-### Common Scenarios
-
-<table>
-<thead>
-  <tr>
-    <th>
-      Scenario
-    </th>
-    
-    <th>
-      Recommended License
-    </th>
-    
-    <th>
-      Suggested Tier
-    </th>
-  </tr>
-</thead>
-
-<tbody>
-  <tr>
-    <td>
-      Single project or client work
-    </td>
-    
-    <td>
-      Commercial
-    </td>
-    
-    <td>
-      Single Project ($99)
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
-      Agency with multiple clients
-    </td>
-    
-    <td>
-      Commercial
-    </td>
-    
-    <td>
-      Unlimited Projects ($199)
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
-      SaaS application
-    </td>
-    
-    <td>
-      Commercial
-    </td>
-    
-    <td>
-      Unlimited Projects ($199)
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
-      Long-term projects
-    </td>
-    
-    <td>
-      Commercial
-    </td>
-    
-    <td>
-      Lifetime ($399)
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
-      Open source package
-    </td>
-    
-    <td>
-      AGPL-3.0
-    </td>
-    
-    <td>
-      Free
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
-      Educational project (public)
-    </td>
-    
-    <td>
-      AGPL-3.0
-    </td>
-    
-    <td>
-      Free
-    </td>
-  </tr>
-</tbody>
-</table>
-
-## Existing Customers
-
-<alert type="info">
-
-**Your licenses remain valid!** All existing licenses, including lifetime licenses, continue to work exactly as before with no changes needed.
-
-</alert>
-
-## Special Offers
-
-<alert type="info">
-
-Contact **customfieldsnext@gmail.com** with proof of eligibility to receive your discount code.
-
-</alert>
-
-<card-group>
-<card icon="i-lucide-graduation-cap" title="Education - 50% off">
-
-Students and educators with valid .edu email
-
-</card>
-
-<card icon="i-lucide-heart" title="Non-Profit - 40% off">
-
-Registered 501(c)(3) and equivalents
-
-</card>
-</card-group>
-
-## Frequently Asked Questions
-
-<accordion>
-<accordion-item label="What exactly is the AGPL-3.0 network provision?">
-
-The AGPL-3.0's key difference from GPL is Section 13: if users interact with your software over a network (web app, API, SaaS), you must provide them with the complete source code. This closes the "ASP loophole" where SaaS providers could use GPL software without sharing modifications.
-
-</accordion-item>
-
-<accordion-item label="Can I use Custom Fields in my agency's client projects?">
-
-Yes, with a commercial license. For multiple client projects, choose the "Unlimited Projects" plan which covers unlimited projects and SaaS applications.
-
-</accordion-item>
-
-<accordion-item label="What's the difference between Single Project and Unlimited Projects?">
-
-Single Project ($99) is for one non-SaaS project with three activations (local, CI, production). Unlimited Projects ($199) allows use in unlimited projects including SaaS applications with unlimited activations.
-
-</accordion-item>
-
-<accordion-item label="What happens when my commercial license expires?">
-
-Your installations continue working forever. You only lose access to updates and support. Renew anytime to regain update access. No functionality is disabled.
-
-</accordion-item>
-
-<accordion-item label="Can I contribute to Custom Fields?">
-
-Yes! We welcome contributions. By contributing, you agree that your contributions will be licensed under AGPL-3.0. Significant contributors may receive commercial licenses.
-
-</accordion-item>
-
-<accordion-item label="Is Custom Fields compatible with MIT/BSD licensed projects?">
-
-Only if your entire project is licensed under AGPL-3.0. The AGPL-3.0 is a copyleft license that requires the entire work to be AGPL-3.0. For MIT/BSD projects, you need a commercial license.
-
-</accordion-item>
-</accordion>
-
-## Legal Information
-
-### Copyright Notice
-
-Custom Fields is Copyright 2024 Relaticle. All rights reserved.
-
-### License Texts
-
-- [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html)
-- Commercial license terms provided upon purchase
-
-### Warranty Disclaimer
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-### Contact
-
-For licensing questions: **customfieldsnext@gmail.com**
+</div>
 
 ---
 
-<card icon="i-lucide-lightbulb" title="Quick Summary">
+## Open Source
 
-**Custom Fields = Your Choice**
+Custom Fields is also available under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html) — free to use if your entire application is open source.
 
-- **AGPL-3.0**: Free to use, must share all code (including network use)
-- **Commercial**: Keep code private, simple project-based pricing ($99-$399)
-- All features included in both licenses
-- Choose the plan that fits your project needs
+---
 
-</card>
+## Discounts
+
+- **Students/Educators**: 50% off (valid .edu email)
+- **Non-Profits**: 40% off (registered 501(c)(3))
+
+Contact **customfieldsnext@gmail.com** for discount codes or licensing questions.
