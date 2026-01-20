@@ -138,13 +138,30 @@
                     return `{{ __('custom-fields::custom-fields.phone.change_country') }}, ${label}`;
                 },
 
-                open() {
-                    if (!this.isDisabled) {
-                        this.isOpen = true;
+                toggle() {
+                    if (this.isDisabled) return;
+                    if (this.isOpen) {
+                        this.close();
+                    } else {
+                        this.openPanel();
                     }
                 },
 
+                openPanel() {
+                    if (this.isDisabled || this.isOpen) return;
+                    this.$refs.panel?.open(this.$refs.trigger);
+                    this.isOpen = true;
+                    this.$nextTick(() => this.$refs.newPhoneInput?.focus());
+                },
+
                 close() {
+                    if (!this.isOpen) return;
+                    // Close any open country dropdown first
+                    if (this.activeCountryDropdown !== null) {
+                        const panelRef = this.activeCountryDropdown === 'new' ? 'countryPanelNew' : 'countryPanelSingle';
+                        this.$refs[panelRef]?.close();
+                    }
+                    this.$refs.panel?.close();
                     this.isOpen = false;
                     this.activeCountryDropdown = null;
                     this.countrySearch = '';
@@ -152,11 +169,11 @@
                     this.newEntry = { country: this.defaultCountry, number: '' };
                 },
 
-                toggle() {
-                    this.isOpen ? this.close() : this.open();
-                },
-
                 openCountryDropdown(index) {
+                    if (this.activeCountryDropdown === index) return;
+                    const panelRef = index === 'new' ? 'countryPanelNew' : 'countryPanelSingle';
+                    const triggerRef = index === 'new' ? 'countryTriggerNew' : 'countryTriggerSingle';
+                    this.$refs[panelRef]?.open(this.$refs[triggerRef]);
                     this.activeCountryDropdown = index;
                     this.countrySearch = '';
                     this.highlightedIndex = -1;
@@ -164,6 +181,9 @@
                 },
 
                 closeCountryDropdown() {
+                    if (this.activeCountryDropdown === null) return;
+                    const panelRef = this.activeCountryDropdown === 'new' ? 'countryPanelNew' : 'countryPanelSingle';
+                    this.$refs[panelRef]?.close();
                     this.activeCountryDropdown = null;
                     this.countrySearch = '';
                     this.highlightedIndex = -1;
@@ -360,7 +380,7 @@
                 }
             }"
             x-on:click.outside="close()"
-            x-on:keydown.escape.window="close()"
+            x-on:keydown.esc="isOpen && (close(), $event.stopPropagation())"
             x-effect="if (countrySearch !== '') { highlightedIndex = 0; announceResults(); }"
             class="relative w-full"
         >
@@ -381,7 +401,8 @@
                         <button
                             type="button"
                             role="combobox"
-                            :aria-expanded="activeCountryDropdown === 0"
+                            x-ref="countryTriggerSingle"
+                            :aria-expanded="activeCountryDropdown === 0 ? 'true' : 'false'"
                             :aria-controls="getListboxId(0)"
                             :aria-activedescendant="activeCountryDropdown === 0 ? highlightedOptionId : null"
                             :aria-label="getCountryAriaLabel(state[0]?.country)"
@@ -399,16 +420,12 @@
                         {{-- Country Dropdown --}}
                         <div
                             x-cloak
-                            x-show="activeCountryDropdown === 0"
                             x-float.placement.bottom-start.flip.teleport.offset="{ offset: 4 }"
                             x-on:click.outside="closeCountryDropdown()"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            class="z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:leave-end="opacity-0"
+                            x-ref="countryPanelSingle"
+                            class="absolute z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
                         >
                             <div class="border-b border-gray-100 dark:border-gray-800">
                                 <div class="relative">
@@ -491,10 +508,12 @@
                 <div>
                     <button
                         type="button"
-                        x-on:click="toggle()"
+                        x-ref="trigger"
+                        x-on:click.stop="toggle()"
                         :disabled="isDisabled"
-                        :aria-expanded="isOpen"
+                        :aria-expanded="isOpen ? 'true' : 'false'"
                         aria-haspopup="dialog"
+                        :aria-controls="$id('panel')"
                         aria-label="{{ __('custom-fields::custom-fields.phone.manage_phone_numbers') }}"
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 rounded-lg"
                     >
@@ -541,17 +560,14 @@
                     {{-- Popover Panel --}}
                     <div
                         x-cloak
-                        x-show="isOpen"
                         x-float.placement.bottom-start.flip.offset="{ offset: 4 }"
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100"
-                        x-transition:leave-end="opacity-0 scale-95"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:leave-end="opacity-0"
+                        x-ref="panel"
+                        :id="$id('panel')"
                         role="dialog"
                         aria-label="{{ __('custom-fields::custom-fields.phone.edit_phone_numbers') }}"
-                        class="absolute left-0 right-0 top-full z-10 mt-1 w-full rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                        class="absolute z-50 w-full rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
                     >
                         <div wire:ignore>
                             <div
@@ -611,7 +627,7 @@
                                         {{-- Delete Button --}}
                                         <button
                                             type="button"
-                                            x-on:click="deleteEntry(entry)"
+                                            x-on:click.stop="deleteEntry(entry)"
                                             aria-label="{{ __('custom-fields::custom-fields.phone.remove_phone_number') }}"
                                             class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                                         >
@@ -630,7 +646,8 @@
                                     <button
                                         type="button"
                                         role="combobox"
-                                        :aria-expanded="activeCountryDropdown === 'new'"
+                                        x-ref="countryTriggerNew"
+                                        :aria-expanded="activeCountryDropdown === 'new' ? 'true' : 'false'"
                                         :aria-controls="getListboxId('new')"
                                         :aria-activedescendant="activeCountryDropdown === 'new' ? highlightedOptionId : null"
                                         :aria-label="getCountryAriaLabel(newEntry.country)"
@@ -648,16 +665,12 @@
                                     {{-- Country Dropdown --}}
                                     <div
                                         x-cloak
-                                        x-show="activeCountryDropdown === 'new'"
                                         x-float.placement.bottom-start.flip.teleport.offset="{ offset: 4 }"
                                         x-on:click.outside="closeCountryDropdown()"
-                                        x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-75"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        class="z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                                        x-transition:enter-start="opacity-0"
+                                        x-transition:leave-end="opacity-0"
+                                        x-ref="countryPanelNew"
+                                        class="absolute z-50 w-64 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
                                     >
                                         <div class="border-b border-gray-100 dark:border-gray-800">
                                             <div class="relative">
@@ -734,7 +747,7 @@
                                 {{-- Add Button --}}
                                 <button
                                     type="button"
-                                    x-on:click="addEntry()"
+                                    x-on:click.stop="addEntry()"
                                     :disabled="isDisabled || !newEntry.number.trim()"
                                     class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     aria-label="{{ $addLabel }}"
