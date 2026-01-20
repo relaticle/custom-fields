@@ -43,6 +43,10 @@ Perfect for multi-tenant SaaS applications and enterprise admin panels.
   </div>
 </div>
 
+<div class="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+Powering <a href="https://relaticle.com" target="_blank" class="underline hover:text-gray-700 dark:hover:text-gray-200">Relaticle CRM</a> in production
+</div>
+
 ::u-page-section
 #title
 Why choose Custom Fields?

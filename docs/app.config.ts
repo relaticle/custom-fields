@@ -47,7 +47,7 @@ export default defineAppConfig({
                     target: '_blank'
                 },
                 {
-                    icon: 'i-lucide-layout-kanban',
+                    icon: 'i-lucide-columns-3',
                     label: 'Flowforge',
                     to: 'https://relaticle.github.io/flowforge/',
                     target: '_blank'
