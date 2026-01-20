@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Infolists;
 
-use Filament\Infolists\Components\TextEntry as BaseTextEntry;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\HtmlString;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
@@ -15,131 +15,66 @@ use Relaticle\CustomFields\Models\CustomField;
 
 final class RecordEntry extends AbstractInfolistEntry
 {
-    public function make(CustomField $customField): BaseTextEntry
+    public function make(CustomField $customField): Entry
     {
-        $entry = BaseTextEntry::make($customField->getFieldName())
-            ->label($customField->name)
-            ->html();
-
         if ($customField->lookup_type === null) {
-            return $entry->state(fn (): HtmlString => new HtmlString(''));
+            return ViewEntry::make($customField->getFieldName())
+                ->label($customField->name)
+                ->view('custom-fields::infolists.record-entry')
+                ->state(['records' => [], 'multiple' => false]);
         }
 
         $entity = Entities::getEntity($customField->lookup_type);
         $isMultiSelect = $customField->settings->allow_multiple ?? false;
 
-        return $entry->state(function (HasCustomFields $record) use ($customField, $entity, $isMultiSelect): HtmlString {
-            $value = $record->getCustomFieldValue($customField);
+        return ViewEntry::make($customField->getFieldName())
+            ->label($customField->name)
+            ->view('custom-fields::infolists.record-entry')
+            ->state(function (HasCustomFields $record) use ($customField, $entity, $isMultiSelect): array {
+                $value = $record->getCustomFieldValue($customField);
 
-            if ($value === null || (is_array($value) && $value === [])) {
-                return new HtmlString('');
-            }
-
-            if ($entity === null) {
-                return new HtmlString(e((string) (is_array($value) ? ($value[0] ?? '') : $value)));
-            }
-
-            $avatarConfig = $entity->getAvatarConfiguration();
-            $titleAttribute = $entity->getPrimaryAttribute();
-
-            // Values are always stored as arrays with multiChoice data type
-            if (is_array($value)) {
-                if ($isMultiSelect || count($value) > 1) {
-                    return $this->formatMultipleRecords($value, $entity, $avatarConfig, $titleAttribute);
+                if ($value === null || (is_array($value) && $value === [])) {
+                    return ['records' => [], 'multiple' => $isMultiSelect];
                 }
 
-                // Single value mode - extract first element
-                $value = $value[0] ?? null;
-                if ($value === null) {
-                    return new HtmlString('');
+                if ($entity === null) {
+                    return ['records' => [], 'multiple' => $isMultiSelect];
                 }
-            }
 
-            return $this->formatSingleRecord($value, $entity, $avatarConfig, $titleAttribute);
-        });
+                $avatarConfig = $entity->getAvatarConfiguration();
+                $titleAttribute = $entity->getPrimaryAttribute();
+
+                $recordIds = is_array($value) ? $value : [$value];
+                $records = $entity->newQuery()->whereIn('id', $recordIds)->get();
+
+                $formattedRecords = $records->map(function (Model $relatedRecord) use ($avatarConfig, $titleAttribute, $entity) {
+                    return $this->formatRecord($relatedRecord, $avatarConfig, $titleAttribute, $entity);
+                })->toArray();
+
+                return [
+                    'records' => $formattedRecords,
+                    'multiple' => $isMultiSelect,
+                ];
+            });
     }
 
-    private function formatSingleRecord(
-        mixed $recordId,
-        mixed $entity,
-        ?AvatarConfiguration $avatarConfig,
-        string $titleAttribute,
-    ): HtmlString {
-        $record = $entity->newQuery()->find($recordId);
-
-        if ($record === null) {
-            return new HtmlString('');
-        }
-
-        return new HtmlString($this->renderRecordHtml($record, $avatarConfig, $titleAttribute));
-    }
-
-    private function formatMultipleRecords(
-        array $recordIds,
-        mixed $entity,
-        ?AvatarConfiguration $avatarConfig,
-        string $titleAttribute,
-    ): HtmlString {
-        $records = $entity->newQuery()->whereIn('id', $recordIds)->get();
-
-        if ($records->isEmpty()) {
-            return new HtmlString('');
-        }
-
-        $html = '<div class="flex flex-wrap gap-2">';
-
-        foreach ($records as $record) {
-            $html .= $this->renderRecordBadge($record, $avatarConfig, $titleAttribute);
-        }
-
-        $html .= '</div>';
-
-        return new HtmlString($html);
-    }
-
-    private function renderRecordHtml(
+    private function formatRecord(
         Model $record,
         ?AvatarConfiguration $avatarConfig,
         string $titleAttribute,
-    ): string {
-        $name = e($record->getAttribute($titleAttribute) ?? '');
+        mixed $entity,
+    ): array {
+        $name = $record->getAttribute($titleAttribute) ?? '';
         $avatarUrl = $this->getAvatarUrl($record, $avatarConfig);
         $shapeClass = $avatarConfig?->getCssClass() ?? 'rounded-full';
+        $url = $this->getRecordUrl($record, $entity);
 
-        if ($avatarUrl !== null) {
-            return sprintf(
-                '<div class="flex items-center gap-2"><img src="%s" alt="" class="h-8 w-8 %s object-cover shrink-0" /><span>%s</span></div>',
-                e($avatarUrl),
-                $shapeClass,
-                $name
-            );
-        }
-
-        return $name;
-    }
-
-    private function renderRecordBadge(
-        Model $record,
-        ?AvatarConfiguration $avatarConfig,
-        string $titleAttribute,
-    ): string {
-        $name = e($record->getAttribute($titleAttribute) ?? '');
-        $avatarUrl = $this->getAvatarUrl($record, $avatarConfig);
-        $shapeClass = $avatarConfig?->getCssClass() ?? 'rounded-full';
-
-        if ($avatarUrl !== null) {
-            return sprintf(
-                '<span class="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2.5 py-1.5 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200"><img src="%s" alt="" class="h-5 w-5 %s object-cover" />%s</span>',
-                e($avatarUrl),
-                $shapeClass,
-                $name
-            );
-        }
-
-        return sprintf(
-            '<span class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1.5 text-sm font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">%s</span>',
-            $name
-        );
+        return [
+            'name' => $name,
+            'avatarUrl' => $avatarUrl,
+            'avatarShape' => $shapeClass,
+            'url' => $url,
+        ];
     }
 
     private function getAvatarUrl(Model $record, ?AvatarConfiguration $avatarConfig): ?string
@@ -149,5 +84,20 @@ final class RecordEntry extends AbstractInfolistEntry
         }
 
         return $record->getAttribute($avatarConfig->attribute);
+    }
+
+    private function getRecordUrl(Model $record, mixed $entity): ?string
+    {
+        $resourceClass = $entity->getResourceClass();
+
+        if ($resourceClass === null || ! class_exists($resourceClass)) {
+            return null;
+        }
+
+        if (! method_exists($resourceClass, 'getUrl')) {
+            return null;
+        }
+
+        return $resourceClass::getUrl('view', ['record' => $record]);
     }
 }

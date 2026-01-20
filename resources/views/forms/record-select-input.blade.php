@@ -441,7 +441,7 @@
                                 <img
                                     :src="selectedRecords[0].avatar"
                                     :class="selectedRecords[0].avatarShape || 'rounded-full'"
-                                    class="h-6 w-6 object-cover shrink-0"
+                                    class="h-5 w-5 object-cover shrink-0"
                                     alt=""
                                 />
                             </template>
@@ -507,7 +507,7 @@
                                         <img
                                             :src="record.avatar"
                                             :class="record.avatarShape || 'rounded-full'"
-                                            class="h-4 w-4 object-cover"
+                                            class="h-5 w-5 object-cover"
                                             alt=""
                                         />
                                     </template>
