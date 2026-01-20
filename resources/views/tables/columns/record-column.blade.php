@@ -2,7 +2,7 @@
     $currentRecord = $getRecord();
     $records = $getRecords($currentRecord);
     $multiple = $isMultiple();
-    $maxVisible = 3;
+    $maxVisible = 1;
     $visibleRecords = array_slice($records, 0, $maxVisible);
     $hiddenCount = max(0, count($records) - $maxVisible);
 @endphp
@@ -55,7 +55,7 @@
                                 class="h-5 w-5 {{ $record['avatarShape'] }} object-cover shrink-0"
                             />
                         @endif
-                        <span class="text-sm text-gray-950 dark:text-white underline decoration-gray-300 dark:decoration-gray-600 underline-offset-2 truncate max-w-[100px]">{{ $record['name'] }}</span>
+                        <span class="text-sm text-gray-950 dark:text-white underline decoration-gray-300 dark:decoration-gray-600 underline-offset-2 truncate max-w-[120px]">{{ $record['name'] }}</span>
                     </a>
                 @else
                     <span class="inline-flex items-center gap-2 py-0.5 px-1 shrink-0">
@@ -66,7 +66,7 @@
                                 class="h-5 w-5 {{ $record['avatarShape'] }} object-cover shrink-0"
                             />
                         @endif
-                        <span class="text-sm text-gray-950 dark:text-white truncate max-w-[100px]">{{ $record['name'] }}</span>
+                        <span class="text-sm text-gray-950 dark:text-white truncate max-w-[120px]">{{ $record['name'] }}</span>
                     </span>
                 @endif
             @endforeach
