@@ -27,7 +27,6 @@
         <div
             x-data="{
                 state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
-                isOpen: false,
                 newValue: '',
                 allowMultiple: @js($allowMultiple),
                 maxValues: @js($maxValues),
@@ -65,22 +64,29 @@
                     return Math.max(0, this.state.length - this.maxVisibleValues);
                 },
 
-                open() {
-                    if (!this.isDisabled) {
-                        this.isOpen = true;
-                        this.$nextTick(() => {
-                            this.$refs.newInput?.focus();
-                        });
+                isOpen() {
+                    return this.$refs.panel?._x_isShown === true;
+                },
+
+                togglePanel() {
+                    if (this.isDisabled) return;
+                    this.$refs.panel?.toggle(this.$refs.trigger);
+                    if (this.isOpen()) {
+                        this.newValue = '';
+                        this.$nextTick(() => this.$refs.newInput?.focus());
                     }
                 },
 
-                close() {
-                    this.isOpen = false;
+                openPanel() {
+                    if (this.isDisabled) return;
+                    this.$refs.panel?.open(this.$refs.trigger);
                     this.newValue = '';
+                    this.$nextTick(() => this.$refs.newInput?.focus());
                 },
 
-                toggle() {
-                    this.isOpen ? this.close() : this.open();
+                closePanel() {
+                    this.$refs.panel?.close();
+                    this.newValue = '';
                 },
 
                 addValue() {
@@ -100,7 +106,7 @@
                     this.newValue = '';
 
                     if (!this.allowMultiple) {
-                        this.close();
+                        this.closePanel();
                     } else {
                         this.$nextTick(() => {
                             this.$refs.newInput?.focus();
@@ -116,7 +122,7 @@
                 deleteValue(valueToDelete) {
                     this.state = this.state.filter((v) => v !== valueToDelete);
                     if (this.state.length === 0 && !this.allowMultiple) {
-                        this.close();
+                        this.closePanel();
                     }
                 },
 
@@ -134,15 +140,25 @@
                 copyToClipboard(text, index) {
                     window.navigator.clipboard.writeText(text);
                     this.copiedIndex = index;
+                    this.announceToScreenReader('Copied ' + text + ' to clipboard');
                     setTimeout(() => {
                         this.copiedIndex = null;
                     }, 2000);
+                },
+
+                announceToScreenReader(message) {
+                    if (this.$refs.announcer) {
+                        this.$refs.announcer.textContent = message;
+                    }
                 }
             }"
-            x-on:click.outside="close()"
-            x-on:keydown.escape.window="close()"
+            x-on:click.outside="closePanel()"
+            x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
             class="relative w-full"
         >
+            {{-- Screen reader live region --}}
+            <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
             {{-- Single Value Mode: simple inline input --}}
             <template x-if="!allowMultiple && state.length <= 1">
                 <input
@@ -162,9 +178,15 @@
                     {{-- Trigger Area --}}
                     <button
                         type="button"
-                        x-on:click="toggle()"
+                        x-ref="trigger"
+                        x-on:click.stop="togglePanel()"
+                        x-on:keydown.enter.prevent="togglePanel()"
+                        x-on:keydown.space.prevent="togglePanel()"
                         :disabled="isDisabled"
-                        class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none"
+                        :aria-expanded="isOpen() ? 'true' : 'false'"
+                        aria-haspopup="dialog"
+                        :aria-controls="$id('panel')"
+                        class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none rounded"
                     >
                         {{-- Content area (empty state or values) --}}
                         <div class="flex flex-1 items-center gap-x-3 overflow-hidden">
@@ -187,7 +209,8 @@
                                     <button
                                         type="button"
                                         x-on:click.stop="copyToClipboard(value, 'trigger-' + index)"
-                                        class="absolute right-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                        :aria-label="'Copy ' + value + ' to clipboard'"
+                                        class="absolute right-0 opacity-0 group-hover/item:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                     >
                                         <x-heroicon-m-clipboard-document
                                             x-show="copiedIndex !== 'trigger-' + index"
@@ -215,7 +238,7 @@
                         {{-- Chevron indicator --}}
                         <x-heroicon-m-chevron-down
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                            x-bind:class="{ 'rotate-180': isOpen }"
+                            x-bind:class="{ 'rotate-180': isOpen() }"
                             aria-hidden="true"
                         />
                     </button>
@@ -223,15 +246,14 @@
                     {{-- Popover Panel --}}
                     <div
                         x-cloak
-                        x-show="isOpen"
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100"
-                        x-transition:leave-end="opacity-0 scale-95"
+                        x-float.placement.bottom-start.flip.offset="{ offset: 4 }"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:leave-end="opacity-0"
                         x-ref="panel"
-                        class="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+                        :id="$id('panel')"
+                        role="dialog"
+                        aria-label="Manage values"
+                        class="absolute z-50 w-full rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
                     >
                         {{-- Existing Values List --}}
                         <div wire:ignore>
@@ -268,7 +290,8 @@
                                                 <button
                                                     type="button"
                                                     x-on:click.stop="copyToClipboard(value, index)"
-                                                    class="absolute right-0 opacity-0 group-hover/value:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700"
+                                                    :aria-label="'Copy ' + value + ' to clipboard'"
+                                                    class="absolute right-0 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                                 >
                                                     <x-heroicon-m-clipboard-document
                                                         x-show="copiedIndex !== index"
@@ -289,8 +312,9 @@
                                             {{-- Delete Button --}}
                                             <button
                                                 type="button"
-                                                x-on:click="deleteValue(value)"
-                                                class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                                                x-on:click.stop="deleteValue(value)"
+                                                :aria-label="'Delete ' + value"
+                                                class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                             >
                                                 <x-heroicon-m-trash class="size-4" aria-hidden="true" />
                                             </button>
@@ -312,14 +336,16 @@
                                     x-model="newValue"
                                     x-ref="newInput"
                                     x-on:keydown.enter="handleEnter($event)"
+                                    aria-label="{{ $addLabel }}"
                                     class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
                                     placeholder="{{ $addLabel }}..."
                                 />
                                 <button
                                     type="button"
-                                    x-on:click="addValue()"
+                                    x-on:click.stop="addValue()"
                                     :disabled="!newValue.trim()"
-                                    class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Add value"
+                                    class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                 >
                                     <x-heroicon-m-arrow-right class="size-4" aria-hidden="true" />
                                 </button>

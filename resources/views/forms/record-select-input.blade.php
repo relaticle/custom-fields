@@ -25,7 +25,6 @@
     <div
         x-data="{
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
-            isOpen: false,
             search: '',
             isSearching: false,
             searchResults: [],
@@ -152,29 +151,32 @@
                 }
             },
 
-            open() {
-                if (!this.isDisabled) {
-                    this.isOpen = true;
+            isOpen() {
+                return this.$refs.panel?._x_isShown === true;
+            },
+
+            togglePanel() {
+                if (this.isDisabled) return;
+                this.$refs.panel?.toggle(this.$refs.trigger);
+                if (this.isOpen()) {
                     this.search = '';
                     this.searchResults = [];
-                    this.$nextTick(() => {
-                        this.$refs.searchInput?.focus();
-                    });
+                    this.$nextTick(() => this.$refs.searchInput?.focus());
                 }
             },
 
-            close() {
-                this.isOpen = false;
+            openPanel() {
+                if (this.isDisabled) return;
+                this.$refs.panel?.open(this.$refs.trigger);
                 this.search = '';
                 this.searchResults = [];
+                this.$nextTick(() => this.$refs.searchInput?.focus());
             },
 
-            toggle() {
-                if (this.isOpen) {
-                    this.close();
-                } else {
-                    this.open();
-                }
+            closePanel() {
+                this.$refs.panel?.close();
+                this.search = '';
+                this.searchResults = [];
             },
 
             toggleRecord(record) {
@@ -205,7 +207,7 @@
                 } else {
                     // Single-select: replace the current value
                     this.state = [record.id];
-                    this.close();
+                    this.closePanel();
                 }
             },
 
@@ -213,8 +215,8 @@
                 this.state = this.state.filter(id => id !== recordId);
             }
         }"
-        x-on:click.outside="close()"
-        x-on:keydown.escape.window="close()"
+        x-on:click.outside="closePanel()"
+        x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
         class="relative w-full"
     >
         <x-filament::input.wrapper
@@ -229,9 +231,15 @@
             <template x-if="!allowMultiple">
                 <button
                     type="button"
-                    x-on:click="toggle()"
+                    x-ref="trigger"
+                    x-on:click.stop="togglePanel()"
+                    x-on:keydown.enter.prevent="togglePanel()"
+                    x-on:keydown.space.prevent="togglePanel()"
                     :disabled="isDisabled"
-                    class="flex w-full min-h-[2.25rem] items-center gap-2 py-1.5 px-3 text-left focus:outline-none"
+                    :aria-expanded="isOpen() ? 'true' : 'false'"
+                    aria-haspopup="listbox"
+                    :aria-controls="$id('panel')"
+                    class="flex w-full min-h-[2.25rem] items-center gap-2 py-1.5 px-3 text-left focus:outline-none rounded"
                 >
                     {{-- Selected Record or Placeholder --}}
                     <template x-if="hasValues && selectedRecords[0]">
@@ -258,7 +266,8 @@
                         <button
                             type="button"
                             x-on:click.stop="state = []"
-                            class="shrink-0 rounded p-0.5 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                            aria-label="Clear selection"
+                            class="shrink-0 rounded p-0.5 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                             <x-heroicon-m-x-mark class="size-4" />
                         </button>
@@ -267,7 +276,7 @@
                     {{-- Chevron --}}
                     <x-heroicon-m-chevron-down
                         class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                        x-bind:class="{ 'rotate-180': isOpen }"
+                        x-bind:class="{ 'rotate-180': isOpen() }"
                     />
                 </button>
             </template>
@@ -277,9 +286,15 @@
                 <div>
                     <button
                         type="button"
-                        x-on:click="toggle()"
+                        x-ref="trigger"
+                        x-on:click.stop="togglePanel()"
+                        x-on:keydown.enter.prevent="togglePanel()"
+                        x-on:keydown.space.prevent="togglePanel()"
                         :disabled="isDisabled"
-                        class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none"
+                        :aria-expanded="isOpen() ? 'true' : 'false'"
+                        aria-haspopup="listbox"
+                        :aria-controls="$id('panel')"
+                        class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none rounded"
                     >
                         {{-- Content area --}}
                         <div class="flex flex-1 items-center gap-1.5 flex-wrap overflow-hidden">
@@ -305,6 +320,7 @@
                                     <button
                                         type="button"
                                         x-on:click.stop="removeRecord(record.id)"
+                                        :aria-label="'Remove ' + record.label"
                                         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                         :disabled="isDisabled"
                                     >
@@ -324,7 +340,7 @@
                         {{-- Chevron --}}
                         <x-heroicon-m-chevron-down
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                            x-bind:class="{ 'rotate-180': isOpen }"
+                            x-bind:class="{ 'rotate-180': isOpen() }"
                         />
                     </button>
                 </div>
@@ -334,19 +350,20 @@
         {{-- Dropdown Panel --}}
         <div
             x-cloak
-            x-show="isOpen"
-            x-transition:enter="transition ease-out duration-100"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-75"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            class="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
+            x-float.placement.bottom-start.flip.offset="{ offset: 4 }"
+            x-transition:enter-start="opacity-0"
+            x-transition:leave-end="opacity-0"
+            x-ref="panel"
+            :id="$id('panel')"
+            role="listbox"
+            :aria-multiselectable="allowMultiple ? 'true' : 'false'"
+            aria-label="Select records"
+            class="absolute z-50 w-full overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
         >
             {{-- Search Input --}}
             <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
                 <template x-if="!isSearching">
-                    <x-heroicon-m-magnifying-glass class="size-4 text-gray-400 shrink-0" />
+                    <x-heroicon-m-magnifying-glass class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
                 </template>
                 <template x-if="isSearching">
                     <x-filament::loading-indicator class="size-4 text-gray-400 shrink-0" />
@@ -355,6 +372,7 @@
                     type="text"
                     x-model.debounce.300ms="search"
                     x-ref="searchInput"
+                    aria-label="Search records"
                     class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
                     placeholder="{{ $placeholder }}"
                 />
@@ -371,8 +389,10 @@
                 <template x-for="record in sortedOptions" :key="'option-' + record.id">
                     <button
                         type="button"
-                        x-on:click="allowMultiple ? toggleRecord(record) : selectRecord(record)"
+                        x-on:click.stop="allowMultiple ? toggleRecord(record) : selectRecord(record)"
                         :disabled="allowMultiple && !isSelected(record.id) && !canAddMore"
+                        role="option"
+                        :aria-selected="isSelected(record.id) ? 'true' : 'false'"
                         class="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 dark:focus:bg-white/5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         :class="{ 'border-b border-gray-200 dark:border-gray-700': record.isLastSelected }"
                     >
@@ -402,7 +422,7 @@
                                         : 'border-gray-300 dark:border-gray-600'"
                                 >
                                     <template x-if="isSelected(record.id)">
-                                        <svg class="h-2.5 w-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                        <svg class="h-2.5 w-2.5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                         </svg>
                                     </template>
@@ -412,7 +432,7 @@
 
                         {{-- Check icon for single-select --}}
                         <template x-if="!allowMultiple && isSelected(record.id)">
-                            <x-heroicon-m-check class="size-4 text-primary-600 dark:text-primary-400 shrink-0" />
+                            <x-heroicon-m-check class="size-4 text-primary-600 dark:text-primary-400 shrink-0" aria-hidden="true" />
                         </template>
                     </button>
                 </template>
