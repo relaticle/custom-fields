@@ -17,7 +17,7 @@ final class RecordColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
 
-    public function make(CustomField $customField): Column
+    public function make(CustomField $customField): RecordColumnView
     {
         $column = RecordColumnView::make($customField->getFieldName())
             ->customField($customField)
@@ -39,15 +39,15 @@ final class RecordColumnView extends Column
 {
     protected string $view = 'custom-fields::tables.columns.record-column';
 
-    protected ?CustomField $customField = null;
+    private ?CustomField $customField = null;
 
-    protected bool $multiple = false;
+    private bool $multiple = false;
 
-    protected mixed $entity = null;
+    private mixed $entity = null;
 
-    protected ?AvatarConfiguration $avatarConfig = null;
+    private ?AvatarConfiguration $avatarConfig = null;
 
-    protected ?string $titleAttribute = null;
+    private ?string $titleAttribute = null;
 
     public function customField(CustomField $customField): static
     {
@@ -73,7 +73,7 @@ final class RecordColumnView extends Column
 
     public function getRecords(Model $record): array
     {
-        if (! $record instanceof HasCustomFields || $this->customField === null) {
+        if (! $record instanceof HasCustomFields || ! $this->customField instanceof CustomField) {
             return [];
         }
 
@@ -89,9 +89,9 @@ final class RecordColumnView extends Column
 
         $recordIds = is_array($value) ? $value : [$value];
         $records = $this->entity->newQuery()->whereIn('id', $recordIds)->get()
-            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds));
+            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds, true));
 
-        return $records->map(function (Model $relatedRecord) {
+        return $records->map(function (Model $relatedRecord): array {
             return $this->formatRecord($relatedRecord);
         })->toArray();
     }

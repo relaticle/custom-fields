@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Pest\Expectation;
 use Relaticle\CustomFields\Tests\TestCase;
@@ -17,7 +18,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(__DIR__);
  * @param  class-string  $component
  * @param  array<string, mixed>  $params
  */
-function livewire(string $component, array $params = []): \Livewire\Features\SupportTesting\Testable
+function livewire(string $component, array $params = []): Testable
 {
     return Livewire::test($component, $params);
 }

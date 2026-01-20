@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Infolists;
 
-use Filament\Infolists\Components\Entry;
 use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
@@ -15,7 +14,7 @@ use Relaticle\CustomFields\Models\CustomField;
 
 final class RecordEntry extends AbstractInfolistEntry
 {
-    public function make(CustomField $customField): Entry
+    public function make(CustomField $customField): ViewEntry
     {
         if ($customField->lookup_type === null) {
             return ViewEntry::make($customField->getFieldName())
@@ -46,9 +45,9 @@ final class RecordEntry extends AbstractInfolistEntry
 
                 $recordIds = is_array($value) ? $value : [$value];
                 $records = $entity->newQuery()->whereIn('id', $recordIds)->get()
-                    ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds));
+                    ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds, true));
 
-                $formattedRecords = $records->map(function (Model $relatedRecord) use ($avatarConfig, $titleAttribute, $entity) {
+                $formattedRecords = $records->map(function (Model $relatedRecord) use ($avatarConfig, $titleAttribute, $entity): array {
                     return $this->formatRecord($relatedRecord, $avatarConfig, $titleAttribute, $entity);
                 })->toArray();
 

@@ -254,7 +254,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
         ['query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
 
         $records = $query->whereIn($keyName, $ids)->get()
-            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $ids));
+            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $ids, true));
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
     }

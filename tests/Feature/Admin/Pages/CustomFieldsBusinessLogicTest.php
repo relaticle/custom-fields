@@ -7,7 +7,6 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
-
 beforeEach(function (): void {
     // Arrange: Create authenticated user for all tests
     $this->user = User::factory()->create();
