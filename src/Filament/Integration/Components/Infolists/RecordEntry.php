@@ -45,7 +45,8 @@ final class RecordEntry extends AbstractInfolistEntry
                 $titleAttribute = $entity->getPrimaryAttribute();
 
                 $recordIds = is_array($value) ? $value : [$value];
-                $records = $entity->newQuery()->whereIn('id', $recordIds)->get();
+                $records = $entity->newQuery()->whereIn('id', $recordIds)->get()
+                    ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds));
 
                 $formattedRecords = $records->map(function (Model $relatedRecord) use ($avatarConfig, $titleAttribute, $entity) {
                     return $this->formatRecord($relatedRecord, $avatarConfig, $titleAttribute, $entity);

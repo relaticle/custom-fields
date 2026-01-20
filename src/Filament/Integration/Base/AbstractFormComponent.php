@@ -75,7 +75,11 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     $component->getRecord()?->getKey()
                 )
             )
-            ->columnSpan($customField->width->getSpanValue())
+            ->columnSpan(
+                FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
+                    ? $customField->width->getSpanValue()
+                    : 12
+            )
             ->when(
                 FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY) &&
                 $this->hasVisibilityConditions($customField),

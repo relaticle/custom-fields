@@ -69,6 +69,12 @@
                             this.scrollActiveIntoView();
                         });
                     } else {
+                        // When closing in multi-select, reorder state to match visual order
+                        if (this.allowMultiple) {
+                            const snapshotSelected = this.selectedSnapshot.filter(id => this.state.includes(id));
+                            const newlySelected = this.state.filter(id => !this.selectedSnapshot.includes(id));
+                            this.state = [...snapshotSelected, ...newlySelected];
+                        }
                         this.search = '';
                         this.searchResults = [];
                         this.activeIndex = -1;
@@ -115,6 +121,14 @@
             },
 
             get selectedRecords() {
+                // When dropdown is open in multi-select, use selectedSnapshot order for consistency
+                // Items from snapshot that are still selected come first, then any newly selected items
+                if (this.open && this.allowMultiple) {
+                    const snapshotSelected = this.selectedSnapshot.filter(id => this.state.includes(id));
+                    const newlySelected = this.state.filter(id => !this.selectedSnapshot.includes(id));
+                    const orderedIds = [...snapshotSelected, ...newlySelected];
+                    return orderedIds.map(id => this.recordsCache[id] || { id, label: id, avatar: null }).filter(Boolean);
+                }
                 return this.state.map(id => this.recordsCache[id] || { id, label: id, avatar: null }).filter(Boolean);
             },
 
@@ -151,6 +165,10 @@
                     const bSelected = selectedIds.includes(b.id);
                     if (aSelected && !bSelected) return -1;
                     if (!aSelected && bSelected) return 1;
+                    // Both selected: preserve selection order
+                    if (aSelected && bSelected) {
+                        return selectedIds.indexOf(a.id) - selectedIds.indexOf(b.id);
+                    }
                     return 0;
                 });
             },

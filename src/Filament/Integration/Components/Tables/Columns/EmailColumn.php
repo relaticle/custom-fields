@@ -22,7 +22,10 @@ final class EmailColumn extends AbstractTableColumn
         $this->configureLabel($column, $customField);
 
         $column
-            ->width('180px')
+            ->width('200px')
+            ->extraCellAttributes([
+                'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
+            ])
             ->sortable(false)
             ->searchable(false)
             ->getStateUsing(function (HasCustomFields $record) use ($customField): array {

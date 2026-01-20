@@ -20,7 +20,11 @@ final class RecordColumn extends AbstractTableColumn
     public function make(CustomField $customField): Column
     {
         $column = RecordColumnView::make($customField->getFieldName())
-            ->customField($customField);
+            ->customField($customField)
+            ->width('200px')
+            ->extraCellAttributes([
+                'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
+            ]);
 
         $this->configureLabel($column, $customField);
 
@@ -84,7 +88,8 @@ final class RecordColumnView extends Column
         }
 
         $recordIds = is_array($value) ? $value : [$value];
-        $records = $this->entity->newQuery()->whereIn('id', $recordIds)->get();
+        $records = $this->entity->newQuery()->whereIn('id', $recordIds)->get()
+            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds));
 
         return $records->map(function (Model $relatedRecord) {
             return $this->formatRecord($relatedRecord);
