@@ -35,6 +35,7 @@
             recordsCache: @js($initialRecords),
             initialOptions: @js(array_values($initialOptions)),
             maxVisibleValues: @js($maxVisiblePills),
+            selectedSnapshot: [],
 
             init() {
                 if (!Array.isArray(this.state)) {
@@ -79,7 +80,7 @@
 
                 // If searching (>=2 chars) and have server results, use those
                 if (searchLower.length >= 2 && this.searchResults.length > 0) {
-                    return this.addLastSelectedFlag(this.sortBySelected([...this.searchResults]));
+                    return this.sortBySelected([...this.searchResults]);
                 }
 
                 // Otherwise filter initial options client-side
@@ -88,25 +89,19 @@
                     options = options.filter(opt => opt.label.toLowerCase().includes(searchLower));
                 }
 
-                return this.addLastSelectedFlag(this.sortBySelected(options));
+                return this.sortBySelected(options);
             },
 
             sortBySelected(options) {
+                // In multi-select mode, use the snapshot to prevent reordering while dropdown is open
+                const selectedIds = this.allowMultiple ? this.selectedSnapshot : this.state;
                 return options.sort((a, b) => {
-                    const aSelected = this.state.includes(a.id);
-                    const bSelected = this.state.includes(b.id);
+                    const aSelected = selectedIds.includes(a.id);
+                    const bSelected = selectedIds.includes(b.id);
                     if (aSelected && !bSelected) return -1;
                     if (!aSelected && bSelected) return 1;
                     return 0;
                 });
-            },
-
-            addLastSelectedFlag(options) {
-                const selectedCount = options.filter(opt => this.state.includes(opt.id)).length;
-                return options.map((opt, index) => ({
-                    ...opt,
-                    isLastSelected: index === selectedCount - 1 && selectedCount > 0
-                }));
             },
 
             isSelected(recordId) {
@@ -157,20 +152,28 @@
 
             togglePanel() {
                 if (this.isDisabled) return;
+
+                const wasOpen = this.isOpen();
                 this.$refs.panel?.toggle(this.$refs.trigger);
-                if (this.isOpen()) {
+
+                if (!wasOpen) {
+                    // Opening the panel
+                    this.selectedSnapshot = [...this.state];
                     this.search = '';
                     this.searchResults = [];
-                    this.$nextTick(() => this.$refs.searchInput?.focus());
+                    // Use setTimeout to ensure panel transition has started
+                    setTimeout(() => this.$refs.searchInput?.focus(), 50);
                 }
             },
 
             openPanel() {
                 if (this.isDisabled) return;
+                this.selectedSnapshot = [...this.state];
                 this.$refs.panel?.open(this.$refs.trigger);
                 this.search = '';
                 this.searchResults = [];
-                this.$nextTick(() => this.$refs.searchInput?.focus());
+                // Use setTimeout to ensure panel transition has started
+                setTimeout(() => this.$refs.searchInput?.focus(), 50);
             },
 
             closePanel() {
@@ -193,7 +196,6 @@
 
                 if (this.state.includes(record.id)) return;
 
-                // Cache the record data (without isLastSelected flag)
                 this.recordsCache[record.id] = {
                     id: record.id,
                     label: record.label,
@@ -394,7 +396,6 @@
                         role="option"
                         :aria-selected="isSelected(record.id) ? 'true' : 'false'"
                         class="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 dark:focus:bg-white/5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                        :class="{ 'border-b border-gray-200 dark:border-gray-700': record.isLastSelected }"
                     >
                         {{-- Avatar (only shown when configured) --}}
                         <template x-if="record.avatar">
