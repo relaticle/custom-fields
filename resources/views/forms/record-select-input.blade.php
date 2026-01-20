@@ -36,6 +36,7 @@
             initialOptions: @js(array_values($initialOptions)),
             maxVisibleValues: @js($maxVisiblePills),
             selectedSnapshot: [],
+            activeIndex: -1,
 
             init() {
                 if (!Array.isArray(this.state)) {
@@ -49,7 +50,23 @@
                     } else {
                         this.searchResults = [];
                     }
+                    // Reset activeIndex when search changes
+                    this.activeIndex = this.sortedOptions.length > 0 ? 0 : -1;
                 });
+            },
+
+            get activeDescendant() {
+                if (!this.isOpen() || this.activeIndex < 0 || this.activeIndex >= this.sortedOptions.length) {
+                    return null;
+                }
+                return this.$id('option-' + this.activeIndex);
+            },
+
+            getInitialActiveIndex() {
+                if (!this.hasValues) return 0;
+                // Find index of first selected item
+                const firstSelectedIndex = this.sortedOptions.findIndex(opt => this.state.includes(opt.id));
+                return firstSelectedIndex >= 0 ? firstSelectedIndex : 0;
             },
 
             get canAddMore() {
@@ -161,8 +178,14 @@
                     this.selectedSnapshot = [...this.state];
                     this.search = '';
                     this.searchResults = [];
+                    this.activeIndex = this.getInitialActiveIndex();
                     // Use setTimeout to ensure panel transition has started
-                    setTimeout(() => this.$refs.searchInput?.focus(), 50);
+                    setTimeout(() => {
+                        this.$refs.searchInput?.focus();
+                        this.scrollActiveIntoView();
+                    }, 50);
+                } else {
+                    this.activeIndex = -1;
                 }
             },
 
@@ -172,22 +195,176 @@
                 this.$refs.panel?.open(this.$refs.trigger);
                 this.search = '';
                 this.searchResults = [];
+                this.activeIndex = this.getInitialActiveIndex();
                 // Use setTimeout to ensure panel transition has started
-                setTimeout(() => this.$refs.searchInput?.focus(), 50);
+                setTimeout(() => {
+                    this.$refs.searchInput?.focus();
+                    this.scrollActiveIntoView();
+                }, 50);
             },
 
             closePanel() {
                 this.$refs.panel?.close();
                 this.search = '';
                 this.searchResults = [];
+                this.activeIndex = -1;
+                this.$refs.trigger?.focus();
+            },
+
+            onKeydown(event) {
+                if (this.isDisabled) return;
+
+                switch (event.key) {
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (this.isOpen()) {
+                            this.focusNext();
+                        } else {
+                            this.openPanel();
+                        }
+                        break;
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (this.isOpen()) {
+                            this.focusPrevious();
+                        } else {
+                            this.openPanel();
+                        }
+                        break;
+                    case 'Home':
+                        if (this.isOpen()) {
+                            event.preventDefault();
+                            this.focusFirst();
+                        }
+                        break;
+                    case 'End':
+                        if (this.isOpen()) {
+                            event.preventDefault();
+                            this.focusLast();
+                        }
+                        break;
+                    case 'Enter':
+                        event.preventDefault();
+                        if (this.isOpen() && this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
+                            const record = this.sortedOptions[this.activeIndex];
+                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
+                        } else if (!this.isOpen()) {
+                            this.openPanel();
+                        }
+                        break;
+                    case ' ':
+                        // Don't intercept space when typing in search input
+                        if (document.activeElement === this.$refs.searchInput) {
+                            return;
+                        }
+                        if (!this.isOpen()) {
+                            event.preventDefault();
+                            this.openPanel();
+                        }
+                        break;
+                    case 'Tab':
+                        if (this.isOpen()) {
+                            this.closePanel();
+                        }
+                        break;
+                }
+            },
+
+            onSearchKeydown(event) {
+                switch (event.key) {
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.focusNext();
+                        break;
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.focusPrevious();
+                        break;
+                    case 'Home':
+                        event.preventDefault();
+                        this.focusFirst();
+                        break;
+                    case 'End':
+                        event.preventDefault();
+                        this.focusLast();
+                        break;
+                    case 'Enter':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
+                            const record = this.sortedOptions[this.activeIndex];
+                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
+                        } else if (this.sortedOptions.length > 0) {
+                            const record = this.sortedOptions[0];
+                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
+                        }
+                        break;
+                    case 'Escape':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.closePanel();
+                        break;
+                }
+            },
+
+            focusNext() {
+                const max = this.sortedOptions.length - 1;
+                if (max < 0) return;
+                this.activeIndex = this.activeIndex >= max ? 0 : this.activeIndex + 1;
+                this.scrollActiveIntoView();
+            },
+
+            focusPrevious() {
+                const max = this.sortedOptions.length - 1;
+                if (max < 0) return;
+                this.activeIndex = this.activeIndex <= 0 ? max : this.activeIndex - 1;
+                this.scrollActiveIntoView();
+            },
+
+            focusFirst() {
+                if (this.sortedOptions.length === 0) return;
+                this.activeIndex = 0;
+                this.scrollActiveIntoView();
+            },
+
+            focusLast() {
+                if (this.sortedOptions.length === 0) return;
+                this.activeIndex = this.sortedOptions.length - 1;
+                this.scrollActiveIntoView();
+            },
+
+            scrollActiveIntoView() {
+                this.$nextTick(() => {
+                    const activeOption = this.$refs.optionsList?.querySelector('[data-highlighted]');
+                    if (activeOption) {
+                        activeOption.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+            },
+
+            announceSelection(record, wasSelected) {
+                if (this.$refs.announcer) {
+                    const action = wasSelected ? 'deselected' : 'selected';
+                    let message = record.label + ' ' + action;
+                    if (this.allowMultiple) {
+                        message += `. ${this.state.length} item${this.state.length !== 1 ? 's' : ''} total`;
+                    }
+                    this.$refs.announcer.textContent = message;
+                }
             },
 
             toggleRecord(record) {
-                if (this.isSelected(record.id)) {
+                const wasSelected = this.isSelected(record.id);
+                if (wasSelected) {
                     this.removeRecord(record.id);
                 } else {
                     this.selectRecord(record);
                 }
+                this.announceSelection(record, wasSelected);
             },
 
             selectRecord(record) {
@@ -219,8 +396,12 @@
         }"
         x-on:click.outside="closePanel()"
         x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
+        x-on:keydown="onKeydown($event)"
         class="relative w-full"
     >
+        {{-- Hidden live region for screen reader announcements --}}
+        <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
         <x-filament::input.wrapper
             :disabled="$isDisabled"
             :valid="! $errors->has($statePath)"
@@ -238,9 +419,11 @@
                     x-on:keydown.enter.prevent="togglePanel()"
                     x-on:keydown.space.prevent="togglePanel()"
                     :disabled="isDisabled"
+                    role="combobox"
                     :aria-expanded="isOpen() ? 'true' : 'false'"
                     aria-haspopup="listbox"
                     :aria-controls="$id('panel')"
+                    :aria-activedescendant="activeDescendant"
                     class="flex w-full min-h-[2.25rem] items-center gap-2 py-1.5 px-3 text-left focus:outline-none rounded"
                 >
                     {{-- Selected Record or Placeholder --}}
@@ -293,9 +476,11 @@
                         x-on:keydown.enter.prevent="togglePanel()"
                         x-on:keydown.space.prevent="togglePanel()"
                         :disabled="isDisabled"
+                        role="combobox"
                         :aria-expanded="isOpen() ? 'true' : 'false'"
                         aria-haspopup="listbox"
                         :aria-controls="$id('panel')"
+                        :aria-activedescendant="activeDescendant"
                         class="flex w-full min-h-[2.25rem] items-center gap-1.5 py-1.5 px-3 text-left focus:outline-none rounded"
                     >
                         {{-- Content area --}}
@@ -374,28 +559,37 @@
                     type="text"
                     x-model.debounce.300ms="search"
                     x-ref="searchInput"
+                    x-on:keydown="onSearchKeydown($event)"
                     aria-label="Search records"
+                    :aria-controls="$id('panel')"
+                    :aria-activedescendant="activeDescendant"
                     class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
                     placeholder="{{ $placeholder }}"
                 />
             </div>
 
             {{-- Options List --}}
-            <div class="max-h-[280px] overflow-y-auto">
+            <div x-ref="optionsList" class="max-h-[280px] overflow-y-auto">
                 <template x-if="sortedOptions.length === 0 && !isSearching && emptyStateMessage">
                     <div class="px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                         <span x-text="emptyStateMessage"></span>
                     </div>
                 </template>
 
-                <template x-for="record in sortedOptions" :key="'option-' + record.id">
+                <template x-for="(record, index) in sortedOptions" :key="'option-' + record.id">
                     <button
                         type="button"
+                        :id="$id('option-' + index)"
                         x-on:click.stop="allowMultiple ? toggleRecord(record) : selectRecord(record)"
+                        x-on:mouseenter="activeIndex = index"
                         :disabled="allowMultiple && !isSelected(record.id) && !canAddMore"
                         role="option"
                         :aria-selected="isSelected(record.id) ? 'true' : 'false'"
-                        class="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 dark:focus:bg-white/5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        :data-highlighted="activeIndex === index ? '' : undefined"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        :class="activeIndex === index
+                            ? 'bg-gray-100 dark:bg-gray-800'
+                            : 'hover:bg-gray-50 dark:hover:bg-white/5'"
                     >
                         {{-- Avatar (only shown when configured) --}}
                         <template x-if="record.avatar">
