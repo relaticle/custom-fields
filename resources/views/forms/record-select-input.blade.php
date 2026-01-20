@@ -23,10 +23,12 @@
     class="fi-fo-record-select-input-wrp"
 >
     <div
-        wire:key="{{ $key }}"
+        wire:key="{{ $key }}-{{ $isDisabled ? 'disabled' : 'enabled' }}"
         wire:ignore.self
+        x-cloak
         x-data="{
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
+            open: false,
             search: '',
             isSearching: false,
             searchResults: [],
@@ -39,6 +41,7 @@
             maxVisibleValues: @js($maxVisiblePills),
             selectedSnapshot: [],
             activeIndex: -1,
+            documentClickListener: null,
 
             init() {
                 if (!Array.isArray(this.state)) {
@@ -52,13 +55,42 @@
                     } else {
                         this.searchResults = [];
                     }
-                    // Reset activeIndex when search changes
                     this.activeIndex = this.sortedOptions.length > 0 ? 0 : -1;
                 });
+
+                this.$watch('open', (isOpen) => {
+                    if (isOpen) {
+                        this.selectedSnapshot = [...this.state];
+                        this.search = '';
+                        this.searchResults = [];
+                        this.activeIndex = this.getInitialActiveIndex();
+                        this.$nextTick(() => {
+                            this.$refs.searchInput?.focus();
+                            this.scrollActiveIntoView();
+                        });
+                    } else {
+                        this.search = '';
+                        this.searchResults = [];
+                        this.activeIndex = -1;
+                    }
+                });
+
+                this.documentClickListener = (event) => {
+                    if (this.open && !this.$el.contains(event.target)) {
+                        this.close();
+                    }
+                };
+                document.addEventListener('click', this.documentClickListener);
+            },
+
+            destroy() {
+                if (this.documentClickListener) {
+                    document.removeEventListener('click', this.documentClickListener);
+                }
             },
 
             get activeDescendant() {
-                if (!this.isOpen() || this.activeIndex < 0 || this.activeIndex >= this.sortedOptions.length) {
+                if (!this.open || this.activeIndex < 0 || this.activeIndex >= this.sortedOptions.length) {
                     return null;
                 }
                 return this.$id('option-' + this.activeIndex);
@@ -165,55 +197,26 @@
                 }
             },
 
-            isOpen() {
-                return this.$refs.panel?._x_isShown === true;
-            },
-
-            togglePanel() {
+            toggle() {
                 if (this.isDisabled) return;
-
-                const wasOpen = this.isOpen();
-                this.$refs.panel?.toggle(this.$refs.trigger);
-
-                if (!wasOpen) {
-                    // Opening the panel
-                    this.selectedSnapshot = [...this.state];
-                    this.search = '';
-                    this.searchResults = [];
-                    this.activeIndex = this.getInitialActiveIndex();
-                    // Use setTimeout to ensure panel transition has started
-                    setTimeout(() => {
-                        this.$refs.searchInput?.focus();
-                        this.scrollActiveIntoView();
-                    }, 50);
-                } else {
-                    this.activeIndex = -1;
-                }
+                this.open ? this.close() : this.openPanel();
             },
 
             openPanel() {
-                if (this.isDisabled) return;
-                this.selectedSnapshot = [...this.state];
+                if (this.isDisabled || this.open) return;
                 this.$refs.panel?.open(this.$refs.trigger);
-                this.search = '';
-                this.searchResults = [];
-                this.activeIndex = this.getInitialActiveIndex();
-                // Use setTimeout to ensure panel transition has started
-                setTimeout(() => {
-                    this.$refs.searchInput?.focus();
-                    this.scrollActiveIntoView();
-                }, 50);
+                this.open = true;
+            },
+
+            close() {
+                if (!this.open) return;
+                this.$refs.panel?.close();
+                this.open = false;
+                this.$refs.trigger?.focus();
             },
 
             closePanel() {
-                const wasOpen = this.isOpen();
-                this.$refs.panel?.close();
-                this.search = '';
-                this.searchResults = [];
-                this.activeIndex = -1;
-                if (wasOpen) {
-                    this.$refs.trigger?.focus();
-                }
+                this.close();
             },
 
             onKeydown(event) {
@@ -223,7 +226,7 @@
                     case 'ArrowDown':
                         event.preventDefault();
                         event.stopPropagation();
-                        if (this.isOpen()) {
+                        if (this.open) {
                             this.focusNext();
                         } else {
                             this.openPanel();
@@ -232,46 +235,45 @@
                     case 'ArrowUp':
                         event.preventDefault();
                         event.stopPropagation();
-                        if (this.isOpen()) {
+                        if (this.open) {
                             this.focusPrevious();
                         } else {
                             this.openPanel();
                         }
                         break;
                     case 'Home':
-                        if (this.isOpen()) {
+                        if (this.open) {
                             event.preventDefault();
                             this.focusFirst();
                         }
                         break;
                     case 'End':
-                        if (this.isOpen()) {
+                        if (this.open) {
                             event.preventDefault();
                             this.focusLast();
                         }
                         break;
                     case 'Enter':
                         event.preventDefault();
-                        if (this.isOpen() && this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
+                        if (this.open && this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
                             const record = this.sortedOptions[this.activeIndex];
                             this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
-                        } else if (!this.isOpen()) {
+                        } else if (!this.open) {
                             this.openPanel();
                         }
                         break;
                     case ' ':
-                        // Don't intercept space when typing in search input
                         if (document.activeElement === this.$refs.searchInput) {
                             return;
                         }
-                        if (!this.isOpen()) {
+                        if (!this.open) {
                             event.preventDefault();
                             this.openPanel();
                         }
                         break;
                     case 'Tab':
-                        if (this.isOpen()) {
-                            this.closePanel();
+                        if (this.open) {
+                            this.close();
                         }
                         break;
                 }
@@ -399,8 +401,8 @@
                 this.state = this.state.filter(id => id !== recordId);
             }
         }"
-        x-on:click.outside="closePanel()"
-        x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
+        x-on:click.outside="close()"
+        x-on:keydown.esc="open && (close(), $event.stopPropagation())"
         x-on:keydown="onKeydown($event)"
         class="relative w-full"
     >
@@ -414,18 +416,19 @@
                 \Filament\Support\prepare_inherited_attributes($attributes)
                     ->class(['fi-fo-record-select-input'])
             "
+            x-bind:class="{ 'ring-2 ring-primary-600 dark:ring-primary-500': open }"
         >
             {{-- Single Value Mode --}}
             <template x-if="!allowMultiple">
                 <button
                     type="button"
                     x-ref="trigger"
-                    x-on:click="togglePanel()"
-                    x-on:keydown.enter.prevent="togglePanel()"
-                    x-on:keydown.space.prevent="togglePanel()"
+                    x-on:click="toggle()"
+                    x-on:keydown.enter.prevent="toggle()"
+                    x-on:keydown.space.prevent="toggle()"
                     :disabled="isDisabled"
                     role="combobox"
-                    :aria-expanded="isOpen() ? 'true' : 'false'"
+                    :aria-expanded="open ? 'true' : 'false'"
                     aria-haspopup="listbox"
                     :aria-controls="$id('panel')"
                     :aria-activedescendant="activeDescendant"
@@ -466,7 +469,7 @@
                     {{-- Chevron --}}
                     <x-heroicon-m-chevron-down
                         class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                        x-bind:class="{ 'rotate-180': isOpen() }"
+                        x-bind:class="{ 'rotate-180': open }"
                     />
                 </button>
             </template>
@@ -477,12 +480,12 @@
                     <button
                         type="button"
                         x-ref="trigger"
-                        x-on:click="togglePanel()"
-                        x-on:keydown.enter.prevent="togglePanel()"
-                        x-on:keydown.space.prevent="togglePanel()"
+                        x-on:click="toggle()"
+                        x-on:keydown.enter.prevent="toggle()"
+                        x-on:keydown.space.prevent="toggle()"
                         :disabled="isDisabled"
                         role="combobox"
-                        :aria-expanded="isOpen() ? 'true' : 'false'"
+                        :aria-expanded="open ? 'true' : 'false'"
                         aria-haspopup="listbox"
                         :aria-controls="$id('panel')"
                         :aria-activedescendant="activeDescendant"
@@ -532,7 +535,7 @@
                         {{-- Chevron --}}
                         <x-heroicon-m-chevron-down
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
-                            x-bind:class="{ 'rotate-180': isOpen() }"
+                            x-bind:class="{ 'rotate-180': open }"
                         />
                     </button>
                 </div>

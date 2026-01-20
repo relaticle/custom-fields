@@ -26,22 +26,38 @@
         "
     >
         <div
-            wire:key="{{ $key }}"
+            wire:key="{{ $key }}-{{ $isDisabled ? 'disabled' : 'enabled' }}"
             wire:ignore.self
+            x-cloak
             x-data="{
                 state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
                 newValue: '',
+                componentKey: @js($key),
                 allowMultiple: @js($allowMultiple),
                 maxValues: @js($maxValues),
                 isDisabled: @js($isDisabled),
                 maxVisibleValues: 3,
                 copiedIndex: null,
+                documentClickListener: null,
 
                 init() {
                     if (!Array.isArray(this.state)) {
                         this.state = this.state ? [this.state] : [];
                     }
                     this.state = this.state.filter(v => v && v.trim() !== '');
+
+                    this.documentClickListener = (event) => {
+                        if (this.isOpen() && !this.$el.contains(event.target)) {
+                            this.closePanel();
+                        }
+                    };
+                    document.addEventListener('click', this.documentClickListener);
+                },
+
+                destroy() {
+                    if (this.documentClickListener) {
+                        document.removeEventListener('click', this.documentClickListener);
+                    }
                 },
 
                 get canAddMore() {

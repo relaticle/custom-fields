@@ -28,11 +28,13 @@
         "
     >
         <div
-            wire:key="{{ $key }}"
+            wire:key="{{ $key }}-{{ $isDisabled ? 'disabled' : 'enabled' }}"
             wire:ignore.self
+            x-cloak
             x-data="{
                 state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
                 isOpen: false,
+                componentKey: @js($key),
                 allowMultiple: @js($allowMultiple),
                 maxValues: @js($maxValues),
                 isDisabled: @js($isDisabled),
@@ -46,6 +48,7 @@
                 highlightedIndex: -1,
                 newEntry: { country: @js($defaultCountry), number: '' },
                 copiedIndex: null,
+                documentClickListener: null,
 
                 init() {
                     if (!Array.isArray(this.state)) {
@@ -59,6 +62,19 @@
                         country: entry?.country || this.defaultCountry,
                         number: entry?.number || ''
                     }));
+
+                    this.documentClickListener = (event) => {
+                        if (this.isOpen && !this.$el.contains(event.target)) {
+                            this.close();
+                        }
+                    };
+                    document.addEventListener('click', this.documentClickListener);
+                },
+
+                destroy() {
+                    if (this.documentClickListener) {
+                        document.removeEventListener('click', this.documentClickListener);
+                    }
                 },
 
                 get canAddMore() {
@@ -414,7 +430,7 @@
                             x-on:click.stop="activeCountryDropdown === 0 ? closeCountryDropdown() : openCountryDropdown(0)"
                             x-on:keydown="handleButtonKeydown($event, 0)"
                             :disabled="isDisabled"
-                            class="flex items-center gap-1 py-1.5 pl-3 pr-1.5 text-sm text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-l-lg w-20"
+                            class="flex items-center gap-1 py-1.5 pl-3 pr-1.5 text-sm text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-l-lg w-23"
                         >
                             <span x-text="getCountryLabel(state[0]?.country)" class="font-medium text-xs"></span>
                             <x-heroicon-m-chevron-down class="size-3.5 text-gray-400" x-bind:class="{ 'rotate-180': activeCountryDropdown === 0 }" aria-hidden="true" />
