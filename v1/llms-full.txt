@@ -1943,39 +1943,18 @@ A commercial license is required if you:
 - Operate a commercial SaaS without sharing source code
 - Require warranty or liability terms beyond AGPL-3.0
 
-### Commercial License Pricing
+### Commercial License Options
 
-Choose from three simple pricing plans. **All tiers include every feature** - no artificial limitations.
+We offer flexible licensing tiers to match your needs - from single projects to unlimited use.
 
-::tabs
-  :::tab{label="Single Project"}
-  **$99/year**
+::alert{type="info"}
+**For current pricing and purchasing options**
 
-  - Install Custom Fields in one (non SaaS) project
-  - Includes three activations (local, CI, and production)
-  - One year of updates
-  - All features included
-  :::
+, please visit the 
 
-  :::tab{label="Unlimited Projects"}
-  **$199/year**
+[latest documentation](https://relaticle.github.io/custom-fields/community/license){rel=""nofollow""}
 
-  - Install Custom Fields in unlimited projects
-  - Including SaaS applications
-  - Unlimited license activations
-  - One year of updates
-  - All features included
-  :::
-
-  :::tab{label="Lifetime"}
-  **$399**
-
-  - Install Custom Fields in unlimited projects
-  - Including SaaS applications
-  - Unlimited license activations
-  - Lifetime updates
-  - All features included
-  :::
+.
 ::
 
 ::card-group
@@ -1983,10 +1962,10 @@ Choose from three simple pricing plans. **All tiers include every feature** - no
   ---
   icon: i-lucide-credit-card
   target: _blank
-  title: Purchase License
-  to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+  title: View Current Pricing
+  to: https://relaticle.github.io/custom-fields/community/license
   ---
-  Select your tier at checkout
+  See all licensing tiers and purchase options
   :::
 
   :::card
@@ -2019,14 +1998,21 @@ Review AGPL-3.0 requirements, especially the network use provision
 
 ### Common Scenarios
 
-| Scenario                      | Recommended License | Suggested Tier            |
-| ----------------------------- | ------------------- | ------------------------- |
-| Single project or client work | Commercial          | Single Project ($99)      |
-| Agency with multiple clients  | Commercial          | Unlimited Projects ($199) |
-| SaaS application              | Commercial          | Unlimited Projects ($199) |
-| Long-term projects            | Commercial          | Lifetime ($399)           |
-| Open source package           | AGPL-3.0            | Free                      |
-| Educational project (public)  | AGPL-3.0            | Free                      |
+| Scenario                      | Recommended License |
+| ----------------------------- | ------------------- |
+| Single project or client work | Commercial          |
+| Agency with multiple clients  | Commercial          |
+| SaaS application              | Commercial          |
+| Open source package           | AGPL-3.0            |
+| Educational project (public)  | AGPL-3.0            |
+
+::alert{type="info"}
+See 
+
+[current pricing](https://relaticle.github.io/custom-fields/community/license){rel=""nofollow""}
+
+ for available tiers.
+::
 
 ## Existing Customers
 
@@ -2074,7 +2060,11 @@ Contact
   ---
   label: What's the difference between Single Project and Unlimited Projects?
   ---
-  Single Project ($99) is for one non-SaaS project with three activations (local, CI, production). Unlimited Projects ($199) allows use in unlimited projects including SaaS applications with unlimited activations.
+  Single Project is for one non-SaaS project with three activations (local, CI, production). Unlimited Projects allows use in unlimited projects including SaaS applications with unlimited activations. See 
+
+  [current pricing](https://relaticle.github.io/custom-fields/community/license){rel=""nofollow""}
+
+   for details.
   :::
 
   :::accordion-item{label="What happens when my commercial license expires?"}
@@ -2118,9 +2108,9 @@ For licensing questions: &#x2A;*<customfieldsnext@gmail.com>**
 **Custom Fields = Your Choice**
 
 - **AGPL-3.0**: Free to use, must share all code (including network use)
-- **Commercial**: Keep code private, simple project-based pricing ($99-$399)
+- **Commercial**: Keep code private, simple project-based pricing
 - All features included in both licenses
-- Choose the plan that fits your project needs
+- See [current pricing](https://relaticle.github.io/custom-fields/community/license){rel=""nofollow""} for details
 ::
 
 
