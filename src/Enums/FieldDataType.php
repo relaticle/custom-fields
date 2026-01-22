@@ -36,6 +36,17 @@ enum FieldDataType: string
     }
 
     /**
+     * Check if this category represents date or datetime fields.
+     */
+    public function isDateOrDateTime(): bool
+    {
+        return in_array($this, [
+            self::DATE,
+            self::DATE_TIME,
+        ], true);
+    }
+
+    /**
      * Get compatible operators for this field category.
      *
      * @return array<int, VisibilityOperator>
