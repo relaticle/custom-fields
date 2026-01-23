@@ -46,6 +46,11 @@ enum FieldDataType: string
         ], true);
     }
 
+    public function isTimestamp(): bool
+    {
+        return $this === self::DATE_TIME;
+    }
+
     /**
      * Get compatible operators for this field category.
      *
