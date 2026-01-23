@@ -51,6 +51,11 @@ enum FieldDataType: string
         return $this === self::DATE_TIME;
     }
 
+    public function isFloat(): bool
+    {
+        return $this === self::FLOAT;
+    }
+
     /**
      * Get compatible operators for this field category.
      *
