@@ -13,7 +13,7 @@ use Filament\Support\Concerns\HasExtraAlpineAttributes;
 
 /**
  * A custom Filament form field for managing single or multiple values
- * with a popover-based editing interface (Attio/Twenty UX pattern).
+ * with a popover-based editing interface.
  *
  * Single value: Shows a pill that opens popover on click
  * Multiple values: Shows pills + add button, popover with editable rows
