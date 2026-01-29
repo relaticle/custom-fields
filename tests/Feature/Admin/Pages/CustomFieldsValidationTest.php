@@ -79,6 +79,21 @@ describe('CustomFieldsPage - Field Validation Testing', function (): void {
         ])->assertHasFormErrors(['code']);
     });
 
+    it('validates option names are unique case-insensitively', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])->callAction('createField', [
+            'name' => 'Status',
+            'code' => 'status',
+            'type' => 'select',
+            'options' => [
+                ['name' => 'Active'],
+                ['name' => 'active'],
+            ],
+        ])->assertHasFormErrors(['options.1.name']);
+    });
+
     it('validates field type compatibility with validation rules', function (string $fieldType, array $allowedRules, array $disallowedRules): void {
         // Test that allowed rules work
         foreach ($allowedRules as $rule) {

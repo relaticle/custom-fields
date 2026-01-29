@@ -94,7 +94,27 @@ class FieldForm implements FormInterface
                         ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
                             $get('../../settings.enable_option_colors')
                     ),
-                TextInput::make('name')->required()->columnSpan(9)->distinct(),
+                TextInput::make('name')
+                    ->required()
+                    ->columnSpan(9)
+                    ->rules([
+                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                            if (blank($value)) {
+                                return;
+                            }
+
+                            $hasDuplicate = collect($get('../../options') ?? [])
+                                ->pluck('name')
+                                ->filter()
+                                ->map(fn ($name) => mb_strtolower($name))
+                                ->duplicates()
+                                ->contains(mb_strtolower($value));
+
+                            if ($hasDuplicate) {
+                                $fail(__('validation.distinct'));
+                            }
+                        },
+                    ]),
             ])
             ->columns(12)
             ->columnSpanFull()
