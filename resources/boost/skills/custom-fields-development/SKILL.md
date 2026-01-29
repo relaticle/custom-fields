@@ -138,27 +138,36 @@ public function getColumns(): array
 
 | Type | Key | Data Storage |
 |------|-----|--------------|
-| Text | `text` | string_value |
+| Text | `text` | text_value |
 | Email | `email` | string_value |
 | Phone | `phone` | string_value |
 | Textarea | `textarea` | text_value |
 | Rich Editor | `rich-editor` | text_value |
 | Markdown | `markdown-editor` | text_value |
-| Link | `link` | string_value |
+| Link | `link` | text_value |
 | Number | `number` | integer_value |
 | Currency | `currency` | float_value |
 | Date | `date` | date_value |
-| DateTime | `datetime` | datetime_value |
-| Select | `select` | string_value |
+| DateTime | `date-time` | datetime_value |
+| Select | `select` | integer_value |
 | Multi-Select | `multi-select` | json_value |
 | Checkbox | `checkbox` | boolean_value |
 | Checkbox List | `checkbox-list` | json_value |
-| Radio | `radio` | string_value |
+| Radio | `radio` | integer_value |
 | Toggle | `toggle` | boolean_value |
-| Toggle Buttons | `toggle-buttons` | string_value |
+| Toggle Buttons | `toggle-buttons` | integer_value |
 | Tags Input | `tags-input` | json_value |
-| Color Picker | `color-picker` | string_value |
-| File Upload | `file-upload` | json_value |
+| Color Picker | `color-picker` | text_value |
+| File Upload | `file-upload` | string_value |
+
+### Field Type Key Naming
+
+When creating custom field types, prefix keys with your project/organization name to avoid conflicts:
+
+- Use `acme-star-rating` instead of `star-rating`
+- Use `myapp-priority` instead of `priority`
+
+This prevents collisions if built-in field types are added later with similar names.
 
 ## Feature Flags
 
