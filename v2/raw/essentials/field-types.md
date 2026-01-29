@@ -44,7 +44,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Text
     </td>
     
     <td>
@@ -110,7 +110,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Text
     </td>
     
     <td>
@@ -435,7 +435,7 @@ Custom Fields includes 20+ pre-configured field types:
     
     <td>
       <code>
-        datetime
+        date-time
       </code>
     </td>
     
@@ -462,7 +462,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Text
     </td>
     
     <td>
@@ -536,7 +536,7 @@ class StarRatingFieldType extends BaseFieldType
     public function configure(): FieldSchema
     {
         return FieldSchema::numeric()
-            ->key('star-rating')
+            ->key('acme-star-rating')
             ->label('Star Rating')
             ->icon('heroicon-o-star')
             ->formComponent(function (CustomField $customField) {
@@ -755,11 +755,12 @@ enum FieldDataType: string
 ## Best Practices
 
 1. **Use Existing Filament Components**: Build on Filament's components like `Select`, `TextInput`, etc.
-2. **Follow Naming Conventions**: Use kebab-case for keys (e.g., `star-rating`, `country-select`)
-3. **Choose the Right Data Type**: Select the data type that matches how your field's values should be stored
-4. **Use Closures for Flexibility**: For complex components, use closure-based definitions
-5. **Test Your Components**: Ensure your field type works in forms, tables, and infolists
-6. **Consider Validation**: Only allow validation rules that make sense for your field type
+2. **Follow Naming Conventions**: Use kebab-case for keys (e.g., `acme-star-rating`, `myapp-country-select`)
+3. **Prefix Keys with Project/Org Name**: Always prefix custom field type keys with your project or organization name to avoid conflicts with built-in types (e.g., `acme-priority` instead of `priority`)
+4. **Choose the Right Data Type**: Select the data type that matches how your field's values should be stored
+5. **Use Closures for Flexibility**: For complex components, use closure-based definitions
+6. **Test Your Components**: Ensure your field type works in forms, tables, and infolists
+7. **Consider Validation**: Only allow validation rules that make sense for your field type
 
 ## Field Type Priority
 
