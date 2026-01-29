@@ -44,7 +44,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Text
     </td>
     
     <td>
@@ -66,7 +66,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Multi-choice
     </td>
     
     <td>
@@ -88,7 +88,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Multi-choice
     </td>
     
     <td>
@@ -110,7 +110,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Multi-choice
     </td>
     
     <td>
@@ -462,7 +462,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      String
+      Text
     </td>
     
     <td>
@@ -558,7 +558,7 @@ class StarRatingFieldType extends BaseFieldType
     public function configure(): FieldSchema
     {
         return FieldSchema::numeric()
-            ->key('star-rating')
+            ->key('acme-star-rating')
             ->label('Star Rating')
             ->icon('heroicon-o-star')
             ->formComponent(function (CustomField $customField) {
@@ -777,7 +777,11 @@ enum FieldDataType: string
 ## Best Practices
 
 1. **Use Existing Filament Components**: Build on Filament's components like `Select`, `TextInput`, etc.
-2. **Follow Naming Conventions**: Use kebab-case for keys (e.g., `star-rating`, `country-select`)
+2. **Follow Naming Conventions**:
+
+  - Use `kebab-case` for keys (e.g., `star-rating`, `country-select`)
+  - **Use a project prefix** for custom types (e.g., `acme-star-rating`) to avoid conflicts with built-in types
+  - Only skip the prefix when intentionally replacing a built-in type
 3. **Choose the Right Data Type**: Select the data type that matches how your field's values should be stored
 4. **Use Closures for Flexibility**: For complex components, use closure-based definitions
 5. **Test Your Components**: Ensure your field type works in forms, tables, and infolists

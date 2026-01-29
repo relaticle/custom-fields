@@ -858,10 +858,10 @@ Custom Fields includes 20+ pre-configured field types:
 
 | Field Type          | Key               | Data Type     | Description                             |
 | ------------------- | ----------------- | ------------- | --------------------------------------- |
-| **Text Input**      | `text`            | String        | Basic text input with validation        |
-| **Email**           | `email`           | String        | Email input with validation             |
-| **Phone**           | `phone`           | String        | Phone number input                      |
-| **Link**            | `link`            | String        | URL validation and formatting           |
+| **Text Input**      | `text`            | Text          | Basic text input with validation        |
+| **Email**           | `email`           | Multi-choice  | Email input with validation             |
+| **Phone**           | `phone`           | Multi-choice  | Phone number input                      |
+| **Link**            | `link`            | Multi-choice  | URL validation and formatting           |
 | **Textarea**        | `textarea`        | Text          | Multi-line text input                   |
 | **Rich Editor**     | `rich-editor`     | Text          | WYSIWYG editor with formatting          |
 | **Markdown Editor** | `markdown-editor` | Text          | Markdown syntax with preview            |
@@ -877,7 +877,7 @@ Custom Fields includes 20+ pre-configured field types:
 | **Toggle Buttons**  | `toggle-buttons`  | Single-choice | Button group selection                  |
 | **Date**            | `date`            | Date          | Date picker                             |
 | **Date Time**       | `date-time`       | DateTime      | Date and time picker                    |
-| **Color Picker**    | `color-picker`    | String        | Visual color selection                  |
+| **Color Picker**    | `color-picker`    | Text          | Visual color selection                  |
 | **File Upload**     | `file-upload`     | String        | File upload with validation             |
 | **Record**          | `record`          | Multi-choice  | Polymorphic model lookup                |
 
@@ -923,7 +923,7 @@ class StarRatingFieldType extends BaseFieldType
     public function configure(): FieldSchema
     {
         return FieldSchema::numeric()
-            ->key('star-rating')
+            ->key('acme-star-rating')
             ->label('Star Rating')
             ->icon('heroicon-o-star')
             ->formComponent(function (CustomField $customField) {
@@ -1142,7 +1142,10 @@ enum FieldDataType: string
 ## Best Practices
 
 1. **Use Existing Filament Components**: Build on Filament's components like `Select`, `TextInput`, etc.
-2. **Follow Naming Conventions**: Use kebab-case for keys (e.g., `star-rating`, `country-select`)
+2. **Follow Naming Conventions**:
+   - Use `kebab-case` for keys (e.g., `star-rating`, `country-select`)
+   - **Use a project prefix** for custom types (e.g., `acme-star-rating`) to avoid conflicts with built-in types
+   - Only skip the prefix when intentionally replacing a built-in type
 3. **Choose the Right Data Type**: Select the data type that matches how your field's values should be stored
 4. **Use Closures for Flexibility**: For complex components, use closure-based definitions
 5. **Test Your Components**: Ensure your field type works in forms, tables, and infolists
