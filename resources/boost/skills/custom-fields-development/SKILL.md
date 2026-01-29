@@ -138,17 +138,17 @@ public function getColumns(): array
 
 | Type | Key | Data Storage |
 |------|-----|--------------|
-| Text | `text` | string_value |
-| Email | `email` | string_value |
+| Text | `text` | text_value |
+| Email | `email` | json_value |
 | Phone | `phone` | json_value |
 | Textarea | `textarea` | text_value |
 | Rich Editor | `rich-editor` | text_value |
 | Markdown | `markdown-editor` | text_value |
-| Link | `link` | string_value |
+| Link | `link` | json_value |
 | Number | `number` | integer_value |
 | Currency | `currency` | float_value |
 | Date | `date` | date_value |
-| DateTime | `datetime` | datetime_value |
+| DateTime | `date-time` | datetime_value |
 | Select | `select` | string_value |
 | Multi-Select | `multi-select` | json_value |
 | Checkbox | `checkbox` | boolean_value |
@@ -157,9 +157,27 @@ public function getColumns(): array
 | Toggle | `toggle` | boolean_value |
 | Toggle Buttons | `toggle-buttons` | string_value |
 | Tags Input | `tags-input` | json_value |
-| Color Picker | `color-picker` | string_value |
-| File Upload | `file-upload` | json_value |
-| Record Select | `record` | string_value / json_value |
+| Color Picker | `color-picker` | text_value |
+| File Upload | `file-upload` | string_value |
+| Record Select | `record` | json_value |
+
+### Field Type Key Naming
+
+**Convention:** Use `kebab-case` for all field type keys.
+
+**For custom field types**, use a project prefix to avoid conflicts:
+
+| Scenario | Pattern | Example |
+|----------|---------|---------|
+| New custom type | `{project}-{name}` | `acme-star-rating` |
+| Extended built-in | `{project}-{original}` | `acme-rich-editor` |
+| Replace built-in | Same key | `rich-editor` |
+
+**Why prefix?**
+- Avoids accidental override of built-in types
+- Future-proof against new package versions
+- Clear identification in database/UI
+- Safe for multi-vendor environments
 
 ## Feature Flags
 
