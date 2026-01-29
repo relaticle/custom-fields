@@ -42,5 +42,10 @@ node_modules/
 .DS_Store
 
 # AI
+/.ai
 /.claude
+/.cursor
+/.junie
+AGENTS.md
+boost.json
 CLAUDE.md
