@@ -35,6 +35,34 @@ use Relaticle\CustomFields\Services\TenantContextService;
 class FieldForm implements FormInterface
 {
     /**
+     * Get type-specific settings schema components.
+     *
+     * @return array<int, Component>
+     */
+    private static function getTypeSettingsSchema(): array
+    {
+        $components = [];
+
+        foreach (CustomFieldsType::toCollection() as $fieldTypeData) {
+            if ($fieldTypeData->settingsSchema === null) {
+                continue;
+            }
+
+            $schema = is_callable($fieldTypeData->settingsSchema)
+                ? ($fieldTypeData->settingsSchema)()
+                : $fieldTypeData->settingsSchema;
+
+            foreach ($schema as $component) {
+                $components[] = $component->visible(
+                    fn (Get $get): bool => $get('type') === $fieldTypeData->key
+                );
+            }
+        }
+
+        return $components;
+    }
+
+    /**
      * @return array<int, Component>
      *
      * @throws Exception
@@ -388,6 +416,9 @@ class FieldForm implements FormInterface
                                             ])
                                     ),
                             ]),
+
+                        // Dynamic type-specific settings from field type definition
+                        ...self::getTypeSettingsSchema(),
 
                         Select::make('options_lookup_type')
                             ->label(
