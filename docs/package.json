@@ -17,6 +17,7 @@
         "typescript": "^5.9.2"
     },
     "devDependencies": {
+        "nuxt-fathom": "^0.0.3",
         "zod": "^4.3.5",
         "zod-to-json-schema": "^3.25.1"
     }
