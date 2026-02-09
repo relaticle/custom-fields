@@ -93,7 +93,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
                         $command->newLine();
                         $command->warn('⚠️ Commercial/closed projects require a Commercial License');
                         $command->info('📄 Open source projects use AGPL-3.0');
-                        $command->info('https://custom-fields.relaticle.com/legal-acknowledgments/license');
+                        $command->info('https://relaticle.github.io/custom-fields/community/license');
                         $command->newLine(2);
                     });
             });

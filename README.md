@@ -75,11 +75,11 @@ public function form(Schema $schema): Form
 
 ## Documentation
 
-For complete installation instructions, configuration options, and examples, visit our [documentation](https://custom-fields.relaticle.com/).
+For complete installation instructions, configuration options, and examples, visit our [documentation](https://relaticle.github.io/custom-fields/).
 
 ## Contributing
 
-Contributions are welcome! Please see our [contributing guide](https://custom-fields.relaticle.com/help-support/contributing) in the documentation.
+Contributions are welcome! Please see our [contributing guide](https://relaticle.github.io/custom-fields/community/contributing) in the documentation.
 
 ## Licensing
 
