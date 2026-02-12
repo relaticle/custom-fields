@@ -62,7 +62,7 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->orderBy('sort_order');
     }
 
-    private function findField(string $fieldId): ?CustomField
+    private function findField(string|int $fieldId): ?CustomField
     {
         return CustomFields::newCustomFieldModel()
             ->newQuery()

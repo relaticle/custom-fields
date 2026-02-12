@@ -11,6 +11,8 @@ use BackedEnum;
 use Exception;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Filament\Support\Contracts\ScalableIcon;
+use Filament\Support\Enums\IconSize;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -110,18 +112,11 @@ final class EntityConfigurationData extends Data
         return once(function (): string {
             $icon = $this->icon;
 
-            // Handle Filament Heroicon enums
+            if ($icon instanceof ScalableIcon) {
+                return $icon->getIconForSize(IconSize::Medium);
+            }
+
             if ($icon instanceof BackedEnum) {
-                return $icon->value;
-            }
-
-            // For any objects with a name property
-            if (is_object($icon) && property_exists($icon, 'name')) {
-                return $icon->name;
-            }
-
-            // For any objects with a value property
-            if (is_object($icon) && property_exists($icon, 'value')) {
                 return $icon->value;
             }
 
@@ -166,6 +161,10 @@ final class EntityConfigurationData extends Data
                 }
 
                 $icon = $resourceClass::getNavigationIcon();
+
+                if ($icon instanceof ScalableIcon) {
+                    return $icon->getIconForSize(IconSize::Medium);
+                }
 
                 if ($icon instanceof BackedEnum) {
                     return $icon->value;
