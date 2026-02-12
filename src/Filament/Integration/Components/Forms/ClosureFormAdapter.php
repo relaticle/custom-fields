@@ -31,7 +31,7 @@ final readonly class ClosureFormAdapter extends AbstractFormComponent
         private Closure $closure,
         ValidationService $validationService,
         CoreVisibilityLogicService $coreVisibilityLogic,
-        FrontendVisibilityService $frontendVisibilityService
+        FrontendVisibilityService $frontendVisibilityService,
     ) {
         parent::__construct($validationService, $coreVisibilityLogic, $frontendVisibilityService);
     }

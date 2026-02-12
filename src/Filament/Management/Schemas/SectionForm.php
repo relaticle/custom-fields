@@ -17,6 +17,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Services\TenantContextService;
 
 class SectionForm implements FormInterface, SectionFormInterface
@@ -28,6 +29,18 @@ class SectionForm implements FormInterface, SectionFormInterface
         self::$entityType = $entityType;
 
         return new self;
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    private static function visibilitySchema(): array
+    {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY)) {
+            return [];
+        }
+
+        return [VisibilityComponent::makeForSection(self::$entityType)];
     }
 
     /**
@@ -139,6 +152,7 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->maxLength(255)
                     ->nullable()
                     ->columnSpan(12),
+                ...self::visibilitySchema(),
             ]),
         ];
     }

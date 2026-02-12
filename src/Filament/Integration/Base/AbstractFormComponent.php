@@ -29,7 +29,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     public function __construct(
         protected ValidationService $validationService,
         protected CoreVisibilityLogicService $coreVisibilityLogic,
-        protected FrontendVisibilityService $frontendVisibilityService
+        protected FrontendVisibilityService $frontendVisibilityService,
     ) {}
 
     /**
@@ -141,9 +141,16 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             $allFields
         );
 
-        return in_array($jsExpression, [null, '', '0'], true)
-            ? $field
-            : $field->live()->visibleJs($jsExpression);
+        if (in_array($jsExpression, [null, '', '0'], true)) {
+            return $field;
+        }
+
+        // visibleJs alone handles both initial state (via x-cloak) and reactivity.
+        // Do NOT combine with visible() — server-side visible(false) prevents the
+        // component from rendering entirely, which blocks visibleJs from ever executing.
+        $field->live()->visibleJs($jsExpression);
+
+        return $field;
     }
 
     /**

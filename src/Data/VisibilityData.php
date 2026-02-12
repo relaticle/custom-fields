@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Data;
 
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -34,7 +36,7 @@ class VisibilityData extends Data
     /**
      * @param  array<string, mixed>  $fieldValues
      */
-    public function evaluate(array $fieldValues): bool
+    public function evaluate(array $fieldValues, ?Model $record = null): bool
     {
         if (! $this->requiresConditions() || ! $this->conditions instanceof DataCollection) {
             return $this->mode === VisibilityMode::ALWAYS_VISIBLE;
@@ -43,7 +45,7 @@ class VisibilityData extends Data
         $results = [];
 
         foreach ($this->conditions as $condition) {
-            $result = $this->evaluateCondition($condition, $fieldValues);
+            $result = $this->evaluateCondition($condition, $fieldValues, $record);
             $results[] = $result;
         }
 
@@ -55,14 +57,22 @@ class VisibilityData extends Data
     /**
      * @param  array<string, mixed>  $fieldValues
      */
-    private function evaluateCondition(VisibilityConditionData $condition, array $fieldValues): bool
-    {
-        $fieldValue = $fieldValues[$condition->field_code] ?? null;
+    private function evaluateCondition(
+        VisibilityConditionData $condition,
+        array $fieldValues,
+        ?Model $record = null
+    ): bool {
+        $fieldValue = match ($condition->source) {
+            ConditionSource::CustomField => $fieldValues[$condition->field_code] ?? null,
+            ConditionSource::ModelAttribute => $record?->getAttribute($condition->field_code),
+        };
 
         return $condition->operator->evaluate($fieldValue, $condition->value);
     }
 
     /**
+     * Get dependent custom field codes (excludes model attribute conditions).
+     *
      * @return array<int, string>
      */
     public function getDependentFields(): array
@@ -74,9 +84,29 @@ class VisibilityData extends Data
         $fields = [];
 
         foreach ($this->conditions as $condition) {
-            $fields[] = $condition->field_code;
+            if ($condition->isCustomField()) {
+                $fields[] = $condition->field_code;
+            }
         }
 
         return array_unique($fields);
+    }
+
+    /**
+     * Check if any conditions reference model attributes.
+     */
+    public function hasModelAttributeConditions(): bool
+    {
+        if (! $this->conditions instanceof DataCollection) {
+            return false;
+        }
+
+        foreach ($this->conditions as $condition) {
+            if ($condition->isModelAttribute()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

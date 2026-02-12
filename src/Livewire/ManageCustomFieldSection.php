@@ -15,6 +15,8 @@ use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
@@ -69,13 +71,13 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         return Action::make('edit')
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::sectionModel())
-            ->slideOver(false)
+            ->slideOver(FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY))
             ->record($this->section)
             ->schema(SectionForm::entityType($this->entityType)->schema())
             ->fillForm($this->section->toArray())
             ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
             ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())
-            ->modalWidth(Width::TwoExtraLarge);
+            ->modalWidth(FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY) ? Width::ScreenLarge : Width::TwoExtraLarge);
     }
 
     public function activateAction(): Action
