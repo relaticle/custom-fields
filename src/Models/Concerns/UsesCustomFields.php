@@ -49,6 +49,14 @@ trait UsesCustomFields
         static::saved(function (Model $model): void {
             $model->saveCustomFieldsFromTemp();
         });
+
+        static::deleting(function (Model $model): void {
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
+            $model->customFieldValues()->delete();
+        });
     }
 
     /**
