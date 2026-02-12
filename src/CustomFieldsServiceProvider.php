@@ -13,6 +13,7 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Livewire;
+use Relaticle\CustomFields\Console\Commands\CleanupOrphanedValuesCommand;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
 use Relaticle\CustomFields\Console\Commands\UpgradeCommand;
@@ -167,6 +168,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     private function getCommands(): array
     {
         return [
+            CleanupOrphanedValuesCommand::class,
             MakeCustomFieldsMigrationCommand::class,
             MakeFieldTypeCommand::class,
             UpgradeCommand::class,
