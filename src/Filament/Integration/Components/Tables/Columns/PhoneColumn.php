@@ -27,10 +27,8 @@ final class PhoneColumn extends AbstractTableColumn
         $this->configureLabel($column, $customField);
 
         $column
-            ->width('200px')
-            ->extraCellAttributes([
-                'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
-            ])
+            ->width('180px')
+            ->disabledClick()
             ->sortable(false)
             ->searchable(false)
             ->getStateUsing(function (HasCustomFields $record) use ($customField): array {

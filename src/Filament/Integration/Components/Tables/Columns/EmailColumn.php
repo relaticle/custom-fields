@@ -23,9 +23,7 @@ final class EmailColumn extends AbstractTableColumn
 
         $column
             ->width('200px')
-            ->extraCellAttributes([
-                'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
-            ])
+            ->disabledClick()
             ->sortable(false)
             ->searchable(false)
             ->getStateUsing(function (HasCustomFields $record) use ($customField): array {

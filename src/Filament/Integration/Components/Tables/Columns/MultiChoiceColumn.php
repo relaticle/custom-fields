@@ -30,6 +30,12 @@ final class MultiChoiceColumn extends AbstractTableColumn
             ->sortable(false)
             ->getStateUsing(fn (HasCustomFields $record): array => $this->valueResolver->resolve($record, $customField));
 
-        return $this->applyBadgeColorsIfEnabled($column, $customField);
+        $column = $this->applyBadgeColorsIfEnabled($column, $customField);
+
+        if (! $column->isBadge()) {
+            $column->badge()->color('gray');
+        }
+
+        return $column;
     }
 }

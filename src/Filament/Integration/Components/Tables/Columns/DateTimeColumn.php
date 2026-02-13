@@ -37,11 +37,11 @@ class DateTimeColumn extends AbstractTableColumn
             }
 
             if ($value && $customField->type === 'date_time') {
-                return $value->format('Y-m-d H:i:s');
+                return $value->format('M j, Y H:i');
             }
 
             if ($value && $customField->type === 'date') {
-                return $value->format('Y-m-d');
+                return $value->format('M j, Y');
             }
 
             return $value;
