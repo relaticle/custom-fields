@@ -126,7 +126,7 @@ class CustomField extends Model
      */
     public function section(): ?BelongsTo
     {
-        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             return null;
         }
 

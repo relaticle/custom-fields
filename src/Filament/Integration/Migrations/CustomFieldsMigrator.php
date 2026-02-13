@@ -57,7 +57,7 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
         $fieldData->entityType = $entityType;
 
         // Only set section entityType when sections are enabled
-        if ($fieldData->section instanceof CustomFieldSectionData && FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        if ($fieldData->section instanceof CustomFieldSectionData && FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             $fieldData->section->entityType = $entityType;
         }
 
@@ -125,7 +125,7 @@ class CustomFieldsMigrator implements CustomsFieldsMigrators
             }
 
             // Only create/update section when sections are enabled
-            if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED) && $this->customFieldData->section instanceof CustomFieldSectionData) {
+            if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS) && $this->customFieldData->section instanceof CustomFieldSectionData) {
                 $sectionData = $this->customFieldData->section->toArray();
                 $sectionAttributes = [
                     'entity_type' => $this->customFieldData->entityType,

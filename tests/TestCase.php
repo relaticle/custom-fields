@@ -129,7 +129,7 @@ class TestCase extends BaseTestCase
                 CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
                 CustomFieldsFeature::UI_TABLE_FILTERS,
                 CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
-                CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED,
+                CustomFieldsFeature::SYSTEM_SECTIONS,
             )
         );
 

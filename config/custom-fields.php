@@ -56,7 +56,7 @@ return [
             CustomFieldsFeature::UI_TABLE_FILTERS,
             CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL,
             CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
-            CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED,
+            CustomFieldsFeature::SYSTEM_SECTIONS,
         )
         ->disable(
             CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
