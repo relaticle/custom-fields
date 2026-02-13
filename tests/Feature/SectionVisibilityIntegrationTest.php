@@ -31,7 +31,7 @@ beforeEach(function (): void {
             CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
             CustomFieldsFeature::UI_TABLE_COLUMNS,
             CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
-            CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED,
+            CustomFieldsFeature::SYSTEM_SECTIONS,
             CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY,
             CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS,
         );
@@ -158,7 +158,7 @@ describe('SectionComponentFactory visibility application', function (): void {
 
     it('does not apply visibility when feature is disabled', function (): void {
         config(['custom-fields.features' => FeatureConfigurator::configure()
-            ->enable(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)
+            ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)
             ->disable(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY),
         ]);
 

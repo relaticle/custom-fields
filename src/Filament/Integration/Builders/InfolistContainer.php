@@ -88,7 +88,7 @@ final class InfolistContainer extends Grid
 
         // Use explicit setting if provided, otherwise check feature flag
         $withoutSections = $this->withoutSections
-            ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+            ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
         $builder = app(InfolistBuilder::class)
             ->forModel($model)

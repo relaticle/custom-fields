@@ -59,7 +59,7 @@ final class InfolistBuilder extends BaseBuilder
             ->when($this->visibleWhenFilled, fn (Entry $field): Entry => $field->visible(fn (mixed $state): bool => filled($state)));
 
         // Check if sections are disabled
-        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
         // When sections disabled, get fields directly without section context
         if ($this->withoutSections || $sectionsDisabled) {

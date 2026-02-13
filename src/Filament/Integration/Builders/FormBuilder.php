@@ -74,7 +74,7 @@ class FormBuilder extends BaseBuilder
         );
 
         // Return flat fields if sections are disabled or withoutSections is set
-        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
         if ($this->withoutSections || $sectionsDisabled) {
             return $allFields->map($createField);
         }

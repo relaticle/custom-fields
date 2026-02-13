@@ -13,7 +13,7 @@ use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
 beforeEach(function (): void {
     // Skip if sections are disabled (these tests require sections)
-    if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+    if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
         $this->markTestSkipped('Sections feature must be enabled for these tests.');
     }
 

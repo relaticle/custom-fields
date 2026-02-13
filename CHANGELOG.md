@@ -11,7 +11,7 @@ All notable changes to `custom-fields` will be documented in this file.
 - **RichTextColumn**: Better rich editor display in tables
 - **Tags Filter**: Colored badges and filters for tags input
 - **Upgrade Command**: Automated migration tool (`vendor/bin/custom-fields-upgrade`)
-- **Optional Sections**: `SYSTEM_SECTIONS_ENABLED` feature flag for sectionless mode
+- **Optional Sections**: `SYSTEM_SECTIONS` feature flag for sectionless mode
 - **Field Search**: Search functionality in custom fields management page
 - **Field Deactivation**: Soft-disable non-system-defined fields and sections
 - **Avatar Configuration**: Display options for entity references

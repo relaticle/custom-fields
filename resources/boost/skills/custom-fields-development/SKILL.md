@@ -194,7 +194,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
         CustomFieldsFeature::FIELD_OPTION_COLORS,
         CustomFieldsFeature::UI_TABLE_COLUMNS,
         CustomFieldsFeature::UI_TABLE_FILTERS,
-        CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED,
+        CustomFieldsFeature::SYSTEM_SECTIONS,
     )
     ->disable(
         CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
@@ -214,7 +214,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 | `UI_TOGGLEABLE_COLUMNS` | Allow users to toggle column visibility |
 | `UI_FIELD_WIDTH_CONTROL` | Control field width in forms |
 | `SYSTEM_MANAGEMENT_INTERFACE` | Admin page for managing fields |
-| `SYSTEM_SECTIONS_ENABLED` | Organize fields into sections |
+| `SYSTEM_SECTIONS` | Organize fields into sections |
 | `SYSTEM_MULTI_TENANCY` | Tenant isolation for fields |
 
 ## Configuration

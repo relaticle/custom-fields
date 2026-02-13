@@ -14,10 +14,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $sectionsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+        $sectionsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
         /**
-         * Custom Field Sections (only created when SYSTEM_SECTIONS_ENABLED)
+         * Custom Field Sections (only created when SYSTEM_SECTIONS)
          */
         if ($sectionsEnabled) {
             Schema::create(config('custom-fields.database.table_names.custom_field_sections'), function (Blueprint $table): void {
@@ -170,7 +170,7 @@ return new class extends Migration
         Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_options'));
         Schema::dropIfExists(config('custom-fields.database.table_names.custom_fields'));
 
-        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             Schema::dropIfExists(config('custom-fields.database.table_names.custom_field_sections'));
         }
     }
