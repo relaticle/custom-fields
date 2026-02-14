@@ -7,12 +7,14 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
+use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 
 final class EmailColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
+    use ConfiguresSearchable;
 
     public function make(CustomField $customField): BaseTextColumn
     {
@@ -20,12 +22,12 @@ final class EmailColumn extends AbstractTableColumn
             ->view('custom-fields::tables.columns.email-column');
 
         $this->configureLabel($column, $customField);
+        $this->configureSearchable($column, $customField);
 
         $column
             ->width('200px')
             ->disabledClick()
             ->sortable(false)
-            ->searchable(false)
             ->getStateUsing(function (HasCustomFields $record) use ($customField): array {
                 $value = $record->getCustomFieldValue($customField);
 
