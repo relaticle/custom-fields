@@ -57,7 +57,7 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function isSectionsDisabled(): bool
     {
-        return ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED);
+        return ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
     }
 
     #[Computed]

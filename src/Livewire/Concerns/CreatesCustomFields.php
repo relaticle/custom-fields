@@ -31,7 +31,7 @@ trait CreatesCustomFields
         ];
 
         // Only include section_id when sections are enabled
-        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED) && $sectionId !== null) {
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS) && $sectionId !== null) {
             $result['custom_field_section_id'] = $sectionId;
         }
 

@@ -59,7 +59,7 @@ abstract class BaseBuilder
         $this->explicitModel = $model;
 
         // Only initialize sections query when sections are enabled
-        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             $this->sections = CustomFields::newSectionModel()->query()
                 ->forEntityType($model::class)
                 ->orderBy('sort_order');
@@ -141,7 +141,7 @@ abstract class BaseBuilder
      */
     protected function getAllFields(): Collection
     {
-        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS_ENABLED)) {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             return $this->getFieldsDirectly();
         }
 
