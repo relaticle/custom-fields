@@ -26,9 +26,21 @@ final class MultiChoiceColumn extends AbstractTableColumn
 
         $this->configureLabel($column, $customField);
 
+        $limit = 3;
+
         $column
             ->sortable(false)
-            ->getStateUsing(fn (HasCustomFields $record): array => $this->valueResolver->resolve($record, $customField));
+            ->getStateUsing(function (HasCustomFields $record) use ($customField, $limit): array {
+                $values = $this->valueResolver->resolve($record, $customField);
+
+                if (count($values) <= $limit) {
+                    return $values;
+                }
+
+                $remaining = count($values) - $limit;
+
+                return [...array_slice($values, 0, $limit), "+{$remaining}"];
+            });
 
         $column = $this->applyBadgeColorsIfEnabled($column, $customField);
 

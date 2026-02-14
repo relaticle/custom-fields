@@ -22,6 +22,7 @@ final class RecordColumn extends AbstractTableColumn
         $column = RecordColumnView::make($customField->getFieldName())
             ->customField($customField)
             ->width('200px')
+            ->disabledClick()
             ->extraCellAttributes([
                 'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
             ]);
