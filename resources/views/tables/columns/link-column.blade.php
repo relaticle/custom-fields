@@ -80,7 +80,7 @@
                         target="_blank"
                         rel="noopener noreferrer"
                         x-on:click.stop
-                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[120px]"
+                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[200px]"
                         title="{{ $entry }}"
                     >{{ $getDisplayUrl($entry) }}</a>
                     <button
@@ -134,7 +134,7 @@
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         x-on:click.stop
-                                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[100px]"
+                                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[200px]"
                                         title="{{ $entry }}"
                                 >{{ $getDisplayUrl($entry) }}</a>
                                 <button
