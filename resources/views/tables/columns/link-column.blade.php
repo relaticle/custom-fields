@@ -72,7 +72,7 @@
     <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
     @if (filled($entries))
-        <div class="flex items-center gap-x-3 text-left overflow-hidden">
+        <div class="inline-flex items-center gap-x-3 text-left">
             @foreach ($visibleEntries as $index => $entry)
                 <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0">
                     <a

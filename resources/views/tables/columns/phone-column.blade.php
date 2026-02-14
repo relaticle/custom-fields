@@ -57,7 +57,7 @@
     @if (empty($entries))
         {{-- Empty: no value --}}
     @else
-        <div class="flex items-center gap-x-3 text-left overflow-hidden">
+        <div class="inline-flex items-center gap-x-3 text-left">
             @foreach ($visibleEntries as $index => $entry)
                 <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-0">
                     <a

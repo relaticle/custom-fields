@@ -57,9 +57,9 @@
     @if (empty($entries))
         {{-- Empty: no value --}}
     @else
-        <div class="flex items-center gap-x-2">
+        <div class="inline-flex items-center gap-x-2">
             @foreach ($visibleEntries as $index => $entry)
-                <div class="group/value relative min-w-0 flex-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0">
                     <a
                         href="mailto:{{ $entry }}"
                         x-on:click.stop
