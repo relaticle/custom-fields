@@ -41,29 +41,23 @@
     }"
     x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
     x-on:click.outside="closePanel()"
-    class="relative px-3 py-4"
+    @if ($hiddenCount > 0)
+        x-ref="trigger"
+        :aria-expanded="isOpen() ? 'true' : 'false'"
+        aria-haspopup="menu"
+        :aria-controls="$id('panel')"
+        x-on:click="togglePanel()"
+        x-on:keydown.enter.prevent="togglePanel()"
+        x-on:keydown.space.prevent="togglePanel()"
+    @endif
+    class="fi-ta-text relative {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
 >
-    {{-- Screen reader live region --}}
     <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
     @if (empty($entries))
         {{-- Empty: no value --}}
     @else
-        {{-- Collapsed View - Single line with truncated values --}}
-        <div
-            @if ($hiddenCount > 0)
-                x-ref="trigger"
-                role="button"
-                tabindex="0"
-                :aria-expanded="isOpen() ? 'true' : 'false'"
-                aria-haspopup="menu"
-                :aria-controls="$id('panel')"
-                x-on:click="togglePanel()"
-                x-on:keydown.enter.prevent="togglePanel()"
-                x-on:keydown.space.prevent="togglePanel()"
-            @endif
-            class="flex items-center gap-x-3 text-left overflow-hidden {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
-        >
+        <div class="flex items-center gap-x-3 text-left overflow-hidden">
             @foreach ($visibleEntries as $index => $entry)
                 <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-0">
                     <a

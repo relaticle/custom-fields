@@ -98,6 +98,10 @@ final class RecordEntry extends AbstractInfolistEntry
             return null;
         }
 
+        if (! array_key_exists('view', $resourceClass::getPages())) {
+            return null;
+        }
+
         return $resourceClass::getUrl('view', ['record' => $record]);
     }
 }

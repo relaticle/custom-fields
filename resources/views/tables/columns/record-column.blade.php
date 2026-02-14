@@ -24,7 +24,7 @@
     class="relative"
 >
     @if (empty($records))
-        <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
+        {{-- Empty: no value --}}
     @elseif ($multiple)
         {{-- Multiple records display --}}
         <div

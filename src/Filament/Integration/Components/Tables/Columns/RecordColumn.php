@@ -136,6 +136,10 @@ final class RecordColumnView extends Column
             return null;
         }
 
+        if (! array_key_exists('view', $resourceClass::getPages())) {
+            return null;
+        }
+
         return $resourceClass::getUrl('view', ['record' => $record]);
     }
 }
