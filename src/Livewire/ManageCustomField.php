@@ -44,7 +44,13 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->record($this->field)
             ->schema(FieldForm::schema())
             ->fillForm($this->field->toArray())
-            ->action(fn (array $data) => $this->field->update($data))
+            ->action(function (array $data): void {
+                if (isset($data['settings'])) {
+                    $data['settings'] = array_merge($this->field->settings->toArray(), $data['settings']);
+                }
+
+                $this->field->update($data);
+            })
             ->modalWidth(Width::ScreenLarge)
             ->slideOver();
     }
