@@ -292,7 +292,7 @@ The package supports these features that can be enabled/disabled:
   <tr>
     <td>
       <code>
-        SYSTEM_SECTIONS_ENABLED
+        SYSTEM_SECTIONS
       </code>
     </td>
     

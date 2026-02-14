@@ -693,7 +693,7 @@ The package supports these features that can be enabled/disabled:
 | `UI_FIELD_WIDTH_CONTROL`               | Custom field width per field              |
 | `SYSTEM_MANAGEMENT_INTERFACE`          | Enable the management interface           |
 | `SYSTEM_MULTI_TENANCY`                 | Enable multi-tenant isolation             |
-| `SYSTEM_SECTIONS_ENABLED`              | Enable field grouping in sections         |
+| `SYSTEM_SECTIONS`                      | Enable field grouping in sections         |
 
 ::alert{type="info"}
 If your custom models include tenant-specific scoping logic, you'll need to register a 
