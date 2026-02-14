@@ -32,6 +32,7 @@ final class EntityConfigurationData extends Data
         public string $primaryAttribute = 'id',
         public array $searchAttributes = [],
         public ?string $resourceClass = null,
+        public ?string $recordPage = 'view',
         public ?Collection $features = null,
         public int $priority = 999,
         public array $metadata = [],
@@ -194,6 +195,11 @@ final class EntityConfigurationData extends Data
         return $this->resourceClass;
     }
 
+    public function getRecordPage(): ?string
+    {
+        return $this->recordPage;
+    }
+
     public function getScopes(): array
     {
         return [];
@@ -305,6 +311,7 @@ final class EntityConfigurationData extends Data
             primaryAttribute: $properties['primaryAttribute'] ?? 'id',
             searchAttributes: $properties['searchAttributes'] ?? [],
             resourceClass: $properties['resourceClass'] ?? null,
+            recordPage: $properties['recordPage'] ?? 'view',
             features: $properties['features'] ?? collect(),
             priority: $properties['priority'] ?? 999,
             metadata: $properties['metadata'] ?? [],
