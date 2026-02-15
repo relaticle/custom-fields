@@ -53,6 +53,7 @@ class SafeValueConverter
                 : self::toSafeInteger($value),
             FieldDataType::FLOAT => self::toSafeFloat($value),
             FieldDataType::MULTI_CHOICE => self::toSafeArray($value),
+            FieldDataType::BOOLEAN => self::toSafeBoolean($value),
             default => $value,
         };
     }
@@ -131,6 +132,29 @@ class SafeValueConverter
         }
 
         return null;
+    }
+
+    /**
+     * Convert a value to a safe boolean (0 or 1) for database storage.
+     *
+     * @param  mixed  $value  The value to convert
+     * @return int|null The boolean value as 0/1 or null if empty
+     */
+    public static function toSafeBoolean(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        if (is_string($value)) {
+            return in_array(mb_strtolower(trim($value)), ['true', '1', 'yes', 'on'], true) ? 1 : 0;
+        }
+
+        return $value ? 1 : 0;
     }
 
     /**
