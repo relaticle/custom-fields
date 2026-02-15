@@ -49,9 +49,7 @@ public static function form(Schema $schema): Schema
             Forms\Components\TextInput::make('email'),
 
             // Add Custom Fields
-            CustomFields::form()->forSchema($schema)
-                                ->build()
-                                ->columnSpanFull()
+            CustomFields::form()->build()->columnSpanFull()
         ]);
 }
 ```
