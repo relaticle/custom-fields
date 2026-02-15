@@ -45,7 +45,7 @@ final class ImportColumnConfigurator
             FieldDataType::DATE => $this->configureDate($column),
             FieldDataType::DATE_TIME => $this->configureDateTime($column),
             FieldDataType::NUMERIC, FieldDataType::FLOAT => $column->numeric(),
-            FieldDataType::BOOLEAN => $column->boolean(),
+            FieldDataType::BOOLEAN => $this->configureBoolean($column),
             default => $this->configureText($column, $customField),
         };
 
@@ -303,6 +303,32 @@ final class ImportColumnConfigurator
         }
 
         return $foundIds;
+    }
+
+    /**
+     * Configure boolean fields with string coercion for CSV values.
+     */
+    private function configureBoolean(ImportColumn $column): void
+    {
+        $column->castStateUsing(function (mixed $state): ?bool {
+            if (blank($state)) {
+                return null;
+            }
+
+            if (is_bool($state)) {
+                return $state;
+            }
+
+            $normalized = strtolower(trim((string) $state));
+
+            return match ($normalized) {
+                '1', 'true', 'yes', 'on' => true,
+                '0', 'false', 'no', 'off' => false,
+                default => null,
+            };
+        });
+
+        $column->example('true or false');
     }
 
     /**

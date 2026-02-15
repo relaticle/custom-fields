@@ -56,6 +56,11 @@ enum FieldDataType: string
         return $this === self::FLOAT;
     }
 
+    public function isBoolean(): bool
+    {
+        return $this === self::BOOLEAN;
+    }
+
     /**
      * Get compatible operators for this field category.
      *
