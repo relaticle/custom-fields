@@ -27,6 +27,9 @@ class ColorPickerFieldType extends BaseFieldType
             ->tableColumn(ColorColumn::class)
             ->infolistEntry(ColorEntry::class)
             ->priority(90)
+            ->defaultValidationRules([
+                'regex:/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/',
+            ])
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
                 ValidationRule::STARTS_WITH,
