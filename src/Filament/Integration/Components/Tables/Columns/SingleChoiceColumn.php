@@ -33,6 +33,12 @@ final class SingleChoiceColumn extends AbstractTableColumn
             ->getStateUsing(fn (HasCustomFields $record): string => $this->valueResolver->resolve($record, $customField))
             ->searchable(false);
 
-        return $this->applyBadgeColorsIfEnabled($column, $customField);
+        $column = $this->applyBadgeColorsIfEnabled($column, $customField);
+
+        if (! $column->isBadge()) {
+            $column->badge()->color('gray');
+        }
+
+        return $column;
     }
 }

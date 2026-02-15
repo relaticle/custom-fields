@@ -22,6 +22,7 @@ final class RecordColumn extends AbstractTableColumn
         $column = RecordColumnView::make($customField->getFieldName())
             ->customField($customField)
             ->width('200px')
+            ->disabledClick()
             ->extraCellAttributes([
                 'style' => 'min-width: 200px; max-width: 200px; overflow: hidden;',
             ]);
@@ -126,6 +127,12 @@ final class RecordColumnView extends Column
             return null;
         }
 
+        $recordPage = $this->entity->getRecordPage();
+
+        if ($recordPage === null) {
+            return null;
+        }
+
         $resourceClass = $this->entity->getResourceClass();
 
         if ($resourceClass === null || ! class_exists($resourceClass)) {
@@ -136,6 +143,17 @@ final class RecordColumnView extends Column
             return null;
         }
 
-        return $resourceClass::getUrl('view', ['record' => $record]);
+        if (! array_key_exists($recordPage, $resourceClass::getPages())) {
+            throw new \InvalidArgumentException(sprintf(
+                "Entity '%s' has recordPage '%s' but %s does not define a '%s' page. Available pages: %s.",
+                $this->entity->getLabelSingular(),
+                $recordPage,
+                class_basename($resourceClass),
+                $recordPage,
+                implode(', ', array_keys($resourceClass::getPages())),
+            ));
+        }
+
+        return $resourceClass::getUrl($recordPage, ['record' => $record]);
     }
 }

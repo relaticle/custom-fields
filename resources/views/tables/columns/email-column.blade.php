@@ -41,41 +41,35 @@
     }"
     x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
     x-on:click.outside="closePanel()"
-    class="relative"
+    @if ($hiddenCount > 0)
+        x-ref="trigger"
+        :aria-expanded="isOpen() ? 'true' : 'false'"
+        aria-haspopup="menu"
+        :aria-controls="$id('panel')"
+        x-on:click="togglePanel()"
+        x-on:keydown.enter.prevent="togglePanel()"
+        x-on:keydown.space.prevent="togglePanel()"
+    @endif
+    class="fi-ta-text relative {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
 >
-    {{-- Screen reader live region --}}
     <div x-ref="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
     @if (empty($entries))
-        <span class="text-gray-400 dark:text-gray-500">—</span>
+        {{-- Empty: no value --}}
     @else
-        {{-- Collapsed View - Single line with truncated values --}}
-        <div
-            @if ($hiddenCount > 0)
-                x-ref="trigger"
-                role="button"
-                tabindex="0"
-                :aria-expanded="isOpen() ? 'true' : 'false'"
-                aria-haspopup="menu"
-                :aria-controls="$id('panel')"
-                x-on:click="togglePanel()"
-                x-on:keydown.enter.prevent="togglePanel()"
-                x-on:keydown.space.prevent="togglePanel()"
-            @endif
-            class="flex items-center gap-x-3 text-left overflow-hidden {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
-        >
+        <div class="inline-flex items-center gap-x-2">
             @foreach ($visibleEntries as $index => $entry)
                 <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0">
                     <a
                         href="mailto:{{ $entry }}"
                         x-on:click.stop
-                        class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate max-w-[120px]"
+                        class="block text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate"
                     >{{ $entry }}</a>
                     <button
                         type="button"
                         x-on:click.stop="copyToClipboard(@js($entry), 'visible-{{ $index }}', $event)"
                         aria-label="Copy {{ $entry }} to clipboard"
-                        class="absolute right-0 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                        class="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                     >
                         <x-heroicon-m-clipboard-document
                             x-show="copiedIndex !== 'visible-{{ $index }}'"
@@ -92,12 +86,11 @@
                 </div>
             @endforeach
             @if ($hiddenCount > 0)
-                <span class="text-sm text-gray-400 dark:text-gray-500 whitespace-nowrap" aria-hidden="true">+{{ $hiddenCount }}</span>
+                <span class="text-sm text-gray-400 dark:text-gray-500 whitespace-nowrap shrink-0" aria-hidden="true">+{{ $hiddenCount }}</span>
                 <span class="sr-only">and {{ $hiddenCount }} more. Press Enter to view all.</span>
             @endif
         </div>
 
-        {{-- Expanded Popover - All values --}}
         @if ($hiddenCount > 0)
             <div
                 x-cloak
@@ -108,25 +101,25 @@
                 role="menu"
                 :id="$id('panel')"
                 aria-label="All email addresses"
-                class="absolute z-50 w-[180px] rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
+                class="absolute z-50 w-[260px] rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
             >
-                <div class="py-1 max-h-[280px] overflow-y-auto overflow-x-auto">
+                <div class="py-1 max-h-[280px] overflow-y-auto">
                     @foreach ($entries as $index => $entry)
                         <div
                             role="menuitem"
-                            class="flex items-center px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                            class="px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
-                            <div class="group/value relative inline-flex items-center py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="group/value relative min-w-0 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                 <a
                                     href="mailto:{{ $entry }}"
                                     x-on:click.stop
-                                    class="text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2"
+                                    class="block text-sm text-primary-600 dark:text-primary-400 underline decoration-gray-300 dark:decoration-gray-600 decoration-1 underline-offset-2 truncate"
                                 >{{ $entry }}</a>
                                 <button
                                     type="button"
                                     x-on:click.stop="copyToClipboard(@js($entry), {{ $index }}, $event)"
                                     aria-label="Copy {{ $entry }} to clipboard"
-                                    class="absolute right-0 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                                    class="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                 >
                                     <x-heroicon-m-clipboard-document
                                         x-show="copiedIndex !== {{ $index }}"

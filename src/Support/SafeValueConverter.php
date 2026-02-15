@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\Support;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
 
 /**
  * Handles safe conversion of values to database-compatible formats
@@ -17,30 +19,40 @@ class SafeValueConverter
     /**
      * Maximum allowable integer for BIGINT in most SQL databases
      */
-    public const MAX_BIGINT = PHP_INT_MAX; // Explicit value instead of PHP_INT_MAX
+    public const MAX_BIGINT = PHP_INT_MAX;
 
     /**
      * Minimum allowable integer for BIGINT in most SQL databases
      */
-    public const MIN_BIGINT = PHP_INT_MIN; // Explicit value instead of PHP_INT_MIN
+    public const MIN_BIGINT = PHP_INT_MIN;
 
     /**
      * Safely convert a value to the appropriate type for database storage.
      *
      * @param  mixed  $value  The value to convert
-     * @param  string  $fieldType  The field type
+     * @param  string  $fieldType  The field type key (e.g. 'select', 'email')
      * @return mixed The converted value
      */
     public static function toDbSafe(mixed $value, string $fieldType): mixed
     {
-        // Handle field types by string value
-        return match ($fieldType) {
-            'number' => self::toSafeInteger($value),
-            'radio', 'select' => CustomFields::optionModelUsesStringKeys()
+        $fieldTypeData = CustomFieldsType::getFieldType($fieldType);
+
+        if ($fieldTypeData === null) {
+            return $value;
+        }
+
+        return self::convertByDataType($value, $fieldTypeData->dataType);
+    }
+
+    public static function convertByDataType(mixed $value, FieldDataType $dataType): mixed
+    {
+        return match ($dataType) {
+            FieldDataType::NUMERIC => self::toSafeInteger($value),
+            FieldDataType::SINGLE_CHOICE => CustomFields::optionModelUsesStringKeys()
                 ? self::toSafeString($value)
                 : self::toSafeInteger($value),
-            'currency' => self::toSafeFloat($value),
-            'checkbox_list', 'toggle_buttons', 'tags_input', 'multi_select' => self::toSafeArray($value),
+            FieldDataType::FLOAT => self::toSafeFloat($value),
+            FieldDataType::MULTI_CHOICE => self::toSafeArray($value),
             default => $value,
         };
     }

@@ -88,6 +88,12 @@ final class RecordEntry extends AbstractInfolistEntry
 
     private function getRecordUrl(Model $record, mixed $entity): ?string
     {
+        $recordPage = $entity->getRecordPage();
+
+        if ($recordPage === null) {
+            return null;
+        }
+
         $resourceClass = $entity->getResourceClass();
 
         if ($resourceClass === null || ! class_exists($resourceClass)) {
@@ -98,6 +104,17 @@ final class RecordEntry extends AbstractInfolistEntry
             return null;
         }
 
-        return $resourceClass::getUrl('view', ['record' => $record]);
+        if (! array_key_exists($recordPage, $resourceClass::getPages())) {
+            throw new \InvalidArgumentException(sprintf(
+                "Entity '%s' has recordPage '%s' but %s does not define a '%s' page. Available pages: %s.",
+                $entity->getLabelSingular(),
+                $recordPage,
+                class_basename($resourceClass),
+                $recordPage,
+                implode(', ', array_keys($resourceClass::getPages())),
+            ));
+        }
+
+        return $resourceClass::getUrl($recordPage, ['record' => $record]);
     }
 }

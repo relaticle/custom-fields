@@ -68,7 +68,7 @@ public function form(Schema $schema): Form
     return $schema->components([
         // Your existing form fields...
         
-        CustomFields::form()->forSchema($schema)->build()
+        CustomFields::form()->build()
     ]);
 }
 ```

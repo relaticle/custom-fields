@@ -21,26 +21,22 @@
     }"
     x-on:keydown.esc="isOpen() && (closePanel(), $event.stopPropagation())"
     x-on:click.outside="closePanel()"
-    class="relative"
+    @if ($hiddenCount > 0)
+        x-ref="trigger"
+        :aria-expanded="isOpen() ? 'true' : 'false'"
+        aria-haspopup="menu"
+        :aria-controls="$id('panel')"
+        x-on:click="togglePanel()"
+        x-on:keydown.enter.prevent="togglePanel()"
+        x-on:keydown.space.prevent="togglePanel()"
+    @endif
+    class="relative {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
 >
     @if (empty($records))
-        <span class="text-gray-400 dark:text-gray-500">&mdash;</span>
+        {{-- Empty: no value --}}
     @elseif ($multiple)
         {{-- Multiple records display --}}
-        <div
-            @if ($hiddenCount > 0)
-                x-ref="trigger"
-                role="button"
-                tabindex="0"
-                :aria-expanded="isOpen() ? 'true' : 'false'"
-                aria-haspopup="menu"
-                :aria-controls="$id('panel')"
-                x-on:click.stop="togglePanel()"
-                x-on:keydown.enter.prevent="togglePanel()"
-                x-on:keydown.space.prevent="togglePanel()"
-            @endif
-            class="flex items-center gap-x-2 text-left overflow-hidden {{ $hiddenCount > 0 ? 'cursor-pointer' : '' }}"
-        >
+        <div class="flex items-center gap-x-2 text-left overflow-hidden">
             @foreach ($visibleRecords as $record)
                 @if ($record['url'])
                     <a

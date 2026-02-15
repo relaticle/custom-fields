@@ -101,6 +101,10 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->schema(FieldForm::schema(withOptionsRelationship: true))
             ->fillForm(fn (CustomField $record): array => $record->toArray())
             ->action(function (array $data, CustomField $record): void {
+                if (isset($data['settings'])) {
+                    $data['settings'] = array_merge($record->settings->toArray(), $data['settings']);
+                }
+
                 $record->update($data);
                 $this->resetFieldsCache();
             })

@@ -35,6 +35,7 @@ final class FieldColumnFactory
                 condition: FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS),
                 isToggledHiddenByDefault: $customField->settings->list_toggleable_hidden
             )
-            ->columnSpan($customField->width->getSpanValue());
+            ->columnSpan($customField->width->getSpanValue())
+            ->placeholder('');
     }
 }
