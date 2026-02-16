@@ -275,10 +275,7 @@ dataset('field_type_configurations', fn (): array => [
     'link_field' => [
         'fieldType' => 'link',
         'config' => [
-            'validation_rules' => [
-                ['name' => 'url', 'parameters' => []],
-                ['name' => 'starts_with', 'parameters' => ['http://', 'https://']],
-            ],
+            'validation_rules' => [],
         ],
         'testValues' => [
             'valid' => ['https://example.com', 'http://test.org', 'https://www.google.com'],

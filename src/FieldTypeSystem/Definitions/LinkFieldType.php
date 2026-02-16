@@ -34,8 +34,6 @@ class LinkFieldType extends BaseFieldType
             ->defaultItemValidationRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/'])
             ->availableValidationRules([
                 ValidationRule::REQUIRED,
-                ValidationRule::URL,
-                ValidationRule::STARTS_WITH,
                 ValidationRule::MIN,
                 ValidationRule::MAX,
             ]);

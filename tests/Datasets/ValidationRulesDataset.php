@@ -590,8 +590,8 @@ dataset('field_type_validation_compatibility', fn (): array => [
     ],
     'url_field_rules' => [
         'fieldType' => 'link',
-        'allowedRules' => ['required', 'url', 'starts_with'],
-        'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer'],
+        'allowedRules' => ['required', 'min', 'max'],
+        'disallowedRules' => ['numeric', 'alpha', 'boolean', 'array', 'date', 'integer', 'starts_with', 'url'],
     ],
     'phone_field_rules' => [
         'fieldType' => 'phone',
