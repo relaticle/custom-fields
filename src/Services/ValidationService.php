@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services;
 
+use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\ValidationRuleData;
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
@@ -33,8 +33,8 @@ final class ValidationService
      */
     public function getValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
-        // Convert user rules to Laravel validator format
-        $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
+        // Get capability-based rules from stored values
+        $capabilityRules = $this->getCapabilityRules($customField);
 
         // Get field type default rules (always applied for data integrity)
         $fieldTypeDefaultRules = $this->getFieldTypeDefaultRules($customField->type);
@@ -43,8 +43,8 @@ final class ValidationService
         $isEncrypted = $customField->settings->encrypted ?? false;
         $databaseRules = $this->getDatabaseValidationRules($customField->type, $isEncrypted);
 
-        // Merge all rule types: field defaults + user rules + database constraints
-        $rules = $this->mergeAllValidationRules($fieldTypeDefaultRules, $userRules, $databaseRules, $customField->type);
+        // Merge all rule types
+        $rules = $this->mergeAllValidationRules($fieldTypeDefaultRules, $capabilityRules, $databaseRules, $customField->type);
 
         // Add type-specific rules based on settings
         $typeSpecificRules = $this->getTypeSpecificRules($customField, $ignoreEntityId);
@@ -60,8 +60,38 @@ final class ValidationService
      */
     public function isRequired(CustomField $customField): bool
     {
-        return $customField->validation_rules->toCollection()
-            ->contains('name', ValidationRule::REQUIRED->value);
+        return (bool) ($customField->validation_rules?->get('required', false));
+    }
+
+    /**
+     * Get validation rules from a field type's registered capabilities using stored values.
+     *
+     * @return array<int, string>
+     */
+    private function getCapabilityRules(CustomField $customField): array
+    {
+        $fieldTypeManager = app(FieldManager::class);
+        $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
+
+        if (! $fieldTypeInstance) {
+            return [];
+        }
+
+        $capabilities = $fieldTypeInstance->configure()->data()->validationCapabilities;
+        $validationRules = $customField->validation_rules;
+        $rules = [];
+
+        foreach ($capabilities as $capabilityClass) {
+            /** @var ValidationCapability $capability */
+            $capability = app($capabilityClass);
+            $value = $validationRules?->get($capability->key());
+
+            if ($value !== null) {
+                $rules = array_merge($rules, $capability->toRules($value));
+            }
+        }
+
+        return $rules;
     }
 
     /**
