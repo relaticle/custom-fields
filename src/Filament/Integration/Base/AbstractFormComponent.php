@@ -52,7 +52,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         Collection $allFields,
         array $dependentFieldCodes
     ): Field {
-        return $field
+        $field
             ->name($customField->getFieldName())
             ->label($customField->name)
             ->afterStateHydrated(
@@ -94,6 +94,30 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                 filled($dependentFieldCodes),
                 fn (Field $field): Field => $field->live()
             );
+
+        $this->applyValidationCapabilities($field, $customField);
+
+        return $field;
+    }
+
+    private function applyValidationCapabilities(Field $field, CustomField $customField): void
+    {
+        $fieldTypeData = $customField->typeData;
+
+        if (! $fieldTypeData) {
+            return;
+        }
+
+        $validationRules = $customField->validation_rules;
+
+        foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
+            $capability = app($capabilityClass);
+            $value = $validationRules?->get($capability->key());
+
+            if ($value !== null) {
+                $capability->applyToComponent($field, $value);
+            }
+        }
     }
 
     private function getFieldValue(
