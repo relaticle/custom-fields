@@ -23,12 +23,12 @@ use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
+use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Filament\Management\Forms\Components\CustomFieldValidationComponent;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\TypeField;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Models\CustomField;
@@ -66,6 +66,40 @@ class FieldForm implements FormInterface
                 $components[] = $component->visible(
                     fn (Get $get): bool => $get('type') === $fieldTypeData->key
                 );
+            }
+        }
+
+        return $components;
+    }
+
+    /**
+     * Get validation schema components from registered capabilities.
+     *
+     * @return array<int, Component>
+     */
+    private static function getValidationSchema(): array
+    {
+        $components = [];
+
+        $components[] = Toggle::make('validation_rules.required')
+            ->label(__('custom-fields::custom-fields.field.form.validation.required'))
+            ->default(false);
+
+        foreach (CustomFieldsType::toCollection() as $fieldTypeData) {
+            if ($fieldTypeData->validationCapabilities === []) {
+                continue;
+            }
+
+            foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
+                /** @var ValidationCapability $capability */
+                $capability = app($capabilityClass);
+                $capabilityComponents = $capability->formSchema('validation_rules');
+
+                foreach ($capabilityComponents as $component) {
+                    $components[] = $component->visible(
+                        fn (Get $get): bool => $get('type') === $fieldTypeData->key
+                    );
+                }
             }
         }
 
@@ -466,7 +500,7 @@ class FieldForm implements FormInterface
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
             $additionalTabs[] = Tab::make(
                 __('custom-fields::custom-fields.field.form.validation.label')
-            )->schema([CustomFieldValidationComponent::make()]);
+            )->schema(self::getValidationSchema());
         }
 
         // If no additional tabs, return schema directly without tabs wrapper

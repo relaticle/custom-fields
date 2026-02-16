@@ -71,6 +71,7 @@ return [
             'unique_per_entity_type_help' => 'Each value can only be assigned to one record of this entity type.',
             'validation' => [
                 'label' => 'Validation',
+                'required' => 'Required',
                 'rules' => 'Validation Rules',
                 'rule' => 'Rule',
                 'description' => 'Description',
