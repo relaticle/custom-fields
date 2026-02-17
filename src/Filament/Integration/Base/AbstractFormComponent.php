@@ -112,6 +112,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
 
         foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
             $capability = app($capabilityClass);
+            /** @phpstan-ignore nullsafe.neverNull */
             $value = $validationRules?->get($capability->key());
 
             if ($value !== null) {

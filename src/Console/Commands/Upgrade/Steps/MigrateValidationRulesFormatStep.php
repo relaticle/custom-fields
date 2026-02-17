@@ -30,9 +30,6 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private const MULTI_SELECT_TYPES = ['multi_select', 'checkbox_list', 'tags_input', 'record'];
 
     /** @var list<string> */
-    private const DATE_TYPES = ['date', 'date_time'];
-
-    /** @var list<string> */
     private const FILE_TYPES = ['file_upload'];
 
     public function name(): string
@@ -373,6 +370,6 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return null;
         }
 
-        return $first['value'] ?? null;
+        return $first['value'];
     }
 }
