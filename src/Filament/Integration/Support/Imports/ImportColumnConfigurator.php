@@ -12,7 +12,6 @@ use Exception;
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\CustomFields;
-use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
@@ -448,35 +447,12 @@ final class ImportColumnConfigurator
      */
     private function finalize(ImportColumn $column, CustomField $customField): ImportColumn
     {
-        // Apply validation rules
-        $this->applyValidationRules($column, $customField);
+        // TODO: Reimplement import validation using the new capabilities system if desired.
 
         $column->fillRecordUsing(function (mixed $state, mixed $record) use ($customField): void {
             ImportDataStorage::set($record, $customField->code, $state);
         });
 
         return $column;
-    }
-
-    /**
-     * Apply validation rules to the column.
-     */
-    private function applyValidationRules(ImportColumn $column, CustomField $customField): void
-    {
-        // Handle validation_rules being a DataCollection or Collection
-        $validationRules = $customField->validation_rules->toCollection();
-
-        $rules = $validationRules
-            ->map(
-                fn (ValidationRuleData $rule): string => $rule->parameters === []
-                    ? $rule->name
-                    : $rule->name.':'.implode(',', $rule->parameters)
-            )
-            ->filter()
-            ->toArray();
-
-        if (! empty($rules)) {
-            $column->rules($rules);
-        }
     }
 }

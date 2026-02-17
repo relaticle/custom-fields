@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\FileUploadComponent;
@@ -28,13 +27,8 @@ class FileUploadFieldType extends BaseFieldType
             ->infolistEntry(TextEntry::class)
             ->priority(17)
             ->searchable()
-            ->defaultValidationRules([ValidationRule::FILE])
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::FILE,
-                ValidationRule::MIMES,
-                ValidationRule::MIMETYPES,
-                ValidationRule::MAX,
-            ]);
+            ->defaultValidationRules(['file'])
+            ->canHaveAcceptedFileTypes()
+            ->canHaveMaxFileSize();
     }
 }

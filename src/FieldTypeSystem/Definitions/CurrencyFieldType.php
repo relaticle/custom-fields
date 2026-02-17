@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
@@ -27,16 +26,9 @@ class CurrencyFieldType extends BaseFieldType
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
             ->priority(25)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::NUMERIC,
-                ValidationRule::DECIMAL,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::BETWEEN,
-                ValidationRule::GT,
-                ValidationRule::GTE,
-            ])
+            ->canHaveMinValue()
+            ->canHaveMaxValue()
+            ->canHaveDecimalPlaces()
             ->importExample('99.99')
             ->importTransformer(function (mixed $state): ?float {
                 if (blank($state)) {

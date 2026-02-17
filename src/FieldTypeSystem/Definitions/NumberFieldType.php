@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\NumberComponent;
@@ -28,17 +27,8 @@ class NumberFieldType extends BaseFieldType
             ->infolistEntry(TextEntry::class)
             ->supportsUniqueConstraint()
             ->priority(20)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::NUMERIC,
-                ValidationRule::INTEGER,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::BETWEEN,
-                ValidationRule::GT,
-                ValidationRule::GTE,
-                ValidationRule::LT,
-                ValidationRule::LTE,
-            ]);
+            ->canHaveMinValue()
+            ->canHaveMaxValue()
+            ->canBeIntegerOnly();
     }
 }

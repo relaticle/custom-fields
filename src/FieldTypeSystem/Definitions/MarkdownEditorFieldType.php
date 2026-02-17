@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\MarkdownEditorComponent;
@@ -27,10 +26,7 @@ final class MarkdownEditorFieldType extends BaseFieldType
             ->tableColumn(RichTextColumn::class)
             ->infolistEntry(HtmlEntry::class)
             ->priority(85)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-            ]);
+            ->canHaveMinLength()
+            ->canHaveMaxLength();
     }
 }

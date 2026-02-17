@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -239,9 +238,7 @@ describe('Custom Fields Integration', function (): void {
             'type' => 'text',
             'sort_order' => 1,
             'entity_type' => Post::class,
-            'validation_rules' => [
-                new ValidationRuleData(name: 'required', parameters: []),
-            ],
+            'validation_rules' => ['required' => true],
         ]);
 
         $newData = Post::factory()->make();
@@ -260,7 +257,7 @@ describe('Custom Fields Integration', function (): void {
             ->assertHasFormErrors(['custom_fields.meta_description']);
     });
 
-    it('validates custom field types and constraints', function (string $fieldType, mixed $invalidValue, string $rule): void {
+    it('validates custom field types and constraints', function (string $fieldType, mixed $invalidValue, array $validationRules): void {
         // Arrange
         $section = CustomFieldSection::factory()->create([
             'entity_type' => Post::class,
@@ -272,9 +269,7 @@ describe('Custom Fields Integration', function (): void {
             'code' => 'test_field',
             'type' => $fieldType,
             'entity_type' => Post::class,
-            'validation_rules' => [
-                new ValidationRuleData(name: $rule, parameters: []),
-            ],
+            'validation_rules' => $validationRules,
         ]);
 
         $newData = Post::factory()->make();
@@ -292,8 +287,8 @@ describe('Custom Fields Integration', function (): void {
             ->call('create')
             ->assertHasFormErrors(['custom_fields.test_field']);
     })->with([
-        'text field min length' => ['text', 'a', 'min:3'],
-        'number field must be numeric' => ['number', 'not-a-number', 'numeric'],
+        'text field min length' => ['text', 'a', ['min_length' => 3]],
+        'number field must be numeric' => ['number', 'not-a-number', []],
     ]);
 });
 
@@ -331,7 +326,7 @@ describe('Form Field Visibility and State', function (): void {
 });
 
 describe('Choice Field Validation with Option IDs', function (): void {
-    it('validates choice fields with IN/NOT_IN rules using option IDs', function (
+    it('validates choice fields with required rule using option IDs', function (
         string $fieldType,
         string $fieldCode,
         array $validationRules,
@@ -365,9 +360,9 @@ describe('Choice Field Validation with Option IDs', function (): void {
 
         // Transform submit value to use option IDs (like Filament does)
         $transformedValue = match (true) {
-            is_string($submitValue) && $submitValue === 'invalid' => 999999,
             is_string($submitValue) => $options->firstWhere('name', $submitValue)?->id,
-            is_array($submitValue) => collect($submitValue)->map(fn ($name) => $name === 'invalid' ? 999999 : $options->firstWhere('name', $name)?->id
+            is_array($submitValue) => collect($submitValue)->map(
+                fn ($name) => $options->firstWhere('name', $name)?->id
             )->toArray(),
             default => $submitValue,
         };
@@ -405,62 +400,18 @@ describe('Choice Field Validation with Option IDs', function (): void {
             $test->assertHasFormErrors(['custom_fields.'.$fieldCode => [$expectedError]]);
         }
     })->with([
-        // Single choice field tests
-        'select with valid IN rule' => [
+        'select with valid required value' => [
             'fieldType' => 'select',
             'fieldCode' => 'priority',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'in', parameters: ['Low', 'Medium', 'High']),
-            ],
+            'validationRules' => ['required' => true],
             'optionNames' => ['Low', 'Medium', 'High'],
             'submitValue' => 'Medium',
             'shouldPass' => true,
         ],
-        'select with invalid IN rule' => [
-            'fieldType' => 'select',
-            'fieldCode' => 'priority',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'in', parameters: ['Low', 'Medium', 'High']),
-            ],
-            'optionNames' => ['Low', 'Medium', 'High'],
-            'submitValue' => 'invalid',
-            'shouldPass' => false,
-            'expectedError' => 'in',
-        ],
-        'select with NOT_IN rule valid' => [
-            'fieldType' => 'select',
-            'fieldCode' => 'status',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'not_in', parameters: ['Deleted', 'Banned']),
-            ],
-            'optionNames' => ['Active', 'Deleted', 'Banned'],
-            'submitValue' => 'Active',
-            'shouldPass' => true,
-        ],
-        'select with NOT_IN rule invalid' => [
-            'fieldType' => 'select',
-            'fieldCode' => 'status',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'not_in', parameters: ['Deleted', 'Banned']),
-            ],
-            'optionNames' => ['Active', 'Deleted', 'Banned'],
-            'submitValue' => 'Deleted',
-            'shouldPass' => false,
-            'expectedError' => 'not_in',
-        ],
-        // Multi-choice field tests
         'multi-select with valid values' => [
             'fieldType' => 'multi-select',
             'fieldCode' => 'categories',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'array'),
-                new ValidationRuleData(name: 'min', parameters: [1]),
-            ],
+            'validationRules' => ['required' => true],
             'optionNames' => ['Technology', 'Business', 'Design'],
             'submitValue' => ['Technology', 'Design'],
             'shouldPass' => true,
@@ -468,23 +419,16 @@ describe('Choice Field Validation with Option IDs', function (): void {
         'multi-select with empty array' => [
             'fieldType' => 'multi-select',
             'fieldCode' => 'categories',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'array'),
-                new ValidationRuleData(name: 'min', parameters: [1]),
-            ],
+            'validationRules' => ['required' => true],
             'optionNames' => ['Technology', 'Business', 'Design'],
             'submitValue' => [],
             'shouldPass' => false,
             'expectedError' => 'required',
         ],
-        'checkbox-list with IN validation' => [
+        'checkbox-list with valid values' => [
             'fieldType' => 'checkbox-list',
             'fieldCode' => 'features',
-            'validationRules' => [
-                new ValidationRuleData(name: 'array'),
-                new ValidationRuleData(name: 'in', parameters: ['Feature A', 'Feature B', 'Feature C']),
-            ],
+            'validationRules' => [],
             'optionNames' => ['Feature A', 'Feature B', 'Feature C'],
             'submitValue' => ['Feature A', 'Feature C'],
             'shouldPass' => true,
@@ -492,10 +436,7 @@ describe('Choice Field Validation with Option IDs', function (): void {
         'radio with required validation' => [
             'fieldType' => 'radio',
             'fieldCode' => 'subscription',
-            'validationRules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'in', parameters: ['Basic', 'Pro', 'Enterprise']),
-            ],
+            'validationRules' => ['required' => true],
             'optionNames' => ['Basic', 'Pro', 'Enterprise'],
             'submitValue' => 'Pro',
             'shouldPass' => true,
@@ -514,10 +455,7 @@ describe('Choice Field Validation with Option IDs', function (): void {
             'code' => 'special_field',
             'type' => 'select',
             'entity_type' => Post::class,
-            'validation_rules' => [
-                new ValidationRuleData(name: 'required'),
-                new ValidationRuleData(name: 'in', parameters: ['Option/1', 'Option,2', 'Option:3']),
-            ],
+            'validation_rules' => ['required' => true],
         ]);
 
         // Create options with special characters

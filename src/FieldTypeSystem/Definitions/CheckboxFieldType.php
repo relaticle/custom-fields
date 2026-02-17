@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CheckboxComponent;
@@ -26,11 +25,6 @@ class CheckboxFieldType extends BaseFieldType
             ->formComponent(CheckboxComponent::class)
             ->tableColumn(IconColumn::class)
             ->infolistEntry(BooleanEntry::class)
-            ->priority(50)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::BOOLEAN,
-                ValidationRule::ACCEPTED,
-            ]);
+            ->priority(50);
     }
 }

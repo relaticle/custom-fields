@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\MultiSelectComponent;
@@ -29,13 +28,8 @@ class MultiSelectFieldType extends BaseFieldType
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(42)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::ARRAY,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::DISTINCT,
-            ])
+            ->canHaveMinSelections()
+            ->canHaveMaxSelections()
             ->filterable();
     }
 }

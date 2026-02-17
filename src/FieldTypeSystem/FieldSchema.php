@@ -9,7 +9,6 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\FieldDataType;
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Validation\Capabilities\AcceptedFileTypesCapability;
 use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
 use Relaticle\CustomFields\Validation\Capabilities\IntegerOnlyCapability;
@@ -50,8 +49,6 @@ class FieldSchema
 
     // Field properties
     private int $priority = 500;
-
-    private array $availableValidationRules = [];
 
     private array $defaultValidationRules = [];
 
@@ -262,24 +259,13 @@ class FieldSchema
     }
 
     /**
-     * Set available validation rules for this field type (user selectable)
-     */
-    public function availableValidationRules(array $rules): self
-    {
-        $this->availableValidationRules = $rules;
-
-        return $this;
-    }
-
-    /**
-     * Set default validation rules that are always applied
+     * Set default validation rules that are always applied.
+     *
+     * @param  array<string>  $rules
      */
     public function defaultValidationRules(array $rules): self
     {
-        $this->defaultValidationRules = array_map(
-            fn (ValidationRule|string $rule): string => $rule instanceof ValidationRule ? $rule->value : $rule,
-            $rules
-        );
+        $this->defaultValidationRules = $rules;
 
         return $this;
     }
@@ -288,7 +274,7 @@ class FieldSchema
      * Set default validation rules for individual items in multi-value fields.
      * Only available for MULTI_CHOICE data type.
      *
-     * @param  array<ValidationRule|string>  $rules
+     * @param  array<string>  $rules
      *
      * @throws InvalidArgumentException if used with non-MULTI_CHOICE data type
      */
@@ -300,10 +286,7 @@ class FieldSchema
             );
         }
 
-        $this->defaultItemValidationRules = array_map(
-            fn (ValidationRule|string $rule): string => $rule instanceof ValidationRule ? $rule->value : $rule,
-            $rules
-        );
+        $this->defaultItemValidationRules = $rules;
 
         return $this;
     }
@@ -583,14 +566,6 @@ class FieldSchema
     }
 
     /**
-     * Get the available validation rules (user selectable)
-     */
-    public function getAvailableValidationRules(): array
-    {
-        return $this->availableValidationRules;
-    }
-
-    /**
      * Get the default validation rules (always applied)
      */
     public function getDefaultValidationRules(): array
@@ -735,7 +710,6 @@ class FieldSchema
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
             supportsMultiValue: $this->supportsMultiValue,
             supportsUniqueConstraint: $this->supportsUniqueConstraint,
-            validationRules: $this->availableValidationRules,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema

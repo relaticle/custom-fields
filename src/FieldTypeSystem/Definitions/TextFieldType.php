@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextInputComponent;
@@ -29,16 +28,7 @@ class TextFieldType extends BaseFieldType
             ->encryptable()
             ->supportsUniqueConstraint()
             ->priority(10)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::ALPHA,
-                ValidationRule::ALPHA_NUM,
-                ValidationRule::ALPHA_DASH,
-                ValidationRule::EMAIL,
-                ValidationRule::STARTS_WITH,
-                ValidationRule::ENDS_WITH,
-            ]);
+            ->canHaveMinLength()
+            ->canHaveMaxLength();
     }
 }

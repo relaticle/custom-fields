@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TagsInputComponent;
@@ -31,13 +30,8 @@ final class TagsInputFieldType extends BaseFieldType
             ->searchable(false)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(70)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::ARRAY,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::DISTINCT,
-            ])
+            ->canHaveMinSelections()
+            ->canHaveMaxSelections()
             ->withArbitraryValues()
             ->importExample('tag1, tag2, tag3');
     }

@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
@@ -209,12 +208,6 @@ arch('Models use proper casts for data integrity')
     ->expect('Relaticle\CustomFields\Models')
     ->toHaveProperty('casts')
     ->when(fn ($class): bool => str_contains((string) $class, 'CustomField'));
-
-arch('Validation rules are consistently applied')
-    ->expect(ValidationRule::class)
-    ->toBeEnum()
-    ->and('Relaticle\CustomFields\Services')
-    ->toUse(ValidationRule::class);
 
 // Multi-tenancy constraints
 arch('Tenant isolation is properly implemented')

@@ -30,7 +30,6 @@ final class FieldTypeData extends Data implements Stringable
         public bool $acceptsArbitraryValues = false,
         public bool $supportsMultiValue = false,
         public bool $supportsUniqueConstraint = false,
-        public array $validationRules = [],
         /** @var array<int, class-string<\Relaticle\CustomFields\Contracts\ValidationCapability>> */
         public array $validationCapabilities = [],
         public ?string $settingsDataClass = null,

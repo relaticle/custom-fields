@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\SelectComponent;
@@ -26,11 +25,6 @@ class SelectFieldType extends BaseFieldType
             ->infolistEntry(SingleChoiceEntry::class)
             ->encryptable()
             ->priority(50)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::IN,
-                ValidationRule::NOT_IN,
-            ])
             ->filterable();
     }
 }
