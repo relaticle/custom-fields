@@ -10,6 +10,7 @@ use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ClearCachesStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateEmailFormatStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateLookupFieldsStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigratePhoneFormatStep;
+use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateValidationRulesFormatStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ValidateSchemaStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
@@ -33,6 +34,7 @@ final class UpgradeCommand extends Command
         'lookup-fields' => MigrateLookupFieldsStep::class,
         'email-format' => MigrateEmailFormatStep::class,
         'phone-format' => MigratePhoneFormatStep::class,
+        'migrate-validation-format' => MigrateValidationRulesFormatStep::class,
         'clean-multivalue-rules' => CleanMultiValueValidationRulesStep::class,
         'validate-schema' => ValidateSchemaStep::class,
         'clear-caches' => ClearCachesStep::class,
