@@ -11,6 +11,7 @@ enum DateUnit: string implements HasLabel
     case Days = 'days';
     case Weeks = 'weeks';
     case Months = 'months';
+    case Quarters = 'quarters';
     case Years = 'years';
 
     public function getLabel(): string
@@ -19,6 +20,7 @@ enum DateUnit: string implements HasLabel
             self::Days => 'Days',
             self::Weeks => 'Weeks',
             self::Months => 'Months',
+            self::Quarters => 'Quarters',
             self::Years => 'Years',
         };
     }

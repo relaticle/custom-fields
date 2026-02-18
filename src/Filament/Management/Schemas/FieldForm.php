@@ -449,48 +449,44 @@ class FieldForm implements FormInterface
                         )
                         ->disabled(self::disabledForSystemFields())
                         ->default(false),
-                    Toggle::make('validation_rules.required')
-                        ->inline()
-                        ->label(__('custom-fields::custom-fields.field.form.validation.required'))
-                        ->visible(fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES))
-                        ->default(false),
                 ]),
 
             // Dynamic type-specific settings from field type definition
             ...self::getTypeSettingsSchema(),
 
-            Select::make('lookup_type')
-                ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
-                ->visible(
-                    fn (Get $get): bool => $get('type') !== null
-                        && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true
-                )
-                ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
-                ->options(Entities::getLookupOptions())
-                ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
-                ->required(),
-            $optionsRepeater,
         ];
 
-        // Add validation fieldset inline when the feature is enabled and the type has capabilities
+        // Add validation fieldset with required toggle and type-specific capabilities
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
-            $validationSchema = self::getValidationSchema();
+            $validationSchema = [
+                Toggle::make('validation_rules.required')
+                    ->inline()
+                    ->label(__('custom-fields::custom-fields.field.form.validation.required'))
+                    ->default(false)
+                    ->columnSpanFull(),
+                ...self::getValidationSchema(),
+            ];
 
-            if ($validationSchema !== []) {
-                $typesWithCapabilities = CustomFieldsType::toCollection()
-                    ->filter(fn ($fieldType) => $fieldType->validationCapabilities !== [])
-                    ->pluck('key')
-                    ->all();
-
-                $generalSchema[] = Fieldset::make(
-                    __('custom-fields::custom-fields.field.form.validation.label')
-                )
-                    ->columnSpanFull()
-                    ->columns(2)
-                    ->schema($validationSchema)
-                    ->visible(fn (Get $get): bool => in_array($get('type'), $typesWithCapabilities, true));
-            }
+            $generalSchema[] = Fieldset::make(
+                __('custom-fields::custom-fields.field.form.validation.label')
+            )
+                ->columnSpanFull()
+                ->columns(2)
+                ->schema($validationSchema);
         }
+
+        $generalSchema[] = Select::make('lookup_type')
+            ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
+            ->visible(
+                fn (Get $get): bool => $get('type') !== null
+                    && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true
+            )
+            ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
+            ->options(Entities::getLookupOptions())
+            ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
+            ->required();
+
+        $generalSchema[] = $optionsRepeater;
 
         // Build additional tabs based on feature flags
         $additionalTabs = [];

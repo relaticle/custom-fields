@@ -10,20 +10,22 @@ it('MinDateCapability has correct key', function (): void {
     expect((new MinDateCapability)->key())->toBe('min_date');
 });
 
-it('MinDateCapability produces after_or_equal rule for absolute date', function (): void {
-    $capability = new MinDateCapability;
-    $value = ['mode' => 'absolute', 'absolute_value' => '2026-06-15'];
-
-    expect($capability->toRules($value))->toBe(['after_or_equal:2026-06-15']);
-});
-
-it('MinDateCapability produces after_or_equal rule for relative date', function (): void {
+it('MinDateCapability produces after_or_equal rule for future date', function (): void {
     Carbon::setTestNow('2026-02-17');
 
     $capability = new MinDateCapability;
-    $value = ['mode' => 'relative', 'relative_value' => 7, 'relative_unit' => 'days'];
+    $value = ['relative_value' => 7, 'relative_unit' => 'days', 'direction' => 'from_now'];
 
     expect($capability->toRules($value))->toBe(['after_or_equal:2026-02-24']);
+});
+
+it('MinDateCapability produces after_or_equal rule for past date', function (): void {
+    Carbon::setTestNow('2026-02-17');
+
+    $capability = new MinDateCapability;
+    $value = ['relative_value' => 30, 'relative_unit' => 'days', 'direction' => 'ago'];
+
+    expect($capability->toRules($value))->toBe(['after_or_equal:2026-01-18']);
 });
 
 it('MinDateCapability returns empty rules for null', function (): void {
@@ -36,20 +38,22 @@ it('MaxDateCapability has correct key', function (): void {
     expect((new MaxDateCapability)->key())->toBe('max_date');
 });
 
-it('MaxDateCapability produces before_or_equal rule for absolute date', function (): void {
-    $capability = new MaxDateCapability;
-    $value = ['mode' => 'absolute', 'absolute_value' => '2026-12-31'];
-
-    expect($capability->toRules($value))->toBe(['before_or_equal:2026-12-31']);
-});
-
-it('MaxDateCapability produces before_or_equal rule for relative date', function (): void {
+it('MaxDateCapability produces before_or_equal rule for future date', function (): void {
     Carbon::setTestNow('2026-02-17');
 
     $capability = new MaxDateCapability;
-    $value = ['mode' => 'relative', 'relative_value' => 30, 'relative_unit' => 'days'];
+    $value = ['relative_value' => 30, 'relative_unit' => 'days', 'direction' => 'from_now'];
 
     expect($capability->toRules($value))->toBe(['before_or_equal:2026-03-19']);
+});
+
+it('MaxDateCapability produces before_or_equal rule for past date', function (): void {
+    Carbon::setTestNow('2026-02-17');
+
+    $capability = new MaxDateCapability;
+    $value = ['relative_value' => 18, 'relative_unit' => 'years', 'direction' => 'ago'];
+
+    expect($capability->toRules($value))->toBe(['before_or_equal:2008-02-17']);
 });
 
 it('MaxDateCapability returns empty rules for null', function (): void {

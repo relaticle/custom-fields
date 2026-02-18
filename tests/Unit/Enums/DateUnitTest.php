@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\Enums\DateUnit;
 
-it('has Days, Weeks, Months, Years cases', function (): void {
+it('has Days, Weeks, Months, Quarters, Years cases', function (): void {
     $caseNames = array_map(fn (DateUnit $unit): string => $unit->name, DateUnit::cases());
 
-    expect($caseNames)->toBe(['Days', 'Weeks', 'Months', 'Years']);
+    expect($caseNames)->toBe(['Days', 'Weeks', 'Months', 'Quarters', 'Years']);
 });
 
 it('provides labels for form selects', function (DateUnit $unit, string $expected): void {
@@ -16,5 +16,6 @@ it('provides labels for form selects', function (DateUnit $unit, string $expecte
     [DateUnit::Days, 'Days'],
     [DateUnit::Weeks, 'Weeks'],
     [DateUnit::Months, 'Months'],
+    [DateUnit::Quarters, 'Quarters'],
     [DateUnit::Years, 'Years'],
 ]);

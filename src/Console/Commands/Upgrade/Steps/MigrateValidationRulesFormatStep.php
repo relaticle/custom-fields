@@ -266,7 +266,13 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return null;
         }
 
-        return ['min_date' => $this->parseDateConstraint($value)];
+        $constraint = $this->parseDateConstraint($value, $warnings);
+
+        if ($constraint === null) {
+            return null;
+        }
+
+        return ['min_date' => $constraint];
     }
 
     /**
@@ -281,37 +287,51 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return null;
         }
 
-        return ['max_date' => $this->parseDateConstraint($value)];
+        $constraint = $this->parseDateConstraint($value, $warnings);
+
+        if ($constraint === null) {
+            return null;
+        }
+
+        return ['max_date' => $constraint];
     }
 
     /**
-     * Parse a date constraint value into the new format.
+     * Parse a date constraint value into the new relative format.
      *
-     * @return array{mode: string, relative_value?: int, relative_unit?: string, absolute_value?: string}
+     * @param  list<string>  $warnings
+     * @return array{relative_value: int, relative_unit: string, direction: string}|null
      */
-    private function parseDateConstraint(string $value): array
+    private function parseDateConstraint(string $value, array &$warnings): ?array
     {
         return match ($value) {
             'today' => [
-                'mode' => 'relative',
                 'relative_value' => 0,
                 'relative_unit' => 'days',
+                'direction' => 'from_now',
             ],
             'tomorrow' => [
-                'mode' => 'relative',
                 'relative_value' => 1,
                 'relative_unit' => 'days',
+                'direction' => 'from_now',
             ],
             'yesterday' => [
-                'mode' => 'relative',
-                'relative_value' => -1,
+                'relative_value' => 1,
                 'relative_unit' => 'days',
+                'direction' => 'ago',
             ],
-            default => [
-                'mode' => 'absolute',
-                'absolute_value' => $value,
-            ],
+            default => $this->handleAbsoluteDateConstraint($value, $warnings),
         };
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     */
+    private function handleAbsoluteDateConstraint(string $value, array &$warnings): null
+    {
+        $warnings[] = "Absolute date constraint '{$value}' cannot be automatically converted to relative format, discarding";
+
+        return null;
     }
 
     /**

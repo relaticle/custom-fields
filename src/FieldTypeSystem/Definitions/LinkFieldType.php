@@ -30,8 +30,6 @@ class LinkFieldType extends BaseFieldType
             ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
-            ->defaultItemValidationRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/'])
-            ->canHaveMinLength()
-            ->canHaveMaxLength();
+            ->defaultItemValidationRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/']);
     }
 }

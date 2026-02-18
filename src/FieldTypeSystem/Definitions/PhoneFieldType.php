@@ -34,8 +34,6 @@ class PhoneFieldType extends BaseFieldType
             ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
-            ->defaultItemValidationRules(['phone:AUTO'])
-            ->canHaveMinLength()
-            ->canHaveMaxLength();
+            ->defaultItemValidationRules(['phone:AUTO']);
     }
 }

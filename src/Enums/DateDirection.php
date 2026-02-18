@@ -6,16 +6,16 @@ namespace Relaticle\CustomFields\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum DateConstraintMode: string implements HasLabel
+enum DateDirection: string implements HasLabel
 {
-    case Absolute = 'absolute';
-    case Relative = 'relative';
+    case Ago = 'ago';
+    case FromNow = 'from_now';
 
     public function getLabel(): string
     {
         return match ($this) {
-            self::Absolute => 'Absolute',
-            self::Relative => 'Relative',
+            self::Ago => 'Ago',
+            self::FromNow => 'From Now',
         };
     }
 }

@@ -32,8 +32,6 @@ class EmailFieldType extends BaseFieldType
             ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
-            ->defaultItemValidationRules(['email', 'max:254'])
-            ->canHaveMinLength()
-            ->canHaveMaxLength();
+            ->defaultItemValidationRules(['email', 'max:254']);
     }
 }
