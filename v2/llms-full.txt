@@ -111,6 +111,86 @@ Why choose Custom Fields?
 ::
 
 ::u-page-section
+  :::u-pricing-plans{.gap-x-3 compact compact="true"}
+    ::::u-pricing-plan
+    ---
+    button:
+      label: View on GitHub
+      to: https://github.com/relaticle/custom-fields
+      target: _blank
+      color: neutral
+      variant: outline
+    features:
+      - Unlimited domains
+      - Community support
+    description: AGPL-3.0 for open source projects
+    price: Free
+    title: Open Source
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - 1 domain
+      - 1 year updates
+    billing-cycle: /year
+    description: Personal projects & internal tools
+    price: $79
+    title: Solo
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - Up to 5 domains
+      - 1 year updates
+    billing-cycle: /year
+    description: Agencies & multiple client sites
+    price: $129
+    title: Pro
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - Unlimited domains
+      - 1 year updates
+    highlight: true
+    billing-cycle: /year
+    description: Required for SaaS & multi-tenant
+    price: $299
+    title: Business
+    ---
+    ::::
+  :::
+
+  :::div{.mt-4.text-center.text-sm.text-gray-500.dark:text-gray-400}
+  **Students/Educators**: 50% off · **Non-Profits**: 40% off · [Full license details](https://relaticle.github.io/custom-fields/v2/community/license){.underline.hover:text-gray-700.dark:hover:text-gray-200}
+  :::
+
+#title
+Pricing
+
+#description
+All tiers include every feature. Dev/staging environments are always free.
+::
+
+::u-page-section
   :::card-group
     ::::card
     ---
