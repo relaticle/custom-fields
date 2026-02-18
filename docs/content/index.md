@@ -117,6 +117,87 @@ Why choose Custom Fields?
 
 ::u-page-section
 #title
+Pricing
+
+#description
+All tiers include every feature. Dev/staging environments are always free.
+
+#default
+  ::u-pricing-plans{compact class="gap-x-3"}
+    :::u-pricing-plan
+    ---
+    title: Open Source
+    price: Free
+    description: AGPL-3.0 for open source projects
+    features:
+      - Unlimited domains
+      - Community support
+    button:
+      label: View on GitHub
+      to: https://github.com/relaticle/custom-fields
+      target: _blank
+      color: neutral
+      variant: outline
+    ---
+    :::
+
+    :::u-pricing-plan
+    ---
+    title: Solo
+    price: $79
+    billing-cycle: /year
+    description: Personal projects & internal tools
+    features:
+      - 1 domain
+      - 1 year updates
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    ---
+    :::
+
+    :::u-pricing-plan
+    ---
+    title: Pro
+    price: $129
+    billing-cycle: /year
+    description: Agencies & multiple client sites
+    features:
+      - Up to 5 domains
+      - 1 year updates
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    ---
+    :::
+
+    :::u-pricing-plan
+    ---
+    title: Business
+    price: $299
+    billing-cycle: /year
+    description: Required for SaaS & multi-tenant
+    highlight: true
+    features:
+      - Unlimited domains
+      - 1 year updates
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    ---
+    :::
+  ::
+
+  <div class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+    <strong>Students/Educators</strong>: 50% off &middot; <strong>Non-Profits</strong>: 40% off &middot; <a href="/community/license" class="underline hover:text-gray-700 dark:hover:text-gray-200">Full license details</a>
+  </div>
+::
+
+::u-page-section
+#title
 Our Ecosystem
 
 #description
