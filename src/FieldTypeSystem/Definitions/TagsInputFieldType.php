@@ -10,6 +10,8 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\TagsInputCompon
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\MultiChoiceEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiChoiceColumn;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters\TagsFilter;
+use Relaticle\CustomFields\Validation\Capabilities\MaxSelectionsCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 /**
  * ABOUTME: Field type definition for Tags Input fields
@@ -30,8 +32,10 @@ final class TagsInputFieldType extends BaseFieldType
             ->searchable(false)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(70)
-            ->canHaveMinSelections()
-            ->canHaveMaxSelections()
+            ->withValidationCapabilities(
+                MinSelectionsCapability::class,
+                MaxSelectionsCapability::class,
+            )
             ->withArbitraryValues()
             ->importExample('tag1, tag2, tag3');
     }

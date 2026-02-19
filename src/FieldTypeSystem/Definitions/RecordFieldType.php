@@ -10,6 +10,8 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectCom
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\RecordEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\RecordColumn;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters\RecordFilter;
+use Relaticle\CustomFields\Validation\Capabilities\MaxSelectionsCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 class RecordFieldType extends BaseFieldType
 {
@@ -30,8 +32,10 @@ class RecordFieldType extends BaseFieldType
             ->searchable(false)
             ->filterable()
             ->priority(45)
-            ->canHaveMinSelections()
-            ->canHaveMaxSelections()
+            ->withValidationCapabilities(
+                MinSelectionsCapability::class,
+                MaxSelectionsCapability::class,
+            )
             ->importExample('01JJXYZ123ABC456DEF789GHI');
     }
 }

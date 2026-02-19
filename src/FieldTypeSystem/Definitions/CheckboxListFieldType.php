@@ -10,6 +10,8 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\CheckboxListCom
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\MultiChoiceEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiChoiceColumn;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters\SelectFilter;
+use Relaticle\CustomFields\Validation\Capabilities\MaxSelectionsCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 /**
  * ABOUTME: Field type definition for Checkbox List fields
@@ -28,8 +30,10 @@ class CheckboxListFieldType extends BaseFieldType
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(55)
-            ->canHaveMinSelections()
-            ->canHaveMaxSelections()
+            ->withValidationCapabilities(
+                MinSelectionsCapability::class,
+                MaxSelectionsCapability::class,
+            )
             ->filterable();
     }
 }

@@ -9,6 +9,8 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\FileUploadComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\AcceptedFileTypesCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MaxFileSizeCapability;
 
 /**
  * ABOUTME: Field type definition for file upload fields
@@ -28,7 +30,9 @@ class FileUploadFieldType extends BaseFieldType
             ->priority(17)
             ->searchable()
             ->defaultValidationRules(['file'])
-            ->canHaveAcceptedFileTypes()
-            ->canHaveMaxFileSize();
+            ->withValidationCapabilities(
+                AcceptedFileTypesCapability::class,
+                MaxFileSizeCapability::class,
+            );
     }
 }

@@ -9,6 +9,9 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
 /**
  * ABOUTME: Field type definition for Currency fields
@@ -26,9 +29,11 @@ class CurrencyFieldType extends BaseFieldType
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
             ->priority(25)
-            ->canHaveMinValue()
-            ->canHaveMaxValue()
-            ->canHaveDecimalPlaces()
+            ->withValidationCapabilities(
+                MinValueCapability::class,
+                MaxValueCapability::class,
+                DecimalPlacesCapability::class,
+            )
             ->importExample('99.99')
             ->importTransformer(function (mixed $state): ?float {
                 if (blank($state)) {

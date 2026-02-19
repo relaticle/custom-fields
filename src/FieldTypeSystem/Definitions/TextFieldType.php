@@ -9,6 +9,8 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextInputComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
 
 /**
  * ABOUTME: Field type definition for standard text input fields
@@ -28,7 +30,9 @@ class TextFieldType extends BaseFieldType
             ->encryptable()
             ->supportsUniqueConstraint()
             ->priority(10)
-            ->canHaveMinLength()
-            ->canHaveMaxLength();
+            ->withValidationCapabilities(
+                MinLengthCapability::class,
+                MaxLengthCapability::class,
+            );
     }
 }

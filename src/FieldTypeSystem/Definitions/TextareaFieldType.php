@@ -9,6 +9,8 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextareaFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
 
 /**
  * ABOUTME: Field type definition for Textarea fields
@@ -27,7 +29,9 @@ final class TextareaFieldType extends BaseFieldType
             ->infolistEntry(TextEntry::class)
             ->supportsUniqueConstraint()
             ->priority(15)
-            ->canHaveMinLength()
-            ->canHaveMaxLength();
+            ->withValidationCapabilities(
+                MinLengthCapability::class,
+                MaxLengthCapability::class,
+            );
     }
 }

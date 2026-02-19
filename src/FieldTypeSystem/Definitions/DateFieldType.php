@@ -9,6 +9,8 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\DateComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\DateTimeEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\DateTimeColumn;
+use Relaticle\CustomFields\Validation\Capabilities\MaxDateCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinDateCapability;
 
 /**
  * ABOUTME: Field type definition for Date fields
@@ -26,7 +28,9 @@ class DateFieldType extends BaseFieldType
             ->tableColumn(DateTimeColumn::class)
             ->infolistEntry(DateTimeEntry::class)
             ->priority(30)
-            ->canHaveMinDate()
-            ->canHaveMaxDate();
+            ->withValidationCapabilities(
+                MinDateCapability::class,
+                MaxDateCapability::class,
+            );
     }
 }

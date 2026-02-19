@@ -9,18 +9,6 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\FieldDataType;
-use Relaticle\CustomFields\Validation\Capabilities\AcceptedFileTypesCapability;
-use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
-use Relaticle\CustomFields\Validation\Capabilities\IntegerOnlyCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MaxDateCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MaxFileSizeCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MaxSelectionsCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MinDateCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
-use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 use Spatie\LaravelData\Data;
 
 /**
@@ -417,94 +405,13 @@ class FieldSchema
 
     // ========== Validation Capability Methods ==========
 
-    public function canHaveMinDate(): self
+    /** @param class-string<ValidationCapability> ...$capabilityClasses */
+    public function withValidationCapabilities(string ...$capabilityClasses): self
     {
-        $this->validationCapabilities[] = MinDateCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMaxDate(): self
-    {
-        $this->validationCapabilities[] = MaxDateCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMinValue(): self
-    {
-        $this->validationCapabilities[] = MinValueCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMaxValue(): self
-    {
-        $this->validationCapabilities[] = MaxValueCapability::class;
-
-        return $this;
-    }
-
-    public function canBeIntegerOnly(): self
-    {
-        $this->validationCapabilities[] = IntegerOnlyCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveDecimalPlaces(): self
-    {
-        $this->validationCapabilities[] = DecimalPlacesCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMinLength(): self
-    {
-        $this->validationCapabilities[] = MinLengthCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMaxLength(): self
-    {
-        $this->validationCapabilities[] = MaxLengthCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMinSelections(): self
-    {
-        $this->validationCapabilities[] = MinSelectionsCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMaxSelections(): self
-    {
-        $this->validationCapabilities[] = MaxSelectionsCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveAcceptedFileTypes(): self
-    {
-        $this->validationCapabilities[] = AcceptedFileTypesCapability::class;
-
-        return $this;
-    }
-
-    public function canHaveMaxFileSize(): self
-    {
-        $this->validationCapabilities[] = MaxFileSizeCapability::class;
-
-        return $this;
-    }
-
-    /** @param class-string<ValidationCapability> $capabilityClass */
-    public function withValidationCapability(string $capabilityClass): self
-    {
-        $this->validationCapabilities[] = $capabilityClass;
+        $this->validationCapabilities = [
+            ...$this->validationCapabilities,
+            ...$capabilityClasses,
+        ];
 
         return $this;
     }
