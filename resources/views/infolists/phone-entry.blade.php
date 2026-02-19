@@ -65,12 +65,12 @@
                     aria-label="Copy {{ $entry['display'] }} to clipboard"
                     class="absolute right-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-800/0 dark:via-gray-800/70 dark:to-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                 >
-                    <x-heroicon-m-clipboard-document
+                    <x-filament::icon icon="heroicon-m-clipboard-document"
                         x-show="copiedIndex !== {{ $index }}"
                         class="size-3.5 text-primary-500"
                         aria-hidden="true"
                     />
-                    <x-heroicon-m-check
+                    <x-filament::icon icon="heroicon-m-check"
                         x-show="copiedIndex === {{ $index }}"
                         x-cloak
                         class="size-3.5 text-green-500"

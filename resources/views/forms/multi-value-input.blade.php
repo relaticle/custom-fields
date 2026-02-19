@@ -231,12 +231,12 @@
                                         :aria-label="'Copy ' + value + ' to clipboard'"
                                         class="absolute right-0 opacity-0 group-hover/item:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                     >
-                                        <x-heroicon-m-clipboard-document
+                                        <x-filament::icon icon="heroicon-m-clipboard-document"
                                             x-show="copiedIndex !== 'trigger-' + index"
                                             class="size-3.5 text-primary-500"
                                             aria-hidden="true"
                                         />
-                                        <x-heroicon-m-check
+                                        <x-filament::icon icon="heroicon-m-check"
                                             x-show="copiedIndex === 'trigger-' + index"
                                             x-cloak
                                             class="size-3.5 text-green-500"
@@ -255,7 +255,7 @@
                         </div>
 
                         {{-- Chevron indicator --}}
-                        <x-heroicon-m-chevron-down
+                        <x-filament::icon icon="heroicon-m-chevron-down"
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
                             x-bind:class="{ 'rotate-180': isOpen() }"
                             aria-hidden="true"
@@ -312,12 +312,12 @@
                                                     :aria-label="'Copy ' + value + ' to clipboard'"
                                                     class="absolute right-0 opacity-0 group-hover/value:opacity-100 focus:opacity-100 transition-opacity duration-300 py-0.5 pl-2 pr-1 rounded-r bg-gradient-to-r from-gray-100/90 via-gray-100/100 to-gray-100 dark:from-gray-700/0 dark:via-gray-700/70 dark:to-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                                 >
-                                                    <x-heroicon-m-clipboard-document
+                                                    <x-filament::icon icon="heroicon-m-clipboard-document"
                                                         x-show="copiedIndex !== index"
                                                         class="size-4 text-primary-500"
                                                         aria-hidden="true"
                                                     />
-                                                    <x-heroicon-m-check
+                                                    <x-filament::icon icon="heroicon-m-check"
                                                         x-show="copiedIndex === index"
                                                         x-cloak
                                                         class="size-4 text-green-500"
@@ -335,7 +335,7 @@
                                                 :aria-label="'Delete ' + value"
                                                 class="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 rounded p-1 text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                             >
-                                                <x-heroicon-m-trash class="size-4" aria-hidden="true" />
+                                                <x-filament::icon icon="heroicon-m-trash" class="size-4" aria-hidden="true" />
                                             </button>
                                         </div>
                                     </template>
@@ -347,7 +347,7 @@
                         <template x-if="canAddMore">
                             <div class="flex items-center gap-2 px-3 py-2 border-t border-gray-100 dark:border-gray-800">
                                 {{-- Plus Icon (Left) --}}
-                                <x-heroicon-m-plus class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
+                                <x-filament::icon icon="heroicon-m-plus" class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
 
                                 <input
                                     type="text"
@@ -366,7 +366,7 @@
                                     aria-label="Add value"
                                     class="shrink-0 rounded p-1 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                                 >
-                                    <x-heroicon-m-arrow-right class="size-4" aria-hidden="true" />
+                                    <x-filament::icon icon="heroicon-m-arrow-right" class="size-4" aria-hidden="true" />
                                 </button>
                             </div>
                         </template>

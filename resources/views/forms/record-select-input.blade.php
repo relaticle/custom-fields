@@ -480,12 +480,12 @@
                             aria-label="Clear selection"
                             class="shrink-0 rounded p-0.5 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
-                            <x-heroicon-m-x-mark class="size-4" />
+                            <x-filament::icon icon="heroicon-m-x-mark" class="size-4" />
                         </button>
                     </template>
 
                     {{-- Chevron --}}
-                    <x-heroicon-m-chevron-down
+                    <x-filament::icon icon="heroicon-m-chevron-down"
                         class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
                         x-bind:class="{ 'rotate-180': open }"
                     />
@@ -537,7 +537,7 @@
                                         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                         :disabled="isDisabled"
                                     >
-                                        <x-heroicon-m-x-mark class="size-3" />
+                                        <x-filament::icon icon="heroicon-m-x-mark" class="size-3" />
                                     </button>
                                 </span>
                             </template>
@@ -551,7 +551,7 @@
                         </div>
 
                         {{-- Chevron --}}
-                        <x-heroicon-m-chevron-down
+                        <x-filament::icon icon="heroicon-m-chevron-down"
                             class="size-4 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200"
                             x-bind:class="{ 'rotate-180': open }"
                         />
@@ -576,7 +576,7 @@
             {{-- Search Input --}}
             <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
                 <template x-if="!isSearching">
-                    <x-heroicon-m-magnifying-glass class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
+                    <x-filament::icon icon="heroicon-m-magnifying-glass" class="size-4 text-gray-400 shrink-0" aria-hidden="true" />
                 </template>
                 <template x-if="isSearching">
                     <x-filament::loading-indicator class="size-4 text-gray-400 shrink-0" />
@@ -653,7 +653,7 @@
 
                         {{-- Check icon for single-select --}}
                         <template x-if="!allowMultiple && isSelected(record.id)">
-                            <x-heroicon-m-check class="size-4 text-primary-600 dark:text-primary-400 shrink-0" aria-hidden="true" />
+                            <x-filament::icon icon="heroicon-m-check" class="size-4 text-primary-600 dark:text-primary-400 shrink-0" aria-hidden="true" />
                         </template>
                     </button>
                 </template>
