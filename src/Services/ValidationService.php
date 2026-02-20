@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services;
 
-use Relaticle\CustomFields\Data\ValidationRuleData;
-use Relaticle\CustomFields\Enums\ValidationRule;
+use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
 use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
-use Spatie\LaravelData\DataCollection;
 
 /**
  * Service for handling field validation rules and constraints.
@@ -33,8 +31,8 @@ final class ValidationService
      */
     public function getValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
-        // Convert user rules to Laravel validator format
-        $userRules = $this->convertUserRulesToValidatorFormat($customField->validation_rules, $customField);
+        // Get capability-based rules from stored values
+        $capabilityRules = $this->getCapabilityRules($customField);
 
         // Get field type default rules (always applied for data integrity)
         $fieldTypeDefaultRules = $this->getFieldTypeDefaultRules($customField->type);
@@ -43,8 +41,8 @@ final class ValidationService
         $isEncrypted = $customField->settings->encrypted ?? false;
         $databaseRules = $this->getDatabaseValidationRules($customField->type, $isEncrypted);
 
-        // Merge all rule types: field defaults + user rules + database constraints
-        $rules = $this->mergeAllValidationRules($fieldTypeDefaultRules, $userRules, $databaseRules, $customField->type);
+        // Merge all rule types
+        $rules = $this->mergeAllValidationRules($fieldTypeDefaultRules, $capabilityRules, $databaseRules, $customField->type);
 
         // Add type-specific rules based on settings
         $typeSpecificRules = $this->getTypeSpecificRules($customField, $ignoreEntityId);
@@ -60,39 +58,40 @@ final class ValidationService
      */
     public function isRequired(CustomField $customField): bool
     {
-        return $customField->validation_rules->toCollection()
-            ->contains('name', ValidationRule::REQUIRED->value);
+        /** @phpstan-ignore nullsafe.neverNull (AsCollection returns null for null DB values) */
+        return (bool) ($customField->validation_rules?->get('required', false));
     }
 
     /**
-     * Convert user validation rules from DataCollection format to Laravel validator format.
+     * Get validation rules from a field type's registered capabilities using stored values.
      *
-     * @param  DataCollection<int, ValidationRuleData>|null  $rules  The validation rules to convert
-     * @param  CustomField  $customField  The custom field for context
-     * @return array<int, string> The converted rules
+     * @return array<int, string>
      */
-    private function convertUserRulesToValidatorFormat(?DataCollection $rules, CustomField $customField): array
+    private function getCapabilityRules(CustomField $customField): array
     {
-        if (! $rules instanceof DataCollection || $rules->toCollection()->isEmpty()) {
+        $fieldTypeManager = app(FieldManager::class);
+        $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
+
+        if (! $fieldTypeInstance) {
             return [];
         }
 
-        return $rules->toCollection()
-            ->map(function (ValidationRuleData $ruleData) use ($customField): string {
-                if ($ruleData->parameters === []) {
-                    return $ruleData->name;
-                }
+        $capabilities = $fieldTypeInstance->configure()->data()->validationCapabilities;
+        $validationRules = $customField->validation_rules;
+        $rules = [];
 
-                // For choice fields with IN or NOT_IN rules, convert option names to IDs
-                if ($customField->isChoiceField() && in_array($ruleData->name, ['in', 'not_in'])) {
-                    $parameters = $this->convertOptionNamesToIds($ruleData->parameters, $customField);
+        foreach ($capabilities as $capabilityClass) {
+            /** @var ValidationCapability $capability */
+            $capability = app($capabilityClass);
+            /** @phpstan-ignore nullsafe.neverNull */
+            $value = $validationRules?->get($capability->key());
 
-                    return $ruleData->name.':'.implode(',', $parameters);
-                }
+            if ($value !== null) {
+                $rules = array_merge($rules, $capability->toRules($value));
+            }
+        }
 
-                return $ruleData->name.':'.implode(',', $ruleData->parameters);
-            })
-            ->toArray();
+        return $rules;
     }
 
     /**
@@ -142,27 +141,6 @@ final class ValidationService
 
         // Combine the rules, with primary rules first
         return array_merge($primaryRules, $filteredSecondaryRules);
-    }
-
-    /**
-     * Convert option names to their corresponding IDs for choice field validation.
-     *
-     * @param  array<array-key, string>  $optionNames  Array of option names
-     * @param  CustomField  $customField  The custom field with options
-     * @return array<int, string> Array of option IDs
-     */
-    private function convertOptionNamesToIds(array $optionNames, CustomField $customField): array
-    {
-        // Load options if not already loaded
-        $customField->loadMissing('options');
-
-        // Create a mapping of option names to IDs
-        $nameToIdMap = $customField->options->pluck('id', 'name')->toArray();
-
-        // Convert names to IDs, keeping the original value if not found
-        return array_map(function (string $name) use ($nameToIdMap): string {
-            return (string) ($nameToIdMap[$name] ?? $name);
-        }, $optionNames);
     }
 
     /**

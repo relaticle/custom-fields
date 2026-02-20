@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextareaFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
 
 /**
  * ABOUTME: Field type definition for Textarea fields
@@ -28,10 +29,9 @@ final class TextareaFieldType extends BaseFieldType
             ->infolistEntry(TextEntry::class)
             ->supportsUniqueConstraint()
             ->priority(15)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-            ]);
+            ->withValidationCapabilities(
+                MinLengthCapability::class,
+                MaxLengthCapability::class,
+            );
     }
 }

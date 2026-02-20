@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Casts\AsCollection;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,6 @@ use Override;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Data\FieldTypeData;
-use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldFactory;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
@@ -28,7 +28,6 @@ use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Observers\CustomFieldObserver;
 use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
-use Spatie\LaravelData\DataCollection;
 
 /**
  * @property string $name
@@ -36,7 +35,7 @@ use Spatie\LaravelData\DataCollection;
  * @property string $type
  * @property string $entity_type
  * @property ?string $lookup_type
- * @property DataCollection<int, ValidationRuleData> $validation_rules
+ * @property \Illuminate\Support\Collection $validation_rules
  * @property CustomFieldSettingsData $settings
  * @property int $sort_order
  * @property bool $active
@@ -114,7 +113,7 @@ class CustomField extends Model
         return [
             'type' => 'string',
             'width' => CustomFieldWidth::class,
-            'validation_rules' => DataCollection::class.':'.ValidationRuleData::class.',default',
+            'validation_rules' => AsCollection::class,
             'active' => 'boolean',
             'system_defined' => 'boolean',
             'settings' => CustomFieldSettingsData::class.':default',

@@ -5,13 +5,11 @@ declare(strict_types=1);
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConfigurator;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportDataStorage;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
-use Spatie\LaravelData\DataCollection;
 
 /**
  * Test that WeakMap properly handles memory management
@@ -144,7 +142,7 @@ it('configures all field data types', function (): void {
             'type' => $type,
         ]);
 
-        $field->validation_rules = new DataCollection(ValidationRuleData::class, []);
+        $field->validation_rules = collect([]);
         $field->options = collect([]);
 
         return $field;
@@ -191,7 +189,7 @@ it('handles various date formats', function (): void {
         'type' => 'date',
     ]);
 
-    $field->validation_rules = new DataCollection(ValidationRuleData::class, []);
+    $field->validation_rules = collect([]);
     $field->options = collect([]);
 
     $column = ImportColumn::make('test_date');
@@ -229,7 +227,7 @@ it('resolves options case insensitively', function (): void {
         'type' => 'select',
     ]);
 
-    $field->validation_rules = new DataCollection(ValidationRuleData::class, []);
+    $field->validation_rules = collect([]);
     $field->options = collect([
         new CustomFieldOption(['id' => 1, 'name' => 'Red']),
         new CustomFieldOption(['id' => 2, 'name' => 'Blue']),
@@ -278,7 +276,7 @@ it('handles multi choice arrays', function (): void {
         'type' => 'multi-select',
     ]);
 
-    $field->validation_rules = new DataCollection(ValidationRuleData::class, []);
+    $field->validation_rules = collect([]);
     $field->options = collect([
         new CustomFieldOption(['id' => 1, 'name' => 'Laravel']),
         new CustomFieldOption(['id' => 2, 'name' => 'PHP']),
@@ -328,20 +326,7 @@ it('applies validation rules', function (): void {
         'type' => 'text',
     ]);
 
-    $field->validation_rules = new DataCollection(ValidationRuleData::class, [
-        new ValidationRuleData(
-            name: 'required',
-            parameters: []
-        ),
-        new ValidationRuleData(
-            name: 'email',
-            parameters: []
-        ),
-        new ValidationRuleData(
-            name: 'max',
-            parameters: [255]
-        ),
-    ]);
+    $field->validation_rules = collect(['required' => true]);
 
     $field->options = collect([]);
 
@@ -366,7 +351,7 @@ it('prevents sql errors with fill record using', function (): void {
         'type' => 'text',
     ]);
 
-    $field->validation_rules = new DataCollection(ValidationRuleData::class, []);
+    $field->validation_rules = collect([]);
     $field->options = collect([]);
 
     $column = ImportColumn::make('custom_fields_custom_field');
