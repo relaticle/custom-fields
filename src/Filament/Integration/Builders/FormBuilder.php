@@ -6,6 +6,7 @@
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
 use Filament\Schemas\Components\Grid;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -78,13 +79,17 @@ class FormBuilder extends BaseBuilder
             return $allFields->map($createField);
         }
 
+        $record = $this->explicitModel instanceof Model && $this->explicitModel->exists
+            ? $this->explicitModel
+            : null;
+
         return $this->getFilteredSections()
-            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField) {
+            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField, $allFields, $record) {
                 $fields = $section->fields->map($createField);
 
                 return $fields->isEmpty()
                     ? null
-                    : $sectionComponentFactory->create($section)->schema($fields->toArray());
+                    : $sectionComponentFactory->create($section, $allFields, $record)->schema($fields->toArray());
             })
             ->filter();
     }

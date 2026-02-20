@@ -155,7 +155,8 @@ class CustomFieldsManagementPage extends Page
             ])
             ->schema(SectionForm::entityType($this->currentEntityType)->schema())
             ->action(fn (array $data): CustomFieldSection => $this->storeSection($data))
-            ->modalWidth(Width::TwoExtraLarge);
+            ->modalWidth(FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY) ? Width::ScreenLarge : Width::TwoExtraLarge)
+            ->slideOver(FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY));
     }
 
     /**

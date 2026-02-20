@@ -15,12 +15,16 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
 /**
@@ -30,6 +34,12 @@ use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 final class VisibilityComponent extends Component
 {
     protected string $view = 'filament-schemas::components.grid';
+
+    private string $statePrefix = 'settings.visibility';
+
+    private bool $forSection = false;
+
+    private ?string $sectionEntityType = null;
 
     public function __construct()
     {
@@ -42,10 +52,20 @@ final class VisibilityComponent extends Component
         return new self;
     }
 
+    public static function makeForSection(string $entityType): static
+    {
+        $instance = new self;
+        $instance->forSection = true;
+        $instance->sectionEntityType = $entityType;
+        $instance->schema([$instance->buildFieldset()]);
+
+        return $instance;
+    }
+
     private function buildFieldset(): Fieldset
     {
         return Fieldset::make('Conditional Visibility')->schema([
-            Select::make('settings.visibility.mode')
+            Select::make("{$this->statePrefix}.mode")
                 ->label('Visibility')
                 ->options(VisibilityMode::class)
                 ->default(VisibilityMode::ALWAYS_VISIBLE)
@@ -58,14 +78,14 @@ final class VisibilityComponent extends Component
                 })
                 ->live(),
 
-            Select::make('settings.visibility.logic')
-                ->label('Condition VisibilityLogic')
+            Select::make("{$this->statePrefix}.logic")
+                ->label('Condition Logic')
                 ->options(VisibilityLogic::class)
                 ->default(VisibilityLogic::ALL)
                 ->required()
                 ->visible(fn (Get $get): bool => $this->modeRequiresConditions($get)),
 
-            Repeater::make('settings.visibility.conditions')
+            Repeater::make("{$this->statePrefix}.conditions")
                 ->label('Conditions')
                 ->schema($this->buildConditionSchema())
                 ->visible(fn (Get $get): bool => $this->modeRequiresConditions($get))
@@ -85,22 +105,34 @@ final class VisibilityComponent extends Component
      */
     private function buildConditionSchema(): array
     {
+        $modelAttributeConditionsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
+
         return [
+            // Source selector: only shown when model attribute conditions feature is enabled
+            Select::make('source')
+                ->label('Source')
+                ->options(ConditionSource::class)
+                ->default(ConditionSource::CustomField)
+                ->live()
+                ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetConditionValues($get, $set))
+                ->columnSpan(2)
+                ->visible(fn (): bool => $modelAttributeConditionsEnabled),
+
             Select::make('field_code')
                 ->label('Field')
                 ->options(fn (Get $get): array => $this->getAvailableFields($get))
                 ->required()
                 ->live()
                 ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetConditionValues($get, $set))
-                ->columnSpan(4),
+                ->columnSpan(fn (): int => $modelAttributeConditionsEnabled ? 3 : 4),
 
             Select::make('operator')
-                ->label('VisibilityOperator')
+                ->label('Operator')
                 ->options(fn (Get $get): array => $this->getCompatibleOperators($get))
                 ->required()
                 ->live()
                 ->afterStateUpdated(fn (Set $set) => $this->clearAllValueFields($set))
-                ->columnSpan(3),
+                ->columnSpan(fn (): int => $modelAttributeConditionsEnabled ? 2 : 3),
 
             ...$this->getValueInputComponents(),
 
@@ -161,9 +193,34 @@ final class VisibilityComponent extends Component
         ];
     }
 
+    private function getConditionSource(Get $get): ConditionSource
+    {
+        $source = $get('source');
+
+        if ($source instanceof ConditionSource) {
+            return $source;
+        }
+
+        if (is_string($source)) {
+            return ConditionSource::tryFrom($source) ?? ConditionSource::CustomField;
+        }
+
+        return ConditionSource::CustomField;
+    }
+
+    private function isModelAttributeSource(Get $get): bool
+    {
+        return $this->getConditionSource($get) === ConditionSource::ModelAttribute;
+    }
+
     private function shouldShowSingleSelect(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
+            return false;
+        }
+
+        // Model attributes never show select (no predefined options)
+        if ($this->isModelAttributeSource($get)) {
             return false;
         }
 
@@ -187,6 +244,11 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        // Model attributes never show multi-select
+        if ($this->isModelAttributeSource($get)) {
+            return false;
+        }
+
         $fieldData = $this->getFieldTypeData($get);
         if ($fieldData === null) {
             return false;
@@ -202,6 +264,12 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        if ($this->isModelAttributeSource($get)) {
+            $dataType = $this->getModelAttributeDataType($get);
+
+            return $dataType === FieldDataType::BOOLEAN;
+        }
+
         $fieldData = $this->getFieldTypeData($get);
 
         return $fieldData && $fieldData->dataType === FieldDataType::BOOLEAN;
@@ -211,6 +279,13 @@ final class VisibilityComponent extends Component
     {
         if (! $this->operatorRequiresValue($get)) {
             return false;
+        }
+
+        if ($this->isModelAttributeSource($get)) {
+            $dataType = $this->getModelAttributeDataType($get);
+
+            // Show text input for all model attribute types except boolean
+            return $dataType !== FieldDataType::BOOLEAN;
         }
 
         $fieldData = $this->getFieldTypeData($get);
@@ -229,6 +304,11 @@ final class VisibilityComponent extends Component
     {
         $fieldCode = $get('field_code');
         if (blank($fieldCode)) {
+            return [];
+        }
+
+        // Model attributes don't have predefined options
+        if ($this->isModelAttributeSource($get)) {
             return [];
         }
 
@@ -253,6 +333,17 @@ final class VisibilityComponent extends Component
             return 'Select an operator first';
         }
 
+        if ($this->isModelAttributeSource($get)) {
+            $dataType = $this->getModelAttributeDataType($get);
+
+            return match ($dataType) {
+                FieldDataType::NUMERIC, FieldDataType::FLOAT => 'Enter a number',
+                FieldDataType::DATE, FieldDataType::DATE_TIME => 'Enter a date (YYYY-MM-DD)',
+                FieldDataType::BOOLEAN => 'Toggle value',
+                default => 'Enter comparison value',
+            };
+        }
+
         $fieldData = $this->getFieldTypeData($get);
         if ($fieldData === null) {
             return 'Enter comparison value';
@@ -274,7 +365,7 @@ final class VisibilityComponent extends Component
 
     private function modeRequiresConditions(Get $get): bool
     {
-        $mode = $get('settings.visibility.mode');
+        $mode = $get("{$this->statePrefix}.mode");
 
         return $mode instanceof VisibilityMode && $mode->requiresConditions();
     }
@@ -302,7 +393,14 @@ final class VisibilityComponent extends Component
             return [];
         }
 
-        $currentFieldCode = $get('../../../../code');
+        if ($this->isModelAttributeSource($get)) {
+            return rescue(function () use ($entityType) {
+                return app(ModelAttributeDiscoveryService::class)
+                    ->getAttributeOptions($entityType);
+            }, []);
+        }
+
+        $currentFieldCode = $this->forSection ? null : $get('../../../../code');
 
         return rescue(function () use ($entityType, $currentFieldCode) {
             return CustomFields::customFieldModel()::query()
@@ -319,11 +417,37 @@ final class VisibilityComponent extends Component
      */
     private function getCompatibleOperators(Get $get): array
     {
+        if ($this->isModelAttributeSource($get)) {
+            $dataType = $this->getModelAttributeDataType($get);
+
+            return $dataType
+                ? $dataType->getCompatibleOperatorOptions()
+                : VisibilityOperator::options();
+        }
+
         $fieldData = $this->getFieldTypeData($get);
 
         return $fieldData
             ? $fieldData->dataType->getCompatibleOperatorOptions()
             : VisibilityOperator::options();
+    }
+
+    private function getModelAttributeDataType(Get $get): ?FieldDataType
+    {
+        $fieldCode = $get('field_code');
+        if (blank($fieldCode)) {
+            return null;
+        }
+
+        $entityType = $this->getEntityType($get);
+        if (blank($entityType)) {
+            return null;
+        }
+
+        return rescue(function () use ($entityType, $fieldCode) {
+            return app(ModelAttributeDiscoveryService::class)
+                ->getAttributeDataType($entityType, $fieldCode);
+        });
     }
 
     private function getFieldTypeData(Get $get): ?object
@@ -360,6 +484,10 @@ final class VisibilityComponent extends Component
 
     private function getEntityType(Get $get): ?string
     {
+        if ($this->forSection) {
+            return $this->sectionEntityType;
+        }
+
         return $get('../../../../entity_type')
             ?? request('entityType')
             ?? request()->route('entityType');

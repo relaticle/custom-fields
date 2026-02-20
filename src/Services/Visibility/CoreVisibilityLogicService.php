@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\Visibility;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Data\VisibilityConditionData;
 use Relaticle\CustomFields\Data\VisibilityData;
@@ -11,6 +12,7 @@ use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Spatie\LaravelData\DataCollection;
 
 /**
@@ -37,6 +39,14 @@ final readonly class CoreVisibilityLogicService
     }
 
     /**
+     * Extract visibility data from a section.
+     */
+    public function getVisibilityDataFromSection(CustomFieldSection $section): ?VisibilityData
+    {
+        return $section->settings->visibility ?? null;
+    }
+
+    /**
      * Determine if a field has visibility conditions.
      * Single source of truth for visibility requirement checking.
      */
@@ -48,8 +58,19 @@ final readonly class CoreVisibilityLogicService
     }
 
     /**
+     * Determine if a section has visibility conditions.
+     */
+    public function hasSectionVisibilityConditions(CustomFieldSection $section): bool
+    {
+        $visibility = $this->getVisibilityDataFromSection($section);
+
+        return $visibility?->requiresConditions() ?? false;
+    }
+
+    /**
      * Get dependent field codes for a given field.
-     * This determines which fields this field depends on for visibility.
+     * This determines which custom fields this field depends on for visibility.
+     * Model attribute dependencies are excluded (they don't trigger ->live()).
      *
      * @return array<string>
      */
@@ -66,11 +87,26 @@ final readonly class CoreVisibilityLogicService
      *
      * @param  array<string, mixed>  $fieldValues
      */
-    public function evaluateVisibility(CustomField $field, array $fieldValues): bool
+    public function evaluateVisibility(CustomField $field, array $fieldValues, ?Model $record = null): bool
     {
         $visibility = $this->getVisibilityData($field);
 
-        return $visibility?->evaluate($fieldValues) ?? true;
+        return $visibility?->evaluate($fieldValues, $record) ?? true;
+    }
+
+    /**
+     * Evaluate whether a section should be visible.
+     *
+     * @param  array<string, mixed>  $fieldValues
+     */
+    public function evaluateSectionVisibility(
+        CustomFieldSection $section,
+        array $fieldValues,
+        ?Model $record = null
+    ): bool {
+        $visibility = $this->getVisibilityDataFromSection($section);
+
+        return $visibility?->evaluate($fieldValues, $record) ?? true;
     }
 
     /**
@@ -80,12 +116,16 @@ final readonly class CoreVisibilityLogicService
      * @param  array<string, mixed>  $fieldValues
      * @param  Collection<int, CustomField>  $allFields
      */
-    public function evaluateVisibilityWithCascading(CustomField $field, array $fieldValues, Collection $allFields): bool
-    {
+    public function evaluateVisibilityWithCascading(
+        CustomField $field,
+        array $fieldValues,
+        Collection $allFields,
+        ?Model $record = null
+    ): bool {
         // Create keyed collection once for O(1) lookups during recursion
         $fieldsByCode = $allFields->keyBy('code');
 
-        return $this->evaluateVisibilityWithCascadingInternal($field, $fieldValues, $fieldsByCode);
+        return $this->evaluateVisibilityWithCascadingInternal($field, $fieldValues, $fieldsByCode, $record);
     }
 
     /**
@@ -97,10 +137,11 @@ final readonly class CoreVisibilityLogicService
     private function evaluateVisibilityWithCascadingInternal(
         CustomField $field,
         array $fieldValues,
-        Collection $fieldsByCode
+        Collection $fieldsByCode,
+        ?Model $record = null
     ): bool {
         // First check if the field itself should be visible
-        if (! $this->evaluateVisibility($field, $fieldValues)) {
+        if (! $this->evaluateVisibility($field, $fieldValues, $record)) {
             return false;
         }
 
@@ -109,7 +150,7 @@ final readonly class CoreVisibilityLogicService
             return true;
         }
 
-        // Check if all parent fields are visible (cascading)
+        // Check if all parent custom fields are visible (cascading)
         $dependentFields = $this->getDependentFields($field);
 
         foreach ($dependentFields as $dependentFieldCode) {
@@ -120,7 +161,7 @@ final readonly class CoreVisibilityLogicService
             }
 
             // Recursively check parent visibility
-            if (! $this->evaluateVisibilityWithCascadingInternal($parentField, $fieldValues, $fieldsByCode)) {
+            if (! $this->evaluateVisibilityWithCascadingInternal($parentField, $fieldValues, $fieldsByCode, $record)) {
                 return false;
             }
         }
@@ -159,6 +200,22 @@ final readonly class CoreVisibilityLogicService
     public function getVisibilityConditions(CustomField $field): array
     {
         $visibility = $this->getVisibilityData($field);
+
+        if (! $visibility instanceof VisibilityData || ! $visibility->conditions instanceof DataCollection) {
+            return [];
+        }
+
+        return $visibility->conditions->all();
+    }
+
+    /**
+     * Get visibility conditions for a section.
+     *
+     * @return array<VisibilityConditionData>
+     */
+    public function getSectionVisibilityConditions(CustomFieldSection $section): array
+    {
+        $visibility = $this->getVisibilityDataFromSection($section);
 
         if (! $visibility instanceof VisibilityData || ! $visibility->conditions instanceof DataCollection) {
             return [];
