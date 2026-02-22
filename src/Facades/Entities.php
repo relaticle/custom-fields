@@ -87,6 +87,14 @@ class Entities extends Facade
     }
 
     /**
+     * Get entities with custom fields that are globally managed
+     */
+    public static function globallyManaged(): EntityCollection
+    {
+        return static::getEntities()->globallyManaged();
+    }
+
+    /**
      * Get entities that can be used as lookup sources
      */
     public static function asLookupSources(): EntityCollection
@@ -97,11 +105,13 @@ class Entities extends Facade
     /**
      * Get entities as options array
      */
-    public static function getOptions(bool $onlyCustomFields = true, bool $usePlural = true): array
+    public static function getOptions(bool $onlyCustomFields = true, bool $usePlural = true, bool $onlyGloballyManaged = false): array
     {
-        $entities = $onlyCustomFields
-            ? static::withCustomFields()
-            : static::getEntities();
+        $entities = match (true) {
+            $onlyGloballyManaged => static::globallyManaged(),
+            $onlyCustomFields => static::withCustomFields(),
+            default => static::getEntities(),
+        };
 
         return $entities->sortedByLabel()->toOptions($usePlural);
     }

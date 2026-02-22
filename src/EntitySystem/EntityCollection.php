@@ -53,6 +53,14 @@ final class EntityCollection extends Collection
     }
 
     /**
+     * Get entities with custom fields that are globally managed (not scoped to a parent record)
+     */
+    public function globallyManaged(): static
+    {
+        return $this->withCustomFields()->withoutFeature(EntityFeature::SCOPED_MANAGEMENT->value);
+    }
+
+    /**
      * Get entities that can be used as lookup sources
      */
     public function asLookupSources(): static
