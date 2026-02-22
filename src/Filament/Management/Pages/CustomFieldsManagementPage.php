@@ -43,7 +43,7 @@ class CustomFieldsManagementPage extends Page
     public function mount(): void
     {
         if (blank($this->currentEntityType)) {
-            $firstEntity = Entities::withCustomFields()->first();
+            $firstEntity = Entities::globallyManaged()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
     }
@@ -91,7 +91,7 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function entityTypes(): Collection
     {
-        return collect(Entities::getOptions(onlyCustomFields: true));
+        return collect(Entities::getOptions(onlyGloballyManaged: true));
     }
 
     public function setCurrentEntityType(?string $entityType): void
