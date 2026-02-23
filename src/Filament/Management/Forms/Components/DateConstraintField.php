@@ -81,9 +81,9 @@ final class DateConstraintField
 
                     Select::make("{$statePath}.field_reference")
                         ->label('Reference field')
-                        ->options(function (Get $get): array {
-                            $entityType = $get('../../entity_type');
-                            $currentCode = $get('../../code');
+                        ->options(function (Get $get, ?CustomField $record): array {
+                            $entityType = $record?->entity_type ?? $get('../../../entity_type');
+                            $currentCode = $record?->code ?? $get('../../../code');
 
                             if (! $entityType) {
                                 return [];
@@ -99,18 +99,18 @@ final class DateConstraintField
                         })
                         ->required()
                         ->rules([
-                            fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                            fn (Get $get, ?CustomField $record): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get, $record): void {
                                 if (! $value) {
                                     return;
                                 }
 
-                                $currentCode = $get('../../code');
+                                $currentCode = $record?->code ?? $get('../../../code');
 
                                 if (! $currentCode) {
                                     return;
                                 }
 
-                                $entityType = $get('../../entity_type');
+                                $entityType = $record?->entity_type ?? $get('../../../entity_type');
 
                                 if (! $entityType) {
                                     return;
