@@ -204,6 +204,10 @@ final class DatabaseFieldConstraints
         $existingValue = null;
 
         foreach ($rules as $index => $rule) {
+            if (! is_string($rule)) {
+                continue;
+            }
+
             if (str_starts_with($rule, $ruleName.':') || $rule === $ruleName) {
                 $existingIndex = $index;
                 if (str_contains($rule, ':')) {

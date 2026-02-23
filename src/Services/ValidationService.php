@@ -123,24 +123,33 @@ final class ValidationService
     /**
      * Combine two sets of rules, removing duplicates but preserving rule precedence.
      *
-     * @param  array<int, string>  $primaryRules  Rules that take precedence
-     * @param  array<int, string>  $secondaryRules  Rules that are overridden by primary rules
-     * @return array<int, string> Combined rules
+     * @param  array<int, mixed>  $primaryRules  Rules that take precedence
+     * @param  array<int, mixed>  $secondaryRules  Rules that are overridden by primary rules
+     * @return array<int, mixed> Combined rules
      */
     private function combineRules(array $primaryRules, array $secondaryRules): array
     {
-        // Extract rule names (without parameters) from primary rules
-        $primaryRuleNames = array_map(fn (string $rule): string => explode(':', $rule, 2)[0], $primaryRules);
+        // Extract rule names (without parameters) from primary string rules
+        $primaryRuleNames = [];
+        foreach ($primaryRules as $rule) {
+            if (is_string($rule)) {
+                $primaryRuleNames[] = explode(':', $rule, 2)[0];
+            }
+        }
 
         // Filter secondary rules to only include those that don't conflict with primary rules
-        $filteredSecondaryRules = array_filter($secondaryRules, function (string $rule) use ($primaryRuleNames): bool {
+        $filteredSecondaryRules = array_filter($secondaryRules, function (mixed $rule) use ($primaryRuleNames): bool {
+            if (! is_string($rule)) {
+                return true;
+            }
+
             $ruleName = explode(':', $rule, 2)[0];
 
             return ! in_array($ruleName, $primaryRuleNames);
         });
 
         // Combine the rules, with primary rules first
-        return array_merge($primaryRules, $filteredSecondaryRules);
+        return array_values(array_merge($primaryRules, $filteredSecondaryRules));
     }
 
     /**
