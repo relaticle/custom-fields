@@ -6,9 +6,12 @@ namespace Relaticle\CustomFields\Validation\Capabilities;
 
 use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\DateConstraintValue;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
+use Relaticle\CustomFields\Validation\Rules\DateConstraintRule;
 
 final readonly class MinDateCapability implements ValidationCapability
 {
@@ -25,7 +28,7 @@ final readonly class MinDateCapability implements ValidationCapability
     /** @return array<int, Component> */
     public function formSchema(string $statePath): array
     {
-        return DateConstraintField::make("{$statePath}.min_date", 'Minimum Date');
+        return DateConstraintField::make("{$statePath}.min_date", 'Minimum Date', 'min');
     }
 
     public function applyToComponent(Field $component, mixed $value): void
@@ -34,26 +37,21 @@ final readonly class MinDateCapability implements ValidationCapability
             return;
         }
 
-        $constraintValue = $this->hydrateValue($value);
+        $constraintValue = DateConstraintValue::from($value);
 
-        $component->minDate(fn () => $constraintValue->resolve());
+        $component->minDate(fn (Get $get, ?Model $record = null) => $constraintValue->resolve(
+            getCallback: fn (string $path): mixed => $get($path),
+            record: $record,
+        ));
     }
 
-    /** @return array<int, string> */
+    /** @return array<int, mixed> */
     public function toRules(mixed $value): array
     {
         if ($value === null) {
             return [];
         }
 
-        $constraintValue = $this->hydrateValue($value);
-
-        return ["after_or_equal:{$constraintValue->resolve()->format('Y-m-d')}"];
-    }
-
-    /** @param array<string, mixed> $value */
-    private function hydrateValue(mixed $value): DateConstraintValue
-    {
-        return DateConstraintValue::from($value);
+        return [new DateConstraintRule(DateConstraintValue::from($value), 'after_or_equal')];
     }
 }

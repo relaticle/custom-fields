@@ -8,13 +8,13 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
-use Relaticle\CustomFields\Enums\DateDirection;
+use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
 
 final class DateConstraintField
 {
     /** @return array<int, Component> */
-    public static function make(string $statePath, string $label): array
+    public static function make(string $statePath, string $label, string $context = 'min'): array
     {
         return [
             Fieldset::make($label)
@@ -36,11 +36,11 @@ final class DateConstraintField
                         ->label('Unit'),
 
                     Select::make("{$statePath}.direction")
-                        ->options(DateDirection::class)
-                        ->default(DateDirection::FromNow->value)
+                        ->options(DateOffsetDirection::class)
+                        ->default(DateOffsetDirection::After->value)
                         ->afterStateHydrated(function ($component, $state): void {
                             if ($state === null) {
-                                $component->state(DateDirection::FromNow->value);
+                                $component->state(DateOffsetDirection::After->value);
                             }
                         })
                         ->label('Direction'),
