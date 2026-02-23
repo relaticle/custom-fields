@@ -15,6 +15,7 @@ use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Validation\DateFieldReferenceValidator;
 
 final class DateConstraintField
 {
@@ -97,6 +98,31 @@ final class DateConstraintField
                                 ->all();
                         })
                         ->required()
+                        ->rules([
+                            fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                if (! $value) {
+                                    return;
+                                }
+
+                                $currentCode = $get('../../code');
+
+                                if (! $currentCode) {
+                                    return;
+                                }
+
+                                $entityType = $get('../../entity_type');
+
+                                if (! $entityType) {
+                                    return;
+                                }
+
+                                $fieldsWithReferences = self::buildReferenceMap($entityType, $currentCode, $value);
+
+                                if (DateFieldReferenceValidator::hasCycle($currentCode, $fieldsWithReferences)) {
+                                    $fail('Circular field reference detected. This would create an infinite loop.');
+                                }
+                            },
+                        ])
                         ->visible(fn (Get $get): bool => $get("{$statePath}.preset") === 'custom_field'),
 
                     DatePicker::make("{$statePath}.fixed_date")
@@ -182,5 +208,44 @@ final class DateConstraintField
         if ($anchor !== DateAnchor::FixedDate) {
             $set("{$statePath}.fixed_date", null);
         }
+    }
+
+    /**
+     * Build a map of field_code => referenced_field_code for cycle detection.
+     *
+     * @return array<string, string>
+     */
+    private static function buildReferenceMap(string $entityType, string $currentCode, string $currentReference): array
+    {
+        $references = [];
+
+        $fields = CustomField::query()
+            ->where('entity_type', $entityType)
+            ->whereIn('type', ['date', 'date-time'])
+            ->where('code', '!=', $currentCode)
+            ->where('active', true)
+            ->get();
+
+        foreach ($fields as $field) {
+            $rules = $field->validation_rules;
+
+            if (! $rules) {
+                continue;
+            }
+
+            foreach (['min_date', 'max_date'] as $key) {
+                $constraint = $rules->get($key);
+
+                if (is_array($constraint) && ($constraint['anchor'] ?? null) === 'custom_field' && isset($constraint['field_reference'])) {
+                    $references[$field->code] = $constraint['field_reference'];
+
+                    break;
+                }
+            }
+        }
+
+        $references[$currentCode] = $currentReference;
+
+        return $references;
     }
 }

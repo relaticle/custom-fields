@@ -32,7 +32,7 @@ final class DateConstraintValue extends Data
             DateAnchor::Today => now()->startOfDay(),
             DateAnchor::FixedDate => Carbon::parse($this->fixedDate)->startOfDay(),
             DateAnchor::CustomField => $this->resolveCustomField($getCallback),
-            DateAnchor::RecordCreated => $record?->created_at?->copy() ?? now()->startOfDay(),
+            DateAnchor::RecordCreated => $record?->getAttribute('created_at')?->copy() ?? now()->startOfDay(),
         };
 
         if ($this->offset === 0) {
