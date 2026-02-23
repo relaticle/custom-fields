@@ -6,16 +6,16 @@ namespace Relaticle\CustomFields\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum DateDirection: string implements HasLabel
+enum DateOffsetDirection: string implements HasLabel
 {
-    case Ago = 'ago';
-    case FromNow = 'from_now';
+    case Before = 'before';
+    case After = 'after';
 
     public function getLabel(): string
     {
         return match ($this) {
-            self::Ago => 'Ago',
-            self::FromNow => 'From Now',
+            self::Before => 'Before',
+            self::After => 'After',
         };
     }
 }
