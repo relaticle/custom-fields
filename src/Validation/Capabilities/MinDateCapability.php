@@ -8,8 +8,6 @@ use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\DateConstraintValue;
-use Relaticle\CustomFields\Enums\DateDirection;
-use Relaticle\CustomFields\Enums\DateUnit;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
 
 final readonly class MinDateCapability implements ValidationCapability
@@ -56,10 +54,6 @@ final readonly class MinDateCapability implements ValidationCapability
     /** @param array<string, mixed> $value */
     private function hydrateValue(mixed $value): DateConstraintValue
     {
-        return new DateConstraintValue(
-            relativeValue: (int) ($value['relative_value'] ?? 0),
-            relativeUnit: DateUnit::from($value['relative_unit']),
-            direction: DateDirection::from($value['direction'] ?? DateDirection::FromNow->value),
-        );
+        return DateConstraintValue::from($value);
     }
 }

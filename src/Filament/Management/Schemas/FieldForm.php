@@ -456,25 +456,6 @@ class FieldForm implements FormInterface
 
         ];
 
-        // Add validation fieldset with required toggle and type-specific capabilities
-        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
-            $validationSchema = [
-                Toggle::make('validation_rules.required')
-                    ->inline()
-                    ->label(__('custom-fields::custom-fields.field.form.validation.required'))
-                    ->default(false)
-                    ->columnSpanFull(),
-                ...self::getValidationSchema(),
-            ];
-
-            $generalSchema[] = Fieldset::make(
-                __('custom-fields::custom-fields.field.form.validation.label')
-            )
-                ->columnSpanFull()
-                ->columns(2)
-                ->schema($validationSchema);
-        }
-
         $generalSchema[] = Select::make('lookup_type')
             ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
             ->visible(
@@ -490,6 +471,19 @@ class FieldForm implements FormInterface
 
         // Build additional tabs based on feature flags
         $additionalTabs = [];
+
+        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
+            $additionalTabs[] = Tab::make(
+                __('custom-fields::custom-fields.field.form.validation.label')
+            )->schema([
+                Toggle::make('validation_rules.required')
+                    ->inline()
+                    ->label(__('custom-fields::custom-fields.field.form.validation.required'))
+                    ->default(false)
+                    ->columnSpanFull(),
+                ...self::getValidationSchema(),
+            ])->columns(2);
+        }
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
             $additionalTabs[] = Tab::make('Visibility')
