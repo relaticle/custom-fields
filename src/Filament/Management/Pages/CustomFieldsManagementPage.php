@@ -46,7 +46,7 @@ class CustomFieldsManagementPage extends Page
     public function mount(): void
     {
         if (blank($this->currentEntityType)) {
-            $firstEntity = Entities::withCustomFields()->sortedByPriority()->first();
+            $firstEntity = Entities::globallyManaged()->sortedByPriority()->first();
             $this->setCurrentEntityType($firstEntity?->getAlias() ?? '');
         }
     }
@@ -108,7 +108,7 @@ class CustomFieldsManagementPage extends Page
     #[Computed]
     public function entityTypes(): Collection
     {
-        return Entities::withCustomFields()
+        return Entities::globallyManaged()
             ->sortedByPriority()
             ->mapWithKeys(fn (EntityConfigurationData $entity): array => [
                 $entity->getAlias() => $entity->getLabelPlural(),

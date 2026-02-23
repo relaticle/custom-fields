@@ -69,12 +69,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     filled($state)
             )
             ->required($this->validationService->isRequired($customField))
-            ->rules(
-                fn (Field $component): array => $this->validationService->getValidationRules(
-                    $customField,
-                    $component->getRecord()?->getKey()
-                )
-            )
+            ->rules($this->getFieldValidationRules($customField))
             ->columnSpan(
                 FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
                     ? $customField->width->getSpanValue()
@@ -169,6 +164,12 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return in_array($jsExpression, [null, '', '0'], true)
             ? $field
             : $field->live()->visibleJs($jsExpression);
+    }
+
+    /** @return array<int, mixed> */
+    protected function getFieldValidationRules(CustomField $customField): array
+    {
+        return $this->validationService->getValidationRules($customField);
     }
 
     /**
