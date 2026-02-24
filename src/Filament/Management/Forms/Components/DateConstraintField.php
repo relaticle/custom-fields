@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
 
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
@@ -82,8 +83,8 @@ final class DateConstraintField
                     Select::make("{$statePath}.field_reference")
                         ->label('Reference field')
                         ->options(function (Get $get, ?CustomField $record): array {
-                            $entityType = $record?->entity_type ?? $get('../../../entity_type');
-                            $currentCode = $record?->code ?? $get('../../../code');
+                            $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
+                            $currentCode = $record?->code ?? $get('../../../code'); // @phpstan-ignore nullsafe.neverNull
 
                             if (! $entityType) {
                                 return [];
@@ -104,13 +105,13 @@ final class DateConstraintField
                                     return;
                                 }
 
-                                $currentCode = $record?->code ?? $get('../../../code');
+                                $currentCode = $record?->code ?? $get('../../../code'); // @phpstan-ignore nullsafe.neverNull
 
                                 if (! $currentCode) {
                                     return;
                                 }
 
-                                $entityType = $record?->entity_type ?? $get('../../../entity_type');
+                                $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
 
                                 if (! $entityType) {
                                     return;
@@ -131,9 +132,52 @@ final class DateConstraintField
                         ->format('Y-m-d')
                         ->required()
                         ->visible(fn (Get $get): bool => $get("{$statePath}.preset") === 'fixed_date'),
+
+                    Hidden::make("{$statePath}.anchor"),
                 ])
                 ->columns(3),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function sanitizeValidationRules(array $data): array
+    {
+        if (! isset($data['validation_rules']) || ! is_array($data['validation_rules'])) {
+            return $data;
+        }
+
+        foreach (['min_date', 'max_date'] as $key) {
+            if (! array_key_exists($key, $data['validation_rules'])) {
+                continue;
+            }
+
+            $constraint = $data['validation_rules'][$key];
+
+            if (! is_array($constraint) || ($constraint['preset'] ?? null) === 'none' || empty($constraint['anchor'] ?? null)) {
+                $data['validation_rules'][$key] = null;
+
+                continue;
+            }
+
+            unset($data['validation_rules'][$key]['preset']);
+
+            $constraint = $data['validation_rules'][$key];
+            $data['validation_rules'][$key] = [
+                'anchor' => $constraint['anchor'],
+                'offset' => (int) ($constraint['offset'] ?? 0),
+                'offset_unit' => $constraint['offset_unit'] ?? DateUnit::Days->value,
+                'offset_direction' => $constraint['offset_direction'] ?? DateOffsetDirection::After->value,
+                ...array_filter([
+                    'field_reference' => $constraint['field_reference'] ?? null,
+                    'fixed_date' => $constraint['fixed_date'] ?? null,
+                ]),
+            ];
+        }
+
+        return $data;
     }
 
     /** @return array<string, string> */
@@ -169,29 +213,14 @@ final class DateConstraintField
     private static function applyPresetDefaults(Set $set, string $statePath, ?string $preset): void
     {
         match ($preset) {
-            'none' => self::clearConstraint($set, $statePath),
-            'today_preset' => self::setTodayPreset($set, $statePath),
+            'none' => $set($statePath, null),
+            'today_preset' => self::setAnchor($set, $statePath, DateAnchor::Today),
             'today_offset' => self::setAnchor($set, $statePath, DateAnchor::Today),
             'custom_field' => self::setAnchor($set, $statePath, DateAnchor::CustomField),
             'record_created' => self::setAnchor($set, $statePath, DateAnchor::RecordCreated),
             'fixed_date' => self::setAnchor($set, $statePath, DateAnchor::FixedDate),
             default => null,
         };
-    }
-
-    private static function clearConstraint(Set $set, string $statePath): void
-    {
-        $set($statePath, null);
-    }
-
-    private static function setTodayPreset(Set $set, string $statePath): void
-    {
-        $set("{$statePath}.anchor", DateAnchor::Today->value);
-        $set("{$statePath}.offset", 0);
-        $set("{$statePath}.offset_unit", DateUnit::Days->value);
-        $set("{$statePath}.offset_direction", DateOffsetDirection::After->value);
-        $set("{$statePath}.field_reference", null);
-        $set("{$statePath}.fixed_date", null);
     }
 
     private static function setAnchor(Set $set, string $statePath, DateAnchor $anchor): void
@@ -210,11 +239,7 @@ final class DateConstraintField
         }
     }
 
-    /**
-     * Build a map of field_code => referenced_field_code for cycle detection.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     private static function buildReferenceMap(string $entityType, string $currentCode, string $currentReference): array
     {
         $references = [];

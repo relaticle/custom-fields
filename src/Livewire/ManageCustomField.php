@@ -15,6 +15,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\View\View;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Models\CustomField;
 
@@ -45,6 +46,8 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->schema(FieldForm::schema())
             ->fillForm($this->field->toArray())
             ->action(function (array $data): void {
+                $data = DateConstraintField::sanitizeValidationRules($data);
+
                 if (isset($data['settings'])) {
                     $data['settings'] = array_merge($this->field->settings->toArray(), $data['settings']);
                 }

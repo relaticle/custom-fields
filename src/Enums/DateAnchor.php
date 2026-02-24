@@ -22,4 +22,12 @@ enum DateAnchor: string implements HasLabel
             self::RecordCreated => 'Record Creation Date',
         };
     }
+
+    public function needsRuntimeContext(): bool
+    {
+        return match ($this) {
+            self::CustomField, self::RecordCreated => true,
+            default => false,
+        };
+    }
 }
