@@ -9,7 +9,7 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\NumberComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
-use Relaticle\CustomFields\Validation\Capabilities\IntegerOnlyCapability;
+use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
@@ -33,7 +33,7 @@ class NumberFieldType extends BaseFieldType
             ->withValidationCapabilities(
                 MinValueCapability::class,
                 MaxValueCapability::class,
-                IntegerOnlyCapability::class,
+                DecimalPlacesCapability::class,
             );
     }
 }

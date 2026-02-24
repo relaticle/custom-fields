@@ -201,18 +201,18 @@ it('accepts number at max_value boundary', function (): void {
 });
 
 // ===========================================================================
-// Numeric capabilities: integer_only
+// Numeric capabilities: decimal_places (0 = integer only)
 // ===========================================================================
 
-it('rejects decimal when integer_only is enabled', function (): void {
-    createField($this, 'count', 'number', ['integer_only' => true]);
+it('rejects decimal when decimal_places is 0', function (): void {
+    createField($this, 'count', 'number', ['decimal_places' => 0]);
 
     validationSubmitCreate($this, ['count' => 3.5])
         ->assertHasFormErrors(['custom_fields.count']);
 });
 
-it('accepts integer when integer_only is enabled', function (): void {
-    createField($this, 'count', 'number', ['integer_only' => true]);
+it('accepts integer when decimal_places is 0', function (): void {
+    createField($this, 'count', 'number', ['decimal_places' => 0]);
 
     validationSubmitCreate($this, ['count' => 3])
         ->assertHasNoFormErrors()

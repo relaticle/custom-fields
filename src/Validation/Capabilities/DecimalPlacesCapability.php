@@ -29,7 +29,8 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(0)
-                ->maxValue(15)
+                ->maxValue(4)
+                ->placeholder('Enter a value between 0 and 4')
                 ->label('Decimal Places'),
         ];
     }
@@ -40,7 +41,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
             return;
         }
 
-        $decimalPlaces = max(0, min(15, (int) $value));
+        $decimalPlaces = max(0, min(4, (int) $value));
         $component->step($this->resolveStep($decimalPlaces)); // @phpstan-ignore method.notFound
     }
 
@@ -51,7 +52,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
             return [];
         }
 
-        $decimalPlaces = max(0, min(15, (int) $value));
+        $decimalPlaces = max(0, min(4, (int) $value));
 
         if ($decimalPlaces === 0) {
             return ['integer'];

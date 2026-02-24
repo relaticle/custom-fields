@@ -182,7 +182,7 @@ it('discards before_or_equal rule with absolute date and warns', function (): vo
         ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-12-31' cannot be automatically converted, discarding");
 });
 
-it('converts integer rule to integer_only', function (): void {
+it('converts integer rule to decimal_places 0', function (): void {
     $field = CustomField::factory()->ofType('number')->create([
         'validation_rules' => [['name' => 'integer', 'parameters' => []]],
     ]);
@@ -190,7 +190,7 @@ it('converts integer rule to integer_only', function (): void {
     runMigrationStep();
 
     $field->refresh();
-    expect($field->validation_rules->get('integer_only'))->toBeTrue();
+    expect($field->validation_rules->get('decimal_places'))->toBe(0);
 });
 
 it('converts decimal rule to decimal_places', function (): void {

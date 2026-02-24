@@ -160,7 +160,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     ): ?array {
         return match ($ruleName) {
             'required' => ['required' => true],
-            'integer' => ['integer_only' => true],
+            'integer' => ['decimal_places' => 0],
             'file' => null,
             'min' => $this->convertMinRule($firstParam, $fieldType, $hasFileRule, $warnings),
             'max' => $this->convertMaxRule($firstParam, $fieldType, $hasFileRule, $warnings),
