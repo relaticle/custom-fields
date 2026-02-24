@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class DecimalPlacesCapability implements ValidationCapability
@@ -41,7 +41,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
         }
 
         $decimalPlaces = max(0, min(15, (int) $value));
-        $component->step($this->resolveStep($decimalPlaces));
+        $component->step($this->resolveStep($decimalPlaces)); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */

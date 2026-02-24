@@ -111,32 +111,14 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
         return $result;
     }
 
-    /**
-     * Detect if validation_rules is in the old sequential array-of-objects format.
-     *
-     * Old format: sequential array where items have a 'name' key.
-     * New format: associative array with string keys like 'required', 'min_length'.
-     */
     private function isOldFormat(Collection $rules): bool
     {
-        if ($rules->isEmpty()) {
-            return false;
-        }
-
         $firstItem = $rules->first();
 
-        if (is_array($firstItem) && array_key_exists('name', $firstItem)) {
-            return true;
-        }
-
-        return false;
+        return is_array($firstItem) && array_key_exists('name', $firstItem);
     }
 
-    /**
-     * Convert old-format rules to new key-value format.
-     *
-     * @param  list<string>  $warnings  Collected warnings (passed by reference)
-     */
+    /** @param list<string> $warnings */
     private function convertRules(Collection $rules, string $fieldType, array &$warnings): Collection
     {
         $newRules = collect();
@@ -164,8 +146,6 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     }
 
     /**
-     * Convert a single old-format rule to the new format.
-     *
      * @param  list<array{value: string}>  $parameters
      * @param  list<string>  $warnings
      * @return array<string, mixed>|null
@@ -188,7 +168,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             'before', 'before_or_equal' => $this->convertDateMaxRule($firstParam, $ruleName, $warnings),
             'decimal' => $this->convertDecimalRule($firstParam, $warnings),
             'mimes', 'mimetypes' => $this->convertMimesRule($parameters),
-            default => $this->handleUnmappableRule($ruleName, $warnings),
+            default => $this->warn($warnings, "Rule '{$ruleName}' cannot be mapped to the new format, discarding"),
         };
     }
 
@@ -297,8 +277,6 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     }
 
     /**
-     * Parse a date constraint value into the new relative format.
-     *
      * @param  list<string>  $warnings
      * @return array{relative_value: int, relative_unit: string, direction: string}|null
      */
@@ -320,18 +298,11 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
                 'relative_unit' => 'days',
                 'direction' => 'ago',
             ],
-            default => $this->handleAbsoluteDateConstraint($value, $warnings),
+            default => $this->warn(
+                $warnings,
+                "Absolute date constraint '{$value}' cannot be automatically converted to relative format, discarding",
+            ),
         };
-    }
-
-    /**
-     * @param  list<string>  $warnings
-     */
-    private function handleAbsoluteDateConstraint(string $value, array &$warnings): null
-    {
-        $warnings[] = "Absolute date constraint '{$value}' cannot be automatically converted to relative format, discarding";
-
-        return null;
     }
 
     /**
@@ -356,7 +327,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertMimesRule(array $parameters): array
     {
         $types = array_map(
-            fn (array $param): string => $param['value'] ?? '',
+            fn (array $param): string => $param['value'],
             $parameters,
         );
 
@@ -366,30 +337,22 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     /**
      * @param  list<string>  $warnings
      */
-    private function handleUnmappableRule(string $ruleName, array &$warnings): null
+    private function warn(array &$warnings, string $message): null
     {
-        $warnings[] = "Rule '{$ruleName}' cannot be mapped to the new format, discarding";
+        $warnings[] = $message;
 
         return null;
     }
 
-    /**
-     * Extract the first parameter value from old-format parameters.
-     *
-     * @param  list<array{value: string}>  $parameters
-     */
+    /** @param list<array{value: string}> $parameters */
     private function getFirstParameterValue(array $parameters): ?string
     {
         if ($parameters === []) {
             return null;
         }
 
-        $first = $parameters[0] ?? null;
+        $first = $parameters[0];
 
-        if (! is_array($first)) {
-            return null;
-        }
-
-        return $first['value'];
+        return is_array($first) ? $first['value'] : null;
     }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class MaxValueCapability implements ValidationCapability
@@ -37,7 +37,7 @@ final readonly class MaxValueCapability implements ValidationCapability
             return;
         }
 
-        $component->maxValue((float) $value);
+        $component->maxValue((float) $value); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */

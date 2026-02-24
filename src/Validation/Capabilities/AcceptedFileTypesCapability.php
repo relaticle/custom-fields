@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TagsInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class AcceptedFileTypesCapability implements ValidationCapability
@@ -39,7 +39,7 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
             return;
         }
 
-        $component->acceptedFileTypes($types);
+        $component->acceptedFileTypes($types); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class MinLengthCapability implements ValidationCapability
@@ -39,7 +39,7 @@ final readonly class MinLengthCapability implements ValidationCapability
             return;
         }
 
-        $component->minLength((int) $value);
+        $component->minLength((int) $value); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */
