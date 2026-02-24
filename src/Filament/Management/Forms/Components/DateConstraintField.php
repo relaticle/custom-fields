@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
 
+use Closure;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -12,6 +13,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
@@ -90,7 +92,7 @@ final class DateConstraintField
                                 return [];
                             }
 
-                            return CustomField::query()
+                            return CustomFields::newCustomFieldModel()::query()
                                 ->where('entity_type', $entityType)
                                 ->whereIn('type', ['date', 'date-time'])
                                 ->when($currentCode, fn ($q) => $q->where('code', '!=', $currentCode))
@@ -100,7 +102,7 @@ final class DateConstraintField
                         })
                         ->required()
                         ->rules([
-                            fn (Get $get, ?CustomField $record): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get, $record): void {
+                            fn (Get $get, ?CustomField $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
                                 if (! $value) {
                                     return;
                                 }
@@ -214,8 +216,7 @@ final class DateConstraintField
     {
         match ($preset) {
             'none' => $set($statePath, null),
-            'today_preset' => self::setAnchor($set, $statePath, DateAnchor::Today),
-            'today_offset' => self::setAnchor($set, $statePath, DateAnchor::Today),
+            'today_preset', 'today_offset' => self::setAnchor($set, $statePath, DateAnchor::Today),
             'custom_field' => self::setAnchor($set, $statePath, DateAnchor::CustomField),
             'record_created' => self::setAnchor($set, $statePath, DateAnchor::RecordCreated),
             'fixed_date' => self::setAnchor($set, $statePath, DateAnchor::FixedDate),
@@ -244,7 +245,7 @@ final class DateConstraintField
     {
         $references = [];
 
-        $fields = CustomField::query()
+        $fields = CustomFields::newCustomFieldModel()::query()
             ->where('entity_type', $entityType)
             ->whereIn('type', ['date', 'date-time'])
             ->where('code', '!=', $currentCode)

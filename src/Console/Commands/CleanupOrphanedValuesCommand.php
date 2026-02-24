@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
-use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\CustomFields;
 
 final class CleanupOrphanedValuesCommand extends Command
 {
@@ -30,7 +30,7 @@ final class CleanupOrphanedValuesCommand extends Command
             $this->newLine();
         }
 
-        $table = (new CustomFieldValue)->getTable();
+        $table = CustomFields::newValueModel()->getTable();
         $entityTypes = DB::table($table)
             ->select('entity_type')
             ->distinct()
