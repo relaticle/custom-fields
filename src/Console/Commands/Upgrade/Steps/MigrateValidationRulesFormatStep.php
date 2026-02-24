@@ -278,29 +278,32 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
 
     /**
      * @param  list<string>  $warnings
-     * @return array{relative_value: int, relative_unit: string, direction: string}|null
+     * @return array{anchor: string, offset: int, offset_unit: string, offset_direction: string}|null
      */
     private function parseDateConstraint(string $value, array &$warnings): ?array
     {
         return match ($value) {
             'today' => [
-                'relative_value' => 0,
-                'relative_unit' => 'days',
-                'direction' => 'from_now',
+                'anchor' => 'today',
+                'offset' => 0,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
             ],
             'tomorrow' => [
-                'relative_value' => 1,
-                'relative_unit' => 'days',
-                'direction' => 'from_now',
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
             ],
             'yesterday' => [
-                'relative_value' => 1,
-                'relative_unit' => 'days',
-                'direction' => 'ago',
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'before',
             ],
             default => $this->warn(
                 $warnings,
-                "Absolute date constraint '{$value}' cannot be automatically converted to relative format, discarding",
+                "Absolute date constraint '{$value}' cannot be automatically converted, discarding",
             ),
         };
     }

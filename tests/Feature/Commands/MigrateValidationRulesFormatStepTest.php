@@ -122,7 +122,7 @@ it('discards after rule with absolute date and warns', function (): void {
 
     $field->refresh();
     expect($field->validation_rules)->toBeNull()
-        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-01-01' cannot be automatically converted to relative format, discarding");
+        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-01-01' cannot be automatically converted, discarding");
 });
 
 it('converts after rule with today to relative min_date', function (): void {
@@ -134,9 +134,10 @@ it('converts after rule with today to relative min_date', function (): void {
 
     $field->refresh();
     $minDate = $field->validation_rules->get('min_date');
-    expect($minDate['relative_value'])->toBe(0)
-        ->and($minDate['relative_unit'])->toBe('days')
-        ->and($minDate['direction'])->toBe('from_now');
+    expect($minDate['anchor'])->toBe('today')
+        ->and($minDate['offset'])->toBe(0)
+        ->and($minDate['offset_unit'])->toBe('days')
+        ->and($minDate['offset_direction'])->toBe('after');
 });
 
 it('converts after rule with tomorrow to relative min_date', function (): void {
@@ -148,9 +149,10 @@ it('converts after rule with tomorrow to relative min_date', function (): void {
 
     $field->refresh();
     $minDate = $field->validation_rules->get('min_date');
-    expect($minDate['relative_value'])->toBe(1)
-        ->and($minDate['relative_unit'])->toBe('days')
-        ->and($minDate['direction'])->toBe('from_now');
+    expect($minDate['anchor'])->toBe('today')
+        ->and($minDate['offset'])->toBe(1)
+        ->and($minDate['offset_unit'])->toBe('days')
+        ->and($minDate['offset_direction'])->toBe('after');
 });
 
 it('converts before rule with yesterday to relative max_date', function (): void {
@@ -162,9 +164,10 @@ it('converts before rule with yesterday to relative max_date', function (): void
 
     $field->refresh();
     $maxDate = $field->validation_rules->get('max_date');
-    expect($maxDate['relative_value'])->toBe(1)
-        ->and($maxDate['relative_unit'])->toBe('days')
-        ->and($maxDate['direction'])->toBe('ago');
+    expect($maxDate['anchor'])->toBe('today')
+        ->and($maxDate['offset'])->toBe(1)
+        ->and($maxDate['offset_unit'])->toBe('days')
+        ->and($maxDate['offset_direction'])->toBe('before');
 });
 
 it('discards before_or_equal rule with absolute date and warns', function (): void {
@@ -176,7 +179,7 @@ it('discards before_or_equal rule with absolute date and warns', function (): vo
 
     $field->refresh();
     expect($field->validation_rules)->toBeNull()
-        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-12-31' cannot be automatically converted to relative format, discarding");
+        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-12-31' cannot be automatically converted, discarding");
 });
 
 it('converts integer rule to integer_only', function (): void {
