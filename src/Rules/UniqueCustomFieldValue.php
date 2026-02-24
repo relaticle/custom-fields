@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -54,7 +55,8 @@ final class UniqueCustomFieldValue implements ValidationRule
         $valueColumn = $this->customField->getValueColumn();
 
         $entityType = $this->customField->entity_type;
-        $morphAlias = (new $entityType)->getMorphClass();
+        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
+        $morphAlias = (new $entityClass)->getMorphClass();
 
         $query = $valueModel->newQuery()
             ->where('custom_field_id', $this->customField->getKey())
