@@ -9,9 +9,6 @@ use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\Data\FieldTypeData;
 
 /**
- * Abstract base class for Custom Fields field types
- * Provides sensible defaults and supports both class-based and inline component definitions
- *
  * @property-read FieldTypeData $data Field type configuration data with full type hints
  */
 abstract class BaseFieldType implements FieldTypeDefinitionInterface
@@ -21,8 +18,21 @@ abstract class BaseFieldType implements FieldTypeDefinitionInterface
     abstract public function configure(): FieldSchema;
 
     /**
-     * Get field type data with proper type hints and caching
+     * Normalize a value before storage and comparison.
      */
+    public function setValue(string $value): string
+    {
+        return $value;
+    }
+
+    /**
+     * Transform a stored value for display.
+     */
+    public function getValue(string $value): string
+    {
+        return $value;
+    }
+
     public function getData(): FieldTypeData
     {
         if (! $this->_data instanceof FieldTypeData) {

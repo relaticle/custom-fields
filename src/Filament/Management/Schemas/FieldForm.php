@@ -98,7 +98,7 @@ class FieldForm implements FormInterface
                     ->required()
                     ->columnSpan(9)
                     ->rules([
-                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
                             if (blank($value)) {
                                 return;
                             }
