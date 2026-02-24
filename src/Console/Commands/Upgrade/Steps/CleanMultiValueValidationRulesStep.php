@@ -69,23 +69,19 @@ final class CleanMultiValueValidationRulesStep implements UpgradeStep
         $failed = 0;
 
         foreach ($affectedFields as $field) {
-            $rules = $field->validation_rules?->toCollection() ?? collect();
+            $rules = $field->validation_rules ?? collect();
 
-            $invalidRules = $rules->filter(
-                fn ($rule): bool => in_array($rule->name, self::STRING_ONLY_RULES, true)
-            );
+            $invalidKeys = $rules->keys()->intersect(self::STRING_ONLY_RULES);
 
-            if ($invalidRules->isEmpty()) {
+            if ($invalidKeys->isEmpty()) {
                 continue;
             }
 
-            $ruleNames = $invalidRules->pluck('name')->implode(', ');
+            $ruleNames = $invalidKeys->implode(', ');
             $command->line(sprintf("  Processing field '%s' (type: %s, id: %s): removing [%s]", $field->name, $field->type, $field->id, $ruleNames));
 
             if (! $dryRun) {
-                $cleanedRules = $rules->reject(
-                    fn ($rule): bool => in_array($rule->name, self::STRING_ONLY_RULES, true)
-                )->values()->toArray();
+                $cleanedRules = $rules->except(self::STRING_ONLY_RULES)->toArray();
 
                 try {
                     $field->update([
