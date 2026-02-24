@@ -1,0 +1,1 @@
+const o={or:"または",error:{title:"ページが見つかりません",description:"申し訳ございませんが、お探しのページは見つかりませんでした。"}},t={copy:{page:"ページをコピー",link:"Markdownページをコピー",view:"Markdownとして表示",gpt:"ChatGPTで開く",claude:"Claudeで開く"},links:"コミュニティ",toc:"このページの内容",report:"問題を報告",edit:"このページを編集"},e={common:o,docs:t};export{o as common,e as default,t as docs};

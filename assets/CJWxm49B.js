@@ -1,0 +1,1 @@
+const o={or:"یان"},t={copy:{page:"کۆپیکردنی پەڕە",link:"کۆپیکردنی پەڕەی Markdown",view:"بینین وەک Markdown",gpt:"کردنەوە لە ChatGPT",claude:"کردنەوە لە Claude"},links:"کۆمەڵگا",toc:"لەم پەڕەدا",report:"ڕاپۆرتکردنی کێشە",edit:"دەستکاریکردنی ئەم پەڕەیە"},c={common:o,docs:t};export{o as common,c as default,t as docs};

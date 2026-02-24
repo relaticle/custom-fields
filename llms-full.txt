@@ -1,234 +1,3 @@
-# Custom Fields - Dynamic Fields Without Migrations
-
-::u-page-hero
-#title
-Custom Fields
-
-#description
-Add dynamic custom fields to your Filament admin panels without writing database migrations.
-
-Perfect for multi-tenant SaaS applications and enterprise admin panels.
-
-#links
-  :::u-button
-  ---
-  color: neutral
-  size: xl
-  to: https://relaticle.github.io/custom-fields/getting-started/installation
-  trailing-icon: i-lucide-arrow-right
-  ---
-  Get started
-  :::
-
-  :::u-button
-  ---
-  color: neutral
-  icon: simple-icons:github
-  size: xl
-  to: https://github.com/relaticle/custom-fields
-  variant: outline
-  ---
-  GitHub
-  :::
-::
-
-::div{.text-center.max-w-4xl.mx-auto}
-  :::div{.aspect-video.rounded-lg.shadow-lg.overflow-hidden}
-  :iframe{allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen="true" frameBorder="0" height="100%" referrerPolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/6iVfeS7VixA?si=3L8H22mbMayEuHs8" title="Custom Fields Demo" width="100%"}
-  :::
-::
-
-::div{.text-center.mt-6.text-sm.text-gray-500.dark:text-gray-400}
-Powering [Relaticle CRM](https://relaticle.com){.underline.hover:text-gray-700.dark:hover:text-gray-200} in production
-::
-
-::u-page-section
-#title
-Why choose Custom Fields?
-
-#features
-  :::u-page-feature
-  ---
-  icon: i-lucide-database
-  ---
-  #title
-  Zero Migrations
-
-  #description
-  Users create and manage fields directly through the admin interface - no deployments required.
-  :::
-
-  :::u-page-feature
-  ---
-  icon: i-lucide-building
-  ---
-  #title
-  Multi-Tenant Ready
-
-  #description
-  Complete tenant isolation with automatic scoping for SaaS applications.
-  :::
-
-  :::u-page-feature
-  ---
-  icon: i-lucide-shapes
-  ---
-  #title
-  20+ Field Types
-
-  #description
-  Text, numbers, dates, selects, rich editors, tags, color pickers, and more.
-  :::
-
-  :::u-page-feature
-  ---
-  icon: i-lucide-shield-check
-  ---
-  #title
-  Type-Safe Storage
-
-  #description
-  Hybrid EAV architecture with typed columns for efficient queries.
-  :::
-
-  :::u-page-feature
-  ---
-  icon: i-lucide-move
-  ---
-  #title
-  Drag & Drop
-
-  #description
-  Intuitive field management with reordering, sections, and conditional visibility.
-  :::
-
-  :::u-page-feature
-  ---
-  icon: i-lucide-puzzle
-  ---
-  #title
-  Full Filament Integration
-
-  #description
-  Works with forms, tables, infolists, import/export, and the complete ecosystem.
-  :::
-::
-
-::u-page-section
-  :::u-pricing-plans{.gap-x-3 compact compact="true"}
-    ::::u-pricing-plan
-    ---
-    button:
-      label: View on GitHub
-      to: https://github.com/relaticle/custom-fields
-      target: _blank
-      color: neutral
-      variant: outline
-    features:
-      - Unlimited domains
-      - Community support
-    description: AGPL-3.0 for open source projects
-    price: Free
-    title: Open Source
-    ---
-    ::::
-
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - 1 domain
-      - 1 year updates
-    billing-cycle: /year
-    description: Personal projects & internal tools
-    price: $79
-    title: Solo
-    ---
-    ::::
-
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - Up to 5 domains
-      - 1 year updates
-    billing-cycle: /year
-    description: Agencies & multiple client sites
-    price: $129
-    title: Pro
-    ---
-    ::::
-
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - Unlimited domains
-      - 1 year updates
-    highlight: true
-    billing-cycle: /year
-    description: Required for SaaS & multi-tenant
-    price: $299
-    title: Business
-    ---
-    ::::
-  :::
-
-  :::div{.mt-4.text-center.text-sm.text-gray-500.dark:text-gray-400}
-  **Students/Educators**: 50% off · **Non-Profits**: 40% off · [Full license details](https://relaticle.github.io/custom-fields/community/license){.underline.hover:text-gray-700.dark:hover:text-gray-200}
-  :::
-
-#title
-Pricing
-
-#description
-All tiers include every feature. Dev/staging environments are always free.
-::
-
-::u-page-section
-  :::card-group
-    ::::card
-    ---
-    icon: i-simple-icons-laravel
-    target: _blank
-    title: FilaForms
-    to: https://filaforms.app
-    ---
-    ![FilaForms](https://filaforms.app/img/og-image.png){.mb-4.rounded-lg.w-full.pointer-events-none}
-
-    Visual form builder for all your public-facing forms.
-    ::::
-
-    ::::card
-    ---
-    icon: i-lucide-columns-3
-    target: _blank
-    title: Flowforge
-    to: https://relaticle.github.io/flowforge/
-    ---
-    ![Flowforge](https://relaticle.github.io/flowforge/og-image.png){.mb-4.rounded-lg.w-full.pointer-events-none}
-
-    Transform any Laravel model into drag-and-drop Kanban boards.
-    ::::
-  :::
-
-#title
-Our Ecosystem
-
-#description
-Extend your Laravel applications with our ecosystem of complementary tools
-::
-
-
 # Installation
 
 ::alert{type="warning"}
@@ -991,10 +760,11 @@ namespace App\Filament\FieldTypes;
 use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Columns\TextColumn;
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
 class StarRatingFieldType extends BaseFieldType
 {
@@ -1032,11 +802,10 @@ class StarRatingFieldType extends BaseFieldType
                     });
             })
             ->priority(45)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-            ]);
+            ->withValidationCapabilities(
+                MinValueCapability::class,
+                MaxValueCapability::class,
+            );
     }
 }
 ```
@@ -1114,13 +883,141 @@ FieldSchema::multiChoice()   // For MULTI_CHOICE data type
 ->priority(50)                       // Sort order (lower = first)
 ->formComponent($component)          // Form field component
 ->tableColumn($column)               // Table column component
+->tableFilter($filter)               // Table filter component
 ->infolistEntry($entry)             // Read-only display component
-->availableValidationRules($rules)  // User-selectable validation rules
-->defaultValidationRules($rules)    // Always-applied validation rules
-->searchable()                      // Enable table search
-->sortable()                        // Enable table sorting
-->filterable()                      // Enable table filtering
-->encryptable()                     // Allow field encryption
+->withValidationCapabilities(...)   // Validation capabilities users can configure per field
+->defaultValidationRules($rules)    // Validation rules always applied to this field type
+->searchable()                      // Enable globally-searchable in tables (default: true)
+->sortable()                        // Enable column sorting in tables (default: true)
+->filterable()                      // Enable table filter for this field type (default: false)
+->encryptable()                     // Allow users to enable encryption for this field
+```
+
+::callout{type="info"}
+A field type needs 
+
+**both**
+
+ 
+
+`filterable()`
+
+ and 
+
+`tableFilter()`
+
+ for filters to appear in tables. 
+
+`filterable()`
+
+ enables the capability; 
+
+`tableFilter()`
+
+ provides the filter component.
+::
+
+### Settings
+
+Add type-specific configuration options that appear in the field editor when your field type is selected. Settings are stored per custom field instance.
+
+`withSettings()` takes two arguments:
+
+1. A [Spatie Laravel Data](https://spatie.be/docs/laravel-data/v4/introduction){rel="&#x22;nofollow&#x22;"} class defining the settings structure
+2. An array of Filament form components (or a `Closure` returning them) for the settings UI
+
+```php
+use Spatie\LaravelData\Data;
+use Filament\Forms\Components\TextInput;
+
+class CurrencySettings extends Data
+{
+    public function __construct(
+        public string $currencySymbol = '$',
+        public int $decimalPlaces = 2,
+    ) {}
+}
+
+// In your field type's configure() method:
+return FieldSchema::float()
+    ->key('acme-currency')
+    ->label('Currency')
+    ->withSettings(CurrencySettings::class, [
+        TextInput::make('currency_symbol')
+            ->label('Currency Symbol')
+            ->default('$'),
+        TextInput::make('decimal_places')
+            ->label('Decimal Places')
+            ->numeric()
+            ->default(2),
+    ]);
+```
+
+The settings form components are automatically shown/hidden based on the selected field type. Access stored settings via `$customField->settings` in your component closures.
+
+### Multi-Value & Constraints
+
+Control whether users can store multiple values in a single field and enforce uniqueness.
+
+```php
+->supportsMultiValue()
+->supportsUniqueConstraint()
+->defaultItemValidationRules($rules)
+->requiresLookupType()
+```
+
+**`supportsMultiValue()`** -- Shows an "Allow Multiple Values" toggle in the field editor. When enabled by the user, the field accepts multiple values (e.g., multiple emails or phone numbers) and a "Max Values" input appears. Used by Email, Phone, Link, and Record field types.
+
+**`supportsUniqueConstraint()`** -- Shows a "Unique per Entity Type" toggle in the field editor. When enabled by the user, a `UniqueCustomFieldValue` validation rule is applied to prevent duplicate values across records of the same entity type. Used by Email, Phone, Link, Text, Textarea, and Number field types.
+
+**`defaultItemValidationRules(array $rules)`** -- Validation rules automatically applied to **each individual item** in a multi-value field. These are not user-configurable -- they are hardcoded per field type. Only available for `MULTI_CHOICE` data types; throws `InvalidArgumentException` otherwise.
+
+**`requiresLookupType()`** -- Replaces the user-defined options UI with an entity type selector. The field stores references to records of the selected entity type instead of static option values. Import/export treats these as entity references. Currently used by the Record field type.
+
+Example -- the Email field type combines these to support multiple unique emails with per-item validation:
+
+```php
+return FieldSchema::multiChoice()
+    ->key('email')
+    ->supportsMultiValue()
+    ->supportsUniqueConstraint()
+    ->withArbitraryValues()
+    ->withoutUserOptions()
+    ->defaultItemValidationRules(['email', 'max:254']);
+```
+
+### Import Customization
+
+Control how field values appear in import templates and how raw import data is transformed before storage.
+
+```php
+->importExample('99.99')
+->importTransformer(function (mixed $state): ?float {
+    // Transform raw import value into the correct storage format
+})
+```
+
+**`importExample(string $example)`** -- Displayed as a sample value in the import template UI, helping users understand the expected format for this field type.
+
+**`importTransformer(Closure $transformer)`** -- Receives the raw value from the import file and returns the transformed value for storage. Without a transformer, the raw value is stored as-is. The closure signature is `function (mixed $state): mixed`.
+
+Example -- the Currency field type strips formatting characters on import:
+
+```php
+return FieldSchema::float()
+    ->key('currency')
+    ->importExample('99.99')
+    ->importTransformer(function (mixed $state): ?float {
+        if (blank($state)) {
+            return null;
+        }
+
+        if (is_string($state)) {
+            $state = preg_replace('/[^0-9.-]/', '', $state);
+        }
+
+        return round(floatval($state), 2);
+    });
 ```
 
 ### Component Types
@@ -1731,22 +1628,22 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
   :::
 
   :::tab{label="Fields"}
-  | Column                    | Type   | Description                     |
-  | ------------------------- | ------ | ------------------------------- |
-  | `id`                      | bigint | Primary key                     |
-  | `custom_field_section_id` | bigint | Parent section                  |
-  | `entity_type`             | string | Polymorphic entity class        |
-  | `code`                    | string | Unique identifier               |
-  | `name`                    | string | Display name                    |
-  | `type`                    | string | Field type (text, number, etc.) |
-  | `lookup_type`             | string | For lookup fields               |
-  | `width`                   | string | Layout width                    |
-  | `sort_order`              | int    | Display order                   |
-  | `validation_rules`        | json   | Laravel validation rules        |
-  | `active`                  | bool   | Enabled flag                    |
-  | `system_defined`          | bool   | Protected from user deletion    |
-  | `settings`                | json   | Type-specific configuration     |
-  | `tenant_id`               | bigint | Optional multi-tenancy          |
+  | Column                    | Type   | Description                                                                          |
+  | ------------------------- | ------ | ------------------------------------------------------------------------------------ |
+  | `id`                      | bigint | Primary key                                                                          |
+  | `custom_field_section_id` | bigint | Parent section                                                                       |
+  | `entity_type`             | string | Polymorphic entity class                                                             |
+  | `code`                    | string | Unique identifier                                                                    |
+  | `name`                    | string | Display name                                                                         |
+  | `type`                    | string | Field type (text, number, etc.)                                                      |
+  | `lookup_type`             | string | For lookup fields                                                                    |
+  | `width`                   | string | Layout width                                                                         |
+  | `sort_order`              | int    | Display order                                                                        |
+  | `validation_rules`        | json   | Capability-driven validation config (e.g. `required`, `min_value`, `decimal_places`) |
+  | `active`                  | bool   | Enabled flag                                                                         |
+  | `system_defined`          | bool   | Protected from user deletion                                                         |
+  | `settings`                | json   | Type-specific configuration                                                          |
+  | `tenant_id`               | bigint | Optional multi-tenancy                                                               |
   :::
 
   :::tab{label="Options"}
@@ -2076,7 +1973,7 @@ Thank you for helping make Custom Fields better for everyone!
 
 All tiers include every feature. Dev/staging environments are always free.
 
-::u-pricing-plans{.gap-x-3 compact compact="true"}
+::u-pricing-plans{.gap-x-3 compact}
   :::u-pricing-plan
   ---
   button:
@@ -2241,3 +2138,234 @@ For questions about code distribution, licensing, or contributing:
 - **Email**: <customfieldsnext@gmail.com>
 - **GitHub Issues**: For technical questions and bug reports
 - **Documentation**: Check our comprehensive docs first
+
+
+# Custom Fields - Dynamic Fields Without Migrations
+
+::u-page-hero
+#title
+Custom Fields
+
+#description
+Add dynamic custom fields to your Filament admin panels without writing database migrations.
+
+Perfect for multi-tenant SaaS applications and enterprise admin panels.
+
+#links
+  :::u-button
+  ---
+  color: neutral
+  size: xl
+  to: https://relaticle.github.io/custom-fields/getting-started/installation
+  trailing-icon: i-lucide-arrow-right
+  ---
+  Get started
+  :::
+
+  :::u-button
+  ---
+  color: neutral
+  icon: simple-icons:github
+  size: xl
+  to: https://github.com/relaticle/custom-fields
+  variant: outline
+  ---
+  GitHub
+  :::
+::
+
+::div{.text-center.max-w-4xl.mx-auto}
+  :::div{.aspect-video.rounded-lg.shadow-lg.overflow-hidden}
+  :iframe{allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen="true" frameBorder="0" height="100%" referrerPolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/6iVfeS7VixA?si=3L8H22mbMayEuHs8" title="Custom Fields Demo" width="100%"}
+  :::
+::
+
+::div{.text-center.mt-6.text-sm.text-gray-500.dark:text-gray-400}
+Powering [Relaticle CRM](https://relaticle.com){.underline.hover:text-gray-700.dark:hover:text-gray-200} in production
+::
+
+::u-page-section
+#title
+Why choose Custom Fields?
+
+#features
+  :::u-page-feature
+  ---
+  icon: i-lucide-database
+  ---
+  #title
+  Zero Migrations
+
+  #description
+  Users create and manage fields directly through the admin interface - no deployments required.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-building
+  ---
+  #title
+  Multi-Tenant Ready
+
+  #description
+  Complete tenant isolation with automatic scoping for SaaS applications.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-shapes
+  ---
+  #title
+  20+ Field Types
+
+  #description
+  Text, numbers, dates, selects, rich editors, tags, color pickers, and more.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-shield-check
+  ---
+  #title
+  Type-Safe Storage
+
+  #description
+  Hybrid EAV architecture with typed columns for efficient queries.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-move
+  ---
+  #title
+  Drag & Drop
+
+  #description
+  Intuitive field management with reordering, sections, and conditional visibility.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-puzzle
+  ---
+  #title
+  Full Filament Integration
+
+  #description
+  Works with forms, tables, infolists, import/export, and the complete ecosystem.
+  :::
+::
+
+::u-page-section
+  :::u-pricing-plans{.gap-x-3 compact}
+    ::::u-pricing-plan
+    ---
+    button:
+      label: View on GitHub
+      to: https://github.com/relaticle/custom-fields
+      target: _blank
+      color: neutral
+      variant: outline
+    features:
+      - Unlimited domains
+      - Community support
+    description: AGPL-3.0 for open source projects
+    price: Free
+    title: Open Source
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - 1 domain
+      - 1 year updates
+    billing-cycle: /year
+    description: Personal projects & internal tools
+    price: $79
+    title: Solo
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - Up to 5 domains
+      - 1 year updates
+    billing-cycle: /year
+    description: Agencies & multiple client sites
+    price: $129
+    title: Pro
+    ---
+    ::::
+
+    ::::u-pricing-plan
+    ---
+    button:
+      label: Purchase
+      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+      target: _blank
+    features:
+      - Unlimited domains
+      - 1 year updates
+    highlight: true
+    billing-cycle: /year
+    description: Required for SaaS & multi-tenant
+    price: $299
+    title: Business
+    ---
+    ::::
+  :::
+
+  :::div{.mt-4.text-center.text-sm.text-gray-500.dark:text-gray-400}
+  **Students/Educators**: 50% off · **Non-Profits**: 40% off · [Full license details](https://relaticle.github.io/custom-fields/community/license){.underline.hover:text-gray-700.dark:hover:text-gray-200}
+  :::
+
+#title
+Pricing
+
+#description
+All tiers include every feature. Dev/staging environments are always free.
+::
+
+::u-page-section
+  :::card-group
+    ::::card
+    ---
+    icon: i-simple-icons-laravel
+    target: _blank
+    title: FilaForms
+    to: https://filaforms.app
+    ---
+    ![FilaForms](https://filaforms.app/img/og-image.png){.mb-4.rounded-lg.w-full.pointer-events-none}
+
+    Visual form builder for all your public-facing forms.
+    ::::
+
+    ::::card
+    ---
+    icon: i-lucide-columns-3
+    target: _blank
+    title: Flowforge
+    to: https://relaticle.github.io/flowforge/
+    ---
+    ![Flowforge](https://relaticle.github.io/flowforge/og-image.png){.mb-4.rounded-lg.w-full.pointer-events-none}
+
+    Transform any Laravel model into drag-and-drop Kanban boards.
+    ::::
+  :::
+
+#title
+Our Ecosystem
+
+#description
+Extend your Laravel applications with our ecosystem of complementary tools
+::

@@ -6,7 +6,7 @@
 
 All tiers include every feature. Dev/staging environments are always free.
 
-<u-pricing-plans :compact="true" className="gap-x-3" compact="true">
+<u-pricing-plans :compact="true" className="gap-x-3">
 <u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["1 domain","1 year updates"]" billing-cycle="/year" description="Personal projects & internal tools" price="$79" title="Solo">
 
 

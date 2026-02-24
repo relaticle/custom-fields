@@ -4,22 +4,22 @@
 
 - [Custom Fields](https://relaticle.github.io/custom-fields/llms-full.txt)
 
-## Landing
-
-- [Custom Fields - Dynamic Fields Without Migrations](https://relaticle.github.io/custom-fields): Add dynamic custom fields to your Filament admin panels without writing database migrations. Perfect for multi-tenant SaaS and admin panels.
-
 ## Docs
 
-- [Installation](https://relaticle.github.io/custom-fields/getting-started/installation): Get started with Custom Fields in just a few steps
-- [Quickstart](https://relaticle.github.io/custom-fields/getting-started/quickstart): Get Custom Fields v3 working in your Filament project in under 5 minutes
-- [Upgrade Guide](https://relaticle.github.io/custom-fields/getting-started/upgrade-guide): Upgrade Custom Fields from v2 to v3
-- [Configuration](https://relaticle.github.io/custom-fields/essentials/configuration): Configure all aspects of the Custom Fields package
-- [Authorization](https://relaticle.github.io/custom-fields/essentials/authorization): Control access to the Custom Fields management interface
-- [Field Types](https://relaticle.github.io/custom-fields/essentials/field-types): Built-in field types and how to create custom ones
-- [Preset Custom Fields](https://relaticle.github.io/custom-fields/essentials/preset-custom-fields): Programmatically define and deploy custom fields using migrations
-- [Import/Export](https://relaticle.github.io/custom-fields/essentials/import-export): Learn how to import and export custom field data with import/export actions
-- [Data Model](https://relaticle.github.io/custom-fields/essentials/data-model): Understanding the Custom Fields database architecture
-- [Support](https://relaticle.github.io/custom-fields/community/support): Get help with Custom Fields
-- [Contributing](https://relaticle.github.io/custom-fields/community/contributing): How to contribute to Custom Fields
-- [License](https://relaticle.github.io/custom-fields/community/license): Commercial licenses for private code, AGPL-3.0 for open source
-- [Code Distribution](https://relaticle.github.io/custom-fields/community/code-distribution): Guidelines for distributing Custom Fields code
+- [Installation](https://relaticle.github.io/custom-fields/raw/getting-started/installation.md): Get started with Custom Fields in just a few steps
+- [Quickstart](https://relaticle.github.io/custom-fields/raw/getting-started/quickstart.md): Get Custom Fields v3 working in your Filament project in under 5 minutes
+- [Upgrade Guide](https://relaticle.github.io/custom-fields/raw/getting-started/upgrade-guide.md): Upgrade Custom Fields from v2 to v3
+- [Configuration](https://relaticle.github.io/custom-fields/raw/essentials/configuration.md): Configure all aspects of the Custom Fields package
+- [Authorization](https://relaticle.github.io/custom-fields/raw/essentials/authorization.md): Control access to the Custom Fields management interface
+- [Field Types](https://relaticle.github.io/custom-fields/raw/essentials/field-types.md): Built-in field types and how to create custom ones
+- [Preset Custom Fields](https://relaticle.github.io/custom-fields/raw/essentials/preset-custom-fields.md): Programmatically define and deploy custom fields using migrations
+- [Import/Export](https://relaticle.github.io/custom-fields/raw/essentials/import-export.md): Learn how to import and export custom field data with import/export actions
+- [Data Model](https://relaticle.github.io/custom-fields/raw/essentials/data-model.md): Understanding the Custom Fields database architecture
+- [Support](https://relaticle.github.io/custom-fields/raw/community/support.md): Get help with Custom Fields
+- [Contributing](https://relaticle.github.io/custom-fields/raw/community/contributing.md): How to contribute to Custom Fields
+- [License](https://relaticle.github.io/custom-fields/raw/community/license.md): Commercial licenses for private code, AGPL-3.0 for open source
+- [Code Distribution](https://relaticle.github.io/custom-fields/raw/community/code-distribution.md): Guidelines for distributing Custom Fields code
+
+## Landing
+
+- [Custom Fields - Dynamic Fields Without Migrations](https://relaticle.github.io/custom-fields/raw/index.md): Add dynamic custom fields to your Filament admin panels without writing database migrations. Perfect for multi-tenant SaaS and admin panels.

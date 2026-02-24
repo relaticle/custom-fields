@@ -1,0 +1,1 @@
+const o={or:"ឬ",error:{title:"រកមិនឃើញទំព័រ",description:"យើងសុំទោស ប៉ុន្តែទំព័រដែលអ្នកកំពុងស្វែងរកមិនអាចរកឃើញទេ។"}},t={copy:{page:"ចម្លងទំព័រ",link:"ចម្លងទំព័រ Markdown",view:"មើលជា Markdown",gpt:"បើកនៅ ChatGPT",claude:"បើកនៅ Claude"},links:"សហគមន៍",toc:"នៅលើទំព័រនេះ",report:"រាយការណ៍បញ្ហា",edit:"កែសម្រួលទំព័រនេះ"},e={common:o,docs:t};export{o as common,e as default,t as docs};

@@ -1,0 +1,1 @@
+const o={or:"أو",error:{title:"الصفحة غير موجودة",description:"نأسف، لكن الصفحة التي تبحث عنها غير موجودة."}},t={copy:{page:"نسخ الصفحة",link:"نسخ صفحة Markdown",view:"عرض كـ Markdown",gpt:"فتح في ChatGPT",claude:"فتح في Claude"},links:"المجتمع",toc:"في هذه الصفحة",report:"الإبلاغ عن مشكلة",edit:"تحرير هذه الصفحة"},e={common:o,docs:t};export{o as common,e as default,t as docs};

@@ -514,7 +514,19 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      Laravel validation rules
+      Capability-driven validation config (e.g. <code>
+        required
+      </code>
+      
+      , <code>
+        min_value
+      </code>
+      
+      , <code>
+        decimal_places
+      </code>
+      
+      )
     </td>
   </tr>
   

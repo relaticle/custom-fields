@@ -1,0 +1,1 @@
+const o={or:"או",error:{title:"העמוד לא נמצא",description:"אנו מתנצלים, אך העמוד שאתה מחפש לא קיים."}},t={copy:{page:"העתק עמוד",link:"העתק עמוד Markdown",view:"הצג כ-Markdown",gpt:"פתח ב-ChatGPT",claude:"פתח ב-Claude"},links:"קהילה",toc:"בעמוד זה",report:"דווח על בעיה",edit:"ערוך עמוד זה"},e={common:o,docs:t};export{o as common,e as default,t as docs};
