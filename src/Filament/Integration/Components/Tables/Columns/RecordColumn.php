@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\Column;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
@@ -144,7 +145,7 @@ final class RecordColumnView extends Column
         }
 
         if (! array_key_exists($recordPage, $resourceClass::getPages())) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 "Entity '%s' has recordPage '%s' but %s does not define a '%s' page. Available pages: %s.",
                 $this->entity->getLabelSingular(),
                 $recordPage,

@@ -13,11 +13,6 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\LinkCo
 
 class LinkFieldType extends BaseFieldType
 {
-    public function setValue(string $value): string
-    {
-        return preg_replace('#^https?://#i', '', trim($value));
-    }
-
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
@@ -38,5 +33,10 @@ class LinkFieldType extends BaseFieldType
                 ValidationRule::MIN,
                 ValidationRule::MAX,
             ]);
+    }
+
+    public function setValue(string $value): string
+    {
+        return preg_replace('#^https?://#i', '', trim($value));
     }
 }

@@ -99,9 +99,15 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         mixed $state,
         mixed $record
     ): mixed {
-        $value = $record?->getCustomFieldValue($customField)
-            ?? $state
-            ?? ($customField->isMultiChoiceField() ? [] : null);
+        $recordValue = $record?->getCustomFieldValue($customField);
+
+        if ($recordValue !== null) {
+            $value = $recordValue;
+        } elseif ($state !== null) {
+            $value = $state;
+        } else {
+            $value = $customField->isMultiChoiceField() ? [] : null;
+        }
 
         if ($value instanceof Carbon) {
             return $value->format($customField->isDateField() ? 'Y-m-d' : 'Y-m-d H:i:s');
