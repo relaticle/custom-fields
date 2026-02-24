@@ -136,7 +136,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             $allFields
         );
 
-        if (blank($jsExpression)) {
+        if (blank($jsExpression) || $jsExpression === '0') {
             return $field;
         }
 
