@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
@@ -325,5 +327,85 @@ describe('Edit record — text field uniqueness via Livewire', function (): void
             ])
             ->call('save')
             ->assertHasFormErrors(['custom_fields.slug']);
+    });
+});
+
+describe('Morph alias resolution', function (): void {
+    beforeEach(function (): void {
+        Relation::morphMap([
+            'post' => Post::class,
+        ]);
+    });
+
+    afterEach(function (): void {
+        Relation::morphMap([], false);
+    });
+
+    it('resolves morph aliases stored in entity_type without fatal error', function (): void {
+        $section = CustomFieldSection::factory()
+            ->forEntityType('post')
+            ->create(['active' => true]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => 'post',
+            'code' => 'unique_code',
+            'name' => 'Unique Code',
+            'type' => 'text',
+            'settings' => new CustomFieldSettingsData(
+                unique_per_entity_type: true,
+            ),
+        ]);
+
+        $existingPost = Post::factory()->create();
+        CustomFieldValue::factory()->create([
+            'custom_field_id' => $field->getKey(),
+            'entity_type' => 'post',
+            'entity_id' => $existingPost->getKey(),
+            'text_value' => 'taken-value',
+        ]);
+
+        $rule = new UniqueCustomFieldValue($field);
+        $errors = [];
+
+        $rule->validate(
+            'custom_fields.unique_code',
+            'taken-value',
+            function (string $message) use (&$errors): void {
+                $errors[] = $message;
+            }
+        );
+
+        expect($errors)->not->toBeEmpty();
+    });
+
+    it('allows unique values when entity_type is a morph alias', function (): void {
+        $section = CustomFieldSection::factory()
+            ->forEntityType('post')
+            ->create(['active' => true]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => 'post',
+            'code' => 'unique_code',
+            'name' => 'Unique Code',
+            'type' => 'text',
+            'settings' => new CustomFieldSettingsData(
+                unique_per_entity_type: true,
+            ),
+        ]);
+
+        $rule = new UniqueCustomFieldValue($field);
+        $errors = [];
+
+        $rule->validate(
+            'custom_fields.unique_code',
+            'fresh-value',
+            function (string $message) use (&$errors): void {
+                $errors[] = $message;
+            }
+        );
+
+        expect($errors)->toBeEmpty();
     });
 });
