@@ -25,7 +25,7 @@ final readonly class MaxSelectionsCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.max_selections")
+            TextInput::make($statePath.'.max_selections')
                 ->numeric()
                 ->integer()
                 ->minValue(1)

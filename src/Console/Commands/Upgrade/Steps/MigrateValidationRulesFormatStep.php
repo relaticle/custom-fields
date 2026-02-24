@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 use Relaticle\CustomFields\CustomFields;
+use Throwable;
 
 /**
  * Migrates validation_rules from the old array-of-objects format to the new key-value format.
@@ -57,8 +58,11 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
 
         foreach ($fields as $field) {
             $rules = $field->validation_rules;
+            if (! $rules instanceof Collection) {
+                continue;
+            }
 
-            if (! $rules instanceof Collection || $rules->isEmpty()) {
+            if ($rules->isEmpty()) {
                 continue;
             }
 
@@ -66,14 +70,14 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
                 continue;
             }
 
-            $command->line("  Processing field '{$field->name}' (type: {$field->type}, id: {$field->id})");
+            $command->line(sprintf("  Processing field '%s' (type: %s, id: %s)", $field->name, $field->type, $field->id));
 
             $fieldWarnings = [];
             $newRules = $this->convertRules($rules, $field->type, $fieldWarnings);
 
             foreach ($fieldWarnings as $warning) {
-                $command->line("    <comment>Warning:</comment> {$warning}");
-                $warnings[] = "Field '{$field->name}' (id: {$field->id}): {$warning}";
+                $command->line('    <comment>Warning:</comment> '.$warning);
+                $warnings[] = sprintf("Field '%s' (id: %s): %s", $field->name, $field->id, $warning);
             }
 
             if (! $dryRun) {
@@ -82,8 +86,8 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
                         'validation_rules' => $newRules->isEmpty() ? null : $newRules->toArray(),
                     ]);
                     $processed++;
-                } catch (\Throwable $e) {
-                    $command->line("  <error>Failed to update field {$field->id}: {$e->getMessage()}</error>");
+                } catch (Throwable $e) {
+                    $command->line(sprintf('  <error>Failed to update field %s: %s</error>', $field->id, $e->getMessage()));
                     $failed++;
                 }
             } else {
@@ -122,10 +126,14 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertRules(Collection $rules, string $fieldType, array &$warnings): Collection
     {
         $newRules = collect();
-        $hasFileRule = $rules->contains(fn ($rule) => is_array($rule) && ($rule['name'] ?? '') === 'file');
+        $hasFileRule = $rules->contains(fn ($rule): bool => is_array($rule) && ($rule['name'] ?? '') === 'file');
 
         foreach ($rules as $rule) {
-            if (! is_array($rule) || ! isset($rule['name'])) {
+            if (! is_array($rule)) {
+                continue;
+            }
+
+            if (! isset($rule['name'])) {
                 continue;
             }
 
@@ -162,13 +170,13 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             'required' => ['required' => true],
             'integer' => ['decimal_places' => 0],
             'file' => null,
-            'min' => $this->convertMinRule($firstParam, $fieldType, $hasFileRule, $warnings),
+            'min' => $this->convertMinRule($firstParam, $fieldType, $warnings),
             'max' => $this->convertMaxRule($firstParam, $fieldType, $hasFileRule, $warnings),
             'after', 'after_or_equal' => $this->convertDateMinRule($firstParam, $ruleName, $warnings),
             'before', 'before_or_equal' => $this->convertDateMaxRule($firstParam, $ruleName, $warnings),
             'decimal' => $this->convertDecimalRule($firstParam, $warnings),
             'mimes', 'mimetypes' => $this->convertMimesRule($parameters),
-            default => $this->warn($warnings, "Rule '{$ruleName}' cannot be mapped to the new format, discarding"),
+            default => $this->warn($warnings, sprintf("Rule '%s' cannot be mapped to the new format, discarding", $ruleName)),
         };
     }
 
@@ -176,7 +184,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
      * @param  list<string>  $warnings
      * @return array<string, mixed>|null
      */
-    private function convertMinRule(?string $value, string $fieldType, bool $hasFileRule, array &$warnings): ?array
+    private function convertMinRule(?string $value, string $fieldType, array &$warnings): ?array
     {
         if ($value === null) {
             $warnings[] = "Rule 'min' has no parameter value, skipping";
@@ -196,7 +204,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return ['min_selections' => (int) $value];
         }
 
-        $warnings[] = "Rule 'min' not applicable for field type '{$fieldType}', discarding";
+        $warnings[] = sprintf("Rule 'min' not applicable for field type '%s', discarding", $fieldType);
 
         return null;
     }
@@ -229,7 +237,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return ['max_selections' => (int) $value];
         }
 
-        $warnings[] = "Rule 'max' not applicable for field type '{$fieldType}', discarding";
+        $warnings[] = sprintf("Rule 'max' not applicable for field type '%s', discarding", $fieldType);
 
         return null;
     }
@@ -241,7 +249,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertDateMinRule(?string $value, string $ruleName, array &$warnings): ?array
     {
         if ($value === null) {
-            $warnings[] = "Rule '{$ruleName}' has no parameter value, skipping";
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
 
             return null;
         }
@@ -262,7 +270,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertDateMaxRule(?string $value, string $ruleName, array &$warnings): ?array
     {
         if ($value === null) {
-            $warnings[] = "Rule '{$ruleName}' has no parameter value, skipping";
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
 
             return null;
         }
@@ -303,7 +311,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             ],
             default => $this->warn(
                 $warnings,
-                "Absolute date constraint '{$value}' cannot be automatically converted, discarding",
+                sprintf("Absolute date constraint '%s' cannot be automatically converted, discarding", $value),
             ),
         };
     }

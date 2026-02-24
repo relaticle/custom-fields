@@ -46,12 +46,16 @@ test('configurable models are only instantiated via CustomFields facade', functi
         $lines = explode("\n", file_get_contents($file->getPathname()));
 
         foreach ($lines as $lineNum => $line) {
-            if (str_contains($line, 'use ') || str_contains($line, '//')) {
+            if (str_contains($line, 'use ')) {
+                continue;
+            }
+
+            if (str_contains($line, '//')) {
                 continue;
             }
 
             if (preg_match($pattern, $line)) {
-                $violations[] = "{$relativePath}:".($lineNum + 1)." -> use {$facade} instead";
+                $violations[] = $relativePath.':'.($lineNum + 1).sprintf(' -> use %s instead', $facade);
             }
         }
     }

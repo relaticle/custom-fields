@@ -25,7 +25,7 @@ final readonly class MinSelectionsCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.min_selections")
+            TextInput::make($statePath.'.min_selections')
                 ->numeric()
                 ->integer()
                 ->minValue(0)

@@ -52,8 +52,8 @@ final readonly class DateConstraintRule implements ValidationRule
         $formattedDate = $boundary->format('M j, Y');
 
         return match ($this->comparison) {
-            'after_or_equal' => "The :attribute must be on or after {$formattedDate}.",
-            'before_or_equal' => "The :attribute must be on or before {$formattedDate}.",
+            'after_or_equal' => sprintf('The :attribute must be on or after %s.', $formattedDate),
+            'before_or_equal' => sprintf('The :attribute must be on or before %s.', $formattedDate),
             default => 'The :attribute has an invalid date.',
         };
     }

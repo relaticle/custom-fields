@@ -25,7 +25,7 @@ final readonly class MaxLengthCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.max_length")
+            TextInput::make($statePath.'.max_length')
                 ->numeric()
                 ->integer()
                 ->minValue(1)

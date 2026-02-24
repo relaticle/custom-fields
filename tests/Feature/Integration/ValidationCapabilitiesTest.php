@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\Carbon;
+use Livewire\Features\SupportTesting\Testable;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
@@ -72,7 +73,7 @@ function createMultiSelectField(object $context, string $code, array $optionName
     return [$field, $options];
 }
 
-function validationSubmitCreate(object $context, array $customFields): \Livewire\Features\SupportTesting\Testable
+function validationSubmitCreate(object $context, array $customFields): Testable
 {
     $newData = Post::factory()->make();
 
@@ -86,7 +87,7 @@ function validationSubmitCreate(object $context, array $customFields): \Livewire
         ->call('create');
 }
 
-function validationSubmitEdit(Post $post, array $customFields): \Livewire\Features\SupportTesting\Testable
+function validationSubmitEdit(Post $post, array $customFields): Testable
 {
     return livewire(EditPost::class, ['record' => $post->getRouteKey()])
         ->fillForm([

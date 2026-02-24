@@ -30,13 +30,13 @@ final class DateConstraintField
         return [
             Fieldset::make($label)
                 ->schema([
-                    Select::make("{$statePath}.preset")
+                    Select::make($statePath.'.preset')
                         ->label('Constraint')
                         ->options(self::presetOptions($context))
                         ->default('none')
                         ->live()
                         ->afterStateHydrated(function ($component, Get $get) use ($statePath): void {
-                            $anchor = $get("{$statePath}.anchor");
+                            $anchor = $get($statePath.'.anchor');
 
                             if ($anchor === null) {
                                 $component->state('none');
@@ -46,7 +46,7 @@ final class DateConstraintField
 
                             $component->state(self::anchorToPreset(
                                 $anchor,
-                                (int) ($get("{$statePath}.offset") ?? 0),
+                                (int) ($get($statePath.'.offset') ?? 0),
                             ));
                         })
                         ->afterStateUpdated(function (Set $set, ?string $state) use ($statePath): void {
@@ -54,35 +54,35 @@ final class DateConstraintField
                         })
                         ->columnSpanFull(),
 
-                    TextInput::make("{$statePath}.offset")
+                    TextInput::make($statePath.'.offset')
                         ->label('Offset value')
                         ->numeric()
                         ->integer()
                         ->minValue(0)
                         ->default(0)
                         ->visible(fn (Get $get): bool => in_array(
-                            $get("{$statePath}.preset"),
+                            $get($statePath.'.preset'),
                             self::PRESETS_WITH_OFFSET,
                             true,
                         )),
 
-                    Select::make("{$statePath}.offset_unit")
+                    Select::make($statePath.'.offset_unit')
                         ->label('Unit')
                         ->options(DateUnit::class)
                         ->default(DateUnit::Days->value)
                         ->visible(fn (Get $get): bool => in_array(
-                            $get("{$statePath}.preset"),
+                            $get($statePath.'.preset'),
                             self::PRESETS_WITH_OFFSET,
                             true,
                         )),
 
-                    Select::make("{$statePath}.offset_direction")
+                    Select::make($statePath.'.offset_direction')
                         ->label('Direction')
                         ->options(DateOffsetDirection::class)
                         ->default(DateOffsetDirection::After->value)
-                        ->visible(fn (Get $get): bool => $get("{$statePath}.preset") === 'today_offset'),
+                        ->visible(fn (Get $get): bool => $get($statePath.'.preset') === 'today_offset'),
 
-                    Select::make("{$statePath}.field_reference")
+                    Select::make($statePath.'.field_reference')
                         ->label('Reference field')
                         ->options(function (Get $get, ?CustomField $record): array {
                             $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
@@ -126,16 +126,16 @@ final class DateConstraintField
                                 }
                             },
                         ])
-                        ->visible(fn (Get $get): bool => $get("{$statePath}.preset") === 'custom_field'),
+                        ->visible(fn (Get $get): bool => $get($statePath.'.preset') === 'custom_field'),
 
-                    DatePicker::make("{$statePath}.fixed_date")
+                    DatePicker::make($statePath.'.fixed_date')
                         ->label('Date')
                         ->native(false)
                         ->format('Y-m-d')
                         ->required()
-                        ->visible(fn (Get $get): bool => $get("{$statePath}.preset") === 'fixed_date'),
+                        ->visible(fn (Get $get): bool => $get($statePath.'.preset') === 'fixed_date'),
 
-                    Hidden::make("{$statePath}.anchor"),
+                    Hidden::make($statePath.'.anchor'),
                 ])
                 ->columns(3),
         ];
@@ -226,17 +226,17 @@ final class DateConstraintField
 
     private static function setAnchor(Set $set, string $statePath, DateAnchor $anchor): void
     {
-        $set("{$statePath}.anchor", $anchor->value);
-        $set("{$statePath}.offset", 0);
-        $set("{$statePath}.offset_unit", DateUnit::Days->value);
-        $set("{$statePath}.offset_direction", DateOffsetDirection::After->value);
+        $set($statePath.'.anchor', $anchor->value);
+        $set($statePath.'.offset', 0);
+        $set($statePath.'.offset_unit', DateUnit::Days->value);
+        $set($statePath.'.offset_direction', DateOffsetDirection::After->value);
 
         if ($anchor !== DateAnchor::CustomField) {
-            $set("{$statePath}.field_reference", null);
+            $set($statePath.'.field_reference', null);
         }
 
         if ($anchor !== DateAnchor::FixedDate) {
-            $set("{$statePath}.fixed_date", null);
+            $set($statePath.'.fixed_date', null);
         }
     }
 

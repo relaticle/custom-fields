@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Override;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
@@ -35,7 +36,7 @@ use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
  * @property string $type
  * @property string $entity_type
  * @property ?string $lookup_type
- * @property \Illuminate\Support\Collection $validation_rules
+ * @property Collection $validation_rules
  * @property CustomFieldSettingsData $settings
  * @property int $sort_order
  * @property bool $active

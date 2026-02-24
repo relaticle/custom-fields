@@ -46,7 +46,7 @@ final class DateConstraintValue extends Data
 
     private function resolveCustomField(?Closure $getCallback): Carbon
     {
-        $value = $getCallback ? $getCallback("custom_fields.{$this->fieldReference}") : null;
+        $value = $getCallback instanceof Closure ? $getCallback('custom_fields.'.$this->fieldReference) : null;
 
         if ($value === null || $value === '') {
             return now()->startOfDay();

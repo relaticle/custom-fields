@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\Carbon;
+use Livewire\Features\SupportTesting\Testable;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
@@ -55,7 +56,7 @@ function createDateField(object $context, string $name, string $code, string $ty
     ]);
 }
 
-function fillAndCreate(object $context, array $customFields): \Livewire\Features\SupportTesting\Testable
+function fillAndCreate(object $context, array $customFields): Testable
 {
     $newData = Post::factory()->make();
 
@@ -69,7 +70,7 @@ function fillAndCreate(object $context, array $customFields): \Livewire\Features
         ->call('create');
 }
 
-function fillAndSave(Post $post, array $customFields): \Livewire\Features\SupportTesting\Testable
+function fillAndSave(Post $post, array $customFields): Testable
 {
     return livewire(EditPost::class, ['record' => $post->getRouteKey()])
         ->fillForm([

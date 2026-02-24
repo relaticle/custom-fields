@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\Carbon;
+use Livewire\Features\SupportTesting\Testable;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
@@ -66,7 +67,7 @@ function configureFieldViaManagement(
         ->where('entity_type', Post::class)
         ->first();
 
-    expect($field)->not->toBeNull("Field '{$code}' was not created via management UI");
+    expect($field)->not->toBeNull(sprintf("Field '%s' was not created via management UI", $code));
 
     return $field;
 }
@@ -84,7 +85,7 @@ function updateFieldViaManagement(CustomField $field, array $validationRules): v
     $field->refresh();
 }
 
-function submitCreate(array $customFields): \Livewire\Features\SupportTesting\Testable
+function submitCreate(array $customFields): Testable
 {
     $newData = Post::factory()->make();
 
@@ -98,7 +99,7 @@ function submitCreate(array $customFields): \Livewire\Features\SupportTesting\Te
         ->call('create');
 }
 
-function submitEdit(Post $post, array $customFields): \Livewire\Features\SupportTesting\Testable
+function submitEdit(Post $post, array $customFields): Testable
 {
     return livewire(EditPost::class, ['record' => $post->getRouteKey()])
         ->fillForm([
@@ -119,7 +120,7 @@ function assertStored(string $code, string $expectedDate): void
         ->firstWhere('custom_field_id', $field->getKey())
         ?->getValue();
 
-    expect($value)->not->toBeNull("No stored value for '{$code}'");
+    expect($value)->not->toBeNull(sprintf("No stored value for '%s'", $code));
     expect(Carbon::parse($value)->format('Y-m-d'))->toBe($expectedDate);
 }
 

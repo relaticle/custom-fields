@@ -25,7 +25,7 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TagsInput::make("{$statePath}.accepted_types")
+            TagsInput::make($statePath.'.accepted_types')
                 ->label('Accepted File Types')
                 ->placeholder('e.g. jpg, png, pdf'),
         ];

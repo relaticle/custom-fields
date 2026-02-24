@@ -25,7 +25,7 @@ final readonly class MaxFileSizeCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.max_size_kb")
+            TextInput::make($statePath.'.max_size_kb')
                 ->numeric()
                 ->integer()
                 ->minValue(1)

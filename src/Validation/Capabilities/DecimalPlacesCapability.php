@@ -25,7 +25,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.decimal_places")
+            TextInput::make($statePath.'.decimal_places')
                 ->numeric()
                 ->integer()
                 ->minValue(0)
@@ -58,7 +58,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
             return ['integer'];
         }
 
-        return ["decimal:0,{$decimalPlaces}"];
+        return ['decimal:0,'.$decimalPlaces];
     }
 
     private function resolveStep(int $decimalPlaces): int|float

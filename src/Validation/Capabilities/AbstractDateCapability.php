@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
+use Carbon\Carbon;
 use Closure;
 use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
@@ -26,7 +27,7 @@ abstract readonly class AbstractDateCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return DateConstraintField::make(
-            "{$statePath}.{$this->key()}",
+            sprintf('%s.%s', $statePath, $this->key()),
             $this->label(),
             $this->context(),
         );
@@ -34,7 +35,7 @@ abstract readonly class AbstractDateCapability implements ValidationCapability
 
     public function applyToComponent(Field $component, mixed $value): void
     {
-        if (! self::isValidConstraint($value)) {
+        if (! $this->isValidConstraint($value)) {
             return;
         }
 
@@ -44,7 +45,7 @@ abstract readonly class AbstractDateCapability implements ValidationCapability
     /** @return array<int, mixed> */
     public function toRules(mixed $value): array
     {
-        if (! self::isValidConstraint($value)) {
+        if (! $this->isValidConstraint($value)) {
             return [];
         }
 
@@ -59,13 +60,13 @@ abstract readonly class AbstractDateCapability implements ValidationCapability
 
     protected static function resolveDate(DateConstraintValue $constraint): Closure
     {
-        return fn (Get $get, ?Model $record = null) => $constraint->resolve(
+        return fn (Get $get, ?Model $record = null): Carbon => $constraint->resolve(
             getCallback: fn (string $path): mixed => $get($path),
             record: $record,
         );
     }
 
-    private static function isValidConstraint(mixed $value): bool
+    private function isValidConstraint(mixed $value): bool
     {
         return is_array($value) && ! empty($value['anchor']);
     }

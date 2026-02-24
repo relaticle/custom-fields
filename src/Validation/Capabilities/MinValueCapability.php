@@ -25,7 +25,7 @@ final readonly class MinValueCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.min_value")
+            TextInput::make($statePath.'.min_value')
                 ->numeric()
                 ->label('Minimum Value'),
         ];

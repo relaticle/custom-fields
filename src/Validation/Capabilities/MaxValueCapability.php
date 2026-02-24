@@ -25,7 +25,7 @@ final readonly class MaxValueCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.max_value")
+            TextInput::make($statePath.'.max_value')
                 ->numeric()
                 ->label('Maximum Value'),
         ];

@@ -122,7 +122,7 @@ it('discards after rule with absolute date and warns', function (): void {
 
     $field->refresh();
     expect($field->validation_rules)->toBeNull()
-        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-01-01' cannot be automatically converted, discarding");
+        ->and($result->warnings)->toContain(sprintf("Field '%s' (id: %s): Absolute date constraint '2026-01-01' cannot be automatically converted, discarding", $field->name, $field->id));
 });
 
 it('converts after rule with today to relative min_date', function (): void {
@@ -179,7 +179,7 @@ it('discards before_or_equal rule with absolute date and warns', function (): vo
 
     $field->refresh();
     expect($field->validation_rules)->toBeNull()
-        ->and($result->warnings)->toContain("Field '{$field->name}' (id: {$field->id}): Absolute date constraint '2026-12-31' cannot be automatically converted, discarding");
+        ->and($result->warnings)->toContain(sprintf("Field '%s' (id: %s): Absolute date constraint '2026-12-31' cannot be automatically converted, discarding", $field->name, $field->id));
 });
 
 it('converts integer rule to decimal_places 0', function (): void {

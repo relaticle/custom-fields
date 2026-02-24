@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use Closure;
+use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Spatie\LaravelData\Data;
 use Stringable;
@@ -30,7 +31,7 @@ final class FieldTypeData extends Data implements Stringable
         public bool $acceptsArbitraryValues = false,
         public bool $supportsMultiValue = false,
         public bool $supportsUniqueConstraint = false,
-        /** @var array<int, class-string<\Relaticle\CustomFields\Contracts\ValidationCapability>> */
+        /** @var array<int, class-string<ValidationCapability>> */
         public array $validationCapabilities = [],
         public ?string $settingsDataClass = null,
         public string|Closure|null $settingsSchema = null,

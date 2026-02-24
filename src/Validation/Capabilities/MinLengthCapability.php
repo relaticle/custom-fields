@@ -25,7 +25,7 @@ final readonly class MinLengthCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.min_length")
+            TextInput::make($statePath.'.min_length')
                 ->numeric()
                 ->integer()
                 ->minValue(0)
