@@ -69,7 +69,10 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     filled($state)
             )
             ->required($this->validationService->isRequired($customField))
-            ->rules($this->getFieldValidationRules($customField))
+            ->rules(fn (Field $component): array => $this->getFieldValidationRules(
+                $customField,
+                $component->getRecord()?->getKey()
+            ))
             ->columnSpan(
                 FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
                     ? $customField->width->getSpanValue()
@@ -96,18 +99,15 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         mixed $state,
         mixed $record
     ): mixed {
-        return value(function () use ($customField, $state, $record) {
-            $value = $record?->getCustomFieldValue($customField) ??
-                ($state ?? ($customField->isMultiChoiceField() ? [] : null));
+        $value = $record?->getCustomFieldValue($customField)
+            ?? $state
+            ?? ($customField->isMultiChoiceField() ? [] : null);
 
-            return $value instanceof Carbon
-                ? $value->format(
-                    $customField->isDateField()
-                        ? 'Y-m-d'
-                        : 'Y-m-d H:i:s'
-                )
-                : $value;
-        });
+        if ($value instanceof Carbon) {
+            return $value->format($customField->isDateField() ? 'Y-m-d' : 'Y-m-d H:i:s');
+        }
+
+        return $value;
     }
 
     /**
@@ -136,15 +136,17 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             $allFields
         );
 
-        return in_array($jsExpression, [null, '', '0'], true)
-            ? $field
-            : $field->live()->visibleJs($jsExpression);
+        if (blank($jsExpression)) {
+            return $field;
+        }
+
+        return $field->live()->visibleJs($jsExpression);
     }
 
     /** @return array<int, mixed> */
-    protected function getFieldValidationRules(CustomField $customField): array
+    protected function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
-        return $this->validationService->getValidationRules($customField);
+        return $this->validationService->getValidationRules($customField, $ignoreEntityId);
     }
 
     /**

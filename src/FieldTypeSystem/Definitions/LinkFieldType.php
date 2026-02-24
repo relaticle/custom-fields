@@ -11,12 +11,13 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\LinkComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\LinkEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\LinkColumn;
 
-/**
- * ABOUTME: Field type definition for Link fields
- * ABOUTME: Provides Link functionality with URL validation and multi-value support
- */
 class LinkFieldType extends BaseFieldType
 {
+    public function setValue(string $value): string
+    {
+        return preg_replace('#^https?://#i', '', trim($value));
+    }
+
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
