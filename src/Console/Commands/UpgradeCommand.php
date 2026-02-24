@@ -191,7 +191,7 @@ final class UpgradeCommand extends Command
         $this->newLine();
         $this->warn('Manual Action Required:');
         $this->line('  Update config/custom-fields.php to use the new format if needed.');
-        $this->line('  See: https://docs.relaticle.com/custom-fields/upgrade-3x');
+        $this->line('  See: https://relaticle.github.io/custom-fields/getting-started/upgrade-guide');
     }
 
     /**
