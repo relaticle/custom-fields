@@ -53,7 +53,7 @@ class SectionForm implements FormInterface, SectionFormInterface
             )
         )->where('entity_type', self::$entityType);
 
-        if (self::$modifyUniqueRuleUsing) {
+        if (self::$modifyUniqueRuleUsing instanceof Closure) {
             return (self::$modifyUniqueRuleUsing)($rule, $get);
         }
 
