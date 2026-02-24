@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Schemas;
 
+use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,8 +25,8 @@ class SectionForm implements FormInterface, SectionFormInterface
 {
     private static string $entityType;
 
-    /** @var ?\Closure(Unique, Get): Unique */
-    private static ?\Closure $modifyUniqueRuleUsing = null;
+    /** @var ?Closure(Unique, Get):Unique */
+    private static ?Closure $modifyUniqueRuleUsing = null;
 
     public static function entityType(string $entityType): self
     {
@@ -35,7 +36,7 @@ class SectionForm implements FormInterface, SectionFormInterface
         return new self;
     }
 
-    public function modifyUniqueRuleUsing(\Closure $callback): self
+    public function modifyUniqueRuleUsing(Closure $callback): self
     {
         self::$modifyUniqueRuleUsing = $callback;
 
@@ -52,8 +53,8 @@ class SectionForm implements FormInterface, SectionFormInterface
             )
         )->where('entity_type', self::$entityType);
 
-        if (self::$modifyUniqueRuleUsing) {
-            $rule = (self::$modifyUniqueRuleUsing)($rule, $get);
+        if (self::$modifyUniqueRuleUsing instanceof Closure) {
+            return (self::$modifyUniqueRuleUsing)($rule, $get);
         }
 
         return $rule;
@@ -76,8 +77,8 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->unique(
                         table: CustomFields::sectionModel(),
                         column: 'name',
-                        ignorable: fn (TextInput $component) => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
-                        modifyRuleUsing: fn (Unique $rule, Get $get) => self::buildUniqueRule($rule, $get),
+                        ignorable: fn (TextInput $component): ?CustomFieldSection => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
+                        modifyRuleUsing: fn (Unique $rule, Get $get): Unique => self::buildUniqueRule($rule, $get),
                     )
                     ->afterStateUpdated(function (
                         Get $get,
@@ -115,8 +116,8 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->unique(
                         table: CustomFields::sectionModel(),
                         column: 'code',
-                        ignorable: fn (TextInput $component) => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
-                        modifyRuleUsing: fn (Unique $rule, Get $get) => self::buildUniqueRule($rule, $get),
+                        ignorable: fn (TextInput $component): ?CustomFieldSection => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
+                        modifyRuleUsing: fn (Unique $rule, Get $get): Unique => self::buildUniqueRule($rule, $get),
                     )
                     ->afterStateUpdated(function (
                         Set $set,

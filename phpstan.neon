@@ -14,5 +14,10 @@ parameters:
     ignoreErrors:
         # Ignore unused trait warnings for library traits meant to be consumed by package users
         - identifier: trait.unused
+        # Filament type stubs declare view() as expecting view-string|null
+        - identifier: argument.type
+          path: src/Filament/Integration/Components/Infolists/*
+        - identifier: argument.type
+          path: src/Filament/Integration/Components/Tables/Columns/*
     parallel:
     		maximumNumberOfProcesses: 3

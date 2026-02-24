@@ -185,9 +185,7 @@ final class ImportColumnConfigurator
                 throw $throwable;
             }
 
-            throw new RowImportFailedException(
-                'Error resolving lookup value: '.$throwable->getMessage()
-            );
+            throw new RowImportFailedException('Error resolving lookup value: '.$throwable->getMessage(), $throwable->getCode(), $throwable);
         }
     }
 
