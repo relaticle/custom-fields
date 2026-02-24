@@ -28,16 +28,12 @@ final readonly class LinkComponent extends AbstractFormComponent
             ->placeholder(__('custom-fields::custom-fields.link.add_link_placeholder'))
             ->nestedRecursiveRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/'])
             ->rules(['array', 'max:'.$maxValues])
-            ->dehydrateStateUsing(function (mixed $state) use ($fieldType): array {
-                return collect($state)
-                    ->map(function (mixed $v) use ($fieldType): string {
-                        $trimmed = trim((string) $v);
-
-                        return $fieldType ? $fieldType->setValue($trimmed) : $trimmed;
-                    })
-                    ->filter(fn (mixed $v): bool => filled($v))
-                    ->values()
-                    ->all();
-            });
+            ->dehydrateStateUsing(fn (mixed $state): array => collect($state)
+                ->map(fn (mixed $v): string => $fieldType
+                    ? $fieldType->setValue(trim((string) $v))
+                    : trim((string) $v))
+                ->filter(fn (string $v): bool => filled($v))
+                ->values()
+                ->all());
     }
 }
