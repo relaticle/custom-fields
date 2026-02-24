@@ -375,10 +375,7 @@ describe('Enhanced field management with datasets', function (): void {
                 'Option 2',
                 'Option 3',
             ])
-            ->withValidation([
-                ['name' => 'required', 'parameters' => []],
-                ['name' => 'in', 'parameters' => ['Option 1', 'Option 2', 'Option 3']],
-            ])
+            ->withValidation(['required' => true])
             ->create([
                 'custom_field_section_id' => $this->section->getKey(),
                 'entity_type' => $this->userEntityType,
@@ -388,9 +385,7 @@ describe('Enhanced field management with datasets', function (): void {
             ->toHaveFieldType('select')
             ->toHaveCorrectComponent('Select')
             ->toHaveValidationRule('required')
-            ->toHaveValidationRule('in', ['Option 1', 'Option 2', 'Option 3'])
             ->and($selectField->options)->toHaveCount(3);
-
     });
 });
 
@@ -418,11 +413,8 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
         // Step 2: Create field with validation
         $field = CustomField::factory()
             ->ofType('text')
-            ->withValidation([
-                ['name' => 'required', 'parameters' => []],
-                ['name' => 'min', 'parameters' => [3]],
-                ['name' => 'max', 'parameters' => [255]],
-            ])
+            ->required()
+            ->withLength(3, 255)
             ->create([
                 'custom_field_section_id' => $section->getKey(),
                 'entity_type' => $this->userEntityType,
@@ -433,8 +425,8 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
         expect($field)
             ->toHaveFieldType('text')
             ->toHaveValidationRule('required')
-            ->toHaveValidationRule('min', [3])
-            ->toHaveValidationRule('max', [255])
+            ->toHaveValidationRule('min_length', 3)
+            ->toHaveValidationRule('max_length', 255)
             ->toBeActive();
 
         // Step 3: Test field usage in forms

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
@@ -35,12 +34,6 @@ class PhoneFieldType extends BaseFieldType
             ->supportsUniqueConstraint()
             ->withArbitraryValues()
             ->withoutUserOptions()
-            ->defaultItemValidationRules(['phone:AUTO'])
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::UNIQUE,
-            ]);
+            ->defaultItemValidationRules(['phone:AUTO']);
     }
 }

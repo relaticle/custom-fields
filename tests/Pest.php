@@ -46,12 +46,11 @@ expect()->extend('toBeActive', fn (): Expectation => expect($this->value->active
 
 expect()->extend('toBeInactive', fn (): Expectation => expect($this->value->active)->toBeFalse());
 
-expect()->extend('toHaveValidationRule', function (string $rule, array $parameters = []): Expectation {
-    $validationRules = $this->value->validation_rules ?? [];
-    $hasRule = collect($validationRules)->contains(fn ($validationRule): bool => $validationRule['name'] === $rule &&
-           ($parameters === [] || $validationRule['parameters'] === $parameters));
+expect()->extend('toHaveValidationRule', function (string $key, mixed $expectedValue = true): Expectation {
+    $validationRules = $this->value->validation_rules;
+    $hasRule = $validationRules && $validationRules->get($key) === $expectedValue;
 
-    return expect($hasRule)->toBeTrue(sprintf("Expected field to have validation rule '%s' with parameters: ", $rule).json_encode($parameters));
+    return expect($hasRule)->toBeTrue(sprintf("Expected field to have validation rule '%s' with value: ", $key).json_encode($expectedValue));
 });
 
 expect()->extend('toHaveVisibilityCondition', function (string $fieldCode, string $operator, mixed $value): Expectation {

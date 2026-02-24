@@ -7,12 +7,10 @@ namespace Relaticle\CustomFields\Livewire\Concerns;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\CodeGenerator;
 
-/**
- * Shared logic for creating custom fields from Livewire components.
- */
 trait CreatesCustomFields
 {
     protected function mutateFieldData(array $data, string $entityType, int|string|null $sectionId = null): array
@@ -30,7 +28,6 @@ trait CreatesCustomFields
             'entity_type' => $entityType,
         ];
 
-        // Only include section_id when sections are enabled
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS) && $sectionId !== null) {
             $result['custom_field_section_id'] = $sectionId;
         }
@@ -40,6 +37,8 @@ trait CreatesCustomFields
 
     protected function storeField(array $data): void
     {
+        $data = DateConstraintField::sanitizeValidationRules($data);
+
         $options = collect($data['options'] ?? [])
             ->filter()
             ->map(function (array $option): array {

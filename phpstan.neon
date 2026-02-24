@@ -14,10 +14,14 @@ parameters:
     ignoreErrors:
         # Ignore unused trait warnings for library traits meant to be consumed by package users
         - identifier: trait.unused
-        # Filament type stubs declare view() as expecting view-string|null
-        - identifier: argument.type
-          path: src/Filament/Integration/Components/Infolists/*
-        - identifier: argument.type
-          path: src/Filament/Integration/Components/Tables/Columns/*
+        # Filament type stubs declare view() as expecting view-string|null (CI-only, version-dependent)
+        -
+            identifier: argument.type
+            path: src/Filament/Integration/Components/Infolists/*
+            reportUnmatched: false
+        -
+            identifier: argument.type
+            path: src/Filament/Integration/Components/Tables/Columns/*
+            reportUnmatched: false
     parallel:
     		maximumNumberOfProcesses: 3

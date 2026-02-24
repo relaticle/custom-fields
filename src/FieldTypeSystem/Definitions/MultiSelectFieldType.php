@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\MultiSelectComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\MultiChoiceEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\MultiChoiceColumn;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters\SelectFilter;
+use Relaticle\CustomFields\Validation\Capabilities\MaxSelectionsCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 /**
  * ABOUTME: Field type definition for Multi Select fields
@@ -29,13 +30,10 @@ class MultiSelectFieldType extends BaseFieldType
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(MultiChoiceEntry::class)
             ->priority(42)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::ARRAY,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::DISTINCT,
-            ])
+            ->withValidationCapabilities(
+                MinSelectionsCapability::class,
+                MaxSelectionsCapability::class,
+            )
             ->filterable();
     }
 }

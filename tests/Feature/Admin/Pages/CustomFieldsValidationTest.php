@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -94,44 +93,6 @@ describe('CustomFieldsPage - Field Validation Testing', function (): void {
         ])->assertHasFormErrors(['options.1.name']);
     });
 
-    it('validates field type compatibility with validation rules', function (string $fieldType, array $allowedRules, array $disallowedRules): void {
-        // Test that allowed rules work
-        foreach ($allowedRules as $rule) {
-            $field = CustomField::factory()
-                ->ofType($fieldType)
-                ->withValidation([$rule])
-                ->create([
-                    'custom_field_section_id' => $this->section->getKey(),
-                    'entity_type' => $this->userEntityType,
-                ]);
-
-            expect($field)->toHaveValidationRule($rule);
-        }
-
-        // Test that disallowed rules are not applied or cause appropriate behavior
-        foreach ($disallowedRules as $rule) {
-            // This would depend on your validation logic implementation
-            // For now, we'll test that the field type and rule combination is handled appropriately
-            expect(ValidationRule::tryFrom($rule))->not->toBeNull();
-        }
-    })->with('field_type_validation_compatibility');
-
-    it('handles all validation rules with their parameters correctly', function (string $rule, array $parameters, mixed $validValue, mixed $invalidValue): void {
-        $field = CustomField::factory()
-            ->ofType('text') // Use TEXT as it supports most rules
-            ->withValidation([['name' => $rule, 'parameters' => $parameters]])
-            ->create([
-                'custom_field_section_id' => $this->section->getKey(),
-                'entity_type' => $this->userEntityType,
-            ]);
-
-        expect($field)->toHaveValidationRule($rule, $parameters);
-
-        // Test that the validation rule is properly stored
-        $validationRules = $field->validation_rules;
-        expect(collect($validationRules)->pluck('name'))->toContain($rule);
-    })->with('validation_rules_with_parameters');
-
     describe('Enhanced field creation with custom expectations', function (): void {
         it('creates fields with correct component mappings', function (array $fieldTypes, string $expectedComponent): void {
             foreach ($fieldTypes as $fieldType) {
@@ -160,8 +121,8 @@ describe('CustomFieldsPage - Field Validation Testing', function (): void {
 
             expect($field)
                 ->toHaveValidationRule('required')
-                ->toHaveValidationRule('min', [3])
-                ->toHaveValidationRule('max', [255])
+                ->toHaveValidationRule('min_length', 3)
+                ->toHaveValidationRule('max_length', 255)
                 ->toBeActive();
         });
 

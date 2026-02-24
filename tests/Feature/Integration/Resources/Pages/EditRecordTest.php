@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Relaticle\CustomFields\Data\ValidationRuleData;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
@@ -285,9 +284,7 @@ describe('Custom Fields Integration', function (): void {
             'code' => 'meta_description',
             'type' => 'text',
             'entity_type' => Post::class,
-            'validation_rules' => [
-                new ValidationRuleData(name: 'required', parameters: []),
-            ],
+            'validation_rules' => ['required' => true],
         ]);
 
         $this->post->saveCustomFieldValue($requiredCustomField, 'Original meta description');
@@ -304,16 +301,14 @@ describe('Custom Fields Integration', function (): void {
             ->assertHasFormErrors(['custom_fields.meta_description']);
     });
 
-    it('validates custom field types and constraints during update', function (string $fieldType, mixed $invalidValue, string $rule): void {
+    it('validates custom field types and constraints during update', function (string $fieldType, mixed $invalidValue, array $validationRules): void {
         // Arrange
         $customField = CustomField::factory()->create([
             'custom_field_section_id' => $this->section->id,
             'code' => 'test_field',
             'type' => $fieldType,
             'entity_type' => Post::class,
-            'validation_rules' => [
-                new ValidationRuleData(name: $rule, parameters: $rule === 'min' ? [3] : []),
-            ],
+            'validation_rules' => $validationRules,
         ]);
 
         $this->post->saveCustomFieldValue($customField, 'original value');
@@ -328,8 +323,8 @@ describe('Custom Fields Integration', function (): void {
             ->call('save')
             ->assertHasFormErrors(['custom_fields.test_field']);
     })->with([
-        'text field min length' => ['text', 'a', 'min'],
-        'number field must be numeric' => ['number', 'not-a-number', 'numeric'],
+        'text field min length' => ['text', 'a', ['min_length' => 3]],
+        'number field must be numeric' => ['number', 'not-a-number', []],
     ]);
 
     it('can clear custom field values', function (): void {

@@ -54,21 +54,11 @@ final class CustomFieldFactory extends Factory
     /**
      * Configure the field with specific validation rules.
      *
-     * @param  array<string|array{name: string, parameters: array}>  $rules
+     * @param  array<string, mixed>  $rules
      */
     public function withValidation(array $rules): self
     {
-        return $this->state(function (array $attributes) use ($rules) {
-            $validationRules = collect($rules)->map(function ($rule) {
-                if (is_string($rule)) {
-                    return ['name' => $rule, 'parameters' => []];
-                }
-
-                return $rule;
-            })->toArray();
-
-            return ['validation_rules' => $validationRules];
-        });
+        return $this->state(fn () => ['validation_rules' => $rules]);
     }
 
     /**
@@ -180,35 +170,9 @@ final class CustomFieldFactory extends Factory
      */
     public function ofType(string $type): self
     {
-        $defaultValidation = match ($type) {
-            'text' => [
-                ['name' => 'string', 'parameters' => []],
-                ['name' => 'max', 'parameters' => [255]],
-            ],
-            'number' => [
-                ['name' => 'numeric', 'parameters' => []],
-            ],
-            'link' => [
-                ['name' => 'url', 'parameters' => []],
-            ],
-            'date' => [
-                ['name' => 'date', 'parameters' => []],
-            ],
-            'checkbox', 'toggle' => [
-                ['name' => 'boolean', 'parameters' => []],
-            ],
-            'select', 'radio' => [
-                ['name' => 'in', 'parameters' => ['option1', 'option2', 'option3']],
-            ],
-            'multi_select', 'checkbox_list', 'tags_input' => [
-                ['name' => 'array', 'parameters' => []],
-            ],
-            default => [],
-        };
-
         return $this->state([
             'type' => $type,
-            'validation_rules' => $defaultValidation,
+            'validation_rules' => [],
         ]);
     }
 
@@ -219,7 +183,7 @@ final class CustomFieldFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $validationRules = $attributes['validation_rules'] ?? [];
-            array_unshift($validationRules, ['name' => 'required', 'parameters' => []]);
+            $validationRules['required'] = true;
 
             return ['validation_rules' => $validationRules];
         });
@@ -234,11 +198,11 @@ final class CustomFieldFactory extends Factory
             $validationRules = $attributes['validation_rules'] ?? [];
 
             if ($min !== null) {
-                $validationRules[] = ['name' => 'min', 'parameters' => [$min]];
+                $validationRules['min_length'] = $min;
             }
 
             if ($max !== null) {
-                $validationRules[] = ['name' => 'max', 'parameters' => [$max]];
+                $validationRules['max_length'] = $max;
             }
 
             return ['validation_rules' => $validationRules];

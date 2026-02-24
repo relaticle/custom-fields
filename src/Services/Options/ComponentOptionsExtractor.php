@@ -9,6 +9,7 @@ use Exception;
 use Filament\Forms\Components\Field;
 use ReflectionObject;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 
@@ -158,7 +159,7 @@ final class ComponentOptionsExtractor
      */
     private function createTestField(): CustomField
     {
-        $field = new CustomField;
+        $field = CustomFields::newCustomFieldModel();
         $field->id = 999;
         $field->name = 'Test Field';
         $field->code = 'test_field';

@@ -1,0 +1,369 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Relaticle\CustomFields\Console\Commands\Upgrade\Steps;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
+use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
+use Relaticle\CustomFields\CustomFields;
+use Throwable;
+
+/**
+ * Migrates validation_rules from the old array-of-objects format to the new key-value format.
+ *
+ * Old format: [{name: 'required', parameters: []}, {name: 'min', parameters: [{value: '5'}]}]
+ * New format: {required: true, min_length: 5}
+ */
+final class MigrateValidationRulesFormatStep implements UpgradeStep
+{
+    /** @var list<string> */
+    private const TEXT_LIKE_TYPES = [
+        'text', 'textarea', 'markdown_editor', 'rich_editor', 'link', 'email', 'phone',
+    ];
+
+    /** @var list<string> */
+    private const NUMERIC_TYPES = ['number', 'currency'];
+
+    /** @var list<string> */
+    private const MULTI_SELECT_TYPES = ['multi_select', 'checkbox_list', 'tags_input', 'record'];
+
+    /** @var list<string> */
+    private const FILE_TYPES = ['file_upload'];
+
+    public function name(): string
+    {
+        return 'Migrate Validation Rules Format';
+    }
+
+    public function description(): string
+    {
+        return 'Convert validation_rules from old array-of-objects format to new key-value format';
+    }
+
+    public function execute(bool $dryRun, Command $command): UpgradeStepResult
+    {
+        $fieldModel = CustomFields::newCustomFieldModel();
+
+        $fields = $fieldModel->newQuery()
+            ->withoutGlobalScopes()
+            ->whereNotNull('validation_rules')
+            ->get();
+
+        $processed = 0;
+        $failed = 0;
+        $warnings = [];
+
+        foreach ($fields as $field) {
+            $rules = $field->validation_rules;
+            if (! $rules instanceof Collection) {
+                continue;
+            }
+
+            if ($rules->isEmpty()) {
+                continue;
+            }
+
+            if (! $this->isOldFormat($rules)) {
+                continue;
+            }
+
+            $command->line(sprintf("  Processing field '%s' (type: %s, id: %s)", $field->name, $field->type, $field->id));
+
+            $fieldWarnings = [];
+            $newRules = $this->convertRules($rules, $field->type, $fieldWarnings);
+
+            foreach ($fieldWarnings as $warning) {
+                $command->line('    <comment>Warning:</comment> '.$warning);
+                $warnings[] = sprintf("Field '%s' (id: %s): %s", $field->name, $field->id, $warning);
+            }
+
+            if (! $dryRun) {
+                try {
+                    $field->update([
+                        'validation_rules' => $newRules->isEmpty() ? null : $newRules->toArray(),
+                    ]);
+                    $processed++;
+                } catch (Throwable $e) {
+                    $command->line(sprintf('  <error>Failed to update field %s: %s</error>', $field->id, $e->getMessage()));
+                    $failed++;
+                }
+            } else {
+                $processed++;
+            }
+        }
+
+        if ($processed === 0 && $failed === 0) {
+            $command->line('  <info>No fields need migration</info>');
+
+            return UpgradeStepResult::skipped('No fields with old validation rules format found');
+        }
+
+        $result = UpgradeStepResult::success($processed, $failed);
+
+        if ($warnings !== []) {
+            return new UpgradeStepResult(
+                success: $result->success,
+                itemsProcessed: $result->itemsProcessed,
+                itemsFailed: $result->itemsFailed,
+                warnings: $warnings,
+            );
+        }
+
+        return $result;
+    }
+
+    private function isOldFormat(Collection $rules): bool
+    {
+        $firstItem = $rules->first();
+
+        return is_array($firstItem) && array_key_exists('name', $firstItem);
+    }
+
+    /** @param list<string> $warnings */
+    private function convertRules(Collection $rules, string $fieldType, array &$warnings): Collection
+    {
+        $newRules = collect();
+        $hasFileRule = $rules->contains(fn ($rule): bool => is_array($rule) && ($rule['name'] ?? '') === 'file');
+
+        foreach ($rules as $rule) {
+            if (! is_array($rule)) {
+                continue;
+            }
+
+            if (! isset($rule['name'])) {
+                continue;
+            }
+
+            $ruleName = $rule['name'];
+            $parameters = $rule['parameters'] ?? [];
+            $firstParam = $this->getFirstParameterValue($parameters);
+
+            $converted = $this->convertRule($ruleName, $firstParam, $parameters, $fieldType, $hasFileRule, $warnings);
+
+            if ($converted !== null) {
+                foreach ($converted as $key => $value) {
+                    $newRules->put($key, $value);
+                }
+            }
+        }
+
+        return $newRules;
+    }
+
+    /**
+     * @param  list<array{value: string}>  $parameters
+     * @param  list<string>  $warnings
+     * @return array<string, mixed>|null
+     */
+    private function convertRule(
+        string $ruleName,
+        ?string $firstParam,
+        array $parameters,
+        string $fieldType,
+        bool $hasFileRule,
+        array &$warnings,
+    ): ?array {
+        return match ($ruleName) {
+            'required' => ['required' => true],
+            'integer' => ['decimal_places' => 0],
+            'file' => null,
+            'min' => $this->convertMinRule($firstParam, $fieldType, $warnings),
+            'max' => $this->convertMaxRule($firstParam, $fieldType, $hasFileRule, $warnings),
+            'after', 'after_or_equal' => $this->convertDateMinRule($firstParam, $ruleName, $warnings),
+            'before', 'before_or_equal' => $this->convertDateMaxRule($firstParam, $ruleName, $warnings),
+            'decimal' => $this->convertDecimalRule($firstParam, $warnings),
+            'mimes', 'mimetypes' => $this->convertMimesRule($parameters),
+            default => $this->warn($warnings, sprintf("Rule '%s' cannot be mapped to the new format, discarding", $ruleName)),
+        };
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array<string, mixed>|null
+     */
+    private function convertMinRule(?string $value, string $fieldType, array &$warnings): ?array
+    {
+        if ($value === null) {
+            $warnings[] = "Rule 'min' has no parameter value, skipping";
+
+            return null;
+        }
+
+        if (in_array($fieldType, self::TEXT_LIKE_TYPES, true)) {
+            return ['min_length' => (int) $value];
+        }
+
+        if (in_array($fieldType, self::NUMERIC_TYPES, true)) {
+            return ['min_value' => (float) $value];
+        }
+
+        if (in_array($fieldType, self::MULTI_SELECT_TYPES, true)) {
+            return ['min_selections' => (int) $value];
+        }
+
+        $warnings[] = sprintf("Rule 'min' not applicable for field type '%s', discarding", $fieldType);
+
+        return null;
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array<string, mixed>|null
+     */
+    private function convertMaxRule(?string $value, string $fieldType, bool $hasFileRule, array &$warnings): ?array
+    {
+        if ($value === null) {
+            $warnings[] = "Rule 'max' has no parameter value, skipping";
+
+            return null;
+        }
+
+        if (in_array($fieldType, self::FILE_TYPES, true) || $hasFileRule) {
+            return ['max_size_kb' => (int) $value];
+        }
+
+        if (in_array($fieldType, self::TEXT_LIKE_TYPES, true)) {
+            return ['max_length' => (int) $value];
+        }
+
+        if (in_array($fieldType, self::NUMERIC_TYPES, true)) {
+            return ['max_value' => (float) $value];
+        }
+
+        if (in_array($fieldType, self::MULTI_SELECT_TYPES, true)) {
+            return ['max_selections' => (int) $value];
+        }
+
+        $warnings[] = sprintf("Rule 'max' not applicable for field type '%s', discarding", $fieldType);
+
+        return null;
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array<string, mixed>|null
+     */
+    private function convertDateMinRule(?string $value, string $ruleName, array &$warnings): ?array
+    {
+        if ($value === null) {
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
+
+            return null;
+        }
+
+        $constraint = $this->parseDateConstraint($value, $warnings);
+
+        if ($constraint === null) {
+            return null;
+        }
+
+        return ['min_date' => $constraint];
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array<string, mixed>|null
+     */
+    private function convertDateMaxRule(?string $value, string $ruleName, array &$warnings): ?array
+    {
+        if ($value === null) {
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
+
+            return null;
+        }
+
+        $constraint = $this->parseDateConstraint($value, $warnings);
+
+        if ($constraint === null) {
+            return null;
+        }
+
+        return ['max_date' => $constraint];
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array{anchor: string, offset: int, offset_unit: string, offset_direction: string}|null
+     */
+    private function parseDateConstraint(string $value, array &$warnings): ?array
+    {
+        return match ($value) {
+            'today' => [
+                'anchor' => 'today',
+                'offset' => 0,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
+            ],
+            'tomorrow' => [
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
+            ],
+            'yesterday' => [
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'before',
+            ],
+            default => $this->warn(
+                $warnings,
+                sprintf("Absolute date constraint '%s' cannot be automatically converted, discarding", $value),
+            ),
+        };
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     * @return array<string, int>|null
+     */
+    private function convertDecimalRule(?string $value, array &$warnings): ?array
+    {
+        if ($value === null) {
+            $warnings[] = "Rule 'decimal' has no parameter value, skipping";
+
+            return null;
+        }
+
+        return ['decimal_places' => (int) $value];
+    }
+
+    /**
+     * @param  list<array{value: string}>  $parameters
+     * @return array<string, list<string>>
+     */
+    private function convertMimesRule(array $parameters): array
+    {
+        $types = array_map(
+            fn (array $param): string => $param['value'],
+            $parameters,
+        );
+
+        return ['accepted_types' => array_values(array_filter($types))];
+    }
+
+    /**
+     * @param  list<string>  $warnings
+     */
+    private function warn(array &$warnings, string $message): null
+    {
+        $warnings[] = $message;
+
+        return null;
+    }
+
+    /** @param list<array{value: string}> $parameters */
+    private function getFirstParameterValue(array $parameters): ?string
+    {
+        if ($parameters === []) {
+            return null;
+        }
+
+        $first = $parameters[0];
+
+        return is_array($first) ? $first['value'] : null;
+    }
+}

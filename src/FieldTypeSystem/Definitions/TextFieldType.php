@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextInputComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
+use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
 
 /**
  * ABOUTME: Field type definition for standard text input fields
@@ -29,16 +30,9 @@ class TextFieldType extends BaseFieldType
             ->encryptable()
             ->supportsUniqueConstraint()
             ->priority(10)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::MIN,
-                ValidationRule::MAX,
-                ValidationRule::ALPHA,
-                ValidationRule::ALPHA_NUM,
-                ValidationRule::ALPHA_DASH,
-                ValidationRule::EMAIL,
-                ValidationRule::STARTS_WITH,
-                ValidationRule::ENDS_WITH,
-            ]);
+            ->withValidationCapabilities(
+                MinLengthCapability::class,
+                MaxLengthCapability::class,
+            );
     }
 }

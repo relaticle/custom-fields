@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ToggleButtonsComponent;
@@ -29,11 +28,6 @@ class ToggleButtonsFieldType extends BaseFieldType
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(SingleChoiceEntry::class)
             ->priority(53)
-            ->availableValidationRules([
-                ValidationRule::REQUIRED,
-                ValidationRule::IN,
-                ValidationRule::NOT_IN,
-            ])
             ->filterable();
     }
 }

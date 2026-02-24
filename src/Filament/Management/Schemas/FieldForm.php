@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Management\Schemas;
 
 use Closure;
-use Exception;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -20,15 +19,16 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
+use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Filament\Management\Forms\Components\CustomFieldValidationComponent;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\TypeField;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Models\CustomField;
@@ -73,9 +73,37 @@ class FieldForm implements FormInterface
     }
 
     /**
-     * @return array<int, Component>
+     * Get validation schema components from registered capabilities.
      *
-     * @throws Exception
+     * @return array<int, Component>
+     */
+    private static function getValidationSchema(): array
+    {
+        $components = [];
+
+        foreach (CustomFieldsType::toCollection() as $fieldTypeData) {
+            if ($fieldTypeData->validationCapabilities === []) {
+                continue;
+            }
+
+            foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
+                /** @var ValidationCapability $capability */
+                $capability = app($capabilityClass);
+                $capabilityComponents = $capability->formSchema('validation_rules');
+
+                foreach ($capabilityComponents as $component) {
+                    $components[] = $component->visible(
+                        fn (Get $get): bool => $get('type') === $fieldTypeData->key
+                    );
+                }
+            }
+        }
+
+        return $components;
+    }
+
+    /**
+     * @return array<int, Component>
      */
     public static function schema(bool $withOptionsRelationship = true): array
     {
@@ -246,11 +274,11 @@ class FieldForm implements FormInterface
                 )
             )
                 ->columnSpanFull()
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     // Visibility settings
                     Toggle::make('settings.visible_in_list')
-                        ->inline(false)
+                        ->inline()
                         ->live()
                         ->label(
                             __(
@@ -266,7 +294,7 @@ class FieldForm implements FormInterface
                             }
                         }),
                     Toggle::make('settings.visible_in_view')
-                        ->inline(false)
+                        ->inline()
                         ->label(
                             __(
                                 'custom-fields::custom-fields.field.form.visible_in_view'
@@ -281,17 +309,13 @@ class FieldForm implements FormInterface
                             }
                         }),
                     Toggle::make('settings.list_toggleable_hidden')
-                        ->inline(false)
+                        ->inline()
                         ->label(
                             __(
                                 'custom-fields::custom-fields.field.form.list_toggleable_hidden'
                             )
                         )
-                        ->helperText(
-                            __(
-                                'custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'
-                            )
-                        )
+                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'))
                         ->visible(
                             fn (Get $get): bool => $get(
                                 'settings.visible_in_list'
@@ -310,7 +334,7 @@ class FieldForm implements FormInterface
                         }),
                     // Data settings
                     Toggle::make('settings.searchable')
-                        ->inline(false)
+                        ->inline()
                         ->visible(
                             fn (
                                 Get $get
@@ -335,7 +359,7 @@ class FieldForm implements FormInterface
                             }
                         }),
                     Toggle::make('settings.encrypted')
-                        ->inline(false)
+                        ->inline()
                         ->live()
                         ->disabled(
                             fn (
@@ -357,18 +381,14 @@ class FieldForm implements FormInterface
                         ->default(false),
                     // Appearance settings
                     Toggle::make('settings.enable_option_colors')
-                        ->inline(false)
+                        ->inline()
                         ->live()
                         ->label(
                             __(
                                 'custom-fields::custom-fields.field.form.enable_option_colors'
                             )
                         )
-                        ->helperText(
-                            __(
-                                'custom-fields::custom-fields.field.form.enable_option_colors_help'
-                            )
-                        )
+                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.enable_option_colors_help'))
                         ->visible(
                             fn (
                                 Get $get
@@ -381,10 +401,10 @@ class FieldForm implements FormInterface
                         ),
                     // Multi-value settings
                     Toggle::make('settings.allow_multiple')
-                        ->inline(false)
+                        ->inline()
                         ->live()
                         ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
-                        ->helperText(__('custom-fields::custom-fields.field.form.allow_multiple_help'))
+                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.allow_multiple_help'))
                         ->visible(
                             fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
                                 CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
@@ -401,11 +421,7 @@ class FieldForm implements FormInterface
                                 'custom-fields::custom-fields.field.form.max_values'
                             )
                         )
-                        ->helperText(
-                            __(
-                                'custom-fields::custom-fields.field.form.max_values_help'
-                            )
-                        )
+                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.max_values_help'))
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(20)
@@ -420,17 +436,13 @@ class FieldForm implements FormInterface
                         }),
                     // Uniqueness constraint
                     Toggle::make('settings.unique_per_entity_type')
-                        ->inline(false)
+                        ->inline()
                         ->label(
                             __(
                                 'custom-fields::custom-fields.field.form.unique_per_entity_type'
                             )
                         )
-                        ->helperText(
-                            __(
-                                'custom-fields::custom-fields.field.form.unique_per_entity_type_help'
-                            )
-                        )
+                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.unique_per_entity_type_help'))
                         ->visible(
                             fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
                                 CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
@@ -442,31 +454,40 @@ class FieldForm implements FormInterface
             // Dynamic type-specific settings from field type definition
             ...self::getTypeSettingsSchema(),
 
-            Select::make('lookup_type')
-                ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
-                ->visible(
-                    fn (Get $get): bool => $get('type') !== null
-                        && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true
-                )
-                ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
-                ->options(Entities::getLookupOptions())
-                ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
-                ->required(),
-            $optionsRepeater,
         ];
+
+        $generalSchema[] = Select::make('lookup_type')
+            ->label(__('custom-fields::custom-fields.field.form.lookup_type.label'))
+            ->visible(
+                fn (Get $get): bool => $get('type') !== null
+                    && CustomFieldsType::getFieldType($get('type'))?->requiresLookupType === true
+            )
+            ->disabled(fn (?CustomField $record): bool => (bool) $record?->exists)
+            ->options(Entities::getLookupOptions())
+            ->default((Entities::asLookupSources()->first()?->getAlias()) ?? '')
+            ->required();
+
+        $generalSchema[] = $optionsRepeater;
 
         // Build additional tabs based on feature flags
         $additionalTabs = [];
 
-        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
-            $additionalTabs[] = Tab::make('Visibility')
-                ->schema([VisibilityComponent::make()]);
-        }
-
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_VALIDATION_RULES)) {
             $additionalTabs[] = Tab::make(
                 __('custom-fields::custom-fields.field.form.validation.label')
-            )->schema([CustomFieldValidationComponent::make()]);
+            )->schema([
+                Toggle::make('validation_rules.required')
+                    ->inline()
+                    ->label(__('custom-fields::custom-fields.field.form.validation.required'))
+                    ->default(false)
+                    ->columnSpanFull(),
+                ...self::getValidationSchema(),
+            ])->columns(2);
+        }
+
+        if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
+            $additionalTabs[] = Tab::make('Visibility')
+                ->schema([VisibilityComponent::make()]);
         }
 
         // If no additional tabs, return schema directly without tabs wrapper

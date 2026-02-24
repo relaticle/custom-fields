@@ -8,9 +8,8 @@ use Closure;
 {{ formComponentImport }}
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Columns\TextColumn;
-use Relaticle\CustomFields\Enums\ValidationRule;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
-use Relaticle\CustomFields\FieldTypeSystem\FieldTypeConfigurator;
+use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**
@@ -19,9 +18,9 @@ use Relaticle\CustomFields\Models\CustomField;
  */
 class {{ class }} extends BaseFieldType
 {
-    public function configure(): FieldTypeConfigurator
+    public function configure(): FieldSchema
     {
-        return FieldTypeConfigurator::{{ configurator }}
+        return FieldSchema::{{ configurator }}
             ->key('{{ fieldKey }}')
             ->label('{{ fieldLabel }}')
             ->icon('heroicon-o-pencil'){{ withoutUserOptions }}
@@ -29,9 +28,6 @@ class {{ class }} extends BaseFieldType
             ->tableColumn($this->getTableColumn())
             ->infolistEntry($this->getInfolistEntry())
             ->priority(100)
-            ->validationRules([
-                ValidationRule::REQUIRED,
-            ])
             ->searchable()
             ->sortable();
     }
