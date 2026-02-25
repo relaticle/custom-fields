@@ -98,11 +98,6 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             });
     }
 
-    public function setWidth(int|string $fieldId, int $width): void
-    {
-        $this->dispatch('field-width-updated', $fieldId, $width);
-    }
-
     public function render(): View
     {
         return view('custom-fields::livewire.manage-custom-field');

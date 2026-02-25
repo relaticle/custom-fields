@@ -281,14 +281,6 @@ describe('ManageCustomField - Field Actions', function (): void {
             'field' => $systemField,
         ])->assertActionHidden('delete');
     });
-
-    it('dispatches width update event', function (): void {
-        // Act & Assert
-        livewire(ManageCustomField::class, [
-            'field' => $this->field,
-        ])->call('setWidth', $this->field->getKey(), 75)
-            ->assertDispatched('field-width-updated', $this->field->getKey(), 75);
-    });
 });
 
 describe('Enhanced field management with datasets', function (): void {
