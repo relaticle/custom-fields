@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class MaxLengthCapability implements ValidationCapability
@@ -25,7 +25,7 @@ final readonly class MaxLengthCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.max_length")
+            TextInput::make($statePath.'.max_length')
                 ->numeric()
                 ->integer()
                 ->minValue(1)
@@ -39,7 +39,7 @@ final readonly class MaxLengthCapability implements ValidationCapability
             return;
         }
 
-        $component->maxLength((int) $value);
+        $component->maxLength((int) $value); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */

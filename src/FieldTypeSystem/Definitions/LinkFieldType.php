@@ -10,10 +10,6 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\LinkComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\LinkEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\LinkColumn;
 
-/**
- * ABOUTME: Field type definition for Link fields
- * ABOUTME: Provides Link functionality with URL validation and multi-value support
- */
 class LinkFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
@@ -31,5 +27,10 @@ class LinkFieldType extends BaseFieldType
             ->withArbitraryValues()
             ->withoutUserOptions()
             ->defaultItemValidationRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/']);
+    }
+
+    public function setValue(string $value): string
+    {
+        return preg_replace('#^https?://#i', '', trim($value));
     }
 }

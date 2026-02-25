@@ -81,7 +81,7 @@ final class MigrateLookupFieldsStep implements UpgradeStep
                 $settings->allow_multiple = $isMultiValue;
                 $field->settings = $settings;
 
-                $field->save();
+                $field->saveQuietly();
 
                 $command->line(sprintf(
                     '  <info>✓</info> %s: %s → record%s',

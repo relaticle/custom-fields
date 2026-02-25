@@ -88,7 +88,7 @@
                             <div class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400 truncate">
                                 @if($field->settings?->unique_per_entity_type)
                                     {{ __('custom-fields::custom-fields.common.unique') }}
-                                @elseif($field->validation_rules?->toCollection()->first(fn($rule) => $rule->name === 'required'))
+                                @elseif($field->validation_rules?->has('required'))
                                     {{ __('custom-fields::custom-fields.common.required') }}
                                 @endif
                             </div>
@@ -178,7 +178,7 @@
                                     <div class="px-3 py-3 text-sm text-gray-600 dark:text-gray-400 opacity-60 truncate">
                                         @if($field->settings?->unique_per_entity_type)
                                             {{ __('custom-fields::custom-fields.common.unique') }}
-                                        @elseif($field->validation_rules?->toCollection()->first(fn($rule) => $rule->name === 'required'))
+                                        @elseif($field->validation_rules?->has('required'))
                                             {{ __('custom-fields::custom-fields.common.required') }}
                                         @endif
                                     </div>

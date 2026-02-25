@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 use Relaticle\CustomFields\CustomFields;
+use Throwable;
 
 /**
  * Migrates validation_rules from the old array-of-objects format to the new key-value format.
@@ -57,8 +58,11 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
 
         foreach ($fields as $field) {
             $rules = $field->validation_rules;
+            if (! $rules instanceof Collection) {
+                continue;
+            }
 
-            if (! $rules instanceof Collection || $rules->isEmpty()) {
+            if ($rules->isEmpty()) {
                 continue;
             }
 
@@ -66,14 +70,14 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
                 continue;
             }
 
-            $command->line("  Processing field '{$field->name}' (type: {$field->type}, id: {$field->id})");
+            $command->line(sprintf("  Processing field '%s' (type: %s, id: %s)", $field->name, $field->type, $field->id));
 
             $fieldWarnings = [];
             $newRules = $this->convertRules($rules, $field->type, $fieldWarnings);
 
             foreach ($fieldWarnings as $warning) {
-                $command->line("    <comment>Warning:</comment> {$warning}");
-                $warnings[] = "Field '{$field->name}' (id: {$field->id}): {$warning}";
+                $command->line('    <comment>Warning:</comment> '.$warning);
+                $warnings[] = sprintf("Field '%s' (id: %s): %s", $field->name, $field->id, $warning);
             }
 
             if (! $dryRun) {
@@ -82,8 +86,8 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
                         'validation_rules' => $newRules->isEmpty() ? null : $newRules->toArray(),
                     ]);
                     $processed++;
-                } catch (\Throwable $e) {
-                    $command->line("  <error>Failed to update field {$field->id}: {$e->getMessage()}</error>");
+                } catch (Throwable $e) {
+                    $command->line(sprintf('  <error>Failed to update field %s: %s</error>', $field->id, $e->getMessage()));
                     $failed++;
                 }
             } else {
@@ -111,39 +115,25 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
         return $result;
     }
 
-    /**
-     * Detect if validation_rules is in the old sequential array-of-objects format.
-     *
-     * Old format: sequential array where items have a 'name' key.
-     * New format: associative array with string keys like 'required', 'min_length'.
-     */
     private function isOldFormat(Collection $rules): bool
     {
-        if ($rules->isEmpty()) {
-            return false;
-        }
-
         $firstItem = $rules->first();
 
-        if (is_array($firstItem) && array_key_exists('name', $firstItem)) {
-            return true;
-        }
-
-        return false;
+        return is_array($firstItem) && array_key_exists('name', $firstItem);
     }
 
-    /**
-     * Convert old-format rules to new key-value format.
-     *
-     * @param  list<string>  $warnings  Collected warnings (passed by reference)
-     */
+    /** @param list<string> $warnings */
     private function convertRules(Collection $rules, string $fieldType, array &$warnings): Collection
     {
         $newRules = collect();
-        $hasFileRule = $rules->contains(fn ($rule) => is_array($rule) && ($rule['name'] ?? '') === 'file');
+        $hasFileRule = $rules->contains(fn ($rule): bool => is_array($rule) && ($rule['name'] ?? '') === 'file');
 
         foreach ($rules as $rule) {
-            if (! is_array($rule) || ! isset($rule['name'])) {
+            if (! is_array($rule)) {
+                continue;
+            }
+
+            if (! isset($rule['name'])) {
                 continue;
             }
 
@@ -164,8 +154,6 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     }
 
     /**
-     * Convert a single old-format rule to the new format.
-     *
      * @param  list<array{value: string}>  $parameters
      * @param  list<string>  $warnings
      * @return array<string, mixed>|null
@@ -180,15 +168,15 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     ): ?array {
         return match ($ruleName) {
             'required' => ['required' => true],
-            'integer' => ['integer_only' => true],
+            'integer' => ['decimal_places' => 0],
             'file' => null,
-            'min' => $this->convertMinRule($firstParam, $fieldType, $hasFileRule, $warnings),
+            'min' => $this->convertMinRule($firstParam, $fieldType, $warnings),
             'max' => $this->convertMaxRule($firstParam, $fieldType, $hasFileRule, $warnings),
             'after', 'after_or_equal' => $this->convertDateMinRule($firstParam, $ruleName, $warnings),
             'before', 'before_or_equal' => $this->convertDateMaxRule($firstParam, $ruleName, $warnings),
             'decimal' => $this->convertDecimalRule($firstParam, $warnings),
             'mimes', 'mimetypes' => $this->convertMimesRule($parameters),
-            default => $this->handleUnmappableRule($ruleName, $warnings),
+            default => $this->warn($warnings, sprintf("Rule '%s' cannot be mapped to the new format, discarding", $ruleName)),
         };
     }
 
@@ -196,7 +184,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
      * @param  list<string>  $warnings
      * @return array<string, mixed>|null
      */
-    private function convertMinRule(?string $value, string $fieldType, bool $hasFileRule, array &$warnings): ?array
+    private function convertMinRule(?string $value, string $fieldType, array &$warnings): ?array
     {
         if ($value === null) {
             $warnings[] = "Rule 'min' has no parameter value, skipping";
@@ -216,7 +204,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return ['min_selections' => (int) $value];
         }
 
-        $warnings[] = "Rule 'min' not applicable for field type '{$fieldType}', discarding";
+        $warnings[] = sprintf("Rule 'min' not applicable for field type '%s', discarding", $fieldType);
 
         return null;
     }
@@ -249,7 +237,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
             return ['max_selections' => (int) $value];
         }
 
-        $warnings[] = "Rule 'max' not applicable for field type '{$fieldType}', discarding";
+        $warnings[] = sprintf("Rule 'max' not applicable for field type '%s', discarding", $fieldType);
 
         return null;
     }
@@ -261,7 +249,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertDateMinRule(?string $value, string $ruleName, array &$warnings): ?array
     {
         if ($value === null) {
-            $warnings[] = "Rule '{$ruleName}' has no parameter value, skipping";
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
 
             return null;
         }
@@ -282,7 +270,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertDateMaxRule(?string $value, string $ruleName, array &$warnings): ?array
     {
         if ($value === null) {
-            $warnings[] = "Rule '{$ruleName}' has no parameter value, skipping";
+            $warnings[] = sprintf("Rule '%s' has no parameter value, skipping", $ruleName);
 
             return null;
         }
@@ -297,41 +285,35 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     }
 
     /**
-     * Parse a date constraint value into the new relative format.
-     *
      * @param  list<string>  $warnings
-     * @return array{relative_value: int, relative_unit: string, direction: string}|null
+     * @return array{anchor: string, offset: int, offset_unit: string, offset_direction: string}|null
      */
     private function parseDateConstraint(string $value, array &$warnings): ?array
     {
         return match ($value) {
             'today' => [
-                'relative_value' => 0,
-                'relative_unit' => 'days',
-                'direction' => 'from_now',
+                'anchor' => 'today',
+                'offset' => 0,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
             ],
             'tomorrow' => [
-                'relative_value' => 1,
-                'relative_unit' => 'days',
-                'direction' => 'from_now',
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'after',
             ],
             'yesterday' => [
-                'relative_value' => 1,
-                'relative_unit' => 'days',
-                'direction' => 'ago',
+                'anchor' => 'today',
+                'offset' => 1,
+                'offset_unit' => 'days',
+                'offset_direction' => 'before',
             ],
-            default => $this->handleAbsoluteDateConstraint($value, $warnings),
+            default => $this->warn(
+                $warnings,
+                sprintf("Absolute date constraint '%s' cannot be automatically converted, discarding", $value),
+            ),
         };
-    }
-
-    /**
-     * @param  list<string>  $warnings
-     */
-    private function handleAbsoluteDateConstraint(string $value, array &$warnings): null
-    {
-        $warnings[] = "Absolute date constraint '{$value}' cannot be automatically converted to relative format, discarding";
-
-        return null;
     }
 
     /**
@@ -356,7 +338,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertMimesRule(array $parameters): array
     {
         $types = array_map(
-            fn (array $param): string => $param['value'] ?? '',
+            fn (array $param): string => $param['value'],
             $parameters,
         );
 
@@ -366,30 +348,22 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     /**
      * @param  list<string>  $warnings
      */
-    private function handleUnmappableRule(string $ruleName, array &$warnings): null
+    private function warn(array &$warnings, string $message): null
     {
-        $warnings[] = "Rule '{$ruleName}' cannot be mapped to the new format, discarding";
+        $warnings[] = $message;
 
         return null;
     }
 
-    /**
-     * Extract the first parameter value from old-format parameters.
-     *
-     * @param  list<array{value: string}>  $parameters
-     */
+    /** @param list<array{value: string}> $parameters */
     private function getFirstParameterValue(array $parameters): ?string
     {
         if ($parameters === []) {
             return null;
         }
 
-        $first = $parameters[0] ?? null;
+        $first = $parameters[0];
 
-        if (! is_array($first)) {
-            return null;
-        }
-
-        return $first['value'];
+        return is_array($first) ? $first['value'] : null;
     }
 }

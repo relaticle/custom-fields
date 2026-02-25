@@ -39,7 +39,7 @@ final class MultiChoiceColumn extends AbstractTableColumn
 
                 $remaining = count($values) - $limit;
 
-                return [...array_slice($values, 0, $limit), "+{$remaining}"];
+                return [...array_slice($values, 0, $limit), '+'.$remaining];
             });
 
         $column = $this->applyBadgeColorsIfEnabled($column, $customField);

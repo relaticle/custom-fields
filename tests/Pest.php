@@ -34,7 +34,7 @@ expect()->extend('toHaveCustomFieldValue', function (string $fieldCode, mixed $e
     return expect($customFieldValue?->getValue())->toBe($expectedValue);
 });
 
-expect()->extend('toHaveValidationError', function (string $fieldCode, string $rule) {
+expect()->extend('toHaveValidationError', function (string $fieldCode, string $rule): object {
     $this->assertHasFormErrors(['custom_fields.'.$fieldCode => $rule]);
 
     return $this;

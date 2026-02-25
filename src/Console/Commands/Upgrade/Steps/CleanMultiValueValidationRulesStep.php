@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 use Relaticle\CustomFields\CustomFields;
+use Throwable;
 
 /**
  * Removes string-only validation rules from multi-value field types.
@@ -68,31 +69,27 @@ final class CleanMultiValueValidationRulesStep implements UpgradeStep
         $failed = 0;
 
         foreach ($affectedFields as $field) {
-            $rules = $field->validation_rules?->toCollection() ?? collect();
+            $rules = $field->validation_rules ?? collect();
 
-            $invalidRules = $rules->filter(
-                fn ($rule) => in_array($rule->name, self::STRING_ONLY_RULES, true)
-            );
+            $invalidKeys = $rules->keys()->intersect(self::STRING_ONLY_RULES);
 
-            if ($invalidRules->isEmpty()) {
+            if ($invalidKeys->isEmpty()) {
                 continue;
             }
 
-            $ruleNames = $invalidRules->pluck('name')->implode(', ');
-            $command->line("  Processing field '{$field->name}' (type: {$field->type}, id: {$field->id}): removing [{$ruleNames}]");
+            $ruleNames = $invalidKeys->implode(', ');
+            $command->line(sprintf("  Processing field '%s' (type: %s, id: %s): removing [%s]", $field->name, $field->type, $field->id, $ruleNames));
 
             if (! $dryRun) {
-                $cleanedRules = $rules->reject(
-                    fn ($rule) => in_array($rule->name, self::STRING_ONLY_RULES, true)
-                )->values()->toArray();
+                $cleanedRules = $rules->except(self::STRING_ONLY_RULES)->toArray();
 
                 try {
                     $field->update([
                         'validation_rules' => $cleanedRules === [] ? null : $cleanedRules,
                     ]);
                     $processed++;
-                } catch (\Throwable $e) {
-                    $command->line("  <error>Failed to update field {$field->id}: {$e->getMessage()}</error>");
+                } catch (Throwable $e) {
+                    $command->line(sprintf('  <error>Failed to update field %s: %s</error>', $field->id, $e->getMessage()));
                     $failed++;
                 }
             } else {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class DecimalPlacesCapability implements ValidationCapability
@@ -25,11 +25,12 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.decimal_places")
+            TextInput::make($statePath.'.decimal_places')
                 ->numeric()
                 ->integer()
                 ->minValue(0)
-                ->maxValue(15)
+                ->maxValue(4)
+                ->placeholder('Enter a value between 0 and 4')
                 ->label('Decimal Places'),
         ];
     }
@@ -40,8 +41,8 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
             return;
         }
 
-        $decimalPlaces = max(0, min(15, (int) $value));
-        $component->step($this->resolveStep($decimalPlaces));
+        $decimalPlaces = max(0, min(4, (int) $value));
+        $component->step($this->resolveStep($decimalPlaces)); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */
@@ -51,13 +52,13 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
             return [];
         }
 
-        $decimalPlaces = max(0, min(15, (int) $value));
+        $decimalPlaces = max(0, min(4, (int) $value));
 
         if ($decimalPlaces === 0) {
             return ['integer'];
         }
 
-        return ["decimal:0,{$decimalPlaces}"];
+        return ['decimal:0,'.$decimalPlaces];
     }
 
     private function resolveStep(int $decimalPlaces): int|float

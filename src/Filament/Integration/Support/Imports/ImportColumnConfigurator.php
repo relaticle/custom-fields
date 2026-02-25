@@ -17,6 +17,7 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
+use Relaticle\CustomFields\Services\ValidationService;
 use Throwable;
 
 /**
@@ -184,9 +185,7 @@ final class ImportColumnConfigurator
                 throw $throwable;
             }
 
-            throw new RowImportFailedException(
-                'Error resolving lookup value: '.$throwable->getMessage()
-            );
+            throw new RowImportFailedException('Error resolving lookup value: '.$throwable->getMessage(), $throwable->getCode(), $throwable);
         }
     }
 
@@ -447,7 +446,11 @@ final class ImportColumnConfigurator
      */
     private function finalize(ImportColumn $column, CustomField $customField): ImportColumn
     {
-        // TODO: Reimplement import validation using the new capabilities system if desired.
+        $rules = app(ValidationService::class)->getValidationRules($customField);
+
+        if ($rules !== []) {
+            $column->rules($rules);
+        }
 
         $column->fillRecordUsing(function (mixed $state, mixed $record) use ($customField): void {
             ImportDataStorage::set($record, $customField->code, $state);

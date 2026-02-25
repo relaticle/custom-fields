@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
-use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\CustomFields;
 
 final class CleanupOrphanedValuesCommand extends Command
 {
@@ -30,7 +30,7 @@ final class CleanupOrphanedValuesCommand extends Command
             $this->newLine();
         }
 
-        $table = (new CustomFieldValue)->getTable();
+        $table = CustomFields::newValueModel()->getTable();
         $entityTypes = DB::table($table)
             ->select('entity_type')
             ->distinct()
@@ -50,7 +50,7 @@ final class CleanupOrphanedValuesCommand extends Command
             $class = $morphMap[$type] ?? $type;
 
             if (! class_exists($class)) {
-                $this->warn("Skipping unknown entity type: {$type}");
+                $this->warn('Skipping unknown entity type: '.$type);
 
                 continue;
             }
@@ -61,10 +61,10 @@ final class CleanupOrphanedValuesCommand extends Command
 
             $orphanedCount = DB::table($table)
                 ->where('entity_type', $type)
-                ->whereNotExists(function ($query) use ($entityTable) {
+                ->whereNotExists(function ($query) use ($entityTable): void {
                     $query->select(DB::raw(1))
                         ->from($entityTable)
-                        ->whereColumn("{$entityTable}.id", 'custom_field_values.entity_id');
+                        ->whereColumn($entityTable.'.id', 'custom_field_values.entity_id');
                 })
                 ->count();
 
@@ -82,7 +82,7 @@ final class CleanupOrphanedValuesCommand extends Command
 
         $this->table(['Entity Type', 'Orphaned Values'], $rows);
         $this->newLine();
-        $this->line("Total orphaned values: {$totalOrphaned}");
+        $this->line('Total orphaned values: '.$totalOrphaned);
 
         if ($isDryRun) {
             $this->newLine();
@@ -107,19 +107,19 @@ final class CleanupOrphanedValuesCommand extends Command
 
             $count = DB::table($table)
                 ->where('entity_type', $type)
-                ->whereNotExists(function ($query) use ($entityTable) {
+                ->whereNotExists(function ($query) use ($entityTable): void {
                     $query->select(DB::raw(1))
                         ->from($entityTable)
-                        ->whereColumn("{$entityTable}.id", 'custom_field_values.entity_id');
+                        ->whereColumn($entityTable.'.id', 'custom_field_values.entity_id');
                 })
                 ->delete();
 
-            $this->info("Deleted {$count} orphaned values for {$type}.");
+            $this->info(sprintf('Deleted %d orphaned values for %s.', $count, $type));
             $deleted += $count;
         }
 
         $this->newLine();
-        $this->comment("Cleaned up {$deleted} orphaned custom field values.");
+        $this->comment(sprintf('Cleaned up %d orphaned custom field values.', $deleted));
 
         return self::SUCCESS;
     }

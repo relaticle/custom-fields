@@ -53,6 +53,16 @@ class FormBuilder extends BaseBuilder
                     }
                 }
             }
+
+            $validationRules = $field->validation_rules;
+            if ($validationRules) {
+                foreach (['min_date', 'max_date'] as $constraintKey) {
+                    $constraint = $validationRules->get($constraintKey);
+                    if (is_array($constraint) && ($constraint['anchor'] ?? null) === 'custom_field' && isset($constraint['field_reference'])) {
+                        $dependentCodes[] = $constraint['field_reference'];
+                    }
+                }
+            }
         }
 
         return array_unique($dependentCodes);

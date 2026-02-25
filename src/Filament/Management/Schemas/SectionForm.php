@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Schemas;
 
+use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -18,17 +19,46 @@ use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 
 class SectionForm implements FormInterface, SectionFormInterface
 {
     private static string $entityType;
 
+    /** @var ?Closure(Unique, Get):Unique */
+    private static ?Closure $modifyUniqueRuleUsing = null;
+
     public static function entityType(string $entityType): self
     {
         self::$entityType = $entityType;
+        self::$modifyUniqueRuleUsing = null;
 
         return new self;
+    }
+
+    public function modifyUniqueRuleUsing(Closure $callback): self
+    {
+        self::$modifyUniqueRuleUsing = $callback;
+
+        return $this;
+    }
+
+    private static function buildUniqueRule(Unique $rule, Get $get): Unique
+    {
+        $rule = $rule->when(
+            FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+            fn (Unique $rule) => $rule->where(
+                config('custom-fields.database.column_names.tenant_foreign_key'),
+                TenantContextService::getCurrentTenantId()
+            )
+        )->where('entity_type', self::$entityType);
+
+        if (self::$modifyUniqueRuleUsing instanceof Closure) {
+            return (self::$modifyUniqueRuleUsing)($rule, $get);
+        }
+
+        return $rule;
     }
 
     /**
@@ -60,18 +90,8 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->unique(
                         table: CustomFields::sectionModel(),
                         column: 'name',
-                        ignoreRecord: true,
-                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                            ->when(
-                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                fn (Unique $rule) => $rule->where(
-                                    config(
-                                        'custom-fields.database.column_names.tenant_foreign_key'
-                                    ),
-                                    TenantContextService::getCurrentTenantId()
-                                )
-                            )
-                            ->where('entity_type', self::$entityType)
+                        ignorable: fn (TextInput $component): ?CustomFieldSection => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
+                        modifyRuleUsing: fn (Unique $rule, Get $get): Unique => self::buildUniqueRule($rule, $get),
                     )
                     ->afterStateUpdated(function (
                         Get $get,
@@ -109,18 +129,8 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->unique(
                         table: CustomFields::sectionModel(),
                         column: 'code',
-                        ignoreRecord: true,
-                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                            ->when(
-                                FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                fn (Unique $rule) => $rule->where(
-                                    config(
-                                        'custom-fields.database.column_names.tenant_foreign_key'
-                                    ),
-                                    TenantContextService::getCurrentTenantId()
-                                )
-                            )
-                            ->where('entity_type', self::$entityType)
+                        ignorable: fn (TextInput $component): ?CustomFieldSection => ($record = $component->getRecord()) instanceof CustomFieldSection ? $record : null,
+                        modifyRuleUsing: fn (Unique $rule, Get $get): Unique => self::buildUniqueRule($rule, $get),
                     )
                     ->afterStateUpdated(function (
                         Set $set,

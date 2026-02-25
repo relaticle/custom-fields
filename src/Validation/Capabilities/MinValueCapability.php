@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Validation\Capabilities;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 
 final readonly class MinValueCapability implements ValidationCapability
@@ -25,7 +25,7 @@ final readonly class MinValueCapability implements ValidationCapability
     public function formSchema(string $statePath): array
     {
         return [
-            TextInput::make("{$statePath}.min_value")
+            TextInput::make($statePath.'.min_value')
                 ->numeric()
                 ->label('Minimum Value'),
         ];
@@ -37,7 +37,7 @@ final readonly class MinValueCapability implements ValidationCapability
             return;
         }
 
-        $component->minValue((float) $value);
+        $component->minValue((float) $value); // @phpstan-ignore method.notFound
     }
 
     /** @return array<int, string> */

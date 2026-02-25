@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Contracts;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Field;
+use Filament\Schemas\Components\Component;
 
 interface ValidationCapability
 {
@@ -18,6 +18,6 @@ interface ValidationCapability
 
     public function applyToComponent(Field $component, mixed $value): void;
 
-    /** @return array<int, string> */
+    /** @return array<int, mixed> */
     public function toRules(mixed $value): array;
 }
