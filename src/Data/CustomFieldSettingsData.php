@@ -23,6 +23,7 @@ class CustomFieldSettingsData extends Data
         public bool $allow_multiple = false,
         public int $max_values = 1,
         public bool $unique_per_entity_type = false,
+        public ?string $description = null,
         public VisibilityData $visibility = new VisibilityData,
         public array $additional = [],
     ) {
