@@ -21,6 +21,7 @@ class TypeField extends Select
         $this->native(false)
             ->allowHtml()
             ->searchable()
+            ->selectablePlaceholder(false)
             ->searchDebounce(300)
             ->searchPrompt(__('Search field types...'))
             ->noSearchResultsMessage(__('No field types found'))
