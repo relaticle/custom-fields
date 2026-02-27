@@ -10,6 +10,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Component;
@@ -268,6 +269,12 @@ class FieldForm implements FormInterface
                             $set('code', Str::of($state)->slug('_')->toString());
                         }),
                 ]),
+            Textarea::make('settings.description')
+                ->label(__('custom-fields::custom-fields.field.form.description'))
+                ->maxLength(255)
+                ->rows(2)
+                ->columnSpanFull()
+                ->visible(fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION)),
             Fieldset::make(
                 __(
                     'custom-fields::custom-fields.field.form.settings'

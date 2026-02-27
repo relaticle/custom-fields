@@ -54,6 +54,7 @@ return [
             CustomFieldsFeature::UI_TABLE_COLUMNS,
             CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
             CustomFieldsFeature::UI_TABLE_FILTERS,
+            CustomFieldsFeature::FIELD_DESCRIPTION,
             CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL,
             CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
             CustomFieldsFeature::SYSTEM_SECTIONS,
