@@ -179,14 +179,16 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->action(function (array $data): void {
                 $options = collect($data['options'] ?? [])
                     ->filter()
-                    ->map(function (array $option): array {
+                    ->values()
+                    ->map(function (array $option, int $index): array {
+                        $option['sort_order'] = $index;
+
                         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
                             $option[config('custom-fields.database.column_names.tenant_foreign_key')] = TenantContextService::getCurrentTenantId();
                         }
 
                         return $option;
-                    })
-                    ->values();
+                    });
 
                 unset($data['options']);
 

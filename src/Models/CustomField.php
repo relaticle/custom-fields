@@ -163,6 +163,11 @@ class CustomField extends Model
         return $this->system_defined === true;
     }
 
+    public function hasValues(): bool
+    {
+        return $this->values()->exists();
+    }
+
     public function getValueColumn(): string
     {
         return CustomFields::newValueModel()::getValueColumn($this->type);
