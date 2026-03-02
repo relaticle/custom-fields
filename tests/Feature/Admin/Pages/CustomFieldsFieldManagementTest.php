@@ -331,6 +331,97 @@ describe('ManageCustomField - Field Actions', function (): void {
         ])->assertActionHidden('delete');
     });
 
+    it('can duplicate a field', function (): void {
+        $field = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Original Field',
+                'code' => 'original_field',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'original-field-copy')
+            ->first();
+
+        expect($clone)
+            ->not->toBeNull()
+            ->name->toBe('Original Field (Copy)')
+            ->type->toBe('text')
+            ->entity_type->toBe($this->userEntityType)
+            ->custom_field_section_id->toBe($this->section->getKey())
+            ->system_defined->toBeFalse()
+            ->active->toBeTrue();
+    });
+
+    it('can duplicate a select field with all options', function (): void {
+        $field = CustomField::factory()
+            ->ofType('select')
+            ->withOptions(['Alpha', 'Bravo', 'Charlie'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'My Select',
+                'code' => 'my_select',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field->fresh(),
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'my-select-copy')
+            ->first();
+
+        expect($clone)->not->toBeNull();
+        expect($clone->options)->toHaveCount(3);
+        expect($clone->options->pluck('name')->sort()->values()->all())
+            ->toBe(['Alpha', 'Bravo', 'Charlie']);
+    });
+
+    it('generates unique code when duplicating a field with existing copy', function (): void {
+        $field = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'My Field',
+                'code' => 'my_field',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        expect(CustomField::query()->withDeactivated()->where('code', 'my-field-copy')->exists())->toBeTrue();
+        expect(CustomField::query()->withDeactivated()->where('code', 'my-field-copy-2')->exists())->toBeTrue();
+    });
+
+    it('cannot duplicate a system-defined field', function (): void {
+        $systemField = CustomField::factory()
+            ->ofType('text')
+            ->systemDefined()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $systemField,
+        ])->assertActionHidden('duplicate');
+    });
+
     it('sets sort_order on options when creating a select field via storeField', function (): void {
         livewire(ManageCustomFieldSection::class, [
             'section' => $this->section,
