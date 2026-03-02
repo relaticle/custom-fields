@@ -86,7 +86,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->model(CustomFields::customFieldModel())
             ->defaultColor('danger')
             ->record($this->field)
-            ->visible(fn (CustomField $record): bool => ! $record->isActive() && ! $record->isSystemDefined())
+            ->visible(fn (CustomField $record): bool => (! $record->isActive() || ! $record->hasValues()) && ! $record->isSystemDefined())
             ->action(function (): bool {
                 if ($this->field->isSystemDefined()) {
                     $this->addError('system_defined', __('custom-fields::custom-fields.field.form.system_defined_cannot_delete'));

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
@@ -259,7 +260,14 @@ describe('ManageCustomField - Field Actions', function (): void {
         ]);
     });
 
-    it('cannot delete an active field', function (): void {
+    it('hides delete action for an active field with stored values', function (): void {
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $this->field->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
+
         livewire(ManageCustomField::class, [
             'field' => $this->field,
         ])->assertActionHidden('delete');
@@ -279,6 +287,47 @@ describe('ManageCustomField - Field Actions', function (): void {
         // Act & Assert - delete action is hidden for system-defined fields
         livewire(ManageCustomField::class, [
             'field' => $systemField,
+        ])->assertActionHidden('delete');
+    });
+
+    it('can delete an active field with no values without deactivating first', function (): void {
+        $field = CustomField::factory()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'active' => true,
+                'system_defined' => false,
+                'type' => 'text',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('delete');
+
+        $this->assertDatabaseMissing(CustomField::class, [
+            'id' => $field->getKey(),
+        ]);
+    });
+
+    it('cannot delete an active field that has stored values', function (): void {
+        $field = CustomField::factory()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'active' => true,
+                'system_defined' => false,
+                'type' => 'text',
+            ]);
+
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $field->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
         ])->assertActionHidden('delete');
     });
 });
@@ -331,13 +380,20 @@ describe('Enhanced field management with datasets', function (): void {
             'field' => $systemField,
         ])->assertActionHidden('delete');
 
-        // Active field cannot be deleted
+        // Active field with values cannot be deleted
         $activeField = CustomField::factory()
             ->ofType('text')
             ->create([
                 'custom_field_section_id' => $this->section->getKey(),
                 'entity_type' => $this->userEntityType,
             ]);
+
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $activeField->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
 
         livewire(ManageCustomField::class, [
             'field' => $activeField,
