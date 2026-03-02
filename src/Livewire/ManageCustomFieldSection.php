@@ -77,7 +77,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     {
         $sectionForm = SectionForm::entityType($this->entityType);
 
-        if (self::$uniqueRuleModifierResolver) {
+        if (self::$uniqueRuleModifierResolver instanceof Closure) {
             $modifier = (self::$uniqueRuleModifierResolver)($this->section);
 
             if ($modifier) {

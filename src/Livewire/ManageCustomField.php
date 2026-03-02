@@ -110,7 +110,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->where('entity_type', $entityType)
             ->exists()
         ) {
-            $code = "{$baseCode}-{$suffix}";
+            $code = sprintf('%s-%d', $baseCode, $suffix);
             $suffix++;
         }
 
