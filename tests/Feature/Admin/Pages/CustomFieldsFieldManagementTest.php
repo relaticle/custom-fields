@@ -330,6 +330,37 @@ describe('ManageCustomField - Field Actions', function (): void {
             'field' => $field,
         ])->assertActionHidden('delete');
     });
+
+    it('sets sort_order on options when creating a select field via storeField', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Status Field',
+                'code' => 'status_field',
+                'type' => 'select',
+                'entity_type' => $this->userEntityType,
+                'options' => [
+                    ['name' => 'Charlie'],
+                    ['name' => 'Alpha'],
+                    ['name' => 'Bravo'],
+                ],
+            ]);
+
+        $field = CustomField::query()
+            ->withoutGlobalScopes()
+            ->where('code', 'status_field')
+            ->first();
+
+        expect($field)->not->toBeNull();
+
+        $options = $field->options;
+
+        expect($options)->toHaveCount(3)
+            ->and($options->pluck('name')->all())->toBe(['Charlie', 'Alpha', 'Bravo'])
+            ->and($options->pluck('sort_order')->all())->each->not->toBeNull();
+    });
 });
 
 describe('Enhanced field management with datasets', function (): void {

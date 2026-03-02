@@ -44,7 +44,12 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
             ->schema(FieldForm::schema())
-            ->fillForm($this->field->toArray())
+            ->fillForm(function (): array {
+                $data = $this->field->toArray();
+                $data['options'] = $this->field->options->toArray();
+
+                return $data;
+            })
             ->action(function (array $data): void {
                 $data = DateConstraintField::sanitizeValidationRules($data);
 
