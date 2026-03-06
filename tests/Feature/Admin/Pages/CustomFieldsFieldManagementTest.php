@@ -388,6 +388,38 @@ describe('ManageCustomField - Field Actions', function (): void {
             ->toBe(['Alpha', 'Bravo', 'Charlie']);
     });
 
+    it('can duplicate a select field and preserve option settings', function (): void {
+        $field = CustomField::factory()
+            ->ofType('select')
+            ->withOptions(['Red', 'Blue'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Color Picker',
+                'code' => 'color_picker',
+            ]);
+
+        $field->options->first()->update(['settings' => new \Relaticle\CustomFields\Data\CustomFieldOptionSettingsData(color: '#ff0000')]);
+        $field->options->last()->update(['settings' => new \Relaticle\CustomFields\Data\CustomFieldOptionSettingsData(color: '#0000ff')]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field->fresh(),
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'color-picker-copy')
+            ->first();
+
+        expect($clone)->not->toBeNull();
+        expect($clone->options)->toHaveCount(2);
+
+        $clonedOptions = $clone->options->sortBy('sort_order')->values();
+
+        expect($clonedOptions[0]->settings->color)->toBe('#ff0000');
+        expect($clonedOptions[1]->settings->color)->toBe('#0000ff');
+    });
+
     it('generates unique code when duplicating a field with existing copy', function (): void {
         $field = CustomField::factory()
             ->ofType('text')
