@@ -1,4 +1,4 @@
-![Custom Fields](art/preview.png)
+![Custom Fields](art/preview.png?v=1)
 
 <p align="center">
    <a href="https://packagist.org/packages/relaticle/custom-fields"><img src="https://img.shields.io/packagist/dt/relaticle/custom-fields.svg?style=for-the-badge" alt="Downloads"></a>
