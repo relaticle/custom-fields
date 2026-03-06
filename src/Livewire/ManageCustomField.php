@@ -92,7 +92,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
                     $clone->options()->create([
                         'name' => $option->getRawOriginal('name'),
                         'sort_order' => $option->sort_order,
-                        'settings' => $option->getRawOriginal('settings'),
+                        'settings' => $option->settings,
                     ]);
                 }
 
