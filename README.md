@@ -1,6 +1,6 @@
 # Custom Fields
 
-![Custom Fields](art/card.png?v=1)
+![Custom Fields](art/card-preview.png?v=1)
 
    <a href="https://packagist.org/packages/relaticle/custom-fields"><img src="https://img.shields.io/packagist/dt/relaticle/custom-fields.svg?style=for-the-badge" alt="Downloads"></a>
   <a href="https://laravel.com/docs/12.x"><img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 12"></a>
