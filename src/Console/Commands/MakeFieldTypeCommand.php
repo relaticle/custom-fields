@@ -183,6 +183,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
             FieldDataType::BOOLEAN => 'boolean()',
             FieldDataType::SINGLE_CHOICE => 'singleChoice()',
             FieldDataType::MULTI_CHOICE => 'multiChoice()',
+            FieldDataType::FILE => 'file()',
         };
     }
 
@@ -201,6 +202,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
             FieldDataType::BOOLEAN => 'use Filament\Forms\Components\Toggle;',
             FieldDataType::SINGLE_CHOICE => 'use Filament\Forms\Components\Select;',
             FieldDataType::MULTI_CHOICE => 'use Filament\Forms\Components\CheckboxList;',
+            FieldDataType::FILE => 'use Filament\Forms\Components\FileUpload;',
         };
     }
 
@@ -244,6 +246,9 @@ class MakeFieldTypeCommand extends GeneratorCommand
                 ])
                 ->columnSpanFull();',
             FieldDataType::MULTI_CHOICE => 'return CheckboxList::make($customField->getFieldName())
+                ->label($customField->name)
+                ->columnSpanFull();',
+            FieldDataType::FILE => 'return FileUpload::make($customField->getFieldName())
                 ->label($customField->name)
                 ->columnSpanFull();',
         };

@@ -97,6 +97,16 @@ class FieldSchema
     }
 
     /**
+     * Configure for file upload fields.
+     * Stores file paths in string_value but skips string column validation constraints,
+     * since validation runs against the uploaded file, not the stored path.
+     */
+    public static function file(): self
+    {
+        return new self(FieldDataType::FILE);
+    }
+
+    /**
      * Configure for numeric fields
      */
     public static function numeric(): self
