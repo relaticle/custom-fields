@@ -83,7 +83,7 @@ class CustomFieldValue extends Model
         $dataType = $fieldType->dataType;
 
         return match ($dataType) {
-            FieldDataType::STRING => 'string_value',
+            FieldDataType::STRING, FieldDataType::FILE => 'string_value',
             FieldDataType::TEXT => 'text_value',
             FieldDataType::NUMERIC => 'integer_value',
             FieldDataType::SINGLE_CHOICE => CustomFields::optionModelUsesStringKeys() ? 'string_value' : 'integer_value',
