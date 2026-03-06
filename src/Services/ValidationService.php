@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Services;
 
 use Relaticle\CustomFields\Data\ValidationRuleData;
+use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\ValidationRule;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
@@ -97,6 +99,13 @@ final class ValidationService
      */
     public function getDatabaseValidationRules(string $fieldType, bool $isEncrypted = false): array
     {
+        // File types validate the uploaded file, not the stored path
+        $fieldTypeData = CustomFieldsType::getFieldType($fieldType);
+
+        if ($fieldTypeData?->dataType === FieldDataType::FILE) {
+            return [];
+        }
+
         // Determine the database column for this field type
         $columnName = CustomFieldValue::getValueColumn($fieldType);
 
@@ -201,6 +210,13 @@ final class ValidationService
 
         // Add user rules (can override or supplement defaults)
         $mergedRules = $this->combineRules($mergedRules, $userRules);
+
+        // File types validate the uploaded file, not the stored path — skip DB constraints
+        $fieldTypeData = CustomFieldsType::getFieldType($fieldType);
+
+        if ($fieldTypeData?->dataType === FieldDataType::FILE) {
+            return $mergedRules;
+        }
 
         // Apply database constraint rules using existing logic
         $columnName = CustomFieldValue::getValueColumn($fieldType);
