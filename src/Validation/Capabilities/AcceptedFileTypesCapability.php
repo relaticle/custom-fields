@@ -45,12 +45,6 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
     /** @return array<int, string> */
     public function toRules(mixed $value): array
     {
-        $types = (array) $value;
-
-        if ($types === []) {
-            return [];
-        }
-
-        return ['mimetypes:'.implode(',', $types)];
+        return [];
     }
 }
