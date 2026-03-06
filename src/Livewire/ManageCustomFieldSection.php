@@ -51,8 +51,8 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         $this->section->refresh();
     }
 
-    #[On('field-deleted')]
-    public function fieldDeleted(): void
+    #[On(['field-created', 'field-deleted'])]
+    public function refreshSection(): void
     {
         $this->section->refresh();
     }
