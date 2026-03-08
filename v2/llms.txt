@@ -21,5 +21,5 @@
 - [Data Model](https://relaticle.github.io/custom-fields/v2/essentials/data-model): Understanding the Custom Fields database architecture
 - [Support](https://relaticle.github.io/custom-fields/v2/community/support): Get help with Custom Fields
 - [Contributing](https://relaticle.github.io/custom-fields/v2/community/contributing): How to contribute to Custom Fields
-- [License](https://relaticle.github.io/custom-fields/v2/community/license): Dual licensing model - AGPL-3.0 for open source, commercial for private use
+- [License](https://relaticle.github.io/custom-fields/v2/community/license): Dual-licensed under AGPL-3.0 for open source and commercial licenses for private applications
 - [Code Distribution](https://relaticle.github.io/custom-fields/v2/community/code-distribution): Guidelines for distributing Custom Fields code
