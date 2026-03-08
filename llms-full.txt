@@ -1,11 +1,5 @@
 # Installation
 
-::alert{type="warning"}
-**Beta Release**
-
-: Custom Fields v3 is currently in beta. While stable for production use, some APIs may change before the final release.
-::
-
 Get started with Custom Fields in just a few steps.
 
 ## Requirements
@@ -17,67 +11,43 @@ Get started with Custom Fields in just a few steps.
 
 ## Installation
 
-Choose your installation method based on your license type:
+### 1. Purchase a License
 
-::tabs
-  :::tab{label="Commercial License"}
-  ### 1. Purchase a License
+[View pricing plans](https://relaticle.github.io/custom-fields/#pricing) and choose the one that fits your project.
 
-  [Choose a commercial license](https://relaticle.github.io/custom-fields/community/license) that fits your project.
+### 2. Add Private Repository
 
-  ### 2. Add Private Repository
+Add our private Composer repository to your `composer.json`:
 
-  Add our private Composer repository to your `composer.json`:
+```json
+{
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satis.relaticle.com"
+        }
+    ]
+}
+```
 
-  ```json
-  {
-      "repositories": [
-          {
-              "type": "composer",
-              "url": "https://satis.relaticle.com"
-          }
-      ]
-  }
-  ```
+### 3. Install Package
 
-  ### 3. Install Package
+```bash
+composer require relaticle/custom-fields:^3.0
+```
 
-  ```bash
-  composer require relaticle/custom-fields:^3.0
-  ```
+When prompted for authentication:
 
-  When prompted for authentication:
+- **Username**: Your email (used for purchase)
+- **Password**: Your license key
 
-  - **Username**: Your email (used for purchase)
-  - **Password**: Your license key
+Your license key will be saved in Composer's auth file for future updates.
 
-  Your license key will be saved in Composer's auth file for future updates.
+### 4. Run Installer
 
-  ### 4. Run Installer
-
-  ```bash
-  php artisan custom-fields:install
-  ```
-  :::
-
-  :::tab{label="Open Source (AGPL-3.0)"}
-  > **AGPL-3.0 License**: Requires your **entire application** to be open source. See [license details](https://relaticle.github.io/custom-fields/community/license).
-
-  ### 1. Install Package
-
-  Install directly from Packagist:
-
-  ```bash
-  composer require relaticle/custom-fields:^3.0
-  ```
-
-  ### 2. Run Installer
-
-  ```bash
-  php artisan custom-fields:install
-  ```
-  :::
-::
+```bash
+php artisan custom-fields:install
+```
 
 ## Include CSS Assets
 
@@ -1969,74 +1939,31 @@ Thank you for helping make Custom Fields better for everyone!
 
 # License
 
-## Pricing
+Custom Fields is dual-licensed. Choose the license that fits your project.
 
-All tiers include every feature. Dev/staging environments are always free.
+## Commercial License
 
-::u-pricing-plans{.gap-x-3 compact}
-  :::u-pricing-plan
-  ---
-  button:
-    label: Purchase
-    to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-    target: _blank
-  features:
-    - 1 domain
-    - 1 year updates
-  billing-cycle: /year
-  description: Personal projects & internal tools
-  price: $79
-  title: Solo
-  ---
-  :::
+A commercial license lets you use Custom Fields in private, closed-source applications. All tiers include every feature — the only difference is how many domains you can deploy to.
 
-  :::u-pricing-plan
-  ---
-  button:
-    label: Purchase
-    to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-    target: _blank
-  features:
-    - Up to 5 domains
-    - 1 year updates
-  billing-cycle: /year
-  description: Agencies & multiple client sites
-  price: $129
-  title: Pro
-  ---
-  :::
+What you get:
 
-  :::u-pricing-plan
-  ---
-  button:
-    label: Purchase
-    to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-    target: _blank
-  features:
-    - Unlimited domains
-    - 1 year updates
-  highlight: true
-  billing-cycle: /year
-  description: Required for SaaS & multi-tenant
-  price: $299
-  title: Business
-  ---
-  :::
-::
+- **Private use** — no obligation to open-source your application
+- **1 year of updates** — access to all new features and bug fixes
+- **Priority support** — via email and Discord
 
-::div{.mt-8}
-  :::alert{type="info"}
-  **Existing customers**
+[View pricing plans](https://relaticle.github.io/custom-fields/#pricing) to choose the right tier for your project.
 
-  : Lifetime and grandfathered licenses remain valid forever.
-  :::
+::alert{type="info"}
+**Existing customers**
+
+: Lifetime and grandfathered licenses remain valid forever.
 ::
 
 ---
 
-## Open Source
+## Open Source (AGPL-3.0)
 
-Custom Fields is also available under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html){rel="&#x22;nofollow&#x22;"} — free to use if your entire application is open source.
+Custom Fields is also available under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html){rel="&#x22;nofollow&#x22;"} — free to use if your **entire application** is open source. This means all source code that interacts with Custom Fields must be publicly available under a compatible license.
 
 ---
 
@@ -2161,17 +2088,6 @@ Perfect for multi-tenant SaaS applications and enterprise admin panels.
   ---
   Get started
   :::
-
-  :::u-button
-  ---
-  color: neutral
-  icon: simple-icons:github
-  size: xl
-  to: https://github.com/relaticle/custom-fields
-  variant: outline
-  ---
-  GitHub
-  :::
 ::
 
 ::div{.text-center.max-w-4xl.mx-auto}
@@ -2257,76 +2173,59 @@ Why choose Custom Fields?
 ::
 
 ::u-page-section
-  :::u-pricing-plans{.gap-x-3 compact}
-    ::::u-pricing-plan
-    ---
-    button:
-      label: View on GitHub
-      to: https://github.com/relaticle/custom-fields
-      target: _blank
-      color: neutral
-      variant: outline
-    features:
-      - Unlimited domains
-      - Community support
-    description: AGPL-3.0 for open source projects
-    price: Free
-    title: Open Source
-    ---
-    ::::
+ 
 
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - 1 domain
-      - 1 year updates
-    billing-cycle: /year
-    description: Personal projects & internal tools
-    price: $79
-    title: Solo
-    ---
-    ::::
+  :::div{.max-w-4xl.mx-auto}
+    ::::u-pricing-plans{.gap-x-3 compact}
+      :::::u-pricing-plan
+      ---
+      button:
+        label: Purchase
+        to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+        target: _blank
+      features:
+        - 1 domain
+        - 1 year updates
+      billing-cycle: /year
+      description: Personal projects & internal tools
+      price: $79
+      title: Solo
+      ---
+      :::::
 
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - Up to 5 domains
-      - 1 year updates
-    billing-cycle: /year
-    description: Agencies & multiple client sites
-    price: $129
-    title: Pro
-    ---
-    ::::
+      :::::u-pricing-plan
+      ---
+      button:
+        label: Purchase
+        to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+        target: _blank
+      features:
+        - Up to 5 domains
+        - 1 year updates
+      billing-cycle: /year
+      description: Agencies & multiple client sites
+      price: $129
+      title: Pro
+      ---
+      :::::
 
-    ::::u-pricing-plan
-    ---
-    button:
-      label: Purchase
-      to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
-      target: _blank
-    features:
-      - Unlimited domains
-      - 1 year updates
-    highlight: true
-    billing-cycle: /year
-    description: Required for SaaS & multi-tenant
-    price: $299
-    title: Business
-    ---
+      :::::u-pricing-plan
+      ---
+      button:
+        label: Purchase
+        to: https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603
+        target: _blank
+      features:
+        - Unlimited domains
+        - 1 year updates
+      highlight: true
+      billing-cycle: /year
+      description: Required for SaaS & multi-tenant
+      price: $299
+      title: Business
+      ---
+      :::::
     ::::
-  :::
-
-  :::div{.mt-4.text-center.text-sm.text-gray-500.dark:text-gray-400}
-  **Students/Educators**: 50% off · **Non-Profits**: 40% off · [Full license details](https://relaticle.github.io/custom-fields/community/license){.underline.hover:text-gray-700.dark:hover:text-gray-200}
   :::
 
 #title

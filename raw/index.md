@@ -23,12 +23,6 @@ Perfect for multi-tenant SaaS applications and enterprise admin panels.
 Get started
 
 </u-button>
-
-<u-button color="neutral" size="xl" to="https://github.com/relaticle/custom-fields" icon="simple-icons:github" variant="outline">
-
-GitHub
-
-</u-button>
 </template>
 </u-page-hero>
 
@@ -155,36 +149,26 @@ All tiers include every feature. Dev/staging environments are always free.
 
 </template>
 
+  <div className="max-w-4xl,mx-auto">
 <u-pricing-plans :compact="true" className="gap-x-3">
-<u-pricing-plan :button="{"label":"View on GitHub","to":"https://github.com/relaticle/custom-fields","target":"_blank","color":"neutral","variant":"outline"}" :features="["Unlimited domains","Community support"]" description="AGPL-3.0 for open source projects" price="Free" title="Open Source">
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["1 domain","1 year updates"]" billing-cycle="/year" description="Personal projects & internal tools" price="$79" title="Solo">
 
 
 
 </u-pricing-plan>
 
-<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["1 domain","1 year updates"]" description="Personal projects & internal tools" price="$79" title="Solo" billing-cycle="/year">
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Up to 5 domains","1 year updates"]" billing-cycle="/year" description="Agencies & multiple client sites" price="$129" title="Pro">
 
 
 
 </u-pricing-plan>
 
-<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Up to 5 domains","1 year updates"]" description="Agencies & multiple client sites" price="$129" title="Pro" billing-cycle="/year">
-
-
-
-</u-pricing-plan>
-
-<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Unlimited domains","1 year updates"]" description="Required for SaaS & multi-tenant" price="$299" title="Business" billing-cycle="/year" :highlight="true">
+<u-pricing-plan :button="{"label":"Purchase","to":"https://relaticle.lemonsqueezy.com/buy/803d5933-4b12-4869-9d93-f96797339603","target":"_blank"}" :features="["Unlimited domains","1 year updates"]" billing-cycle="/year" description="Required for SaaS & multi-tenant" price="$299" title="Business" :highlight="true">
 
 
 
 </u-pricing-plan>
 </u-pricing-plans>
-
-<div className="mt-4,text-center,text-sm,text-gray-500,dark:text-gray-400">
-
-**Students/Educators**: 50% off · **Non-Profits**: 40% off · [Full license details](/community/license)
-
 </div>
 </u-page-section>
 
