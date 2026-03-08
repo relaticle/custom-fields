@@ -31,9 +31,6 @@ export default defineNuxtConfig({
         seo: {
             ogImage: `${baseURL}preview.png`,
         },
-        github: {
-            branch: docsVersion,
-        },
     },
     app: {
         baseURL,
