@@ -25,16 +25,6 @@ Perfect for multi-tenant SaaS applications and enterprise admin panels.
   Get started
   :::
 
-  :::u-button
-  ---
-  color: neutral
-  icon: simple-icons:github
-  size: xl
-  to: https://github.com/relaticle/custom-fields
-  variant: outline
-  ---
-  GitHub
-  :::
 ::
 
 <div class="text-center max-w-4xl mx-auto">
@@ -127,24 +117,9 @@ Pricing
 All tiers include every feature. Dev/staging environments are always free.
 
 #default
-  ::u-pricing-plans{compact class="gap-x-3"}
-    :::u-pricing-plan
-    ---
-    title: Open Source
-    price: Free
-    description: AGPL-3.0 for open source projects
-    features:
-      - Unlimited domains
-      - Community support
-    button:
-      label: View on GitHub
-      to: https://github.com/relaticle/custom-fields
-      target: _blank
-      color: neutral
-      variant: outline
-    ---
-    :::
+  <div class="max-w-4xl mx-auto">
 
+  ::u-pricing-plans{compact class="gap-x-3"}
     :::u-pricing-plan
     ---
     title: Solo
@@ -195,8 +170,6 @@ All tiers include every feature. Dev/staging environments are always free.
     :::
   ::
 
-  <div class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-    <strong>Students/Educators</strong>: 50% off &middot; <strong>Non-Profits</strong>: 40% off &middot; <a href="/community/license" class="underline hover:text-gray-700 dark:hover:text-gray-200">Full license details</a>
   </div>
 ::
 

@@ -9,16 +9,6 @@ const { currentVersion, isOldVersion, loadVersions } = useVersions()
 
 onMounted(() => loadVersions())
 
-const links = computed(() => appConfig.github && appConfig.github.url
-  ? [
-      {
-        'icon': 'i-simple-icons-github',
-        'to': appConfig.github.url,
-        'target': '_blank',
-        'aria-label': 'GitHub',
-      },
-    ]
-  : [])
 </script>
 
 <template>
@@ -78,13 +68,6 @@ const links = computed(() => appConfig.github && appConfig.github.url
           </template>
         </ClientOnly>
 
-        <template v-if="links?.length">
-          <UButton
-            v-for="(link, index) of links"
-            :key="index"
-            v-bind="{ color: 'neutral', variant: 'ghost', ...link }"
-          />
-        </template>
       </template>
 
       <template #toggle="{ open, toggle }">
