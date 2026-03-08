@@ -12,35 +12,26 @@ Get started with Custom Fields in just a few steps.
 
 ## Installation
 
-Choose your installation method based on your license type:
+### 1. Purchase a License
 
-<tabs>
-<tab label="Commercial License">
+[View pricing plans](/#pricing) and choose the one that fits your project.
 
-### For commercial/private projects
-
-<steps>
-
-### Purchase a license
-
-[Choose a commercial license](/community/license#commercial-license-pricing)
-
-### Add the private repository
+### 2. Add Private Repository
 
 Add our private Composer repository to your `composer.json`:
 
 ```json
 {
-  "repositories": [
-      {
-          "type": "composer",
-          "url": "https://satis.relaticle.com"
-      }
-  ]
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satis.relaticle.com"
+        }
+    ]
 }
 ```
 
-### Install the package
+### 3. Install Package
 
 ```bash
 composer require relaticle/custom-fields
@@ -51,50 +42,13 @@ When prompted for authentication:
 - **Username**: Your email (used for purchase)
 - **Password**: Your license key
 
-### Run the installer
-
-```bash
-php artisan custom-fields:install
-```
-
-</steps>
-
-<alert type="info">
-
 Your license key will be saved in Composer's auth file for future updates.
 
-</alert>
-</tab>
-
-<tab label="Open Source (AGPL-3.0)">
-<alert type="warning">
-
-**AGPL-3.0 License Requirements**: This installation method requires your **entire application** to be open source and licensed under AGPL-3.0. This applies to ALL code in your project, including:
-
-- Your application code
-- SaaS/web applications accessible over a network
-- Any modifications or extensions
-
-If you cannot make your entire codebase public, you **must** use a [Commercial License](/community/license#commercial-license-pricing) instead.
-
-</alert>
-
-### For open source projects
-
-Install directly from Packagist:
-
-```bash
-composer require relaticle/custom-fields
-```
-
-Then run the installer:
+### 4. Run Installer
 
 ```bash
 php artisan custom-fields:install
 ```
-
-</tab>
-</tabs>
 
 ## Optional Configuration
 

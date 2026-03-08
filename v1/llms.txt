@@ -18,6 +18,7 @@
 - [Preset Custom Fields](https://relaticle.github.io/custom-fields/v1/essentials/preset-custom-fields): Programmatically define and deploy custom fields using migrations
 - [Import/Export](https://relaticle.github.io/custom-fields/v1/essentials/import-export): Learn how to import and export custom field data with import/export actions
 - [Data Model](https://relaticle.github.io/custom-fields/v1/essentials/data-model): Understanding the Custom Fields database architecture
+- [License](https://relaticle.github.io/custom-fields/v1/community/license): Dual-licensed under AGPL-3.0 for open source and commercial licenses for private applications
 - [Support](https://relaticle.github.io/custom-fields/v1/community/support): Get help with Custom Fields
 - [Contributing](https://relaticle.github.io/custom-fields/v1/community/contributing): How to contribute to Custom Fields
 - [License](https://relaticle.github.io/custom-fields/v1/community/license): Dual licensing model - AGPL-3.0 for open source, commercial for private use
