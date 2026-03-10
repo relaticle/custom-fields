@@ -218,7 +218,7 @@ final readonly class CoreVisibilityLogicService
             return false;
         }
 
-        $compatibleOperators = $typeData->dataType->getCompatibleOperators();
+        $compatibleOperators = $typeData->getCompatibleOperators();
 
         return in_array($operator, $compatibleOperators, true);
     }
@@ -256,7 +256,7 @@ final readonly class CoreVisibilityLogicService
             'category' => $typeData->dataType->value,
             'is_optionable' => $typeData->dataType->isChoiceField(),
             'has_multiple_values' => $typeData->dataType->isMultiChoiceField(),
-            'compatible_operators' => $typeData->dataType->getCompatibleOperators(),
+            'compatible_operators' => $typeData->getCompatibleOperators(),
             'has_visibility_conditions' => $this->hasVisibilityConditions($field),
             'visibility_mode' => $this->getVisibilityMode($field)->value,
             'visibility_logic' => $this->getVisibilityLogic($field)->value,
