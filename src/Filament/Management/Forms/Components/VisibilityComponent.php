@@ -322,7 +322,7 @@ final class VisibilityComponent extends Component
         $fieldData = $this->getFieldTypeData($get);
 
         return $fieldData
-            ? $fieldData->dataType->getCompatibleOperatorOptions()
+            ? $fieldData->getCompatibleOperatorOptions()
             : VisibilityOperator::options();
     }
 

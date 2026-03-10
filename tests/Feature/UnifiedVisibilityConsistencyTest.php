@@ -6,11 +6,15 @@ use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
 beforeEach(function (): void {
@@ -318,3 +322,84 @@ test('empty and null value handling is consistent', function (): void {
     $jsExpression = $this->frontendService->buildVisibilityExpression($this->conditionalField, $fields);
     expect($jsExpression)->toBeString(); // Should generate valid expression even with null comparison
 });
+
+test('withoutUserOptions multi-choice fields do not crash during value extraction', function (): void {
+    CustomFieldsType::register([
+        'test-repeater' => TestRepeaterFieldType::class,
+    ]);
+
+    $section = CustomFieldSection::factory()->create([
+        'name' => 'Repeater Section',
+        'entity_type' => Post::class,
+        'active' => true,
+    ]);
+
+    $repeaterField = CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Repeater',
+        'code' => 'repeater',
+        'type' => 'test-repeater',
+        'active' => true,
+    ]);
+
+    $post = Post::factory()->create();
+    $post->saveCustomFieldValue($repeaterField, [
+        ['value' => 'item 1'],
+        ['value' => 'item 2'],
+    ]);
+    $post->load('customFieldValues.customField');
+
+    $backendService = app(BackendVisibilityService::class);
+
+    $result = $backendService->extractFieldValues($post, collect([$repeaterField]));
+
+    expect($result)
+        ->toHaveKey('repeater')
+        ->and($result['repeater'])->toBe([
+            ['value' => 'item 1'],
+            ['value' => 'item 2'],
+        ]);
+
+    $visibleFields = $backendService->getVisibleFields($post, collect([$repeaterField]));
+
+    expect($visibleFields)->toHaveCount(1);
+});
+
+test('field types can override compatible visibility operators', function (): void {
+    CustomFieldsType::register([
+        'test-repeater' => TestRepeaterFieldType::class,
+    ]);
+
+    $fieldTypeData = CustomFieldsType::getFieldType('test-repeater');
+
+    expect($fieldTypeData->getCompatibleOperators())->toBe([
+        VisibilityOperator::IS_EMPTY,
+        VisibilityOperator::IS_NOT_EMPTY,
+    ]);
+});
+
+test('field types without operator override use dataType defaults', function (): void {
+    $fieldTypeData = CustomFieldsType::getFieldType('select');
+
+    expect($fieldTypeData->getCompatibleOperators())
+        ->toBe($fieldTypeData->dataType->getCompatibleOperators());
+});
+
+class TestRepeaterFieldType extends BaseFieldType
+{
+    public function configure(): FieldSchema
+    {
+        return FieldSchema::multiChoice()
+            ->key('test-repeater')
+            ->label('Test Repeater')
+            ->icon('heroicon-o-squares-plus')
+            ->searchable(false)
+            ->sortable(false)
+            ->filterable(false)
+            ->withoutUserOptions()
+            ->visibilityOperators([
+                VisibilityOperator::IS_EMPTY,
+                VisibilityOperator::IS_NOT_EMPTY,
+            ]);
+    }
+}
