@@ -176,6 +176,6 @@ enum VisibilityOperator: string
         // For string field types, use the new field type system
         $fieldTypeData = CustomFieldsType::getFieldType($fieldType);
 
-        return $fieldTypeData->dataType->getCompatibleOperatorOptions();
+        return $fieldTypeData->getCompatibleOperatorOptions();
     }
 }

@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Spatie\LaravelData\Data;
 
 /**
@@ -64,6 +65,9 @@ class FieldSchema
     protected bool $withoutUserOptions = false;
 
     private bool $requiresLookupType = false;
+
+    /** @var array<int, VisibilityOperator>|null */
+    private ?array $visibilityOperators = null;
 
     private ?string $settingsDataClass = null;
 
@@ -403,6 +407,18 @@ class FieldSchema
     }
 
     /**
+     * Override the default visibility operators derived from the data type.
+     *
+     * @param  array<int, VisibilityOperator>  $operators
+     */
+    public function visibilityOperators(array $operators): self
+    {
+        $this->visibilityOperators = $operators;
+
+        return $this;
+    }
+
+    /**
      * Field requires lookup_type selection (entity type selector)
      * This shows the entity selector directly without the options toggle
      */
@@ -629,7 +645,8 @@ class FieldSchema
             supportsUniqueConstraint: $this->supportsUniqueConstraint,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
-            settingsSchema: $this->settingsSchema
+            settingsSchema: $this->settingsSchema,
+            visibilityOperators: $this->visibilityOperators
         );
     }
 }
