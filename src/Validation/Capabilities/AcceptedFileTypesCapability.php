@@ -27,7 +27,7 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
         return [
             TagsInput::make($statePath.'.accepted_types')
                 ->label('Accepted File Types')
-                ->placeholder('e.g. jpg, png, pdf'),
+                ->placeholder('e.g. image/png, application/pdf'),
         ];
     }
 
@@ -45,12 +45,6 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
     /** @return array<int, string> */
     public function toRules(mixed $value): array
     {
-        $types = (array) $value;
-
-        if ($types === []) {
-            return [];
-        }
-
-        return ['mimes:'.implode(',', $types)];
+        return [];
     }
 }

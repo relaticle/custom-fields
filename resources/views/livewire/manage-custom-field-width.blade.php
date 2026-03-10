@@ -1,7 +1,7 @@
 <div
     x-data="{
-        fieldId: @entangle('fieldId'),
-        selectedWidth: @entangle('selectedWidth'),
+        fieldId: @js($fieldId),
+        selectedWidth: $wire.entangle('selectedWidth'),
         widths: @js($widthOptions),
         isSelected(width) {
             return width <= this.selectedWidth;
@@ -13,7 +13,7 @@
         <div class="absolute w-20 flex opacity-70" style="z-index: 1">
             <template x-for="(width, index) in widths" :key="index">
                 <div
-                    wire:click="$parent.setWidth(fieldId, width)"
+                    x-on:click="$dispatch('field-width-updated', { fieldId: fieldId, width: Number(width) })"
                     class="h-6 flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
                     :class="{
                     'rounded-s-md': index === 0,

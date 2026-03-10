@@ -163,8 +163,7 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
         $this->resetFieldsCache();
     }
 
-    #[On('field-deleted')]
-    #[On('fields-reordered')]
+    #[On(['field-created', 'field-deleted', 'fields-reordered'])]
     public function refreshFields(): void
     {
         $this->resetFieldsCache();

@@ -169,6 +169,11 @@ class CustomField extends Model
         return $this->system_defined === true;
     }
 
+    public function hasValues(): bool
+    {
+        return $this->values()->exists();
+    }
+
     /**
      * Deactivate the field if it's not system-defined.
      */

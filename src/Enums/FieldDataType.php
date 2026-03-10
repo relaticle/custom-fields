@@ -18,6 +18,7 @@ enum FieldDataType: string
     case BOOLEAN = 'boolean';
     case SINGLE_CHOICE = 'single_choice';
     case MULTI_CHOICE = 'multi_choice';
+    case FILE = 'file';
 
     /**
      * Check if this category represents optionable fields.
@@ -99,6 +100,10 @@ enum FieldDataType: string
             self::MULTI_CHOICE => [
                 VisibilityOperator::CONTAINS,
                 VisibilityOperator::NOT_CONTAINS,
+                VisibilityOperator::IS_EMPTY,
+                VisibilityOperator::IS_NOT_EMPTY,
+            ],
+            self::FILE => [
                 VisibilityOperator::IS_EMPTY,
                 VisibilityOperator::IS_NOT_EMPTY,
             ],

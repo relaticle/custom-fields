@@ -12,12 +12,6 @@ export default defineAppConfig({
         title: 'Custom Fields',
         description: 'Add dynamic custom fields to your Filament admin panels without writing database migrations.',
     },
-    github: {
-        repo: 'custom-fields',
-        owner: 'Relaticle',
-        edit: true,
-        rootDir: 'docs'
-    },
     socials: {
         discord: 'https://discord.gg/b9WxzUce4Q'
     },
@@ -38,7 +32,6 @@ export default defineAppConfig({
         title: 'On this page',
         bottom: {
             title: 'Ecosystem',
-            edit: 'https://github.com/Relaticle/custom-fields',
             links: [
                 {
                     icon: 'i-simple-icons-laravel',

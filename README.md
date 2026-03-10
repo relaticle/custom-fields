@@ -1,12 +1,12 @@
+# Custom Fields
+
 ![Custom Fields](art/preview.png)
 
-<p align="center">
    <a href="https://packagist.org/packages/relaticle/custom-fields"><img src="https://img.shields.io/packagist/dt/relaticle/custom-fields.svg?style=for-the-badge" alt="Downloads"></a>
   <a href="https://laravel.com/docs/12.x"><img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 12"></a>
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php" alt="PHP 8.3"></a>
   <a href="https://github.com/Relaticle/custom-fields/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/relaticle/custom-fields/actions"><img src="https://img.shields.io/github/actions/workflow/status/relaticle/custom-fields/run-tests.yml?branch=2.x&style=for-the-badge&label=tests" alt="License"></a>
-</p>
 
 A powerful Laravel/Filament plugin for adding dynamic custom fields to any Eloquent model without database migrations.
 

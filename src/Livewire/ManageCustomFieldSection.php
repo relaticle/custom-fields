@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Livewire;
 
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -30,9 +31,17 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     use InteractsWithForms;
     use ManagesFields;
 
+    /** @var ?Closure(CustomFieldSection): ?Closure */
+    private static ?Closure $uniqueRuleModifierResolver = null;
+
     public string $entityType;
 
     public CustomFieldSection $section;
+
+    public static function resolveUniqueRuleModifierUsing(?Closure $callback): void
+    {
+        self::$uniqueRuleModifierResolver = $callback;
+    }
 
     public function updateFieldsOrder(int|string $sectionId, array $fields): void
     {
@@ -68,12 +77,22 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
 
     public function editAction(): Action
     {
+        $sectionForm = SectionForm::entityType($this->entityType);
+
+        if (self::$uniqueRuleModifierResolver instanceof Closure) {
+            $modifier = (self::$uniqueRuleModifierResolver)($this->section);
+
+            if ($modifier) {
+                $sectionForm->modifyUniqueRuleUsing($modifier);
+            }
+        }
+
         return Action::make('edit')
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::sectionModel())
             ->slideOver(FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY))
             ->record($this->section)
-            ->schema(SectionForm::entityType($this->entityType)->schema())
+            ->schema($sectionForm->schema())
             ->fillForm($this->section->toArray())
             ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
             ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())

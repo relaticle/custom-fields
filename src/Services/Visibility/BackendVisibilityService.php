@@ -220,7 +220,8 @@ final class BackendVisibilityService
         if (
             $value === null ||
             $value === '' ||
-            ! $field->isChoiceField()
+            ! $field->isChoiceField() ||
+            $field->typeData->withoutUserOptions
         ) {
             return $value;
         }

@@ -18,6 +18,7 @@ enum CustomFieldsFeature: string
     case FIELD_MULTI_VALUE = 'field_multi_value';
     case FIELD_UNIQUE_VALUE = 'field_unique_value';
     case FIELD_VALIDATION_RULES = 'field_validation_rules';
+    case FIELD_DESCRIPTION = 'field_description';
 
     // Visibility features
     case MODEL_ATTRIBUTE_CONDITIONS = 'model_attribute_conditions';

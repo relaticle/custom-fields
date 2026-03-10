@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Spatie\LaravelData\Data;
 
 /**
@@ -65,6 +66,9 @@ class FieldSchema
 
     private bool $requiresLookupType = false;
 
+    /** @var array<int, VisibilityOperator>|null */
+    private ?array $visibilityOperators = null;
+
     private ?string $settingsDataClass = null;
 
     private string|Closure|null $settingsSchema = null;
@@ -104,6 +108,16 @@ class FieldSchema
     public static function string(): self
     {
         return new self(FieldDataType::STRING);
+    }
+
+    /**
+     * Configure for file upload fields.
+     * Stores file paths in string_value but skips string column validation constraints,
+     * since validation runs against the uploaded file, not the stored path.
+     */
+    public static function file(): self
+    {
+        return new self(FieldDataType::FILE);
     }
 
     /**
@@ -393,6 +407,18 @@ class FieldSchema
     }
 
     /**
+     * Override the default visibility operators derived from the data type.
+     *
+     * @param  array<int, VisibilityOperator>  $operators
+     */
+    public function visibilityOperators(array $operators): self
+    {
+        $this->visibilityOperators = $operators;
+
+        return $this;
+    }
+
+    /**
      * Field requires lookup_type selection (entity type selector)
      * This shows the entity selector directly without the options toggle
      */
@@ -619,7 +645,8 @@ class FieldSchema
             supportsUniqueConstraint: $this->supportsUniqueConstraint,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
-            settingsSchema: $this->settingsSchema
+            settingsSchema: $this->settingsSchema,
+            visibilityOperators: $this->visibilityOperators
         );
     }
 }

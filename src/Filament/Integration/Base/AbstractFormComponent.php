@@ -55,6 +55,11 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         $field
             ->name($customField->getFieldName())
             ->label($customField->name)
+            ->helperText(
+                FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION)
+                    ? ($customField->settings->description ?? null)
+                    : null
+            )
             ->afterStateHydrated(
                 fn (mixed $component, mixed $state, mixed $record): mixed => $component->state(
                     $this->transformHydratedValue(

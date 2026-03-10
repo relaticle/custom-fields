@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
@@ -259,7 +261,14 @@ describe('ManageCustomField - Field Actions', function (): void {
         ]);
     });
 
-    it('cannot delete an active field', function (): void {
+    it('hides delete action for an active field with stored values', function (): void {
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $this->field->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
+
         livewire(ManageCustomField::class, [
             'field' => $this->field,
         ])->assertActionHidden('delete');
@@ -282,12 +291,199 @@ describe('ManageCustomField - Field Actions', function (): void {
         ])->assertActionHidden('delete');
     });
 
-    it('dispatches width update event', function (): void {
-        // Act & Assert
+    it('can delete an active field with no values without deactivating first', function (): void {
+        $field = CustomField::factory()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'active' => true,
+                'system_defined' => false,
+                'type' => 'text',
+            ]);
+
         livewire(ManageCustomField::class, [
-            'field' => $this->field,
-        ])->call('setWidth', $this->field->getKey(), 75)
-            ->assertDispatched('field-width-updated', $this->field->getKey(), 75);
+            'field' => $field,
+        ])->callAction('delete');
+
+        $this->assertDatabaseMissing(CustomField::class, [
+            'id' => $field->getKey(),
+        ]);
+    });
+
+    it('cannot delete an active field that has stored values', function (): void {
+        $field = CustomField::factory()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'active' => true,
+                'system_defined' => false,
+                'type' => 'text',
+            ]);
+
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $field->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->assertActionHidden('delete');
+    });
+
+    it('can duplicate a field', function (): void {
+        $field = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Original Field',
+                'code' => 'original_field',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'original-field-copy')
+            ->first();
+
+        expect($clone)
+            ->not->toBeNull()
+            ->name->toBe('Original Field (Copy)')
+            ->type->toBe('text')
+            ->entity_type->toBe($this->userEntityType)
+            ->custom_field_section_id->toBe($this->section->getKey())
+            ->system_defined->toBeFalse()
+            ->active->toBeTrue();
+    });
+
+    it('can duplicate a select field with all options', function (): void {
+        $field = CustomField::factory()
+            ->ofType('select')
+            ->withOptions(['Alpha', 'Bravo', 'Charlie'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'My Select',
+                'code' => 'my_select',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field->fresh(),
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'my-select-copy')
+            ->first();
+
+        expect($clone)->not->toBeNull();
+        expect($clone->options)->toHaveCount(3);
+        expect($clone->options->pluck('name')->sort()->values()->all())
+            ->toBe(['Alpha', 'Bravo', 'Charlie']);
+    });
+
+    it('can duplicate a select field and preserve option settings', function (): void {
+        $field = CustomField::factory()
+            ->ofType('select')
+            ->withOptions(['Red', 'Blue'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Color Picker',
+                'code' => 'color_picker',
+            ]);
+
+        $field->options->first()->update(['settings' => new CustomFieldOptionSettingsData(color: '#ff0000')]);
+        $field->options->last()->update(['settings' => new CustomFieldOptionSettingsData(color: '#0000ff')]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field->fresh(),
+        ])->callAction('duplicate');
+
+        $clone = CustomField::query()
+            ->withDeactivated()
+            ->where('code', 'color-picker-copy')
+            ->first();
+
+        expect($clone)->not->toBeNull();
+        expect($clone->options)->toHaveCount(2);
+
+        $clonedOptions = $clone->options->sortBy('sort_order')->values();
+
+        expect($clonedOptions[0]->settings->color)->toBe('#ff0000');
+        expect($clonedOptions[1]->settings->color)->toBe('#0000ff');
+    });
+
+    it('generates unique code when duplicating a field with existing copy', function (): void {
+        $field = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'My Field',
+                'code' => 'my_field',
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->callAction('duplicate');
+
+        expect(CustomField::query()->withDeactivated()->where('code', 'my-field-copy')->exists())->toBeTrue();
+        expect(CustomField::query()->withDeactivated()->where('code', 'my-field-copy-2')->exists())->toBeTrue();
+    });
+
+    it('cannot duplicate a system-defined field', function (): void {
+        $systemField = CustomField::factory()
+            ->ofType('text')
+            ->systemDefined()
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $systemField,
+        ])->assertActionHidden('duplicate');
+    });
+
+    it('sets sort_order on options when creating a select field via storeField', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Status Field',
+                'code' => 'status_field',
+                'type' => 'select',
+                'entity_type' => $this->userEntityType,
+                'options' => [
+                    ['name' => 'Charlie'],
+                    ['name' => 'Alpha'],
+                    ['name' => 'Bravo'],
+                ],
+            ]);
+
+        $field = CustomField::query()
+            ->withoutGlobalScopes()
+            ->where('code', 'status_field')
+            ->first();
+
+        expect($field)->not->toBeNull();
+
+        $options = $field->options;
+
+        expect($options)->toHaveCount(3)
+            ->and($options->pluck('name')->all())->toBe(['Charlie', 'Alpha', 'Bravo'])
+            ->and($options->pluck('sort_order')->all())->each->not->toBeNull();
     });
 });
 
@@ -339,13 +535,20 @@ describe('Enhanced field management with datasets', function (): void {
             'field' => $systemField,
         ])->assertActionHidden('delete');
 
-        // Active field cannot be deleted
+        // Active field with values cannot be deleted
         $activeField = CustomField::factory()
             ->ofType('text')
             ->create([
                 'custom_field_section_id' => $this->section->getKey(),
                 'entity_type' => $this->userEntityType,
             ]);
+
+        CustomFields::newValueModel()->create([
+            'custom_field_id' => $activeField->getKey(),
+            'entity_type' => $this->userEntityType,
+            'entity_id' => 1,
+            'string_value' => 'test value',
+        ]);
 
         livewire(ManageCustomField::class, [
             'field' => $activeField,
