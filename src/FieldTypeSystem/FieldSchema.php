@@ -55,6 +55,9 @@ class FieldSchema
 
     protected bool $withoutUserOptions = false;
 
+    /** @var array<int, \Relaticle\CustomFields\Enums\VisibilityOperator>|null */
+    private ?array $visibilityOperators = null;
+
     private ?string $settingsDataClass = null;
 
     private string|Closure|null $settingsSchema = null;
@@ -362,6 +365,18 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Override the default visibility operators derived from the data type.
+     *
+     * @param  array<int, \Relaticle\CustomFields\Enums\VisibilityOperator>  $operators
+     */
+    public function visibilityOperators(array $operators): self
+    {
+        $this->visibilityOperators = $operators;
+
+        return $this;
+    }
+
     // ========== Export Configuration ==========
 
     /**
@@ -554,7 +569,8 @@ class FieldSchema
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
             validationRules: $this->availableValidationRules,
             settingsDataClass: $this->settingsDataClass,
-            settingsSchema: $this->settingsSchema
+            settingsSchema: $this->settingsSchema,
+            visibilityOperators: $this->visibilityOperators
         );
     }
 }
