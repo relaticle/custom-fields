@@ -11,6 +11,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\CircularDependencyException;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\ValueResolvers;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Filament\Integration\Factories\ExportColumnFactory;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
@@ -41,14 +42,19 @@ final class ExporterBuilder extends BaseBuilder
                         return null; // Don't export values for hidden fields
                     }
 
-                    // Get the value resolver and resolve the value
                     $valueResolver = app(ValueResolvers::class);
 
-                    return $valueResolver->resolve(
+                    $value = $valueResolver->resolve(
                         record: $record,
                         customField: $field,
                         exportable: true
                     );
+
+                    $transformer = CustomFieldsType::getFieldTypeInstance($field->typeData->key)
+                        ?->configure()
+                        ->getExportTransformer();
+
+                    return $transformer ? $transformer($value) : $value;
                 });
             })
             ->values();
