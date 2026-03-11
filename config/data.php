@@ -1,12 +1,31 @@
 <?php
 
+use Illuminate\Contracts\Support\Arrayable;
+use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
+use Spatie\LaravelData\Casts\EnumCast;
+use Spatie\LaravelData\Normalizers\ArrayableNormalizer;
+use Spatie\LaravelData\Normalizers\ArrayNormalizer;
+use Spatie\LaravelData\Normalizers\FormRequestNormalizer;
+use Spatie\LaravelData\Normalizers\JsonNormalizer;
+use Spatie\LaravelData\Normalizers\ModelNormalizer;
+use Spatie\LaravelData\Normalizers\ObjectNormalizer;
+use Spatie\LaravelData\RuleInferrers\AttributesRuleInferrer;
+use Spatie\LaravelData\RuleInferrers\BuiltInTypesRuleInferrer;
+use Spatie\LaravelData\RuleInferrers\NullableRuleInferrer;
+use Spatie\LaravelData\RuleInferrers\RequiredRuleInferrer;
+use Spatie\LaravelData\RuleInferrers\SometimesRuleInferrer;
+use Spatie\LaravelData\Support\Creation\ValidationStrategy;
+use Spatie\LaravelData\Transformers\ArrayableTransformer;
+use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
+use Spatie\LaravelData\Transformers\EnumTransformer;
+
 return [
     /*
     |--------------------------------------------------------------------------
     | Validation Strategy
     |--------------------------------------------------------------------------
     */
-    'validation_strategy' => \Spatie\LaravelData\Support\Creation\ValidationStrategy::Always,
+    'validation_strategy' => ValidationStrategy::Always,
 
     /*
     |--------------------------------------------------------------------------
@@ -31,12 +50,12 @@ return [
     |--------------------------------------------------------------------------
     */
     'normalizers' => [
-        \Spatie\LaravelData\Normalizers\ModelNormalizer::class,
-        \Spatie\LaravelData\Normalizers\FormRequestNormalizer::class,
-        \Spatie\LaravelData\Normalizers\ArrayableNormalizer::class,
-        \Spatie\LaravelData\Normalizers\ObjectNormalizer::class,
-        \Spatie\LaravelData\Normalizers\ArrayNormalizer::class,
-        \Spatie\LaravelData\Normalizers\JsonNormalizer::class,
+        ModelNormalizer::class,
+        FormRequestNormalizer::class,
+        ArrayableNormalizer::class,
+        ObjectNormalizer::class,
+        ArrayNormalizer::class,
+        JsonNormalizer::class,
     ],
 
     /*
@@ -45,9 +64,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'transformers' => [
-        DateTimeInterface::class => \Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer::class,
-        \Illuminate\Contracts\Support\Arrayable::class => \Spatie\LaravelData\Transformers\ArrayableTransformer::class,
-        BackedEnum::class => \Spatie\LaravelData\Transformers\EnumTransformer::class,
+        DateTimeInterface::class => DateTimeInterfaceTransformer::class,
+        Arrayable::class => ArrayableTransformer::class,
+        BackedEnum::class => EnumTransformer::class,
     ],
 
     /*
@@ -56,8 +75,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'casts' => [
-        DateTimeInterface::class => \Spatie\LaravelData\Casts\DateTimeInterfaceCast::class,
-        BackedEnum::class => \Spatie\LaravelData\Casts\EnumCast::class,
+        DateTimeInterface::class => DateTimeInterfaceCast::class,
+        BackedEnum::class => EnumCast::class,
     ],
 
     /*
@@ -66,10 +85,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'rule_inferrers' => [
-        \Spatie\LaravelData\RuleInferrers\SometimesRuleInferrer::class,
-        \Spatie\LaravelData\RuleInferrers\NullableRuleInferrer::class,
-        \Spatie\LaravelData\RuleInferrers\RequiredRuleInferrer::class,
-        \Spatie\LaravelData\RuleInferrers\BuiltInTypesRuleInferrer::class,
-        \Spatie\LaravelData\RuleInferrers\AttributesRuleInferrer::class,
+        SometimesRuleInferrer::class,
+        NullableRuleInferrer::class,
+        RequiredRuleInferrer::class,
+        BuiltInTypesRuleInferrer::class,
+        AttributesRuleInferrer::class,
     ],
 ];

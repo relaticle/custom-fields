@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
@@ -399,8 +400,8 @@ describe('ManageCustomField - Field Actions', function (): void {
                 'code' => 'color_picker',
             ]);
 
-        $field->options->first()->update(['settings' => new \Relaticle\CustomFields\Data\CustomFieldOptionSettingsData(color: '#ff0000')]);
-        $field->options->last()->update(['settings' => new \Relaticle\CustomFields\Data\CustomFieldOptionSettingsData(color: '#0000ff')]);
+        $field->options->first()->update(['settings' => new CustomFieldOptionSettingsData(color: '#ff0000')]);
+        $field->options->last()->update(['settings' => new CustomFieldOptionSettingsData(color: '#0000ff')]);
 
         livewire(ManageCustomField::class, [
             'field' => $field->fresh(),
