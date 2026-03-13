@@ -7,10 +7,15 @@ namespace Relaticle\CustomFields\Services\Visibility;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\Data\VisibilityConditionData;
+use Relaticle\CustomFields\Data\VisibilityData;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
+use Spatie\LaravelData\DataCollection;
 
 /**
  * Frontend Visibility Service
@@ -27,6 +32,60 @@ final readonly class FrontendVisibilityService
     public function __construct(
         private CoreVisibilityLogicService $coreLogic,
     ) {}
+
+    /**
+     * Build visibility expression for a section.
+     *
+     * @param  Collection<int, CustomField>|null  $allFields
+     */
+    public function buildSectionVisibilityExpression(
+        CustomFieldSection $section,
+        ?Collection $allFields
+    ): ?string {
+        if (! $this->coreLogic->hasSectionVisibilityConditions($section)) {
+            return null;
+        }
+
+        $visibility = $this->coreLogic->getVisibilityDataFromSection($section);
+
+        if (! $visibility instanceof VisibilityData || ! $visibility->conditions instanceof DataCollection) {
+            return null;
+        }
+
+        $conditions = $visibility->conditions->all();
+        $mode = $visibility->mode;
+        $logic = $visibility->logic;
+
+        $jsConditions = collect($conditions)
+            ->filter(fn (VisibilityConditionData $condition): bool => $this->shouldIncludeCondition($condition, $allFields))
+            ->map(fn (VisibilityConditionData $condition): ?string => $this->buildCondition($condition, $mode, $allFields))
+            ->filter()
+            ->values();
+
+        if ($jsConditions->isEmpty()) {
+            return null;
+        }
+
+        $operator = $logic === VisibilityLogic::ALL ? ' && ' : ' || ';
+
+        return $jsConditions->implode($operator);
+    }
+
+    /**
+     * Determine if a condition should be included in JS expression generation.
+     *
+     * @param  Collection<int, CustomField>|null  $allFields
+     */
+    private function shouldIncludeCondition(
+        VisibilityConditionData $condition,
+        ?Collection $allFields
+    ): bool {
+        if ($condition->isModelAttribute()) {
+            return FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
+        }
+
+        return $allFields instanceof Collection && $allFields->contains('code', $condition->field_code);
+    }
 
     /**
      * Build visibility expression for a field using core logic.
@@ -74,12 +133,7 @@ final readonly class FrontendVisibilityService
         $logic = $this->coreLogic->getVisibilityLogic($field);
 
         $jsConditions = collect($conditions)
-            ->filter(
-                fn (VisibilityConditionData $condition): bool => $allFields->contains(
-                    'code',
-                    $condition->field_code
-                )
-            )
+            ->filter(fn (VisibilityConditionData $condition): bool => $this->shouldIncludeCondition($condition, $allFields))
             ->map(
                 fn (VisibilityConditionData $condition): ?string => $this->buildCondition(
                     $condition,
@@ -143,11 +197,15 @@ final readonly class FrontendVisibilityService
     private function buildCondition(
         VisibilityConditionData $condition,
         VisibilityMode $mode,
-        Collection $allFields
+        ?Collection $allFields
     ): ?string {
+        $isModelAttribute = $condition->isModelAttribute();
+        $escapedCode = addslashes($condition->field_code);
 
-        $targetField = $allFields->firstWhere('code', $condition->field_code);
-        $fieldValue = sprintf("\$get('custom_fields.%s')", $condition->field_code);
+        $targetField = $isModelAttribute ? null : $allFields?->firstWhere('code', $condition->field_code);
+        $fieldValue = $isModelAttribute
+            ? sprintf("\$get('%s')", $escapedCode)
+            : sprintf("\$get('custom_fields.%s')", $escapedCode);
 
         $expression = $this->buildOperatorExpression(
             $condition->operator,
@@ -234,19 +292,11 @@ final readonly class FrontendVisibilityService
         mixed $value,
         ?CustomField $targetField
     ): string {
-        return when(
-            $targetField->isChoiceField(),
-            fn (): string => $this->buildOptionExpression(
-                $fieldValue,
-                $value,
-                $targetField,
-                'equals'
-            ),
-            fn (): string => $this->buildStandardEqualsExpression(
-                $fieldValue,
-                $value
-            )
-        );
+        if (! $targetField instanceof CustomField || ! $targetField->isChoiceField()) {
+            return $this->buildStandardEqualsExpression($fieldValue, $value);
+        }
+
+        return $this->buildOptionExpression($fieldValue, $value, $targetField, 'equals');
     }
 
     /**
@@ -257,19 +307,11 @@ final readonly class FrontendVisibilityService
         mixed $value,
         ?CustomField $targetField
     ): string {
-        return when(
-            $targetField->isChoiceField(),
-            fn (): string => $this->buildOptionExpression(
-                $fieldValue,
-                $value,
-                $targetField,
-                'not_equals'
-            ),
-            fn (): string => $this->buildStandardNotEqualsExpression(
-                $fieldValue,
-                $value
-            )
-        );
+        if (! $targetField instanceof CustomField || ! $targetField->isChoiceField()) {
+            return $this->buildStandardNotEqualsExpression($fieldValue, $value);
+        }
+
+        return $this->buildOptionExpression($fieldValue, $value, $targetField, 'not_equals');
     }
 
     /**
@@ -483,7 +525,9 @@ final readonly class FrontendVisibilityService
         mixed $value,
         ?CustomField $targetField
     ): string {
-        $resolvedValue = $this->resolveOptionValue($value, $targetField);
+        $resolvedValue = $targetField instanceof CustomField
+            ? $this->resolveOptionValue($value, $targetField)
+            : $value;
         $jsValue = $this->formatJsValue($resolvedValue);
 
         return "(() => {

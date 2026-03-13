@@ -15,21 +15,25 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
-/**
- * ABOUTME: Visibility component for configuring field visibility conditions.
- * ABOUTME: Provides dynamic form inputs based on field types and operators.
- */
 final class VisibilityComponent extends Component
 {
     protected string $view = 'filament-schemas::components.grid';
+
+    private bool $forSection = false;
+
+    private ?string $sectionEntityType = null;
 
     public function __construct()
     {
@@ -40,6 +44,15 @@ final class VisibilityComponent extends Component
     public static function make(): static
     {
         return new self;
+    }
+
+    public static function makeForSection(string $entityType): static
+    {
+        $instance = new self;
+        $instance->forSection = true;
+        $instance->sectionEntityType = $entityType;
+
+        return $instance;
     }
 
     private function buildFieldset(): Fieldset
@@ -85,27 +98,48 @@ final class VisibilityComponent extends Component
      */
     private function buildConditionSchema(): array
     {
-        return [
-            Select::make('field_code')
-                ->label('Field')
-                ->options(fn (Get $get): array => $this->getAvailableFields($get))
+        $schema = [];
+
+        $modelAttrsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
+
+        if ($modelAttrsEnabled) {
+            $schema[] = Select::make('source')
+                ->label('Source')
+                ->options(ConditionSource::class)
+                ->default(ConditionSource::CustomField)
                 ->required()
                 ->live()
-                ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetConditionValues($get, $set))
-                ->columnSpan(4),
+                ->afterStateUpdated(fn (Set $set) => $this->resetConditionValues(null, $set))
+                ->columnSpan(3);
+        } else {
+            $schema[] = Hidden::make('source')->default(ConditionSource::CustomField->value);
+        }
 
-            Select::make('operator')
-                ->label('VisibilityOperator')
-                ->options(fn (Get $get): array => $this->getCompatibleOperators($get))
-                ->required()
-                ->live()
-                ->afterStateUpdated(fn (Set $set) => $this->clearAllValueFields($set))
-                ->columnSpan(3),
+        $fieldCodeSpan = $modelAttrsEnabled ? 3 : 4;
+        $operatorSpan = $modelAttrsEnabled ? 2 : 3;
+        $valueSpan = $modelAttrsEnabled ? 4 : 5;
 
-            ...$this->getValueInputComponents(),
+        $schema[] = Select::make('field_code')
+            ->label('Field')
+            ->options(fn (Get $get): array => $this->getAvailableFields($get))
+            ->required()
+            ->live()
+            ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetConditionValues($get, $set))
+            ->columnSpan($fieldCodeSpan);
 
-            Hidden::make('value')->default(null),
-        ];
+        $schema[] = Select::make('operator')
+            ->label('VisibilityOperator')
+            ->options(fn (Get $get): array => $this->getCompatibleOperators($get))
+            ->required()
+            ->live()
+            ->afterStateUpdated(fn (Set $set) => $this->clearAllValueFields($set))
+            ->columnSpan($operatorSpan);
+
+        $schema = [...$schema, ...$this->getValueInputComponents($valueSpan)];
+
+        $schema[] = Hidden::make('value')->default(null);
+
+        return $schema;
     }
 
     /**
@@ -113,10 +147,9 @@ final class VisibilityComponent extends Component
      *
      * @throws Exception
      */
-    private function getValueInputComponents(): array
+    private function getValueInputComponents(int $columnSpan = 5): array
     {
         return [
-            // Single select for choice fields
             Select::make('single_value')
                 ->label('Value')
                 ->live()
@@ -126,9 +159,8 @@ final class VisibilityComponent extends Component
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
                 ->afterStateHydrated(fn (Select $component, Get $get): Select => $component->state($get('value')))
                 ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
-                ->columnSpan(5),
+                ->columnSpan($columnSpan),
 
-            // Multiple select for multi-choice fields
             Select::make('multiple_values')
                 ->label('Value')
                 ->live()
@@ -139,31 +171,44 @@ final class VisibilityComponent extends Component
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
                 ->afterStateHydrated(fn (Select $component, Get $get): Select => $component->state(value($get('value')) ? (array) $get('value') : []))
                 ->afterStateUpdated(fn (array $state, Set $set): mixed => $set('value', $state))
-                ->columnSpan(5),
+                ->columnSpan($columnSpan),
 
-            // Toggle for boolean fields
             Toggle::make('boolean_value')
                 ->inline(false)
                 ->label('Value')
                 ->visible(fn (Get $get): bool => $this->shouldShowToggle($get))
                 ->afterStateHydrated(fn (Toggle $component, Get $get): Toggle => $component->state($get('value')))
                 ->afterStateUpdated(fn (bool $state, Set $set): mixed => $set('value', $state))
-                ->columnSpan(5),
+                ->columnSpan($columnSpan),
 
-            // Text input for other fields
             TextInput::make('text_value')
                 ->label('Value')
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
                 ->visible(fn (Get $get): bool => $this->shouldShowTextInput($get))
                 ->afterStateHydrated(fn (TextInput $component, Get $get): TextInput => $component->state($get('value') ?? ''))
                 ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
-                ->columnSpan(5),
+                ->columnSpan($columnSpan),
         ];
+    }
+
+    private function isModelAttributeSource(Get $get): bool
+    {
+        $source = $get('source');
+
+        if ($source instanceof ConditionSource) {
+            return $source === ConditionSource::ModelAttribute;
+        }
+
+        return $source === ConditionSource::ModelAttribute->value;
     }
 
     private function shouldShowSingleSelect(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
+            return false;
+        }
+
+        if ($this->isModelAttributeSource($get)) {
             return false;
         }
 
@@ -187,6 +232,10 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        if ($this->isModelAttributeSource($get)) {
+            return false;
+        }
+
         $fieldData = $this->getFieldTypeData($get);
         if ($fieldData === null) {
             return false;
@@ -202,6 +251,22 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        if ($this->isModelAttributeSource($get)) {
+            $entityType = $this->getEntityType($get);
+            if (blank($entityType)) {
+                return false;
+            }
+
+            $fieldCode = $get('field_code');
+            if (blank($fieldCode)) {
+                return false;
+            }
+
+            $dataType = app(ModelAttributeDiscoveryService::class)->getAttributeDataType($entityType, $fieldCode);
+
+            return $dataType === FieldDataType::BOOLEAN;
+        }
+
         $fieldData = $this->getFieldTypeData($get);
 
         return $fieldData && $fieldData->dataType === FieldDataType::BOOLEAN;
@@ -213,9 +278,13 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        if ($this->isModelAttributeSource($get)) {
+            return ! $this->shouldShowToggle($get);
+        }
+
         $fieldData = $this->getFieldTypeData($get);
         if ($fieldData === null) {
-            return true; // Default to text input
+            return true;
         }
 
         return ! $fieldData->dataType->isChoiceField() &&
@@ -227,6 +296,10 @@ final class VisibilityComponent extends Component
      */
     private function getFieldOptions(Get $get): array
     {
+        if ($this->isModelAttributeSource($get)) {
+            return [];
+        }
+
         $fieldCode = $get('field_code');
         if (blank($fieldCode)) {
             return [];
@@ -251,6 +324,10 @@ final class VisibilityComponent extends Component
 
         if (blank($get('operator'))) {
             return 'Select an operator first';
+        }
+
+        if ($this->isModelAttributeSource($get)) {
+            return 'Enter comparison value';
         }
 
         $fieldData = $this->getFieldTypeData($get);
@@ -302,7 +379,14 @@ final class VisibilityComponent extends Component
             return [];
         }
 
-        $currentFieldCode = $get('../../../../code');
+        if ($this->isModelAttributeSource($get)) {
+            return rescue(
+                fn (): array => app(ModelAttributeDiscoveryService::class)->getAttributeOptions($entityType),
+                []
+            );
+        }
+
+        $currentFieldCode = $this->forSection ? null : $get('../../../../code');
 
         return rescue(function () use ($entityType, $currentFieldCode) {
             return CustomFields::customFieldModel()::query()
@@ -319,6 +403,10 @@ final class VisibilityComponent extends Component
      */
     private function getCompatibleOperators(Get $get): array
     {
+        if ($this->isModelAttributeSource($get)) {
+            return VisibilityOperator::options();
+        }
+
         $fieldData = $this->getFieldTypeData($get);
 
         return $fieldData
@@ -360,15 +448,23 @@ final class VisibilityComponent extends Component
 
     private function getEntityType(Get $get): ?string
     {
+        if ($this->forSection && $this->sectionEntityType) {
+            return $this->sectionEntityType;
+        }
+
         return $get('../../../../entity_type')
             ?? request('entityType')
             ?? request()->route('entityType');
     }
 
-    private function resetConditionValues(Get $get, Set $set): void
+    private function resetConditionValues(?Get $get, Set $set): void
     {
         $this->clearAllValueFields($set);
-        $set('operator', array_key_first($this->getCompatibleOperators($get)));
+        $set('field_code', null);
+
+        if ($get) {
+            $set('operator', array_key_first($this->getCompatibleOperators($get)));
+        }
     }
 
     private function clearAllValueFields(Set $set): void

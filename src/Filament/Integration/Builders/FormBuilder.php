@@ -88,13 +88,16 @@ class FormBuilder extends BaseBuilder
             return $allFields->map($createField);
         }
 
+        // Resolve record for section visibility (null for create forms)
+        $record = isset($this->model) && $this->model->exists ? $this->model : null;
+
         return $this->getFilteredSections()
-            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField) {
+            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField, $allFields, $record) {
                 $fields = $section->fields->map($createField);
 
                 return $fields->isEmpty()
                     ? null
-                    : $sectionComponentFactory->create($section)->schema($fields->toArray());
+                    : $sectionComponentFactory->create($section, $allFields, $record)->schema($fields->toArray());
             })
             ->filter();
     }
