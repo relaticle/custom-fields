@@ -155,6 +155,7 @@ class CustomFieldsManagementPage extends Page
             ])
             ->schema(SectionForm::entityType($this->currentEntityType)->schema())
             ->action(fn (array $data): CustomFieldSection => $this->storeSection($data))
+            ->successNotificationTitle(__('custom-fields::custom-fields.section.notifications.created'))
             ->modalWidth(Width::TwoExtraLarge);
     }
 
