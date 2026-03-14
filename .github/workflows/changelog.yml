@@ -1,0 +1,42 @@
+name: Changelog
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine target branch
+        id: branch
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          MAJOR=$(echo "$TAG" | sed -E 's/^v?([0-9]+)\..*/\1/')
+          BRANCH="${MAJOR}.x"
+          if ! git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" "$BRANCH" > /dev/null 2>&1; then
+            BRANCH="${{ github.event.repository.default_branch }}"
+          fi
+          echo "name=${BRANCH}" >> $GITHUB_OUTPUT
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.branch.outputs.name }}
+
+      - name: Update Changelog
+        uses: stefanzweifel/changelog-updater-action@v1
+        with:
+          latest-version: ${{ github.event.release.name }}
+          release-notes: ${{ github.event.release.body }}
+
+      - name: Commit updated CHANGELOG
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          branch: ${{ steps.branch.outputs.name }}
+          commit_message: Update CHANGELOG
+          file_pattern: CHANGELOG.md
