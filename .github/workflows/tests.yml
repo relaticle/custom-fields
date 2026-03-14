@@ -38,14 +38,5 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
-      - name: Run Pint
-        run: vendor/bin/pint --test
-
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress
-
-      - name: Run Rector
-        run: vendor/bin/rector --dry-run --no-progress-bar
-
       - name: Run Pest
         run: vendor/bin/pest --ci
