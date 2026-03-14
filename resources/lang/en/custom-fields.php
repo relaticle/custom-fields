@@ -24,6 +24,9 @@ return [
         'default' => [
             'new_section' => 'New Section',
         ],
+        'notifications' => [
+            'created' => 'Section created',
+        ],
     ],
 
     'field' => [
