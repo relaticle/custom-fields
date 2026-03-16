@@ -222,6 +222,7 @@ final class BackendVisibilityService
         ?CustomField $field
     ): mixed {
         if (
+            $field === null ||
             $value === null ||
             $value === '' ||
             ! $field->isChoiceField() ||
