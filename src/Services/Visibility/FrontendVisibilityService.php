@@ -579,7 +579,7 @@ final readonly class FrontendVisibilityService
             is_bool($value) => $value ? 'true' : 'false',
             $value === 'true' => 'true',
             $value === 'false' => 'false',
-            is_string($value) => "'".addslashes($value)."'",
+            is_string($value) => json_encode($value, JSON_UNESCAPED_UNICODE),
             is_int($value) => (string) $value,
             is_float($value) => number_format($value, 10, '.', ''),
             is_numeric($value) => str_contains($value, '.')
@@ -592,7 +592,7 @@ final readonly class FrontendVisibilityService
                         $collection->implode(', ').
                         ']'
                 ),
-            default => "'".addslashes((string) $value)."'",
+            default => json_encode((string) $value, JSON_UNESCAPED_UNICODE),
         };
     }
 

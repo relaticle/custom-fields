@@ -131,7 +131,7 @@ describe('Section visibility JS expression generation', function (): void {
 
         expect($jsExpression)->toBeString()
             ->and($jsExpression)->toContain("\$get('custom_fields.plan')")
-            ->and($jsExpression)->toContain("'pro'");
+            ->and($jsExpression)->toContain('"pro"');
     });
 
     it('generates JS expression for section with model attribute condition', function (): void {
