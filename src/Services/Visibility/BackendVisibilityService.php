@@ -166,10 +166,6 @@ final class BackendVisibilityService
      * @param  Collection<int, CustomField>  $fields
      * @return array<string, mixed>
      */
-    /**
-     * @param  Collection<int, CustomField>  $fields
-     * @return array<string, mixed>
-     */
     public function getNormalizedFieldValues(
         Model $record,
         Collection $fields
