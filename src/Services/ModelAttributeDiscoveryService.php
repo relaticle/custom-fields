@@ -185,11 +185,7 @@ final class ModelAttributeDiscoveryService
 
         $excludedTypes = ['json', 'binary', 'blob', 'longblob', 'mediumblob'];
 
-        if (in_array(strtolower($column['type_name']), $excludedTypes, true)) {
-            return false;
-        }
-
-        return true;
+        return ! in_array(strtolower($column['type_name']), $excludedTypes, true);
     }
 
     /**

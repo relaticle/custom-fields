@@ -462,7 +462,7 @@ final class VisibilityComponent extends Component
         $this->clearAllValueFields($set);
         $set('field_code', null);
 
-        if ($get) {
+        if ($get instanceof Get) {
             $set('operator', array_key_first($this->getCompatibleOperators($get)));
         }
     }

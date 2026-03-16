@@ -303,7 +303,7 @@ describe('VisibilityData create form fail-open', function (): void {
             ],
         ]);
 
-        expect($visibility->evaluate([], null))->toBeTrue();
+        expect($visibility->evaluate([]))->toBeTrue();
     });
 
     it('still evaluates custom field conditions when record is null', function (): void {
@@ -326,8 +326,8 @@ describe('VisibilityData create form fail-open', function (): void {
             ],
         ]);
 
-        expect($visibility->evaluate(['priority' => 'high'], null))->toBeTrue()
-            ->and($visibility->evaluate(['priority' => 'low'], null))->toBeFalse();
+        expect($visibility->evaluate(['priority' => 'high']))->toBeTrue()
+            ->and($visibility->evaluate(['priority' => 'low']))->toBeFalse();
     });
 });
 
