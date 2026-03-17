@@ -23,8 +23,10 @@ trait UsesCustomFields
 {
     public function __construct($attributes = [])
     {
-        // Ensure custom fields are included in a fillable array
-        $this->fillable = array_merge(['custom_fields'], $this->fillable);
+        if (count($this->getFillable()) !== 0) {
+            $this->mergeFillable(['custom_fields']);
+        }
+
         parent::__construct($attributes);
     }
 
