@@ -31,7 +31,19 @@ jobs:
             echo "flag=" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check if release exists
+        id: check
+        run: |
+          if gh release view "${{ github.ref_name }}" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
         run: gh release create "${{ github.ref_name }}" --generate-notes ${{ steps.prerelease.outputs.flag }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
