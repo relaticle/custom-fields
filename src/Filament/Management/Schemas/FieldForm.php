@@ -404,7 +404,7 @@ class FieldForm implements FormInterface
                                     'select',
                                     'multi_select',
                                     'tags-input',
-                                ])
+                                ], true)
                         ),
                     // Multi-value settings
                     Toggle::make('settings.allow_multiple')

@@ -32,6 +32,7 @@ use Relaticle\CustomFields\Providers\EntityServiceProvider;
 use Relaticle\CustomFields\Providers\FieldTypeServiceProvider;
 use Relaticle\CustomFields\Providers\ImportsServiceProvider;
 use Relaticle\CustomFields\Providers\ValidationServiceProvider;
+use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Services\ValueResolver\ValueResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
@@ -77,6 +78,11 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         Livewire::component('manage-custom-field', ManageCustomField::class);
         Livewire::component('manage-custom-field-width', ManageCustomFieldWidth::class);
         Livewire::component('manage-fields-table', ManageFieldsTable::class);
+
+        $this->app->terminating(function (): void {
+            ModelAttributeDiscoveryService::clearCache();
+            BackendVisibilityService::clearCache();
+        });
     }
 
     public function configurePackage(Package $package): void

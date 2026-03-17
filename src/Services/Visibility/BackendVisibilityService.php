@@ -11,6 +11,7 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Options\ComponentOptionsExtractor;
 use Throwable;
 
@@ -111,7 +112,27 @@ final class BackendVisibilityService
         return $this->coreLogic->evaluateVisibilityWithCascading(
             $field,
             $fieldValues,
-            $allFields
+            $allFields,
+            $record
+        );
+    }
+
+    /**
+     * Check if a section should be visible for the given record.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    public function isSectionVisible(
+        Model $record,
+        CustomFieldSection $section,
+        Collection $allFields
+    ): bool {
+        $fieldValues = $this->extractFieldValues($record, $allFields);
+
+        return $this->coreLogic->evaluateSectionVisibility(
+            $section,
+            $fieldValues,
+            $record
         );
     }
 
@@ -133,7 +154,8 @@ final class BackendVisibilityService
             ): bool => $this->coreLogic->evaluateVisibilityWithCascading(
                 $field,
                 $fieldValues,
-                $fields
+                $fields,
+                $record
             )
         );
     }
@@ -141,10 +163,6 @@ final class BackendVisibilityService
     /**
      * Get field values normalized for visibility evaluation.
      *
-     * @param  Collection<int, CustomField>  $fields
-     * @return array<string, mixed>
-     */
-    /**
      * @param  Collection<int, CustomField>  $fields
      * @return array<string, mixed>
      */
@@ -200,6 +218,7 @@ final class BackendVisibilityService
         ?CustomField $field
     ): mixed {
         if (
+            ! $field instanceof CustomField ||
             $value === null ||
             $value === '' ||
             ! $field->isChoiceField() ||

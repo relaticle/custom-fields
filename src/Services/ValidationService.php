@@ -154,7 +154,7 @@ final class ValidationService
 
             $ruleName = explode(':', $rule, 2)[0];
 
-            return ! in_array($ruleName, $primaryRuleNames);
+            return ! in_array($ruleName, $primaryRuleNames, true);
         });
 
         // Combine the rules, with primary rules first

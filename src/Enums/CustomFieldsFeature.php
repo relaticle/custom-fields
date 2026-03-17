@@ -20,6 +20,10 @@ enum CustomFieldsFeature: string
     case FIELD_VALIDATION_RULES = 'field_validation_rules';
     case FIELD_DESCRIPTION = 'field_description';
 
+    // Visibility features
+    case MODEL_ATTRIBUTE_CONDITIONS = 'model_attribute_conditions';
+    case SECTION_CONDITIONAL_VISIBILITY = 'section_conditional_visibility';
+
     // Table/UI integration features
     case UI_TABLE_COLUMNS = 'ui_table_columns';
     case UI_TABLE_FILTERS = 'ui_table_filters';

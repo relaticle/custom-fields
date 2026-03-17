@@ -180,7 +180,7 @@ test('frontend service generates valid JavaScript expressions', function (): voi
 
     expect($jsExpression)->toBeString()
         ->and($jsExpression)->toContain("\$get('custom_fields.status')")
-        ->and($jsExpression)->toContain("'active'");
+        ->and($jsExpression)->toContain('"active"');
 
     // Test always visible field returns null (no expression needed)
     $alwaysVisibleExpression = $this->frontendService->buildVisibilityExpression($this->alwaysVisibleField, $fields);
