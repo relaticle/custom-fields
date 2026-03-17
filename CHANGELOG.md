@@ -2,9 +2,38 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.0 - 2026-03-17
+
+### What's Changed
+
+#### New Features
+
+- **Model attribute conditions**: Conditional field/section visibility based on model attributes (#74)
+- Section conditional visibility support
+
+#### Fixes
+
+- Fix null dereference in `normalizeValueForEvaluation`
+- Replace `addslashes` with `json_encode` for JS string escaping
+- Remove duplicate docblock on `getNormalizedFieldValues`
+- Resolve rector issues for CI compatibility with rector 2.3.9
+- Add explicit success notification to `createSection` action
+- Update tests badge to correct workflow filename and branch
+- Use full URL for `git ls-remote` in changelog workflow
+
+#### Maintenance
+
+- Remove Ukrainian translation for maintainability
+- Add release notes configuration for auto-generated changelogs
+- Add auto-release workflow and normalize CI naming
+- Update actions/setup-node to v6, actions/checkout to v6
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.0.14...v3.1.0
+
 ## 3.0.0 - 2026-01-XX
 
 ### Added
+
 - **Record Field Type**: New field type for entity references with avatar support
 - **Phone Input Component**: Country selector with validation via `propaganistas/laravel-phone`
 - **Email/Phone Columns**: Table columns with clipboard support and improved display
@@ -17,30 +46,36 @@ All notable changes to `custom-fields` will be documented in this file.
 - **Avatar Configuration**: Display options for entity references
 
 ### Changed
+
 - **Filament 5 Required**: Upgraded from Filament 4 to Filament 5
 - **Laravel 12 Required**: Upgraded from Laravel 11 to Laravel 12
 - **Phone Field Format**: Now stores structured JSON with country codes instead of plain strings
 - **Email Field Format**: Now stores JSON arrays to support multiple values
 
 ### Removed
+
 - **Lookup Fields on Non-Record Types**: `lookup_type` setting removed from text, number, date, and other non-relational field types
 
 ### Migration
+
 Run `vendor/bin/custom-fields-upgrade` to automatically migrate phone/email formats and lookup field settings.
 
 ## 2.0.0 - 2025-XX-XX
 
 ### Added
+
 - **Fluent Builder API**: New `CustomFields::form()`, `CustomFields::table()`, `CustomFields::infolist()` builders
 - **Field Type Configurator**: Fluent configuration for enabling/disabling field types
 - **BaseFieldType with FieldSchema**: Cleaner field type definitions with less boilerplate
 - **Settings JSON Column**: Added to `custom_field_options` table
 
 ### Changed
+
 - **Namespace Changes**: `InteractsWithCustomFields` trait moved to `Relaticle\CustomFields\Concerns`
 - **Filament 4 Required**: Upgraded from Filament 3 to Filament 4
 
 ### Deprecated
+
 - Component-based integration (`CustomFieldsComponent::make()`) in favor of builder API
 
 ## 1.0.0 - 2024-XX-XX
