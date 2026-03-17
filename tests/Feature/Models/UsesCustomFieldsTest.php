@@ -43,6 +43,25 @@ it('returns empty value when custom field has no value', function () {
     expect($value)->toBeNull();
 });
 
+it('does not override guarded when model uses guarded instead of fillable', function () {
+    $model = new GuardedTestModel;
+
+    expect($model->getFillable())->toBe([])
+        ->and($model->getGuarded())->toBe(['id']);
+});
+
+class GuardedTestModel extends Model
+{
+    use UsesCustomFields;
+
+    protected $guarded = ['id'];
+
+    public function getMorphClass()
+    {
+        return 'guarded_test_model';
+    }
+}
+
 class TestModel extends Model
 {
     use UsesCustomFields;
