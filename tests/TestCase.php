@@ -33,7 +33,6 @@ use Relaticle\CustomFields\Tests\database\factories\UserFactory;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Providers\AdminPanelProvider;
-use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 
 class TestCase extends BaseTestCase
@@ -65,7 +64,6 @@ class TestCase extends BaseTestCase
     {
         $providers = [
             ActionsServiceProvider::class,
-            BladeCaptureDirectiveServiceProvider::class,
             BladeHeroiconsServiceProvider::class,
             BladeIconsServiceProvider::class,
             BladeMdiServiceProvider::class,
