@@ -7,8 +7,8 @@ namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
-use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
-use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
 use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
@@ -26,8 +26,8 @@ class CurrencyFieldType extends BaseFieldType
             ->label('Currency')
             ->icon('mdi-currency-usd')
             ->formComponent(CurrencyComponent::class)
-            ->tableColumn(TextColumn::class)
-            ->infolistEntry(TextEntry::class)
+            ->tableColumn(CurrencyColumn::class)
+            ->infolistEntry(CurrencyEntry::class)
             ->priority(25)
             ->withValidationCapabilities(
                 MinValueCapability::class,
@@ -40,12 +40,18 @@ class CurrencyFieldType extends BaseFieldType
                     return null;
                 }
 
-                // Remove currency symbols and formatting chars
                 if (is_string($state)) {
                     $state = preg_replace('/[^0-9.-]/', '', $state);
                 }
 
                 return round(floatval($state), 2);
+            })
+            ->exportTransformer(function (mixed $value): ?string {
+                if ($value === null) {
+                    return null;
+                }
+
+                return number_format((float) $value, 2, '.', '');
             });
     }
 }

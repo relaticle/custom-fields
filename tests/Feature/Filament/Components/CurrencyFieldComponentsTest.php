@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry as BaseTextEntry;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\CurrencyFieldType;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
@@ -99,5 +100,22 @@ describe('CurrencyComponent', function (): void {
         $component = app(CurrencyComponent::class)->create($field);
 
         expect((int) $component->getStep())->toBe(1);
+    });
+});
+
+describe('CurrencyFieldType Export Transformer', function (): void {
+    it('formats values with 2 decimal places for CSV export', function (): void {
+        $transformer = (new CurrencyFieldType)->configure()->getExportTransformer();
+
+        expect($transformer(1234.5))->toBe('1234.50')
+            ->and($transformer(0))->toBe('0.00')
+            ->and($transformer(99.999))->toBe('100.00')
+            ->and($transformer(42))->toBe('42.00');
+    });
+
+    it('returns null for null values in export', function (): void {
+        $transformer = (new CurrencyFieldType)->configure()->getExportTransformer();
+
+        expect($transformer(null))->toBeNull();
     });
 });
