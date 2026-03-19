@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Utilities\Get;
+use NumberFormatter;
+use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
-use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
-/**
- * ABOUTME: Field type definition for Currency fields
- * ABOUTME: Provides Currency functionality with appropriate validation rules
- */
 class CurrencyFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
@@ -32,7 +33,10 @@ class CurrencyFieldType extends BaseFieldType
             ->withValidationCapabilities(
                 MinValueCapability::class,
                 MaxValueCapability::class,
-                DecimalPlacesCapability::class,
+            )
+            ->withSettings(
+                CurrencyFieldSettingsData::class,
+                fn (): array => $this->settingsSchema(),
             )
             ->importExample('99.99')
             ->importTransformer(function (mixed $state): ?float {
@@ -53,5 +57,141 @@ class CurrencyFieldType extends BaseFieldType
 
                 return number_format((float) $value, 2, '.', '');
             });
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    private function settingsSchema(): array
+    {
+        return [
+            Fieldset::make('Currency Settings')
+                ->columnSpanFull()
+                ->columns(2)
+                ->schema([
+                    Select::make('settings.additional.currency_code')
+                        ->label('Currency')
+                        ->searchable()
+                        ->options(fn (): array => self::getCurrencyOptions())
+                        ->default(config('custom-fields.currency.default_code', 'USD'))
+                        ->required()
+                        ->live(),
+
+                    Select::make('settings.additional.display_type')
+                        ->label('Display')
+                        ->options([
+                            'symbol' => 'Symbol ($1,200.50)',
+                            'narrow_symbol' => 'Narrow Symbol ($1,200.50)',
+                            'code' => 'Code (USD 1,200.50)',
+                            'name' => 'Name (1,200.50 US dollars)',
+                        ])
+                        ->default('symbol')
+                        ->required(),
+
+                    Select::make('settings.additional.decimal_places')
+                        ->label('Decimal Places')
+                        ->options(function (Get $get): array {
+                            $code = $get('settings.additional.currency_code') ?? 'USD';
+                            $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+                            $sample = $formatter->formatCurrency(1200.50, $code) ?: '1,200.50';
+
+                            $formatterNoDecimals = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+                            $formatterNoDecimals->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
+                            $sampleNoDecimals = $formatterNoDecimals->formatCurrency(1200, $code) ?: '1,200';
+
+                            return [
+                                2 => "2 decimals ({$sample})",
+                                0 => "No decimals ({$sampleNoDecimals})",
+                            ];
+                        })
+                        ->default(2)
+                        ->required(),
+
+                    Select::make('settings.additional.grouping')
+                        ->label('Grouping')
+                        ->options([
+                            'default' => 'Default (1,200.50)',
+                            'none' => 'None (1200.50)',
+                        ])
+                        ->default('default')
+                        ->required(),
+                ]),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function getCurrencyOptions(): array
+    {
+        static $options = null;
+
+        if ($options !== null) {
+            return $options;
+        }
+
+        $currencies = [
+            'USD' => 'US Dollar',
+            'EUR' => 'Euro',
+            'GBP' => 'British Pound',
+            'JPY' => 'Japanese Yen',
+            'CHF' => 'Swiss Franc',
+            'CAD' => 'Canadian Dollar',
+            'AUD' => 'Australian Dollar',
+            'NZD' => 'New Zealand Dollar',
+            'CNY' => 'Chinese Yuan',
+            'HKD' => 'Hong Kong Dollar',
+            'SGD' => 'Singapore Dollar',
+            'SEK' => 'Swedish Krona',
+            'NOK' => 'Norwegian Krone',
+            'DKK' => 'Danish Krone',
+            'KRW' => 'South Korean Won',
+            'INR' => 'Indian Rupee',
+            'BRL' => 'Brazilian Real',
+            'MXN' => 'Mexican Peso',
+            'ZAR' => 'South African Rand',
+            'TRY' => 'Turkish Lira',
+            'RUB' => 'Russian Ruble',
+            'PLN' => 'Polish Zloty',
+            'THB' => 'Thai Baht',
+            'IDR' => 'Indonesian Rupiah',
+            'MYR' => 'Malaysian Ringgit',
+            'PHP' => 'Philippine Peso',
+            'CZK' => 'Czech Koruna',
+            'HUF' => 'Hungarian Forint',
+            'ILS' => 'Israeli Shekel',
+            'CLP' => 'Chilean Peso',
+            'ARS' => 'Argentine Peso',
+            'COP' => 'Colombian Peso',
+            'PEN' => 'Peruvian Sol',
+            'AED' => 'UAE Dirham',
+            'SAR' => 'Saudi Riyal',
+            'QAR' => 'Qatari Riyal',
+            'KWD' => 'Kuwaiti Dinar',
+            'BHD' => 'Bahraini Dinar',
+            'OMR' => 'Omani Rial',
+            'EGP' => 'Egyptian Pound',
+            'NGN' => 'Nigerian Naira',
+            'KES' => 'Kenyan Shilling',
+            'GHS' => 'Ghanaian Cedi',
+            'TWD' => 'Taiwan Dollar',
+            'VND' => 'Vietnamese Dong',
+            'BGN' => 'Bulgarian Lev',
+            'RON' => 'Romanian Leu',
+            'HRK' => 'Croatian Kuna',
+            'ISK' => 'Icelandic Krona',
+            'UAH' => 'Ukrainian Hryvnia',
+            'PKR' => 'Pakistani Rupee',
+            'BDT' => 'Bangladeshi Taka',
+            'LKR' => 'Sri Lankan Rupee',
+        ];
+
+        $options = [];
+
+        foreach ($currencies as $code => $name) {
+            $options[$code] = "{$name} ({$code})";
+        }
+
+        return $options;
     }
 }

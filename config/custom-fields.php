@@ -87,6 +87,18 @@ return [
     | Configure database table names and migration paths.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Currency Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Default currency settings for currency field types.
+    |
+    */
+    'currency' => [
+        'default_code' => env('CUSTOM_FIELDS_DEFAULT_CURRENCY', 'USD'),
+    ],
+
     'database' => [
         'migrations_path' => database_path('custom-fields'),
         'table_names' => [

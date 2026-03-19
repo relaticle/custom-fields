@@ -12,12 +12,12 @@ final class CurrencyEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): BaseTextEntry
     {
-        $decimalPlaces = (int) ($customField->validation_rules?->get('decimal_places') ?? 2);
-
         return BaseTextEntry::make($customField->getFieldName())
             ->label($customField->name)
-            ->numeric(decimalPlaces: $decimalPlaces)
-            ->prefix('$')
+            ->money(
+                $customField->getCurrencyCode(),
+                decimalPlaces: $customField->getDecimalPlaces(),
+            )
             ->state(fn (mixed $record) => $record->getCustomFieldValue($customField));
     }
 }

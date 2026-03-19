@@ -206,4 +206,22 @@ class CustomField extends Model
     {
         return 'custom_fields.'.$this->code;
     }
+
+    public function getDecimalPlaces(int $default = 2): int
+    {
+        return (int) ($this->settings->additional['decimal_places']
+            ?? $this->validation_rules?->get('decimal_places') // @phpstan-ignore nullsafe.neverNull
+            ?? $default);
+    }
+
+    public function getCurrencyCode(): string
+    {
+        return $this->settings->additional['currency_code']
+            ?? config('custom-fields.currency.default_code', 'USD');
+    }
+
+    public function getCurrencyDisplayType(): string
+    {
+        return $this->settings->additional['display_type'] ?? 'symbol';
+    }
 }
