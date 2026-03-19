@@ -13,15 +13,26 @@ final readonly class CurrencyComponent extends AbstractFormComponent
 {
     public function create(CustomField $customField): TextInput
     {
+        $decimalPlaces = (int) ($customField->validation_rules?->get('decimal_places') ?? 2);
+
         return TextInput::make($customField->getFieldName())
             ->prefix('$')
             ->numeric()
             ->inputMode('decimal')
-            ->step(0.01)
-            ->minValue(0)
-            ->default(0)
-            ->rules(['numeric', 'min:0'])
-            ->formatStateUsing(fn (mixed $state): string => number_format((float) $state, 2))
-            ->dehydrateStateUsing(fn (mixed $state): float => Str::of($state)->replace(['$', ','], '')->toFloat());
+            ->step($decimalPlaces > 0 ? 1 / (10 ** $decimalPlaces) : 1)
+            ->formatStateUsing(function (mixed $state) use ($decimalPlaces): ?string {
+                if ($state === null || $state === '') {
+                    return null;
+                }
+
+                return number_format((float) $state, $decimalPlaces);
+            })
+            ->dehydrateStateUsing(function (mixed $state): ?float {
+                if ($state === null || $state === '') {
+                    return null;
+                }
+
+                return Str::of($state)->replace(['$', ','], '')->toFloat();
+            });
     }
 }

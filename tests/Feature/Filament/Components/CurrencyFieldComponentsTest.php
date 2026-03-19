@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry as BaseTextEntry;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
 use Relaticle\CustomFields\Models\CustomField;
@@ -49,5 +51,53 @@ describe('CurrencyEntry', function (): void {
         $entry = (new CurrencyEntry)->make($field);
 
         expect($entry)->toBeInstanceOf(BaseTextEntry::class);
+    });
+});
+
+describe('CurrencyComponent', function (): void {
+    it('creates a text input with currency prefix', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create();
+
+        $component = app(CurrencyComponent::class)->create($field);
+
+        expect($component)
+            ->toBeInstanceOf(TextInput::class)
+            ->and($component->getPrefixLabel())->toBe('$');
+    });
+
+    it('has no hardcoded default value', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create();
+
+        $component = app(CurrencyComponent::class)->create($field);
+
+        expect($component->getDefaultState())->toBeNull();
+    });
+
+    it('uses step matching default 2 decimal places', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create();
+
+        $component = app(CurrencyComponent::class)->create($field);
+
+        expect((float) $component->getStep())->toBe(0.01);
+    });
+
+    it('uses step matching configured decimal places', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create([
+            'validation_rules' => ['decimal_places' => 4],
+        ]);
+
+        $component = app(CurrencyComponent::class)->create($field);
+
+        expect((float) $component->getStep())->toBe(0.0001);
+    });
+
+    it('uses step of 1 for zero decimal places', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create([
+            'validation_rules' => ['decimal_places' => 0],
+        ]);
+
+        $component = app(CurrencyComponent::class)->create($field);
+
+        expect((int) $component->getStep())->toBe(1);
     });
 });
