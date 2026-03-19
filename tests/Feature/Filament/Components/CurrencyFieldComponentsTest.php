@@ -10,7 +10,7 @@ describe('CurrencyColumn', function (): void {
     it('creates a text column with currency prefix', function (): void {
         $field = CustomField::factory()->ofType('currency')->create();
 
-        $column = (new CurrencyColumn())->make($field);
+        $column = (new CurrencyColumn)->make($field);
 
         expect($column)
             ->toBeInstanceOf(BaseTextColumn::class)
@@ -22,7 +22,7 @@ describe('CurrencyColumn', function (): void {
             'validation_rules' => ['decimal_places' => 4],
         ]);
 
-        $column = (new CurrencyColumn())->make($field);
+        $column = (new CurrencyColumn)->make($field);
 
         expect($column)->toBeInstanceOf(BaseTextColumn::class);
     });
