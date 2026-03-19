@@ -34,7 +34,7 @@ describe('CurrencyEntry', function (): void {
     it('creates a text entry with currency prefix', function (): void {
         $field = CustomField::factory()->ofType('currency')->create();
 
-        $entry = (new CurrencyEntry())->make($field);
+        $entry = (new CurrencyEntry)->make($field);
 
         expect($entry)
             ->toBeInstanceOf(BaseTextEntry::class)
@@ -46,7 +46,7 @@ describe('CurrencyEntry', function (): void {
             'validation_rules' => ['decimal_places' => 0],
         ]);
 
-        $entry = (new CurrencyEntry())->make($field);
+        $entry = (new CurrencyEntry)->make($field);
 
         expect($entry)->toBeInstanceOf(BaseTextEntry::class);
     });
