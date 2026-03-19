@@ -13,7 +13,7 @@ final readonly class CurrencyComponent extends AbstractFormComponent
 {
     public function create(CustomField $customField): TextInput
     {
-        $decimalPlaces = (int) ($customField->validation_rules->get('decimal_places') ?? 2);
+        $decimalPlaces = (int) ($customField->validation_rules?->get('decimal_places') ?? 2);
 
         return TextInput::make($customField->getFieldName())
             ->prefix('$')

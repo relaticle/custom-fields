@@ -21,7 +21,7 @@ final class CurrencyColumn extends AbstractTableColumn
 
     public function make(CustomField $customField): BaseTextColumn
     {
-        $decimalPlaces = (int) ($customField->validation_rules->get('decimal_places') ?? 2);
+        $decimalPlaces = (int) ($customField->validation_rules?->get('decimal_places') ?? 2);
 
         $column = BaseTextColumn::make($customField->getFieldName())
             ->numeric(decimalPlaces: $decimalPlaces)
