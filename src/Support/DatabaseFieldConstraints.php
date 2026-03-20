@@ -96,6 +96,36 @@ final class DatabaseFieldConstraints
                 'field_types' => [CustomFieldType::CHECKBOX_LIST, CustomFieldType::TOGGLE_BUTTONS, CustomFieldType::TAGS_INPUT, CustomFieldType::MULTI_SELECT],
             ],
         ],
+        'mariadb' => [
+            'text_value' => [
+                'max' => 65535,
+                'validator' => 'max',
+                'field_types' => [CustomFieldType::TEXT, CustomFieldType::TEXTAREA, CustomFieldType::RICH_EDITOR, CustomFieldType::MARKDOWN_EDITOR],
+            ],
+            'string_value' => [
+                'max' => 255,
+                'validator' => 'max',
+                'field_types' => [CustomFieldType::LINK, CustomFieldType::COLOR_PICKER],
+            ],
+            'integer_value' => [
+                'min' => -9223372036854775808,
+                'max' => 9223372036854775807,
+                'validator' => 'between',
+                'field_types' => [CustomFieldType::NUMBER, CustomFieldType::RADIO, CustomFieldType::SELECT],
+            ],
+            'float_value' => [
+                'max_digits' => 30,
+                'max_decimals' => 15,
+                'validator' => ['decimal:0,15'],
+                'field_types' => [CustomFieldType::CURRENCY],
+            ],
+            'json_value' => [
+                'max_items' => 500,
+                'max_item_length' => 255,
+                'validator' => null,
+                'field_types' => [CustomFieldType::CHECKBOX_LIST, CustomFieldType::TOGGLE_BUTTONS, CustomFieldType::TAGS_INPUT, CustomFieldType::MULTI_SELECT],
+            ],
+        ],
         'sqlite' => [
             'text_value' => [
                 'max' => 1000000000, // SQLite has essentially no limit, but setting a reasonable one

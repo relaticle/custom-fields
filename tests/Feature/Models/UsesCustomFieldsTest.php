@@ -43,16 +43,27 @@ it('returns empty value when custom field has no value', function () {
     expect($value)->toBeNull();
 });
 
-it('does not override guarded when model uses guarded instead of fillable', function () {
+it('adds custom_fields to fillable on guarded models', function () {
     $model = new GuardedTestModel;
 
-    expect($model->getFillable())->toBe([])
+    expect($model->getFillable())->toContain('custom_fields')
         ->and($model->getGuarded())->toBe(['id']);
+});
+
+it('stores custom_fields in temp storage when filling a guarded model', function () {
+    createTestModelTable();
+
+    $model = new GuardedTestModel;
+    $model->fill(['custom_fields' => ['test_field' => 'test_value']]);
+
+    expect($model->custom_fields)->toBe(['test_field' => 'test_value']);
 });
 
 class GuardedTestModel extends Model
 {
     use UsesCustomFields;
+
+    protected $table = 'test_models';
 
     protected $guarded = ['id'];
 

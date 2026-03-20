@@ -23,11 +23,11 @@ trait UsesCustomFields
 {
     public function __construct($attributes = [])
     {
-        if (count($this->getFillable()) !== 0) {
-            $this->mergeFillable(['custom_fields']);
-        }
+        $this->mergeFillable(['custom_fields']);
 
         parent::__construct($attributes);
+
+        $this->handleCustomFields();
     }
 
     /**
