@@ -64,6 +64,8 @@ class CurrencyFieldType extends BaseFieldType
      */
     private function settingsSchema(): array
     {
+        $defaultCode = config('custom-fields.currency.default_code', 'USD');
+
         return [
             Fieldset::make('Currency Settings')
                 ->columnSpanFull()
@@ -73,7 +75,11 @@ class CurrencyFieldType extends BaseFieldType
                         ->label('Currency')
                         ->searchable()
                         ->options(fn (): array => self::getCurrencyOptions())
-                        ->default(config('custom-fields.currency.default_code', 'USD'))
+                        ->afterStateHydrated(function (Select $component, mixed $state) use ($defaultCode): void {
+                            if (blank($state)) {
+                                $component->state($defaultCode);
+                            }
+                        })
                         ->required()
                         ->live(),
 
@@ -85,7 +91,11 @@ class CurrencyFieldType extends BaseFieldType
                             'code' => 'Code (USD 1,200.50)',
                             'name' => 'Name (1,200.50 US dollars)',
                         ])
-                        ->default('symbol')
+                        ->afterStateHydrated(function (Select $component, mixed $state): void {
+                            if (blank($state)) {
+                                $component->state('symbol');
+                            }
+                        })
                         ->required(),
 
                     Select::make('settings.additional.decimal_places')
@@ -100,11 +110,13 @@ class CurrencyFieldType extends BaseFieldType
                             $sampleNoDecimals = $formatterNoDecimals->formatCurrency(1200, $code) ?: '1,200';
 
                             return [
-                                2 => "2 decimals ({$sample})",
-                                0 => "No decimals ({$sampleNoDecimals})",
+                                '2' => "2 decimals ({$sample})",
+                                '0' => "No decimals ({$sampleNoDecimals})",
                             ];
                         })
-                        ->default(2)
+                        ->afterStateHydrated(function (Select $component, mixed $state): void {
+                            $component->state($state === null ? '2' : (string) $state);
+                        })
                         ->required(),
 
                     Select::make('settings.additional.grouping')
@@ -113,7 +125,11 @@ class CurrencyFieldType extends BaseFieldType
                             'default' => 'Default (1,200.50)',
                             'none' => 'None (1200.50)',
                         ])
-                        ->default('default')
+                        ->afterStateHydrated(function (Select $component, mixed $state): void {
+                            if (blank($state)) {
+                                $component->state('default');
+                            }
+                        })
                         ->required(),
                 ]),
         ];
