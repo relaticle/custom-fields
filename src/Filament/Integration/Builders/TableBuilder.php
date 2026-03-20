@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
+use Closure;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -38,10 +39,17 @@ final class TableBuilder extends BaseBuilder
                     return $column;
                 }
 
-                // Wrap the existing state with visibility check
-                $column->formatStateUsing(function (mixed $state, mixed $record) use ($field, $backendVisibilityService, $allFields): mixed {
+                $existingFormatter = (fn (): ?Closure => $this->formatStateUsing)->call($column); // @phpstan-ignore property.notFound
+
+                $column->formatStateUsing(function (mixed $state, mixed $record) use ($field, $backendVisibilityService, $allFields, $existingFormatter, $column): mixed {
                     if (! $backendVisibilityService->isFieldVisible($record, $field, $allFields)) {
-                        return null; // Return null or empty value when field should be hidden
+                        return null;
+                    }
+
+                    if ($existingFormatter) {
+                        return $column->evaluate($existingFormatter, [
+                            'state' => $state,
+                        ]);
                     }
 
                     return $state;
