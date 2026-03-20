@@ -206,7 +206,7 @@ final class ValidationService
         // Currency fields: enforce decimal places from settings
         if ($customField->type === 'currency') {
             $decimalPlaces = $customField->getDecimalPlaces();
-            $rules[] = $decimalPlaces === 0 ? 'integer' : "decimal:0,{$decimalPlaces}";
+            $rules[] = $decimalPlaces === 0 ? 'integer' : 'decimal:0,'.$decimalPlaces;
         }
 
         return $rules;

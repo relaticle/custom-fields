@@ -74,7 +74,7 @@ class CurrencyFieldType extends BaseFieldType
                     Select::make('settings.additional.currency_code')
                         ->label('Currency')
                         ->searchable()
-                        ->options(fn (): array => self::getCurrencyOptions())
+                        ->options(fn (): array => $this->getCurrencyOptions())
                         ->afterStateHydrated(function (Select $component, mixed $state) use ($defaultCode): void {
                             if (blank($state)) {
                                 $component->state($defaultCode);
@@ -107,11 +107,12 @@ class CurrencyFieldType extends BaseFieldType
 
                             $formatterNoDecimals = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
                             $formatterNoDecimals->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
+
                             $sampleNoDecimals = $formatterNoDecimals->formatCurrency(1200, $code) ?: '1,200';
 
                             return [
-                                '2' => "2 decimals ({$sample})",
-                                '0' => "No decimals ({$sampleNoDecimals})",
+                                '2' => sprintf('2 decimals (%s)', $sample),
+                                '0' => sprintf('No decimals (%s)', $sampleNoDecimals),
                             ];
                         })
                         ->afterStateHydrated(function (Select $component, mixed $state): void {
@@ -138,7 +139,7 @@ class CurrencyFieldType extends BaseFieldType
     /**
      * @return array<string, string>
      */
-    private static function getCurrencyOptions(): array
+    private function getCurrencyOptions(): array
     {
         static $options = null;
 
@@ -205,7 +206,7 @@ class CurrencyFieldType extends BaseFieldType
         $options = [];
 
         foreach ($currencies as $code => $name) {
-            $options[$code] = "{$name} ({$code})";
+            $options[$code] = sprintf('%s (%s)', $name, $code);
         }
 
         return $options;

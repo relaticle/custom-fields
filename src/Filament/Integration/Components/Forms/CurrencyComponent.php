@@ -16,7 +16,7 @@ final readonly class CurrencyComponent extends AbstractFormComponent
     {
         $decimalPlaces = $customField->getDecimalPlaces();
         $currencyCode = $customField->getCurrencyCode();
-        $prefix = self::getCurrencySymbol($currencyCode, $customField->getCurrencyDisplayType());
+        $prefix = $this->getCurrencySymbol($currencyCode, $customField->getCurrencyDisplayType());
 
         return TextInput::make($customField->getFieldName())
             ->prefix($prefix)
@@ -39,7 +39,7 @@ final readonly class CurrencyComponent extends AbstractFormComponent
             });
     }
 
-    private static function getCurrencySymbol(string $currencyCode, string $displayType): string
+    private function getCurrencySymbol(string $currencyCode, string $displayType): string
     {
         $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
         $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
