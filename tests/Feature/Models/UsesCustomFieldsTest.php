@@ -19,8 +19,8 @@ function createTestModelTable()
 it('handles custom fields from fillable array', function () {
     $testModel = new TestModel;
 
-    // Test that custom_fields is included in fillable
-    expect($testModel->getFillable())->toContain('custom_fields');
+    // Test that custom_fields is recognized as fillable via isFillable override
+    expect($testModel->isFillable('custom_fields'))->toBeTrue();
 });
 
 it('returns empty value when custom field has no value', function () {
@@ -46,8 +46,19 @@ it('returns empty value when custom field has no value', function () {
 it('adds custom_fields to fillable on guarded models', function () {
     $model = new GuardedTestModel;
 
-    expect($model->getFillable())->toContain('custom_fields')
+    expect($model->isFillable('custom_fields'))->toBeTrue()
         ->and($model->getGuarded())->toBe(['id']);
+});
+
+it('does not break mass assignment of other attributes on guarded models', function (): void {
+    // A model with $guarded = ['id'] should still allow mass assignment of other columns
+    $model = new GuardedTestModel;
+    $model->fill([
+        'title' => 'Test Title',
+        'custom_fields' => ['field_one' => 'value_one'],
+    ]);
+
+    expect($model->title)->toBe('Test Title');
 });
 
 it('stores custom_fields in temp storage when filling a guarded model', function () {
