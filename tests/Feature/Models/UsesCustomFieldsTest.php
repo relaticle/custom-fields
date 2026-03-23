@@ -19,8 +19,13 @@ function createTestModelTable()
 it('handles custom fields from fillable array', function () {
     $testModel = new TestModel;
 
-    // Test that custom_fields is recognized as fillable via isFillable override
     expect($testModel->isFillable('custom_fields'))->toBeTrue();
+});
+
+it('includes custom_fields in getFillable for models with $fillable', function () {
+    $testModel = new TestModel;
+
+    expect($testModel->getFillable())->toContain('custom_fields');
 });
 
 it('returns empty value when custom field has no value', function () {
