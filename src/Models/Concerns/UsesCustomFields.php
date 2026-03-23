@@ -25,14 +25,33 @@ trait UsesCustomFields
 {
     public function __construct($attributes = [])
     {
-        if (count($this->getFillable()) !== 0) {
-            $this->mergeFillable(['custom_fields']);
-        }
-
         parent::__construct($attributes);
 
-        // Handle custom_fields immediately if present in attributes
         $this->handleCustomFields();
+    }
+
+    public function isFillable($key): bool
+    {
+        if ($key === 'custom_fields') {
+            return true;
+        }
+
+        return parent::isFillable($key);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    protected function fillableFromArray(array $attributes): array
+    {
+        $fillable = parent::fillableFromArray($attributes);
+
+        if (array_key_exists('custom_fields', $attributes) && ! array_key_exists('custom_fields', $fillable)) {
+            $fillable['custom_fields'] = $attributes['custom_fields'];
+        }
+
+        return $fillable;
     }
 
     /**
