@@ -127,7 +127,7 @@ describe('Guarded Model Support', function (): void {
         expect($model->title)->toBe('Test Title');
     });
 
-    it('stores custom_fields in temp storage when filling a guarded model', function (): void {
+    it('allows custom_fields to be filled on a guarded model', function (): void {
         $model = new GuardedTestModel;
         $model->fill(['custom_fields' => ['test_field' => 'test_value']]);
 
