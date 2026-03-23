@@ -38,6 +38,7 @@ final class DatabaseFieldConstraints
         'text_value' => [
             'max' => [
                 'mysql' => 65535,
+                'mariadb' => 65535,
                 'pgsql' => 1073741823,
                 'sqlite' => 1000000000,
             ],
