@@ -150,13 +150,14 @@ describe('CurrencyComponent', function (): void {
 });
 
 describe('CurrencyFieldType Export Transformer', function (): void {
-    it('formats values with 2 decimal places for CSV export', function (): void {
+    it('exports values preserving meaningful precision', function (): void {
         $transformer = (new CurrencyFieldType)->configure()->getExportTransformer();
 
-        expect($transformer(1234.5))->toBe('1234.50')
-            ->and($transformer(0))->toBe('0.00')
-            ->and($transformer(99.999))->toBe('100.00')
-            ->and($transformer(42))->toBe('42.00');
+        expect($transformer(1234.5))->toBe('1234.5')
+            ->and($transformer(0))->toBe('0')
+            ->and($transformer(99.999))->toBe('99.999')
+            ->and($transformer(42))->toBe('42')
+            ->and($transformer(1234.50))->toBe('1234.5');
     });
 
     it('returns null for null values in export', function (): void {

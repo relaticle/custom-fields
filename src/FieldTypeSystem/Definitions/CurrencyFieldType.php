@@ -48,14 +48,14 @@ class CurrencyFieldType extends BaseFieldType
                     $state = preg_replace('/[^0-9.-]/', '', $state);
                 }
 
-                return round(floatval($state), 2);
+                return (float) $state;
             })
             ->exportTransformer(function (mixed $value): ?string {
                 if ($value === null) {
                     return null;
                 }
 
-                return number_format((float) $value, 2, '.', '');
+                return rtrim(rtrim(number_format((float) $value, 10, '.', ''), '0'), '.');
             });
     }
 
@@ -87,9 +87,7 @@ class CurrencyFieldType extends BaseFieldType
                         ->label('Display')
                         ->options([
                             'symbol' => 'Symbol ($1,200.50)',
-                            'narrow_symbol' => 'Narrow Symbol ($1,200.50)',
                             'code' => 'Code (USD 1,200.50)',
-                            'name' => 'Name (1,200.50 US dollars)',
                         ])
                         ->afterStateHydrated(function (Select $component, mixed $state): void {
                             if (blank($state)) {
@@ -102,36 +100,25 @@ class CurrencyFieldType extends BaseFieldType
                         ->label('Decimal Places')
                         ->options(function (Get $get): array {
                             $code = $get('settings.additional.currency_code') ?? 'USD';
-                            $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
-                            $sample = $formatter->formatCurrency(1200.50, $code) ?: '1,200.50';
 
-                            $formatterNoDecimals = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
-                            $formatterNoDecimals->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
+                            $options = [];
 
-                            $sampleNoDecimals = $formatterNoDecimals->formatCurrency(1200, $code) ?: '1,200';
+                            foreach ([0, 2, 3] as $digits) {
+                                $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+                                $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $digits);
+                                $sample = $formatter->formatCurrency(1200.50, $code) ?: number_format(1200.50, $digits);
 
-                            return [
-                                '2' => sprintf('2 decimals (%s)', $sample),
-                                '0' => sprintf('No decimals (%s)', $sampleNoDecimals),
-                            ];
+                                $label = $digits === 0 ? 'No decimals' : "{$digits} decimals";
+                                $options[(string) $digits] = "{$label} ({$sample})";
+                            }
+
+                            return $options;
                         })
                         ->afterStateHydrated(function (Select $component, mixed $state): void {
                             $component->state($state === null ? '2' : (string) $state);
                         })
                         ->required(),
 
-                    Select::make('settings.additional.grouping')
-                        ->label('Grouping')
-                        ->options([
-                            'default' => 'Default (1,200.50)',
-                            'none' => 'None (1200.50)',
-                        ])
-                        ->afterStateHydrated(function (Select $component, mixed $state): void {
-                            if (blank($state)) {
-                                $component->state('default');
-                            }
-                        })
-                        ->required(),
                 ]),
         ];
     }
@@ -195,7 +182,6 @@ class CurrencyFieldType extends BaseFieldType
             'VND' => 'Vietnamese Dong',
             'BGN' => 'Bulgarian Lev',
             'RON' => 'Romanian Leu',
-            'HRK' => 'Croatian Kuna',
             'ISK' => 'Icelandic Krona',
             'UAH' => 'Ukrainian Hryvnia',
             'PKR' => 'Pakistani Rupee',
