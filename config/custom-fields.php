@@ -97,6 +97,10 @@ return [
     */
     'currency' => [
         'default_code' => env('CUSTOM_FIELDS_DEFAULT_CURRENCY', 'USD'),
+
+        // Override the currency list (null = auto-detect from PHP intl/ICU).
+        // Format: ['USD' => 'US Dollar', 'EUR' => 'Euro', ...]
+        'currencies' => null,
     ],
 
     'database' => [

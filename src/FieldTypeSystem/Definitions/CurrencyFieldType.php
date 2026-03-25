@@ -15,6 +15,7 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
+use Relaticle\CustomFields\Support\CurrencyProvider;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
@@ -74,7 +75,7 @@ class CurrencyFieldType extends BaseFieldType
                     Select::make('settings.additional.currency_code')
                         ->label('Currency')
                         ->searchable()
-                        ->options(fn (): array => $this->getCurrencyOptions())
+                        ->options(fn (): array => CurrencyProvider::getOptions())
                         ->afterStateHydrated(function (Select $component, mixed $state) use ($defaultCode): void {
                             if (blank($state)) {
                                 $component->state($defaultCode);
@@ -98,6 +99,7 @@ class CurrencyFieldType extends BaseFieldType
 
                     Select::make('settings.additional.decimal_places')
                         ->label('Decimal Places')
+                        ->helperText('Auto-detected from currency. Override only if needed.')
                         ->options(function (Get $get): array {
                             $code = $get('settings.additional.currency_code') ?? 'USD';
 
@@ -114,87 +116,19 @@ class CurrencyFieldType extends BaseFieldType
 
                             return $options;
                         })
-                        ->afterStateHydrated(function (Select $component, mixed $state): void {
-                            $component->state($state === null ? '2' : (string) $state);
+                        ->afterStateHydrated(function (Select $component, mixed $state, Get $get): void {
+                            if ($state !== null) {
+                                $component->state((string) $state);
+
+                                return;
+                            }
+
+                            $code = $get('settings.additional.currency_code') ?? 'USD';
+                            $component->state((string) CurrencyProvider::getDecimalDigits($code));
                         })
                         ->required(),
 
                 ]),
         ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function getCurrencyOptions(): array
-    {
-        static $options = null;
-
-        if ($options !== null) {
-            return $options;
-        }
-
-        $currencies = [
-            'USD' => 'US Dollar',
-            'EUR' => 'Euro',
-            'GBP' => 'British Pound',
-            'JPY' => 'Japanese Yen',
-            'CHF' => 'Swiss Franc',
-            'CAD' => 'Canadian Dollar',
-            'AUD' => 'Australian Dollar',
-            'NZD' => 'New Zealand Dollar',
-            'CNY' => 'Chinese Yuan',
-            'HKD' => 'Hong Kong Dollar',
-            'SGD' => 'Singapore Dollar',
-            'SEK' => 'Swedish Krona',
-            'NOK' => 'Norwegian Krone',
-            'DKK' => 'Danish Krone',
-            'KRW' => 'South Korean Won',
-            'INR' => 'Indian Rupee',
-            'BRL' => 'Brazilian Real',
-            'MXN' => 'Mexican Peso',
-            'ZAR' => 'South African Rand',
-            'TRY' => 'Turkish Lira',
-            'RUB' => 'Russian Ruble',
-            'PLN' => 'Polish Zloty',
-            'THB' => 'Thai Baht',
-            'IDR' => 'Indonesian Rupiah',
-            'MYR' => 'Malaysian Ringgit',
-            'PHP' => 'Philippine Peso',
-            'CZK' => 'Czech Koruna',
-            'HUF' => 'Hungarian Forint',
-            'ILS' => 'Israeli Shekel',
-            'CLP' => 'Chilean Peso',
-            'ARS' => 'Argentine Peso',
-            'COP' => 'Colombian Peso',
-            'PEN' => 'Peruvian Sol',
-            'AED' => 'UAE Dirham',
-            'SAR' => 'Saudi Riyal',
-            'QAR' => 'Qatari Riyal',
-            'KWD' => 'Kuwaiti Dinar',
-            'BHD' => 'Bahraini Dinar',
-            'OMR' => 'Omani Rial',
-            'EGP' => 'Egyptian Pound',
-            'NGN' => 'Nigerian Naira',
-            'KES' => 'Kenyan Shilling',
-            'GHS' => 'Ghanaian Cedi',
-            'TWD' => 'Taiwan Dollar',
-            'VND' => 'Vietnamese Dong',
-            'BGN' => 'Bulgarian Lev',
-            'RON' => 'Romanian Leu',
-            'ISK' => 'Icelandic Krona',
-            'UAH' => 'Ukrainian Hryvnia',
-            'PKR' => 'Pakistani Rupee',
-            'BDT' => 'Bangladeshi Taka',
-            'LKR' => 'Sri Lankan Rupee',
-        ];
-
-        $options = [];
-
-        foreach ($currencies as $code => $name) {
-            $options[$code] = sprintf('%s (%s)', $name, $code);
-        }
-
-        return $options;
     }
 }
