@@ -35,6 +35,10 @@ final class UniqueCustomFieldValue implements ValidationRule
                 continue;
             }
 
+            if (! is_scalar($singleValue)) {
+                continue;
+            }
+
             $normalizedValue = $fieldType
                 ? $fieldType->setValue((string) $singleValue)
                 : (string) $singleValue;

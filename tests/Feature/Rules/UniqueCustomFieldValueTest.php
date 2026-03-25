@@ -330,6 +330,56 @@ describe('Edit record — text field uniqueness via Livewire', function (): void
     });
 });
 
+describe('Non-scalar value handling', function (): void {
+    it('does not crash when link field receives array-of-objects instead of array-of-strings', function (): void {
+        $rule = new UniqueCustomFieldValue($this->linkField);
+        $errors = [];
+
+        $rule->validate(
+            'custom_fields.domains',
+            [['url' => 'https://example.com']],
+            function (string $message) use (&$errors): void {
+                $errors[] = $message;
+            }
+        );
+
+        expect($errors)->toBeEmpty();
+    });
+
+    it('does not crash when text field receives an array instead of a string', function (): void {
+        $rule = new UniqueCustomFieldValue($this->textField);
+        $errors = [];
+
+        $rule->validate(
+            'custom_fields.slug',
+            ['nested', 'array'],
+            function (string $message) use (&$errors): void {
+                $errors[] = $message;
+            }
+        );
+
+        expect($errors)->toBeEmpty();
+    });
+
+    it('still validates scalar values after skipping non-scalar ones', function (): void {
+        $existing = Post::factory()->create();
+        storeLinkValueForPost($existing, $this->linkField, ['taken.com']);
+
+        $rule = new UniqueCustomFieldValue($this->linkField);
+        $errors = [];
+
+        $rule->validate(
+            'custom_fields.domains',
+            [['url' => 'https://skip.me'], 'taken.com'],
+            function (string $message) use (&$errors): void {
+                $errors[] = $message;
+            }
+        );
+
+        expect($errors)->not->toBeEmpty();
+    });
+});
+
 describe('Morph alias resolution', function (): void {
     beforeEach(function (): void {
         Relation::morphMap([
