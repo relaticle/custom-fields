@@ -108,7 +108,7 @@ class CurrencyFieldType extends BaseFieldType
                                 $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $digits);
                                 $sample = $formatter->formatCurrency(1200.50, $code) ?: number_format(1200.50, $digits);
 
-                                $label = $digits === 0 ? 'No decimals' : $digits . ' decimals';
+                                $label = $digits === 0 ? 'No decimals' : $digits.' decimals';
                                 $options[(string) $digits] = sprintf('%s (%s)', $label, $sample);
                             }
 
