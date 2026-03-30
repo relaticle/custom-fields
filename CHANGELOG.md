@@ -2,6 +2,24 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.1 - 2026-03-30
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* fix: handle pre-existing releases and protected branch pushes in CI [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/111
+* fix: use deploy key for changelog direct push [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/113
+* fix: remove blade-capture-directive from test providers [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/115
+* fix: move changelog update into release workflow [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/118
+* fix: support $guarded models and MariaDB driver [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/124
+* fix: guard against non-scalar values in UniqueCustomFieldValue rule [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/127
+* chore(deps): bump dependabot/fetch-metadata from 2.5.0 to 3.0.0 by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/128
+* feat: add configurable date display formats [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/129
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.0...v3.1.1
+
 ## v3.1.0 - 2026-03-17
 
 ### What's Changed
