@@ -25,6 +25,145 @@ class AppServiceProvider extends ServiceProvider
 }
 ```
 
+## Date Display Formats
+
+By default, date and date-time fields use different formats depending on context (forms use `Y-m-d`, tables use `M j, Y`, etc.). You can set a single consistent format across all Filament components.
+
+### Via Plugin (recommended)
+
+```php
+use Relaticle\CustomFields\CustomFieldsPlugin;
+
+CustomFieldsPlugin::make()
+    ->dateDisplayFormat('m/d/Y')
+    ->dateTimeDisplayFormat('m/d/Y h:i A')
+```
+
+### Via Facade
+
+```php
+use Relaticle\CustomFields\CustomFields;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        CustomFields::useDateDisplayFormat('m/d/Y');
+        CustomFields::useDateTimeDisplayFormat('m/d/Y h:i A');
+    }
+}
+```
+
+The configured format applies to:
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Component
+    </th>
+    
+    <th>
+      Without config
+    </th>
+    
+    <th>
+      With config
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      Form date pickers
+    </td>
+    
+    <td>
+      <code>
+        Y-m-d
+      </code>
+      
+       / <code>
+        Y-m-d H:i:s
+      </code>
+    </td>
+    
+    <td>
+      Your format
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Table columns
+    </td>
+    
+    <td>
+      <code>
+        M j, Y
+      </code>
+      
+       / <code>
+        M j, Y H:i
+      </code>
+    </td>
+    
+    <td>
+      Your format
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Infolist entries
+    </td>
+    
+    <td>
+      <code>
+        Y-m-d
+      </code>
+      
+       / <code>
+        Y-m-d H:i:s
+      </code>
+    </td>
+    
+    <td>
+      Your format
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Validation messages
+    </td>
+    
+    <td>
+      <code>
+        M j, Y
+      </code>
+    </td>
+    
+    <td>
+      Your format
+    </td>
+  </tr>
+</tbody>
+</table>
+
+<alert type="info">
+
+This only affects how dates are **displayed**. Storage formats (`Y-m-d` and `Y-m-d H:i:s`) remain unchanged.
+
+</alert>
+
+Pass `null` to reset back to component defaults:
+
+```php
+CustomFields::useDateDisplayFormat(null);
+```
+
 ## Configuration File
 
 The configuration file (`config/custom-fields.php`) allows you to customize all aspects of the Custom Fields package. It uses modern fluent configurators for type safety and better IDE support.
