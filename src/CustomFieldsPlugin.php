@@ -22,6 +22,10 @@ class CustomFieldsPlugin implements Plugin
 
     protected bool|Closure $authorizeUsing = true;
 
+    protected ?string $dateDisplayFormat = null;
+
+    protected ?string $dateTimeDisplayFormat = null;
+
     public function getId(): string
     {
         return 'custom-fields';
@@ -38,6 +42,14 @@ class CustomFieldsPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
+        if ($this->dateDisplayFormat !== null) {
+            CustomFields::useDateDisplayFormat($this->dateDisplayFormat);
+        }
+
+        if ($this->dateTimeDisplayFormat !== null) {
+            CustomFields::useDateTimeDisplayFormat($this->dateTimeDisplayFormat);
+        }
+
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
             Action::configureUsing(
                 fn (Action $action): Action => $action->before(
@@ -81,5 +93,19 @@ class CustomFieldsPlugin implements Plugin
     public function isAuthorized(): bool
     {
         return $this->evaluate($this->authorizeUsing) === true;
+    }
+
+    public function dateDisplayFormat(?string $format): static
+    {
+        $this->dateDisplayFormat = $format;
+
+        return $this;
+    }
+
+    public function dateTimeDisplayFormat(?string $format): static
+    {
+        $this->dateTimeDisplayFormat = $format;
+
+        return $this;
     }
 }

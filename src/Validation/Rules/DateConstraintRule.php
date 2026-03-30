@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\DateConstraintValue;
 
 final readonly class DateConstraintRule implements ValidationRule
@@ -49,7 +50,7 @@ final readonly class DateConstraintRule implements ValidationRule
 
     private function getMessage(Carbon $boundary): string
     {
-        $formattedDate = $boundary->format('M j, Y');
+        $formattedDate = $boundary->format(CustomFields::dateDisplayFormat() ?? 'M j, Y');
 
         return match ($this->comparison) {
             'after_or_equal' => sprintf('The :attribute must be on or after %s.', $formattedDate),
