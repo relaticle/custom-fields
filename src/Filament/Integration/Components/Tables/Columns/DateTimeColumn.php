@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 use Closure;
 use Filament\Tables\Columns\Column as BaseColumn;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
@@ -36,12 +37,16 @@ class DateTimeColumn extends AbstractTableColumn
                 $value = $this->locale->call($this, $value);
             }
 
-            if ($value && $customField->type === 'date_time') {
-                return $value->format('M j, Y H:i');
+            if ($value && $customField->isDateTimeField()) {
+                $format = CustomFields::dateTimeDisplayFormat() ?? 'M j, Y H:i';
+
+                return $value->format($format);
             }
 
-            if ($value && $customField->type === 'date') {
-                return $value->format('M j, Y');
+            if ($value && $customField->isDateField()) {
+                $format = CustomFields::dateDisplayFormat() ?? 'M j, Y';
+
+                return $value->format($format);
             }
 
             return $value;

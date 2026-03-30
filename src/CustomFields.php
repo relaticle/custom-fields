@@ -34,6 +34,20 @@ final class CustomFields
     public static string $sectionModel = CustomFieldSection::class;
 
     /**
+     * The display format for date fields (e.g., 'm/d/Y', 'Y-m-d', 'd.m.Y').
+     *
+     * When null, each component uses its own default format.
+     */
+    public static ?string $dateDisplayFormat = null;
+
+    /**
+     * The display format for date-time fields (e.g., 'm/d/Y h:i A', 'Y-m-d H:i:s').
+     *
+     * When null, each component uses its own default format.
+     */
+    public static ?string $dateTimeDisplayFormat = null;
+
+    /**
      * Get the name of the custom field model used by the application.
      *
      * @return class-string<CustomField>
@@ -158,6 +172,58 @@ final class CustomFields
         self::$sectionModel = $model;
 
         return new self;
+    }
+
+    /**
+     * Set the display format for date custom fields.
+     *
+     * This format is used across all Filament components (forms, tables, infolists)
+     * when rendering date custom field values.
+     *
+     * Example:
+     * ```
+     * CustomFields::useDateDisplayFormat('m/d/Y');
+     * ```
+     */
+    public static function useDateDisplayFormat(string $format): static
+    {
+        self::$dateDisplayFormat = $format;
+
+        return new self;
+    }
+
+    /**
+     * Set the display format for date-time custom fields.
+     *
+     * This format is used across all Filament components (forms, tables, infolists)
+     * when rendering date-time custom field values.
+     *
+     * Example:
+     * ```
+     * CustomFields::useDateTimeDisplayFormat('m/d/Y h:i A');
+     * ```
+     */
+    public static function useDateTimeDisplayFormat(string $format): static
+    {
+        self::$dateTimeDisplayFormat = $format;
+
+        return new self;
+    }
+
+    /**
+     * Get the configured date display format, or null for component defaults.
+     */
+    public static function dateDisplayFormat(): ?string
+    {
+        return self::$dateDisplayFormat;
+    }
+
+    /**
+     * Get the configured date-time display format, or null for component defaults.
+     */
+    public static function dateTimeDisplayFormat(): ?string
+    {
+        return self::$dateTimeDisplayFormat;
     }
 
     /**
