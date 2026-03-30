@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Forms;
 
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
@@ -19,6 +20,6 @@ final readonly class DateComponent extends AbstractFormComponent
             ->native(false)
             ->format('Y-m-d')
             ->displayFormat($configuredFormat ?? 'Y-m-d')
-            ->placeholder($configuredFormat ?? 'YYYY-MM-DD');
+            ->placeholder($configuredFormat ? Carbon::now()->format($configuredFormat) : 'YYYY-MM-DD');
     }
 }

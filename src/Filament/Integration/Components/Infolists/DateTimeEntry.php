@@ -19,9 +19,14 @@ final class DateTimeEntry extends AbstractInfolistEntry
             ? (CustomFields::dateTimeDisplayFormat() ?? 'Y-m-d H:i:s')
             : (CustomFields::dateDisplayFormat() ?? 'Y-m-d');
 
-        return TextEntry::make($customField->getFieldName())
-            ->dateTime($format)
-            ->placeholder($format)
+        $entry = TextEntry::make($customField->getFieldName())
+            ->placeholder($format);
+
+        $isDateTime
+            ? $entry->dateTime($format)
+            : $entry->date($format);
+
+        return $entry
             ->label($customField->name)
             ->state(fn (mixed $record) => $record->getCustomFieldValue($customField));
     }

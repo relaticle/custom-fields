@@ -185,7 +185,7 @@ final class CustomFields
      * CustomFields::useDateDisplayFormat('m/d/Y');
      * ```
      */
-    public static function useDateDisplayFormat(string $format): static
+    public static function useDateDisplayFormat(?string $format): static
     {
         self::$dateDisplayFormat = $format;
 
@@ -203,7 +203,7 @@ final class CustomFields
      * CustomFields::useDateTimeDisplayFormat('m/d/Y h:i A');
      * ```
      */
-    public static function useDateTimeDisplayFormat(string $format): static
+    public static function useDateTimeDisplayFormat(?string $format): static
     {
         self::$dateTimeDisplayFormat = $format;
 
