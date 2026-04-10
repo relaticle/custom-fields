@@ -87,6 +87,22 @@ return [
     | Configure database table names and migration paths.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Currency Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Default currency settings for currency field types.
+    |
+    */
+    'currency' => [
+        'default_code' => env('CUSTOM_FIELDS_DEFAULT_CURRENCY', 'USD'),
+
+        // Override the currency list (null = auto-detect from PHP intl/ICU).
+        // Format: ['USD' => 'US Dollar', 'EUR' => 'Euro', ...]
+        'currencies' => null,
+    ],
+
     'database' => [
         'migrations_path' => database_path('custom-fields'),
         'table_names' => [

@@ -17,6 +17,7 @@ use Override;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Data\FieldTypeData;
+use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldFactory;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
@@ -69,7 +70,7 @@ class CustomField extends Model
     /**
      * @var array<string>
      */
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
     protected $attributes = [
         'width' => CustomFieldWidth::_100,
@@ -205,5 +206,37 @@ class CustomField extends Model
     public function getFieldName(): string
     {
         return 'custom_fields.'.$this->code;
+    }
+
+    public function getCurrencySettings(): CurrencyFieldSettingsData
+    {
+        $additional = $this->settings->additional ?? [];
+
+        // Legacy fallback: decimal_places may live in validation_rules
+        if (! isset($additional['decimal_places']) && $this->validation_rules?->has('decimal_places')) { // @phpstan-ignore nullsafe.neverNull
+            $additional['decimal_places'] = $this->validation_rules->get('decimal_places');
+        }
+
+        // Apply config default for currency_code
+        if (! isset($additional['currency_code'])) {
+            $additional['currency_code'] = config('custom-fields.currency.default_code', 'USD');
+        }
+
+        return CurrencyFieldSettingsData::fromAdditional($additional);
+    }
+
+    public function getDecimalPlaces(int $default = 2): int
+    {
+        return $this->getCurrencySettings()->decimalPlaces ?? $default;
+    }
+
+    public function getCurrencyCode(): string
+    {
+        return $this->getCurrencySettings()->currencyCode;
+    }
+
+    public function getCurrencyDisplayType(): string
+    {
+        return $this->getCurrencySettings()->displayType;
     }
 }

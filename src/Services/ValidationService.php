@@ -203,6 +203,12 @@ final class ValidationService
             $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId);
         }
 
+        // Currency fields: enforce decimal places from settings
+        if ($customField->type === 'currency') {
+            $decimalPlaces = $customField->getDecimalPlaces();
+            $rules[] = $decimalPlaces === 0 ? 'integer' : 'decimal:0,'.$decimalPlaces;
+        }
+
         return $rules;
     }
 

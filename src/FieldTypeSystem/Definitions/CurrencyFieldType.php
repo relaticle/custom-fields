@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Utilities\Get;
+use NumberFormatter;
+use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
-use Relaticle\CustomFields\Filament\Integration\Components\Infolists\TextEntry;
-use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\TextColumn;
-use Relaticle\CustomFields\Validation\Capabilities\DecimalPlacesCapability;
+use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
+use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
+use Relaticle\CustomFields\Support\CurrencyProvider;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
 
-/**
- * ABOUTME: Field type definition for Currency fields
- * ABOUTME: Provides Currency functionality with appropriate validation rules
- */
 class CurrencyFieldType extends BaseFieldType
 {
     public function configure(): FieldSchema
@@ -26,13 +28,16 @@ class CurrencyFieldType extends BaseFieldType
             ->label('Currency')
             ->icon('mdi-currency-usd')
             ->formComponent(CurrencyComponent::class)
-            ->tableColumn(TextColumn::class)
-            ->infolistEntry(TextEntry::class)
+            ->tableColumn(CurrencyColumn::class)
+            ->infolistEntry(CurrencyEntry::class)
             ->priority(25)
             ->withValidationCapabilities(
                 MinValueCapability::class,
                 MaxValueCapability::class,
-                DecimalPlacesCapability::class,
+            )
+            ->withSettings(
+                CurrencyFieldSettingsData::class,
+                fn (): array => $this->settingsSchema(),
             )
             ->importExample('99.99')
             ->importTransformer(function (mixed $state): ?float {
@@ -40,12 +45,99 @@ class CurrencyFieldType extends BaseFieldType
                     return null;
                 }
 
-                // Remove currency symbols and formatting chars
                 if (is_string($state)) {
                     $state = preg_replace('/[^0-9.-]/', '', $state);
                 }
 
-                return round(floatval($state), 2);
+                return (float) $state;
+            })
+            ->exportTransformer(function (mixed $value): ?string {
+                if ($value === null) {
+                    return null;
+                }
+
+                return rtrim(rtrim(number_format((float) $value, 10, '.', ''), '0'), '.');
             });
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    private function settingsSchema(): array
+    {
+        $defaultCode = config('custom-fields.currency.default_code', 'USD');
+
+        return [
+            Fieldset::make('Currency Settings')
+                ->columnSpanFull()
+                ->columns(2)
+                ->schema([
+                    Select::make('settings.additional.currency_code')
+                        ->label('Currency')
+                        ->searchable()
+                        ->options(fn (): array => CurrencyProvider::getOptions())
+                        ->afterStateHydrated(function (Select $component, mixed $state) use ($defaultCode): void {
+                            if (blank($state)) {
+                                $component->state($defaultCode);
+                            }
+                        })
+                        ->required()
+                        ->live(),
+
+                    Select::make('settings.additional.display_type')
+                        ->label('Display')
+                        ->options([
+                            'symbol' => 'Symbol ($1,200.50)',
+                            'code' => 'Code (USD 1,200.50)',
+                        ])
+                        ->afterStateHydrated(function (Select $component, mixed $state): void {
+                            if (blank($state)) {
+                                $component->state('symbol');
+                            }
+                        })
+                        ->required(),
+
+                    Select::make('settings.additional.decimal_places')
+                        ->label('Decimal Places')
+                        ->helperText('Auto-detected from currency. Override only if needed.')
+                        ->options(function (Get $get): array {
+                            $code = $get('settings.additional.currency_code') ?? 'USD';
+
+                            $options = [];
+
+                            foreach ([0, 2, 3, 4] as $digits) {
+                                $sample = number_format(1200.50, $digits);
+
+                                if (class_exists(NumberFormatter::class)) {
+                                    $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+                                    $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $digits);
+
+                                    $formatted = $formatter->formatCurrency(1200.50, $code);
+
+                                    if ($formatted !== false) {
+                                        $sample = $formatted;
+                                    }
+                                }
+
+                                $label = $digits === 0 ? 'No decimals' : $digits.' decimals';
+                                $options[(string) $digits] = sprintf('%s (%s)', $label, $sample);
+                            }
+
+                            return $options;
+                        })
+                        ->afterStateHydrated(function (Select $component, mixed $state, Get $get): void {
+                            if ($state !== null) {
+                                $component->state((string) $state);
+
+                                return;
+                            }
+
+                            $code = $get('settings.additional.currency_code') ?? 'USD';
+                            $component->state((string) CurrencyProvider::getDecimalDigits($code));
+                        })
+                        ->required(),
+
+                ]),
+        ];
     }
 }
