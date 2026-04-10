@@ -2,6 +2,20 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.2 - 2026-04-10
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump the npm_and_yarn group across 2 directories with 6 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/130
+* chore(deps): bump the npm_and_yarn group across 2 directories with 19 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/132
+* chore(deps): bump the npm_and_yarn group across 2 directories with 26 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/131
+* feat: currency field display consistency and constraint improvements by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/119
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.1...v3.1.2
+
 ## v3.1.1 - 2026-03-30
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
