@@ -70,7 +70,7 @@ class CustomField extends Model
     /**
      * @var array<string>
      */
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
     protected $attributes = [
         'width' => CustomFieldWidth::_100,

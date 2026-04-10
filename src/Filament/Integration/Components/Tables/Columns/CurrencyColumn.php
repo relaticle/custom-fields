@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
+use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresCurrencyFormatting;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnState;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
@@ -16,6 +17,7 @@ final class CurrencyColumn extends AbstractTableColumn
 {
     use ConfiguresColumnLabel;
     use ConfiguresColumnState;
+    use ConfiguresCurrencyFormatting;
     use ConfiguresSearchable;
     use ConfiguresSortable;
 
@@ -23,17 +25,7 @@ final class CurrencyColumn extends AbstractTableColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 
-        if ($customField->getCurrencyDisplayType() === 'code') {
-            $column
-                ->numeric(decimalPlaces: $customField->getDecimalPlaces())
-                ->prefix($customField->getCurrencyCode().' ');
-        } else {
-            $column->money(
-                $customField->getCurrencyCode(),
-                decimalPlaces: $customField->getDecimalPlaces(),
-            );
-        }
-
+        $this->applyCurrencyFormatting($column, $customField);
         $this->configureLabel($column, $customField);
         $this->configureSortable($column, $customField);
         $this->configureSearchable($column, $customField);

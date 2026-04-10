@@ -4,19 +4,12 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+use Illuminate\Support\Str;
 use NumberFormatter;
 use ResourceBundle;
 
 final class CurrencyProvider
 {
-    /** @var array<string, string>|null */
-    private static ?array $cachedOptions = null;
-
-    private static ?string $cachedLocale = null;
-
-    /** @var array<string, int>|null */
-    private static ?array $cachedDigits = null;
-
     /**
      * Known-obsolete currency codes that ICU doesn't consistently mark as historical.
      * These were replaced by other currencies (mostly EUR) but lack date annotations in ICU data.
@@ -46,19 +39,15 @@ final class CurrencyProvider
     {
         $locale = app()->getLocale();
 
-        if (self::$cachedOptions !== null && self::$cachedLocale === $locale) {
-            return self::$cachedOptions;
-        }
+        return once(function () use ($locale): array {
+            $configCurrencies = config('custom-fields.currency.currencies');
 
-        self::$cachedLocale = $locale;
+            if (is_array($configCurrencies) && $configCurrencies !== []) {
+                return self::buildOptionsFromConfig($configCurrencies);
+            }
 
-        $configCurrencies = config('custom-fields.currency.currencies');
-
-        if (is_array($configCurrencies) && $configCurrencies !== []) {
-            return self::$cachedOptions = self::buildOptionsFromConfig($configCurrencies);
-        }
-
-        return self::$cachedOptions = self::buildOptionsFromIcu($locale);
+            return self::buildOptionsFromIcu($locale);
+        });
     }
 
     /**
@@ -66,18 +55,12 @@ final class CurrencyProvider
      */
     public static function getDecimalDigits(string $code): int
     {
-        if (self::$cachedDigits === null) {
-            self::$cachedDigits = [];
-        }
+        return once(function () use ($code): int {
+            $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+            $formatter->setTextAttribute(NumberFormatter::CURRENCY_CODE, $code);
 
-        if (isset(self::$cachedDigits[$code])) {
-            return self::$cachedDigits[$code];
-        }
-
-        $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
-        $formatter->setTextAttribute(NumberFormatter::CURRENCY_CODE, $code);
-
-        return self::$cachedDigits[$code] = $formatter->getAttribute(NumberFormatter::FRACTION_DIGITS);
+            return $formatter->getAttribute(NumberFormatter::FRACTION_DIGITS);
+        });
     }
 
     /**
@@ -90,7 +73,7 @@ final class CurrencyProvider
         $options = [];
 
         foreach ($currencies as $code => $data) {
-            if (strlen($code) !== 3) {
+            if (Str::length($code) !== 3) {
                 continue;
             }
 
@@ -129,15 +112,5 @@ final class CurrencyProvider
         }
 
         return $options;
-    }
-
-    /**
-     * Flush cached data (useful for testing).
-     */
-    public static function flush(): void
-    {
-        self::$cachedOptions = null;
-        self::$cachedLocale = null;
-        self::$cachedDigits = null;
     }
 }
