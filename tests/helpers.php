@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Livewire\Component;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
