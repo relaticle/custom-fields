@@ -21,11 +21,18 @@ final class CurrencyColumn extends AbstractTableColumn
 
     public function make(CustomField $customField): BaseTextColumn
     {
-        $column = BaseTextColumn::make($customField->getFieldName())
-            ->money(
+        $column = BaseTextColumn::make($customField->getFieldName());
+
+        if ($customField->getCurrencyDisplayType() === 'code') {
+            $column
+                ->numeric(decimalPlaces: $customField->getDecimalPlaces())
+                ->prefix($customField->getCurrencyCode().' ');
+        } else {
+            $column->money(
                 $customField->getCurrencyCode(),
                 decimalPlaces: $customField->getDecimalPlaces(),
             );
+        }
 
         $this->configureLabel($column, $customField);
         $this->configureSortable($column, $customField);

@@ -227,7 +227,7 @@ class CustomField extends Model
 
     public function getDecimalPlaces(int $default = 2): int
     {
-        return $this->getCurrencySettings()->decimalPlaces;
+        return $this->getCurrencySettings()->decimalPlaces ?? $default;
     }
 
     public function getCurrencyCode(): string

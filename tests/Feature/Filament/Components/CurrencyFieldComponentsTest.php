@@ -12,12 +12,27 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\Curren
 use Relaticle\CustomFields\Models\CustomField;
 
 describe('CurrencyColumn', function (): void {
-    it('creates a text column with money formatting', function (): void {
+    it('creates a money-formatted column with symbol display type by default', function (): void {
         $field = CustomField::factory()->ofType('currency')->create();
 
         $column = (new CurrencyColumn)->make($field);
 
-        expect($column)->toBeInstanceOf(BaseTextColumn::class);
+        expect($column)
+            ->toBeInstanceOf(BaseTextColumn::class)
+            ->isMoney()->toBeTrue();
+    });
+
+    it('uses numeric formatting with code prefix for code display type', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create([
+            'settings' => ['additional' => ['currency_code' => 'EUR', 'display_type' => 'code']],
+        ]);
+
+        $column = (new CurrencyColumn)->make($field);
+
+        expect($column)
+            ->toBeInstanceOf(BaseTextColumn::class)
+            ->isNumeric()->toBeTrue()
+            ->getPrefix()->toBe('EUR ');
     });
 
     it('uses configured currency code from settings', function (): void {
@@ -27,7 +42,9 @@ describe('CurrencyColumn', function (): void {
 
         $column = (new CurrencyColumn)->make($field);
 
-        expect($column)->toBeInstanceOf(BaseTextColumn::class);
+        expect($column)
+            ->toBeInstanceOf(BaseTextColumn::class)
+            ->isMoney()->toBeTrue();
     });
 
     it('creates a column for fields with zero decimal places', function (): void {
@@ -37,7 +54,9 @@ describe('CurrencyColumn', function (): void {
 
         $column = (new CurrencyColumn)->make($field);
 
-        expect($column)->toBeInstanceOf(BaseTextColumn::class);
+        expect($column)
+            ->toBeInstanceOf(BaseTextColumn::class)
+            ->isMoney()->toBeTrue();
     });
 
     it('falls back to validation_rules for legacy decimal places', function (): void {
@@ -52,12 +71,27 @@ describe('CurrencyColumn', function (): void {
 });
 
 describe('CurrencyEntry', function (): void {
-    it('creates a text entry with money formatting', function (): void {
+    it('creates a money-formatted entry with symbol display type by default', function (): void {
         $field = CustomField::factory()->ofType('currency')->create();
 
         $entry = (new CurrencyEntry)->make($field);
 
-        expect($entry)->toBeInstanceOf(BaseTextEntry::class);
+        expect($entry)
+            ->toBeInstanceOf(BaseTextEntry::class)
+            ->isMoney()->toBeTrue();
+    });
+
+    it('uses numeric formatting with code prefix for code display type', function (): void {
+        $field = CustomField::factory()->ofType('currency')->create([
+            'settings' => ['additional' => ['currency_code' => 'GBP', 'display_type' => 'code']],
+        ]);
+
+        $entry = (new CurrencyEntry)->make($field);
+
+        expect($entry)
+            ->toBeInstanceOf(BaseTextEntry::class)
+            ->isNumeric()->toBeTrue()
+            ->getPrefix()->toBe('GBP ');
     });
 
     it('creates an entry for fields with zero decimal places', function (): void {
@@ -67,7 +101,9 @@ describe('CurrencyEntry', function (): void {
 
         $entry = (new CurrencyEntry)->make($field);
 
-        expect($entry)->toBeInstanceOf(BaseTextEntry::class);
+        expect($entry)
+            ->toBeInstanceOf(BaseTextEntry::class)
+            ->isMoney()->toBeTrue();
     });
 });
 

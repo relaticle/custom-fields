@@ -49,6 +49,8 @@ final class TableBuilder extends BaseBuilder
                     if ($existingFormatter) {
                         return $column->evaluate($existingFormatter, [
                             'state' => $state,
+                            'record' => $record,
+                            'column' => $column,
                         ]);
                     }
 

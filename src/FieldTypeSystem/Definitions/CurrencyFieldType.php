@@ -105,10 +105,19 @@ class CurrencyFieldType extends BaseFieldType
 
                             $options = [];
 
-                            foreach ([0, 2, 3] as $digits) {
-                                $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
-                                $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $digits);
-                                $sample = $formatter->formatCurrency(1200.50, $code) ?: number_format(1200.50, $digits);
+                            foreach ([0, 2, 3, 4] as $digits) {
+                                $sample = number_format(1200.50, $digits);
+
+                                if (class_exists(NumberFormatter::class)) {
+                                    $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
+                                    $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $digits);
+
+                                    $formatted = $formatter->formatCurrency(1200.50, $code);
+
+                                    if ($formatted !== false) {
+                                        $sample = $formatted;
+                                    }
+                                }
 
                                 $label = $digits === 0 ? 'No decimals' : $digits.' decimals';
                                 $options[(string) $digits] = sprintf('%s (%s)', $label, $sample);

@@ -41,6 +41,14 @@ final readonly class CurrencyComponent extends AbstractFormComponent
 
     private function getCurrencySymbol(string $currencyCode, string $displayType): string
     {
+        if ($displayType === 'code') {
+            return $currencyCode;
+        }
+
+        if (! class_exists(NumberFormatter::class)) {
+            return $currencyCode;
+        }
+
         $formatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
         $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, 0);
 
@@ -52,7 +60,7 @@ final readonly class CurrencyComponent extends AbstractFormComponent
 
         $symbol = str_replace(['0', ' ', "\xC2\xA0"], '', $formatted);
 
-        if ($symbol === '' || $displayType === 'code') {
+        if ($symbol === '') {
             return $currencyCode;
         }
 

@@ -12,12 +12,21 @@ final class CurrencyEntry extends AbstractInfolistEntry
 {
     public function make(CustomField $customField): BaseTextEntry
     {
-        return BaseTextEntry::make($customField->getFieldName())
+        $entry = BaseTextEntry::make($customField->getFieldName())
             ->label($customField->name)
-            ->money(
+            ->state(fn (mixed $record) => $record->getCustomFieldValue($customField));
+
+        if ($customField->getCurrencyDisplayType() === 'code') {
+            $entry
+                ->numeric(decimalPlaces: $customField->getDecimalPlaces())
+                ->prefix($customField->getCurrencyCode().' ');
+        } else {
+            $entry->money(
                 $customField->getCurrencyCode(),
                 decimalPlaces: $customField->getDecimalPlaces(),
-            )
-            ->state(fn (mixed $record) => $record->getCustomFieldValue($customField));
+            );
+        }
+
+        return $entry;
     }
 }
