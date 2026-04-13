@@ -27,6 +27,7 @@ use Illuminate\Validation\Rules\Unique;
 use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -273,8 +274,23 @@ class FieldForm implements FormInterface
                 ->label(__('custom-fields::custom-fields.field.form.description'))
                 ->maxLength(255)
                 ->rows(2)
+                ->live()
                 ->columnSpanFull()
                 ->visible(fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION)),
+            Select::make('settings.description_position')
+                ->label(__('custom-fields::custom-fields.field.form.description_position'))
+                ->options(
+                    collect(DescriptionPosition::cases())
+                        ->mapWithKeys(fn (DescriptionPosition $position): array => [
+                            $position->value => $position->getLabel(),
+                        ])
+                        ->all()
+                )
+                ->placeholder(__('custom-fields::custom-fields.field.form.description_position_options.below'))
+                ->visible(fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION) &&
+                    FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION) &&
+                    filled($get('settings.description'))
+                ),
             Fieldset::make(
                 __(
                     'custom-fields::custom-fields.field.form.settings'
