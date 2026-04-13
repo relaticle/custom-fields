@@ -41,6 +41,11 @@ return [
             'code' => 'Code',
             'code_helper_text' => 'Unique code to identify this field throughout the resource.',
             'description' => 'Description',
+            'description_position' => 'Description Position',
+            'description_position_options' => [
+                'below' => 'Below field',
+                'above' => 'Above field',
+            ],
             'settings' => 'Settings',
             'encrypted' => 'Encrypted',
             'encrypted_help' => 'When enabled, this field\'s values will be stored securely using encryption.',
