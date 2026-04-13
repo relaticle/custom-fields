@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Data;
@@ -24,6 +25,7 @@ class CustomFieldSettingsData extends Data
         public int $max_values = 1,
         public bool $unique_per_entity_type = false,
         public ?string $description = null,
+        public ?DescriptionPosition $descriptionPosition = null,
         public VisibilityData $visibility = new VisibilityData,
         public array $additional = [],
     ) {
