@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Enums;
 
-enum DescriptionPosition: string
+use Filament\Support\Contracts\HasLabel;
+
+enum DescriptionPosition: string implements HasLabel
 {
     case BELOW = 'below';
     case ABOVE = 'above';

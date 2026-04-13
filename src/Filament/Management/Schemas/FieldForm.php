@@ -274,18 +274,12 @@ class FieldForm implements FormInterface
                 ->label(__('custom-fields::custom-fields.field.form.description'))
                 ->maxLength(255)
                 ->rows(2)
-                ->live()
+                ->live(onBlur: true)
                 ->columnSpanFull()
                 ->visible(fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION)),
             Select::make('settings.description_position')
                 ->label(__('custom-fields::custom-fields.field.form.description_position'))
-                ->options(
-                    collect(DescriptionPosition::cases())
-                        ->mapWithKeys(fn (DescriptionPosition $position): array => [
-                            $position->value => $position->getLabel(),
-                        ])
-                        ->all()
-                )
+                ->options(DescriptionPosition::class)
                 ->placeholder(__('custom-fields::custom-fields.field.form.description_position_options.below'))
                 ->visible(fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION) &&
                     FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION) &&
