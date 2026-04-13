@@ -2,7 +2,16 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
+use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
+use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\User;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
 
 it('has the correct backing values', function (): void {
     expect(DescriptionPosition::BELOW->value)->toBe('below');
@@ -13,10 +22,6 @@ it('returns translatable labels', function (): void {
     expect(DescriptionPosition::BELOW->getLabel())->toBeString()->not->toBeEmpty();
     expect(DescriptionPosition::ABOVE->getLabel())->toBeString()->not->toBeEmpty();
 });
-
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 
 it('has FIELD_DESCRIPTION_POSITION feature flag disabled by default', function (): void {
     expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION))->toBeFalse();
@@ -30,8 +35,6 @@ it('can enable FIELD_DESCRIPTION_POSITION feature flag', function (): void {
 
     expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION))->toBeTrue();
 });
-
-use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 
 it('includes descriptionPosition as null by default in settings', function (): void {
     $settings = new CustomFieldSettingsData;
@@ -57,12 +60,6 @@ it('serializes and deserializes descriptionPosition through settings', function 
 
     expect($restored->descriptionPosition)->toBe(DescriptionPosition::ABOVE);
 });
-
-use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Models\CustomFieldSection;
-use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
-use Relaticle\CustomFields\Tests\Fixtures\Models\User;
-use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
 
 it('renders description below field by default', function (): void {
     $this->actingAs(User::factory()->create());
@@ -90,7 +87,8 @@ it('renders description below field by default', function (): void {
     ]);
 
     livewire(CreatePost::class)
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertSeeHtml('Help text below');
 });
 
 it('renders description above field when position is ABOVE and feature enabled', function (): void {
@@ -121,7 +119,8 @@ it('renders description above field when position is ABOVE and feature enabled',
     ]);
 
     livewire(CreatePost::class)
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertSeeHtml('Help text above');
 });
 
 it('ignores description position when FIELD_DESCRIPTION_POSITION feature is disabled', function (): void {
@@ -152,5 +151,6 @@ it('ignores description position when FIELD_DESCRIPTION_POSITION feature is disa
     ]);
 
     livewire(CreatePost::class)
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertSeeHtml('Should render below despite ABOVE setting');
 });
