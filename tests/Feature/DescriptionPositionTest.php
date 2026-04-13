@@ -57,3 +57,100 @@ it('serializes and deserializes descriptionPosition through settings', function 
 
     expect($restored->descriptionPosition)->toBe(DescriptionPosition::ABOVE);
 });
+
+use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\User;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
+
+it('renders description below field by default', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    $config = FeatureConfigurator::configure()
+        ->enable(
+            CustomFieldsFeature::FIELD_DESCRIPTION,
+            CustomFieldsFeature::SYSTEM_SECTIONS,
+        );
+    config(['custom-fields.features' => $config]);
+
+    $section = CustomFieldSection::factory()->create([
+        'entity_type' => Post::class,
+    ]);
+
+    CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Test Field',
+        'code' => 'test_field',
+        'type' => 'text',
+        'entity_type' => Post::class,
+        'settings' => new CustomFieldSettingsData(
+            description: 'Help text below',
+        ),
+    ]);
+
+    livewire(CreatePost::class)
+        ->assertSuccessful();
+});
+
+it('renders description above field when position is ABOVE and feature enabled', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    $config = FeatureConfigurator::configure()
+        ->enable(
+            CustomFieldsFeature::FIELD_DESCRIPTION,
+            CustomFieldsFeature::FIELD_DESCRIPTION_POSITION,
+            CustomFieldsFeature::SYSTEM_SECTIONS,
+        );
+    config(['custom-fields.features' => $config]);
+
+    $section = CustomFieldSection::factory()->create([
+        'entity_type' => Post::class,
+    ]);
+
+    CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Test Field Above',
+        'code' => 'test_field_above',
+        'type' => 'text',
+        'entity_type' => Post::class,
+        'settings' => new CustomFieldSettingsData(
+            description: 'Help text above',
+            descriptionPosition: DescriptionPosition::ABOVE,
+        ),
+    ]);
+
+    livewire(CreatePost::class)
+        ->assertSuccessful();
+});
+
+it('ignores description position when FIELD_DESCRIPTION_POSITION feature is disabled', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    $config = FeatureConfigurator::configure()
+        ->enable(
+            CustomFieldsFeature::FIELD_DESCRIPTION,
+            CustomFieldsFeature::SYSTEM_SECTIONS,
+        )
+        ->disable(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION);
+    config(['custom-fields.features' => $config]);
+
+    $section = CustomFieldSection::factory()->create([
+        'entity_type' => Post::class,
+    ]);
+
+    CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Test Field Fallback',
+        'code' => 'test_field_fallback',
+        'type' => 'text',
+        'entity_type' => Post::class,
+        'settings' => new CustomFieldSettingsData(
+            description: 'Should render below despite ABOVE setting',
+            descriptionPosition: DescriptionPosition::ABOVE,
+        ),
+    ]);
+
+    livewire(CreatePost::class)
+        ->assertSuccessful();
+});

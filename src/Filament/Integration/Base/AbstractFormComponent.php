@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Forms\Components\Field;
+use Filament\Schemas\Components\Text;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValidationService;
@@ -55,10 +57,20 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         $field
             ->name($customField->getFieldName())
             ->label($customField->name)
-            ->helperText(
-                FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION)
-                    ? ($customField->settings->description ?? null)
-                    : null
+            ->when(
+                FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION) &&
+                filled($customField->settings->description),
+                function (Field $field) use ($customField): Field {
+                    $description = $customField->settings->description;
+                    $position = $customField->settings->descriptionPosition;
+
+                    if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION) &&
+                        $position === DescriptionPosition::ABOVE) {
+                        return $field->aboveContent(fn (): Text => Text::make($description));
+                    }
+
+                    return $field->helperText($description);
+                }
             )
             ->afterStateHydrated(
                 fn (mixed $component, mixed $state, mixed $record): mixed => $component->state(
