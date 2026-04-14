@@ -31,11 +31,9 @@ final readonly class CoreVisibilityLogicService
      * Extract visibility data from a custom field.
      * This is the authoritative method for getting visibility configuration.
      */
-    public function getVisibilityData(CustomField $field): ?VisibilityData
+    public function getVisibilityData(CustomField $field): VisibilityData
     {
-        $settings = $field->settings;
-
-        return $settings->visibility ?? null;
+        return $field->settings->visibility;
     }
 
     /**
@@ -43,9 +41,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function getVisibilityDataFromSection(CustomFieldSection $section): ?VisibilityData
     {
-        $settings = $section->settings;
-
-        return $settings->visibility ?? null;
+        return $section->settings->visibility;
     }
 
     /**
@@ -54,9 +50,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function hasVisibilityConditions(CustomField $field): bool
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility?->requiresConditions() ?? false;
+        return $this->getVisibilityData($field)->requiresConditions();
     }
 
     /**
@@ -77,9 +71,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function getDependentFields(CustomField $field): array
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility?->getDependentFields() ?? [];
+        return $this->getVisibilityData($field)->getDependentFields();
     }
 
     /**
@@ -90,9 +82,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function evaluateVisibility(CustomField $field, array $fieldValues, ?Model $record = null): bool
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility?->evaluate($fieldValues, $record) ?? true;
+        return $this->getVisibilityData($field)->evaluate($fieldValues, $record);
     }
 
     /**
@@ -185,9 +175,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function getVisibilityMode(CustomField $field): VisibilityMode
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility->mode ?? VisibilityMode::ALWAYS_VISIBLE;
+        return $this->getVisibilityData($field)->mode;
     }
 
     /**
@@ -196,9 +184,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function getVisibilityLogic(CustomField $field): VisibilityLogic
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility->logic ?? VisibilityLogic::ALL;
+        return $this->getVisibilityData($field)->logic;
     }
 
     /**
@@ -211,7 +197,7 @@ final readonly class CoreVisibilityLogicService
     {
         $visibility = $this->getVisibilityData($field);
 
-        if (! $visibility instanceof VisibilityData || ! $visibility->conditions instanceof DataCollection) {
+        if (! $visibility->conditions instanceof DataCollection) {
             return [];
         }
 
@@ -223,9 +209,7 @@ final readonly class CoreVisibilityLogicService
      */
     public function shouldAlwaysSave(CustomField $field): bool
     {
-        $visibility = $this->getVisibilityData($field);
-
-        return $visibility->alwaysSave ?? false;
+        return $this->getVisibilityData($field)->alwaysSave;
     }
 
     /**
