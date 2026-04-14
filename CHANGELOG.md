@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.3 - 2026-04-14
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* feat: configurable description position for custom fields [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/133
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.2...v3.1.3
+
 ## v3.1.2 - 2026-04-10
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
