@@ -89,6 +89,7 @@ return [
     */
     'fields' => [
         'description_max_length' => 255,
+        'section_description_max_length' => 255,
     ],
 
     /*
