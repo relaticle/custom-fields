@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.4 - 2026-04-15
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* feat: configurable description maxLength and boolean required validation fix [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/134
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.3...v3.1.4
+
 ## v3.1.3 - 2026-04-14
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
