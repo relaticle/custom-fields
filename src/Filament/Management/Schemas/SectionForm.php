@@ -147,7 +147,7 @@ class SectionForm implements FormInterface, SectionFormInterface
                         fn (Get $get): bool => $get('type') ===
                             CustomFieldSectionType::SECTION
                     )
-                    ->maxLength(config('custom-fields.fields.section_description_max_length', 255))
+                    ->maxLength(config('custom-fields.sections.description_max_length', 255))
                     ->nullable()
                     ->columnSpan(12),
                 ...self::visibilitySchema(),
