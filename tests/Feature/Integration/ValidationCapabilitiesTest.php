@@ -458,3 +458,45 @@ it('saves field with longer chain reference A->B->C', function (): void {
         ->assertHasNoFormErrors()
         ->assertRedirect();
 });
+
+// ===========================================================================
+// Required boolean (checkbox/toggle) validation
+// ===========================================================================
+
+it('rejects required checkbox with false value', function (): void {
+    createField($this, 'agree_terms', 'checkbox', ['required' => true]);
+
+    validationSubmitCreate($this, ['agree_terms' => false])
+        ->assertHasFormErrors(['custom_fields.agree_terms']);
+});
+
+it('accepts required checkbox with true value', function (): void {
+    createField($this, 'agree_terms', 'checkbox', ['required' => true]);
+
+    validationSubmitCreate($this, ['agree_terms' => true])
+        ->assertHasNoFormErrors()
+        ->assertRedirect();
+});
+
+it('rejects required toggle with false value', function (): void {
+    createField($this, 'opt_in', 'toggle', ['required' => true]);
+
+    validationSubmitCreate($this, ['opt_in' => false])
+        ->assertHasFormErrors(['custom_fields.opt_in']);
+});
+
+it('accepts required toggle with true value', function (): void {
+    createField($this, 'opt_in', 'toggle', ['required' => true]);
+
+    validationSubmitCreate($this, ['opt_in' => true])
+        ->assertHasNoFormErrors()
+        ->assertRedirect();
+});
+
+it('accepts non-required checkbox with false value', function (): void {
+    createField($this, 'newsletter', 'checkbox');
+
+    validationSubmitCreate($this, ['newsletter' => false])
+        ->assertHasNoFormErrors()
+        ->assertRedirect();
+});
