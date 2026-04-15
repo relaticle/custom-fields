@@ -272,7 +272,7 @@ class FieldForm implements FormInterface
                 ]),
             Textarea::make('settings.description')
                 ->label(__('custom-fields::custom-fields.field.form.description'))
-                ->maxLength(255)
+                ->maxLength(config('custom-fields.fields.description_max_length', 255))
                 ->rows(2)
                 ->live(onBlur: true)
                 ->columnSpanFull()

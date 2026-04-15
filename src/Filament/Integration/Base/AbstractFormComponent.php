@@ -85,7 +85,11 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     $this->coreVisibilityLogic->shouldAlwaysSave($customField) ||
                     filled($state)
             )
-            ->required($this->validationService->isRequired($customField))
+            ->when(
+                $this->validationService->isRequired($customField) && $customField->typeData->dataType->isBoolean(),
+                fn (Field $field): Field => $field->markAsRequired(),
+                fn (Field $field): Field => $field->required($this->validationService->isRequired($customField)),
+            )
             ->rules(fn (Field $component): array => $this->getFieldValidationRules(
                 $customField,
                 $component->getRecord()?->getKey()

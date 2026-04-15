@@ -209,6 +209,10 @@ final class ValidationService
             $rules[] = $decimalPlaces === 0 ? 'integer' : 'decimal:0,'.$decimalPlaces;
         }
 
+        if ($this->isRequired($customField) && $customField->typeData->dataType->isBoolean()) {
+            $rules[] = 'accepted';
+        }
+
         return $rules;
     }
 
