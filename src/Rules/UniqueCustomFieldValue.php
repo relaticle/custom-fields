@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -30,22 +31,32 @@ final class UniqueCustomFieldValue implements ValidationRule
         $values = is_array($value) ? $value : [$value];
         $fieldType = app(FieldManager::class)->getFieldTypeInstance($this->customField->type);
 
+        $normalizedByOriginal = [];
+
         foreach ($values as $singleValue) {
-            if (blank($singleValue)) {
+            if (blank($singleValue) || ! is_scalar($singleValue)) {
                 continue;
             }
 
-            if (! is_scalar($singleValue)) {
-                continue;
-            }
-
-            $normalizedValue = $fieldType
+            $normalizedByOriginal[(string) $singleValue] = $fieldType
                 ? $fieldType->setValue((string) $singleValue)
                 : (string) $singleValue;
+        }
 
-            if ($this->existsOnAnotherEntity($normalizedValue)) {
+        if ($normalizedByOriginal === []) {
+            return;
+        }
+
+        $takenValues = $this->findTakenValues(array_values($normalizedByOriginal));
+
+        if ($takenValues === []) {
+            return;
+        }
+
+        foreach ($normalizedByOriginal as $originalValue => $normalizedValue) {
+            if (in_array($normalizedValue, $takenValues, true)) {
                 $fail(__('custom-fields::custom-fields.validation.unique_value', [
-                    'value' => $singleValue,
+                    'value' => $originalValue,
                 ]));
 
                 return;
@@ -53,10 +64,53 @@ final class UniqueCustomFieldValue implements ValidationRule
         }
     }
 
-    private function existsOnAnotherEntity(string $normalizedValue): bool
+    /**
+     * Return the subset of normalized values that already exist on another entity.
+     *
+     * Executes a single query regardless of how many values are submitted,
+     * avoiding the N+1 pattern of checking each value individually.
+     *
+     * @param  array<int, string>  $normalizedValues
+     * @return array<int, string>
+     */
+    private function findTakenValues(array $normalizedValues): array
+    {
+        $valueColumn = $this->customField->getValueColumn();
+        $query = $this->baseQuery();
+
+        if ($valueColumn === 'json_value') {
+            $query->where(function (Builder $q) use ($normalizedValues): void {
+                foreach ($normalizedValues as $value) {
+                    $q->orWhereJsonContains('json_value', $value);
+                }
+            });
+
+            $stored = [];
+
+            foreach ($query->pluck('json_value')->all() as $storedArray) {
+                if ($storedArray instanceof \Traversable) {
+                    $storedArray = iterator_to_array($storedArray, false);
+                }
+
+                if (is_array($storedArray)) {
+                    $stored = array_merge($stored, $storedArray);
+                }
+            }
+
+            return array_values(array_intersect($normalizedValues, $stored));
+        }
+
+        return $query->whereIn($valueColumn, $normalizedValues)
+            ->pluck($valueColumn)
+            ->map(static fn (mixed $v): string => (string) $v)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function baseQuery(): Builder
     {
         $valueModel = CustomFields::newValueModel();
-        $valueColumn = $this->customField->getValueColumn();
 
         $entityType = $this->customField->entity_type;
         $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
@@ -65,12 +119,6 @@ final class UniqueCustomFieldValue implements ValidationRule
         $query = $valueModel->newQuery()
             ->where('custom_field_id', $this->customField->getKey())
             ->where('entity_type', $morphAlias);
-
-        if ($valueColumn === 'json_value') {
-            $query->whereJsonContains('json_value', $normalizedValue);
-        } else {
-            $query->where($valueColumn, $normalizedValue);
-        }
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
             $tenantFk = config('custom-fields.database.column_names.tenant_foreign_key');
@@ -81,6 +129,6 @@ final class UniqueCustomFieldValue implements ValidationRule
             $query->where('entity_id', '!=', $this->ignoreEntityId);
         }
 
-        return $query->exists();
+        return $query;
     }
 }
