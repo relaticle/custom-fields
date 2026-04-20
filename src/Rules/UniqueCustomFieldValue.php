@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -28,39 +29,32 @@ final class UniqueCustomFieldValue implements ValidationRule
             return;
         }
 
-        $values = is_array($value) ? $value : [$value];
         $fieldType = app(FieldManager::class)->getFieldTypeInstance($this->customField->type);
 
-        $normalizedByOriginal = [];
+        $normalizedByOriginal = collect(Arr::wrap($value))
+            ->reject(fn (mixed $v): bool => blank($v) || ! is_scalar($v))
+            ->mapWithKeys(fn (mixed $v): array => [
+                (string) $v => $fieldType?->setValue((string) $v) ?? (string) $v,
+            ]);
 
-        foreach ($values as $singleValue) {
-            if (blank($singleValue) || ! is_scalar($singleValue)) {
-                continue;
-            }
-
-            $normalizedByOriginal[(string) $singleValue] = $fieldType
-                ? $fieldType->setValue((string) $singleValue)
-                : (string) $singleValue;
-        }
-
-        if ($normalizedByOriginal === []) {
+        if ($normalizedByOriginal->isEmpty()) {
             return;
         }
 
-        $takenValues = $this->findTakenValues(array_values($normalizedByOriginal));
+        $takenValues = $this->findTakenValues($normalizedByOriginal->values()->all());
 
         if ($takenValues === []) {
             return;
         }
 
-        foreach ($normalizedByOriginal as $originalValue => $normalizedValue) {
-            if (in_array($normalizedValue, $takenValues, true)) {
-                $fail(__('custom-fields::custom-fields.validation.unique_value', [
-                    'value' => $originalValue,
-                ]));
+        $collision = $normalizedByOriginal->search(
+            fn (string $normalized): bool => in_array($normalized, $takenValues, true)
+        );
 
-                return;
-            }
+        if ($collision !== false) {
+            $fail(__('custom-fields::custom-fields.validation.unique_value', [
+                'value' => $collision,
+            ]));
         }
     }
 
@@ -85,17 +79,7 @@ final class UniqueCustomFieldValue implements ValidationRule
                 }
             });
 
-            $stored = [];
-
-            foreach ($query->pluck('json_value')->all() as $storedArray) {
-                if ($storedArray instanceof \Traversable) {
-                    $storedArray = iterator_to_array($storedArray, false);
-                }
-
-                if (is_array($storedArray)) {
-                    $stored = array_merge($stored, $storedArray);
-                }
-            }
+            $stored = $query->pluck('json_value')->flatten(1)->all();
 
             return array_values(array_intersect($normalizedValues, $stored));
         }
