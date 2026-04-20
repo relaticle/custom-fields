@@ -85,9 +85,9 @@ final class UniqueCustomFieldValue implements ValidationRule
         }
 
         return $query->whereIn($valueColumn, $normalizedValues)
+            ->distinct()
             ->pluck($valueColumn)
             ->map(static fn (mixed $v): string => (string) $v)
-            ->unique()
             ->values()
             ->all();
     }
