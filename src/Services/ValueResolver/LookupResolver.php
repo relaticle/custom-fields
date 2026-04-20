@@ -14,6 +14,8 @@ use Throwable;
 
 final readonly class LookupResolver
 {
+    public function __construct(private LookupCache $cache) {}
+
     /**
      * Resolve lookup values based on the custom field configuration.
      *
@@ -36,9 +38,40 @@ final readonly class LookupResolver
             return $customField->options->whereIn('id', $values)->pluck('name');
         }
 
-        [$lookupInstance, $recordTitleAttribute] = $this->getLookupAttributes($customField->lookup_type);
+        return $this->resolveAgainstLookupModel($customField->lookup_type, $values);
+    }
 
-        return $lookupInstance->whereIn('id', $values)->pluck($recordTitleAttribute);
+    /**
+     * @param  array<int, mixed>  $values
+     * @return Collection<int, string>
+     *
+     * @throws Throwable
+     */
+    private function resolveAgainstLookupModel(string $lookupType, array $values): Collection
+    {
+        $scalarIds = array_values(array_filter(
+            $values,
+            static fn (mixed $id): bool => is_int($id) || is_string($id),
+        ));
+
+        $missing = $this->cache->missing($lookupType, $scalarIds);
+
+        if ($missing !== []) {
+            [$lookupInstance, $recordTitleAttribute] = $this->getLookupAttributes($lookupType);
+
+            $freshTitles = $lookupInstance->newQuery()
+                ->whereIn('id', $missing)
+                ->pluck($recordTitleAttribute, 'id')
+                ->map(static fn (mixed $title): string => (string) $title)
+                ->all();
+
+            $this->cache->remember($lookupType, $freshTitles);
+        }
+
+        return collect($scalarIds)
+            ->map(fn (int|string $id): ?string => $this->cache->titleFor($lookupType, $id))
+            ->reject(static fn (?string $title): bool => $title === null)
+            ->values();
     }
 
     /**
