@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.5 - 2026-04-21
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump hono from 4.12.12 to 4.12.14 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/135
+* fix: prevent duplicate resource table() invocation in InteractsWithCustomFields [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/140
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.4...v3.1.5
+
 ## v3.1.4 - 2026-04-15
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
