@@ -32,6 +32,14 @@ describe('Page Rendering and Authorization', function (): void {
             ->assertSuccessful();
     });
 
+    it('invokes resource table() only once when InteractsWithCustomFields is used', function (): void {
+        PostResource::$tableCallCount = 0;
+
+        livewire(ListPosts::class)->assertSuccessful();
+
+        expect(PostResource::$tableCallCount)->toBe(1);
+    });
+
     it('is forbidden for users without permission', function (): void {
         // Arrange
         $unauthorizedUser = User::factory()->create();

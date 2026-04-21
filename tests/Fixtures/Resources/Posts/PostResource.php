@@ -34,6 +34,8 @@ class PostResource extends Resource
 
     protected static int $globalSearchResultsLimit = 3;
 
+    public static int $tableCallCount = 0;
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -54,6 +56,8 @@ class PostResource extends Resource
 
     public static function table(Table $table): Table
     {
+        static::$tableCallCount++;
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')
