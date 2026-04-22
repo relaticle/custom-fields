@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
 use Relaticle\CustomFields\Enums\AvatarShape;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
@@ -182,3 +184,22 @@ it('BC: old field.form.description_position_options keys still exist', function 
     expect(Lang::has('custom-fields::custom-fields.field.form.description_position_options.below'))->toBeTrue();
     expect(Lang::has('custom-fields::custom-fields.field.form.description_position_options.above'))->toBeTrue();
 });
+
+it('CustomFieldWidth implements HasLabel', function (): void {
+    expect(is_subclass_of(CustomFieldWidth::class, HasLabel::class))->toBeTrue();
+});
+
+it('CustomFieldWidth routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.custom_field_width.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(CustomFieldWidth::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['25', '25'],
+    ['33', '33'],
+    ['50', '50'],
+    ['66', '66'],
+    ['75', '75'],
+    ['100', '100'],
+]);
