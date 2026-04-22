@@ -23,14 +23,14 @@ enum VisibilityOperator: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::EQUALS => 'Equals',
-            self::NOT_EQUALS => 'Does not equal',
-            self::CONTAINS => 'Contains',
-            self::NOT_CONTAINS => 'Does not contain',
-            self::GREATER_THAN => 'Greater than',
-            self::LESS_THAN => 'Less than',
-            self::IS_EMPTY => 'Is empty',
-            self::IS_NOT_EMPTY => 'Is not empty',
+            self::EQUALS => __('custom-fields::custom-fields.enums.visibility_operator.equals'),
+            self::NOT_EQUALS => __('custom-fields::custom-fields.enums.visibility_operator.not_equals'),
+            self::CONTAINS => __('custom-fields::custom-fields.enums.visibility_operator.contains'),
+            self::NOT_CONTAINS => __('custom-fields::custom-fields.enums.visibility_operator.not_contains'),
+            self::GREATER_THAN => __('custom-fields::custom-fields.enums.visibility_operator.greater_than'),
+            self::LESS_THAN => __('custom-fields::custom-fields.enums.visibility_operator.less_than'),
+            self::IS_EMPTY => __('custom-fields::custom-fields.enums.visibility_operator.is_empty'),
+            self::IS_NOT_EMPTY => __('custom-fields::custom-fields.enums.visibility_operator.is_not_empty'),
         };
     }
 

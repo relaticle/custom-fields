@@ -10,6 +10,9 @@ use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
+use Relaticle\CustomFields\Enums\VisibilityLogic;
+use Relaticle\CustomFields\Enums\VisibilityMode;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 
 it('AvatarShape::Circle routes getLabel through translator', function (): void {
     Lang::addLines([
@@ -91,4 +94,44 @@ it('DateOffsetDirection routes every case getLabel through translator', function
 })->with([
     ['before', 'before'],
     ['after', 'after'],
+]);
+
+it('VisibilityLogic routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.visibility_logic.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(VisibilityLogic::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['all', 'all'],
+    ['any', 'any'],
+]);
+
+it('VisibilityMode routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.visibility_mode.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(VisibilityMode::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['always_visible', 'always_visible'],
+    ['show_when', 'show_when'],
+    ['hide_when', 'hide_when'],
+]);
+
+it('VisibilityOperator routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.visibility_operator.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(VisibilityOperator::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['equals', 'equals'],
+    ['not_equals', 'not_equals'],
+    ['contains', 'contains'],
+    ['not_contains', 'not_contains'],
+    ['greater_than', 'greater_than'],
+    ['less_than', 'less_than'],
+    ['is_empty', 'is_empty'],
+    ['is_not_empty', 'is_not_empty'],
 ]);
