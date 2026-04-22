@@ -87,8 +87,8 @@ class CurrencyFieldType extends BaseFieldType
                     Select::make('settings.additional.display_type')
                         ->label(__('custom-fields::custom-fields.currency.display'))
                         ->options([
-                            'symbol' => 'Symbol ($1,200.50)',
-                            'code' => 'Code (USD 1,200.50)',
+                            'symbol' => __('custom-fields::custom-fields.currency.display_options.symbol'),
+                            'code' => __('custom-fields::custom-fields.currency.display_options.code'),
                         ])
                         ->afterStateHydrated(function (Select $component, mixed $state): void {
                             if (blank($state)) {

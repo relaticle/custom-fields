@@ -561,6 +561,10 @@ return [
         'display' => 'Display',
         'decimal_places' => 'Decimal Places',
         'decimal_places_helper' => 'Auto-detected from currency. Override only if needed.',
+        'display_options' => [
+            'symbol' => 'Symbol ($1,200.50)',
+            'code' => 'Code (USD 1,200.50)',
+        ],
     ],
 
     'import' => [
