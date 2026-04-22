@@ -409,4 +409,80 @@ return [
         'add_record_placeholder' => 'Add record...',
     ],
 
+    'enums' => [
+        'avatar_shape' => [
+            'circle' => 'Circle',
+            'square' => 'Square',
+        ],
+        'condition_source' => [
+            'custom_field' => 'Custom Field',
+            'model_attribute' => 'Model Attribute',
+        ],
+        'custom_field_section_type' => [
+            'section' => 'Section',
+            'fieldset' => 'Fieldset',
+            'headless' => 'Headless',
+        ],
+        'custom_field_width' => [
+            '25' => '25%',
+            '33' => '33%',
+            '50' => '50%',
+            '66' => '66%',
+            '75' => '75%',
+            '100' => 'Full',
+        ],
+        'date_anchor' => [
+            'today' => 'Today',
+            'fixed_date' => 'Fixed Date',
+            'custom_field' => 'Another Field',
+            'record_created' => 'Record Creation Date',
+        ],
+        'date_offset_direction' => [
+            'before' => 'Before',
+            'after' => 'After',
+        ],
+        'date_unit' => [
+            'days' => 'Days',
+            'weeks' => 'Weeks',
+            'months' => 'Months',
+            'quarters' => 'Quarters',
+            'years' => 'Years',
+        ],
+        'description_position' => [
+            'below' => 'Below field',
+            'above' => 'Above field',
+        ],
+        'entity_feature' => [
+            'labels' => [
+                'custom_fields' => 'Custom Fields',
+                'lookup_source' => 'Lookup Source',
+                'scoped_management' => 'Scoped Management',
+            ],
+            'descriptions' => [
+                'custom_fields' => 'Entity can have custom fields attached',
+                'lookup_source' => 'Entity can be used as a lookup source for choice fields',
+                'scoped_management' => 'Entity custom fields are managed per-parent record, not on the global management page',
+            ],
+        ],
+        'visibility_logic' => [
+            'all' => 'All conditions must be met (AND)',
+            'any' => 'Any condition must be met (OR)',
+        ],
+        'visibility_mode' => [
+            'always_visible' => 'Always visible',
+            'show_when' => 'Show when conditions are met',
+            'hide_when' => 'Hide when conditions are met',
+        ],
+        'visibility_operator' => [
+            'equals' => 'Equals',
+            'not_equals' => 'Does not equal',
+            'contains' => 'Contains',
+            'not_contains' => 'Does not contain',
+            'greater_than' => 'Greater than',
+            'less_than' => 'Less than',
+            'is_empty' => 'Is empty',
+            'is_not_empty' => 'Is not empty',
+        ],
+    ],
+
 ];
