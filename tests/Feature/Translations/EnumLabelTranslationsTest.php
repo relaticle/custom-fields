@@ -10,6 +10,7 @@ use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
+use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -134,4 +135,28 @@ it('VisibilityOperator routes every case getLabel through translator', function 
     ['less_than', 'less_than'],
     ['is_empty', 'is_empty'],
     ['is_not_empty', 'is_not_empty'],
+]);
+
+it('EntityFeature routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.entity_feature.labels.{$key}" => 'SENTINEL_LABEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(EntityFeature::from($case)->getLabel())->toBe('SENTINEL_LABEL_'.$key);
+})->with([
+    ['custom_fields', 'custom_fields'],
+    ['lookup_source', 'lookup_source'],
+    ['scoped_management', 'scoped_management'],
+]);
+
+it('EntityFeature routes every case getDescription through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.entity_feature.descriptions.{$key}" => 'SENTINEL_DESC_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(EntityFeature::from($case)->getDescription())->toBe('SENTINEL_DESC_'.$key);
+})->with([
+    ['custom_fields', 'custom_fields'],
+    ['lookup_source', 'lookup_source'],
+    ['scoped_management', 'scoped_management'],
 ]);
