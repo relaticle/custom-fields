@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;

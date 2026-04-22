@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Lang;
 
 it('field.actions keys needed by ManageCustomField exist', function (string $key): void {
-    expect(Lang::has("custom-fields::custom-fields.field.actions.{$key}"))->toBeTrue();
+    expect(Lang::has('custom-fields::custom-fields.field.actions.'.$key))->toBeTrue();
 })->with([
     'activate',
     'deactivate',
@@ -16,7 +16,7 @@ it('field.actions keys needed by ManageCustomField exist', function (string $key
 ]);
 
 it('section.actions keys needed by ManageCustomFieldSection exist', function (string $key): void {
-    expect(Lang::has("custom-fields::custom-fields.section.actions.{$key}"))->toBeTrue();
+    expect(Lang::has('custom-fields::custom-fields.section.actions.'.$key))->toBeTrue();
 })->with([
     'activate',
     'deactivate',

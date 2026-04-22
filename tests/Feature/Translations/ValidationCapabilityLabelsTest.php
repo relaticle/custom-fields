@@ -15,7 +15,7 @@ it('every Validation capability uses __() for its label and placeholder', functi
 
         if (preg_match_all('/->(label|placeholder)\([\'"]([^\'"]+)[\'"]\)/', $source, $m, PREG_SET_ORDER)) {
             foreach ($m as $match) {
-                $violations[] = basename($file).": ->{$match[1]}('{$match[2]}') should use __()";
+                $violations[] = basename($file).sprintf(": ->%s('%s') should use __()", $match[1], $match[2]);
             }
         }
     }

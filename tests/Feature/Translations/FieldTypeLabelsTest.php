@@ -16,13 +16,11 @@ it('every FieldTypeSystem definition uses __() for its outer label', function ()
             // For this task, only verify the OUTER label at the top of the class is translated.
             $source = file_get_contents($file);
             // Count the outer $typeBuilder->label('Currency') — if still hardcoded, flag.
-            if (preg_match("/->label\\('Currency'\\)/", $source)) {
-                // Allow this only if it's inside an inner Fieldset — if it's outside, it's the outer label.
-                // Simplest heuristic: if the file contains __('custom-fields::custom-fields.field_types.currency'),
-                // the outer label is translated.
-                if (! str_contains($source, 'custom-fields::custom-fields.field_types.currency')) {
-                    $violations[] = basename($file).': outer Currency label not translated';
-                }
+            // Allow this only if it's inside an inner Fieldset — if it's outside, it's the outer label.
+            // Simplest heuristic: if the file contains __('custom-fields::custom-fields.field_types.currency'),
+            // the outer label is translated.
+            if (preg_match("/->label\\('Currency'\\)/", $source) && ! str_contains($source, 'custom-fields::custom-fields.field_types.currency')) {
+                $violations[] = basename($file).': outer Currency label not translated';
             }
 
             continue;
@@ -30,7 +28,7 @@ it('every FieldTypeSystem definition uses __() for its outer label', function ()
 
         $source = file_get_contents($file);
         if (preg_match('/->label\([\'"]([^\'"]+)[\'"]\)/', $source, $m)) {
-            $violations[] = basename($file).": ->label('{$m[1]}') should use __() ";
+            $violations[] = basename($file).sprintf(": ->label('%s') should use __() ", $m[1]);
         }
     }
 
@@ -54,7 +52,7 @@ it('CurrencyFieldType inner form uses __() for all inner labels and helpers', fu
         'currency.decimal_places',
         'currency.decimal_places_helper',
     ] as $key) {
-        expect($source)->toContain("custom-fields::custom-fields.{$key}");
+        expect($source)->toContain('custom-fields::custom-fields.'.$key);
     }
 
     // After this task, the only hardcoded ->label('Currency') in the file is the OUTER

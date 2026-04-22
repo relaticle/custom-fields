@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Lang;
 
 it('date_constraint.* translation keys exist', function (string $key): void {
-    expect(Lang::has("custom-fields::custom-fields.date_constraint.{$key}"))->toBeTrue();
+    expect(Lang::has('custom-fields::custom-fields.date_constraint.'.$key))->toBeTrue();
 })->with([
     'constraint', 'offset_value', 'unit', 'direction', 'reference_field', 'date',
 ]);
@@ -32,6 +32,6 @@ it('DateConstraintField source uses translation keys', function (): void {
         'date_constraint.reference_field',
         'date_constraint.date',
     ] as $key) {
-        expect($source)->toContain("custom-fields::custom-fields.{$key}");
+        expect($source)->toContain('custom-fields::custom-fields.'.$key);
     }
 });

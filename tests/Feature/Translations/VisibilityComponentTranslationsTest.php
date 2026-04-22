@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Lang;
 
 it('visibility.* translation keys exist', function (string $key): void {
-    expect(Lang::has("custom-fields::custom-fields.visibility.{$key}"))->toBeTrue();
+    expect(Lang::has('custom-fields::custom-fields.visibility.'.$key))->toBeTrue();
 })->with([
     'heading', 'mode', 'logic', 'conditions', 'source', 'field', 'operator', 'value',
 ]);
@@ -40,6 +40,6 @@ it('VisibilityComponent source has no hardcoded English labels or class-name bug
         'visibility.operator',
         'visibility.value',
     ] as $key) {
-        expect($source)->toContain("custom-fields::custom-fields.{$key}");
+        expect($source)->toContain('custom-fields::custom-fields.'.$key);
     }
 });

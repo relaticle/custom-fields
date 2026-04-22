@@ -52,7 +52,7 @@ it('ConditionSource::ModelAttribute routes getLabel through translator', functio
 
 it('CustomFieldSectionType routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.custom_field_section_type.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.custom_field_section_type.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(CustomFieldSectionType::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -64,7 +64,7 @@ it('CustomFieldSectionType routes every case getLabel through translator', funct
 
 it('DateAnchor routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.date_anchor.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.date_anchor.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(DateAnchor::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -77,7 +77,7 @@ it('DateAnchor routes every case getLabel through translator', function (string 
 
 it('DateUnit routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.date_unit.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.date_unit.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(DateUnit::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -91,7 +91,7 @@ it('DateUnit routes every case getLabel through translator', function (string $c
 
 it('DateOffsetDirection routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.date_offset_direction.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.date_offset_direction.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(DateOffsetDirection::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -102,7 +102,7 @@ it('DateOffsetDirection routes every case getLabel through translator', function
 
 it('VisibilityLogic routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.visibility_logic.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.visibility_logic.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(VisibilityLogic::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -113,7 +113,7 @@ it('VisibilityLogic routes every case getLabel through translator', function (st
 
 it('VisibilityMode routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.visibility_mode.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.visibility_mode.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(VisibilityMode::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -125,7 +125,7 @@ it('VisibilityMode routes every case getLabel through translator', function (str
 
 it('VisibilityOperator routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.visibility_operator.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.visibility_operator.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(VisibilityOperator::from($case)->getLabel())->toBe('SENTINEL_'.$key);
@@ -142,7 +142,7 @@ it('VisibilityOperator routes every case getLabel through translator', function 
 
 it('EntityFeature routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.entity_feature.labels.{$key}" => 'SENTINEL_LABEL_'.$key,
+        'custom-fields.enums.entity_feature.labels.'.$key => 'SENTINEL_LABEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(EntityFeature::from($case)->getLabel())->toBe('SENTINEL_LABEL_'.$key);
@@ -154,7 +154,7 @@ it('EntityFeature routes every case getLabel through translator', function (stri
 
 it('EntityFeature routes every case getDescription through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.entity_feature.descriptions.{$key}" => 'SENTINEL_DESC_'.$key,
+        'custom-fields.enums.entity_feature.descriptions.'.$key => 'SENTINEL_DESC_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(EntityFeature::from($case)->getDescription())->toBe('SENTINEL_DESC_'.$key);
@@ -191,7 +191,7 @@ it('CustomFieldWidth implements HasLabel', function (): void {
 
 it('CustomFieldWidth routes every case getLabel through translator', function (string $case, string $key): void {
     Lang::addLines([
-        "custom-fields.enums.custom_field_width.{$key}" => 'SENTINEL_'.$key,
+        'custom-fields.enums.custom_field_width.'.$key => 'SENTINEL_'.$key,
     ], App::getLocale(), 'custom-fields');
 
     expect(CustomFieldWidth::from($case)->getLabel())->toBe('SENTINEL_'.$key);
