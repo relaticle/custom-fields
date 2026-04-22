@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
-use Filament\Facades\Filament;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Relaticle\CustomFields\Exceptions\MissingRecordTitleAttributeException;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
-use Throwable;
 
 /**
  * Scans a set of loaded host records for their custom-field lookup references
@@ -23,7 +20,10 @@ use Throwable;
  */
 final readonly class LookupPreloader
 {
-    public function __construct(private LookupCache $cache) {}
+    public function __construct(
+        private LookupCache $cache,
+        private LookupAttributeResolver $attributes,
+    ) {}
 
     /**
      * @param  EloquentCollection<int, Model>  $records
@@ -37,7 +37,11 @@ final readonly class LookupPreloader
         $idsByLookupType = [];
 
         foreach ($records as $record) {
-            if (! $record instanceof HasCustomFields || ! $record->relationLoaded('customFieldValues')) {
+            if (! $record instanceof HasCustomFields) {
+                continue;
+            }
+
+            if (! $record->relationLoaded('customFieldValues')) {
                 continue;
             }
 
@@ -47,7 +51,11 @@ final readonly class LookupPreloader
             foreach ($values as $value) {
                 $field = $value->customField;
 
-                if (! $field instanceof CustomField || $field->lookup_type === null) {
+                if (! $field instanceof CustomField) {
+                    continue;
+                }
+
+                if ($field->lookup_type === null) {
                     continue;
                 }
 
@@ -64,7 +72,7 @@ final readonly class LookupPreloader
                 continue;
             }
 
-            [$lookupInstance, $recordTitleAttribute] = $this->getLookupAttributes($lookupType);
+            [$lookupInstance, $recordTitleAttribute] = $this->attributes->resolve($lookupType);
 
             $titles = $lookupInstance->newQuery()
                 ->whereIn('id', $missing)
@@ -81,8 +89,12 @@ final readonly class LookupPreloader
      */
     private function scalarIdsFromValue(mixed $value): array
     {
-        if ($value === null || $value === '' || $value === []) {
+        if (in_array($value, [null, '', []], true)) {
             return [];
+        }
+
+        if ($value instanceof Arrayable) {
+            $value = $value->toArray();
         }
 
         $candidates = is_array($value) ? $value : [$value];
@@ -91,27 +103,5 @@ final readonly class LookupPreloader
             $candidates,
             static fn (mixed $id): bool => is_int($id) || (is_string($id) && $id !== ''),
         ));
-    }
-
-    /**
-     * @return array{0: mixed, 1: string}
-     *
-     * @throws Throwable
-     */
-    private function getLookupAttributes(string $lookupType): array
-    {
-        $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
-        $lookupInstance = app($lookupModelPath);
-
-        $resourcePath = Filament::getModelResource($lookupModelPath);
-        $resourceInstance = app($resourcePath);
-        $recordTitleAttribute = $resourceInstance->getRecordTitleAttribute();
-
-        throw_if(
-            $recordTitleAttribute === null,
-            new MissingRecordTitleAttributeException(sprintf('The `%s` does not have a record title custom attribute.', $resourcePath))
-        );
-
-        return [$lookupInstance, $recordTitleAttribute];
     }
 }
