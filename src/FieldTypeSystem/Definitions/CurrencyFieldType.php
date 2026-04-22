@@ -25,7 +25,7 @@ class CurrencyFieldType extends BaseFieldType
     {
         return FieldSchema::float()
             ->key('currency')
-            ->label('Currency')
+            ->label(__('custom-fields::custom-fields.field_types.currency'))
             ->icon('mdi-currency-usd')
             ->formComponent(CurrencyComponent::class)
             ->tableColumn(CurrencyColumn::class)
@@ -68,12 +68,12 @@ class CurrencyFieldType extends BaseFieldType
         $defaultCode = config('custom-fields.currency.default_code', 'USD');
 
         return [
-            Fieldset::make('Currency Settings')
+            Fieldset::make(__('custom-fields::custom-fields.currency.fieldset'))
                 ->columnSpanFull()
                 ->columns(2)
                 ->schema([
                     Select::make('settings.additional.currency_code')
-                        ->label('Currency')
+                        ->label(__('custom-fields::custom-fields.currency.currency'))
                         ->searchable()
                         ->options(fn (): array => CurrencyProvider::getOptions())
                         ->afterStateHydrated(function (Select $component, mixed $state) use ($defaultCode): void {
@@ -85,7 +85,7 @@ class CurrencyFieldType extends BaseFieldType
                         ->live(),
 
                     Select::make('settings.additional.display_type')
-                        ->label('Display')
+                        ->label(__('custom-fields::custom-fields.currency.display'))
                         ->options([
                             'symbol' => 'Symbol ($1,200.50)',
                             'code' => 'Code (USD 1,200.50)',
@@ -98,8 +98,8 @@ class CurrencyFieldType extends BaseFieldType
                         ->required(),
 
                     Select::make('settings.additional.decimal_places')
-                        ->label('Decimal Places')
-                        ->helperText('Auto-detected from currency. Override only if needed.')
+                        ->label(__('custom-fields::custom-fields.currency.decimal_places'))
+                        ->helperText(__('custom-fields::custom-fields.currency.decimal_places_helper'))
                         ->options(function (Get $get): array {
                             $code = $get('settings.additional.currency_code') ?? 'USD';
 

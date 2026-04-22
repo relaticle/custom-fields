@@ -20,7 +20,7 @@ class EmailFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('email')
-            ->label('Email')
+            ->label(__('custom-fields::custom-fields.field_types.email'))
             ->icon('heroicon-o-envelope')
             ->formComponent(EmailComponent::class)
             ->tableColumn(EmailColumn::class)

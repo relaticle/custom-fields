@@ -22,7 +22,7 @@ final class RichEditorFieldType extends BaseFieldType
     {
         return FieldSchema::text()
             ->key('rich-editor')
-            ->label('Rich Editor')
+            ->label(__('custom-fields::custom-fields.field_types.rich_editor'))
             ->icon('mdi-format-text')
             ->formComponent(RichEditorComponent::class)
             ->tableColumn(RichTextColumn::class)

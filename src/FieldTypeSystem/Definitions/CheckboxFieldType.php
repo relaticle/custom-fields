@@ -20,7 +20,7 @@ class CheckboxFieldType extends BaseFieldType
     {
         return FieldSchema::boolean()
             ->key('checkbox')
-            ->label('Checkbox')
+            ->label(__('custom-fields::custom-fields.field_types.checkbox'))
             ->icon('mdi-checkbox-marked')
             ->formComponent(CheckboxComponent::class)
             ->tableColumn(IconColumn::class)

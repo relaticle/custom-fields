@@ -22,7 +22,7 @@ class FileUploadFieldType extends BaseFieldType
     {
         return FieldSchema::file()
             ->key('file-upload')
-            ->label('File Upload')
+            ->label(__('custom-fields::custom-fields.field_types.file_upload'))
             ->icon('heroicon-o-paper-clip')
             ->formComponent(FileUploadComponent::class)
             ->tableColumn(TextColumn::class)

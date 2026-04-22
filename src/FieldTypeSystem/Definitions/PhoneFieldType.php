@@ -21,7 +21,7 @@ class PhoneFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('phone')
-            ->label('Phone Number')
+            ->label(__('custom-fields::custom-fields.field_types.phone'))
             ->icon('heroicon-o-phone')
             ->formComponent(PhoneComponent::class)
             ->tableColumn(PhoneColumn::class)

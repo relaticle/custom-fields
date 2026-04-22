@@ -21,7 +21,7 @@ class RadioFieldType extends BaseFieldType
     {
         return FieldSchema::singleChoice()
             ->key('radio')
-            ->label('Radio')
+            ->label(__('custom-fields::custom-fields.field_types.radio'))
             ->icon('mdi-radiobox-marked')
             ->formComponent(RadioComponent::class)
             ->tableColumn(SingleChoiceColumn::class)

@@ -23,7 +23,7 @@ final class TagsInputFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('tags-input')
-            ->label('Tags Input')
+            ->label(__('custom-fields::custom-fields.field_types.tags_input'))
             ->icon('mdi-tag-multiple')
             ->formComponent(TagsInputComponent::class)
             ->tableColumn(MultiChoiceColumn::class)

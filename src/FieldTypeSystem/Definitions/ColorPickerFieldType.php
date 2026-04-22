@@ -20,7 +20,7 @@ class ColorPickerFieldType extends BaseFieldType
     {
         return FieldSchema::text()
             ->key('color-picker')
-            ->label('Color Picker')
+            ->label(__('custom-fields::custom-fields.field_types.color_picker'))
             ->icon('mdi-palette')
             ->formComponent(ColorPickerComponent::class)
             ->tableColumn(ColorColumn::class)

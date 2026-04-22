@@ -16,7 +16,7 @@ class LinkFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('link')
-            ->label('Link')
+            ->label(__('custom-fields::custom-fields.field_types.link'))
             ->icon('mdi-link')
             ->formComponent(LinkComponent::class)
             ->tableColumn(LinkColumn::class)

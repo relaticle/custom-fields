@@ -505,4 +505,59 @@ return [
         'date' => 'Date',
     ],
 
+    'field_types' => [
+        'toggle' => 'Toggle',
+        'toggle_buttons' => 'Toggle Buttons',
+        'number' => 'Number',
+        'record' => 'Record',
+        'file_upload' => 'File Upload',
+        'multi_select' => 'Multi Select',
+        'checkbox_list' => 'Checkbox List',
+        'color_picker' => 'Color Picker',
+        'checkbox' => 'Checkbox',
+        'date' => 'Date',
+        'radio' => 'Radio',
+        'link' => 'Link',
+        'text' => 'Text',
+        'date_time' => 'Date and Time',
+        'rich_editor' => 'Rich Editor',
+        'currency' => 'Currency',
+        'phone' => 'Phone Number',
+        'email' => 'Email',
+        'textarea' => 'Textarea',
+        'markdown_editor' => 'Markdown Editor',
+        'select' => 'Select',
+        'tags_input' => 'Tags Input',
+    ],
+
+    'validation' => [
+        'min_length' => 'Minimum Length',
+        'max_length' => 'Maximum Length',
+        'min_value' => 'Minimum Value',
+        'max_value' => 'Maximum Value',
+        'min_selections' => 'Minimum Selections',
+        'max_selections' => 'Maximum Selections',
+        'max_file_size_kb' => 'Maximum File Size (KB)',
+        'accepted_file_types' => 'Accepted File Types',
+        'accepted_file_types_placeholder' => 'e.g. image/png, application/pdf',
+        'decimal_places' => 'Decimal Places',
+        'decimal_places_placeholder' => 'Enter a value between 0 and 4',
+    ],
+
+    'currency' => [
+        'fieldset' => 'Currency Settings',
+        'currency' => 'Currency',
+        'display' => 'Display',
+        'decimal_places' => 'Decimal Places',
+        'decimal_places_helper' => 'Auto-detected from currency. Override only if needed.',
+    ],
+
+    'import' => [
+        'multi_value_helper' => 'Separate multiple values with commas',
+    ],
+
+    'file_upload' => [
+        'placeholder' => 'Choose a file or drag and drop',
+    ],
+
 ];
