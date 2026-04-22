@@ -485,4 +485,24 @@ return [
         ],
     ],
 
+    'visibility' => [
+        'heading' => 'Conditional Visibility',
+        'mode' => 'Visibility',
+        'logic' => 'Condition Logic',
+        'conditions' => 'Conditions',
+        'source' => 'Source',
+        'field' => 'Field',
+        'operator' => 'Operator',
+        'value' => 'Value',
+    ],
+
+    'date_constraint' => [
+        'constraint' => 'Constraint',
+        'offset_value' => 'Offset value',
+        'unit' => 'Unit',
+        'direction' => 'Direction',
+        'reference_field' => 'Reference field',
+        'date' => 'Date',
+    ],
+
 ];
