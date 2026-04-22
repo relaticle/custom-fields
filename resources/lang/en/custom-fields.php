@@ -29,6 +29,13 @@ return [
         'notifications' => [
             'created' => 'Section created',
         ],
+        'actions' => [
+            'activate' => 'Activate',
+            'deactivate' => 'Deactivate',
+            'edit_modal_heading' => 'Edit section',
+            'delete_modal_heading' => 'Delete section',
+            'delete_modal_description' => 'Are you sure you want to delete this section? This cannot be undone.',
+        ],
     ],
 
     'field' => [
@@ -114,6 +121,10 @@ return [
         'actions' => [
             'activate' => 'Activate',
             'deactivate' => 'Deactivate',
+            'duplicate' => 'Duplicate',
+            'edit_modal_heading' => 'Edit field',
+            'delete_modal_heading' => 'Delete field',
+            'delete_modal_description' => 'Are you sure you want to delete this field? This cannot be undone.',
         ],
     ],
 
