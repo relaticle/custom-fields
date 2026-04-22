@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
 use Relaticle\CustomFields\Enums\AvatarShape;
 use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 
 it('AvatarShape::Circle routes getLabel through translator', function (): void {
     Lang::addLines([
@@ -38,3 +39,15 @@ it('ConditionSource::ModelAttribute routes getLabel through translator', functio
 
     expect(ConditionSource::ModelAttribute->getLabel())->toBe('SENTINEL_MA');
 });
+
+it('CustomFieldSectionType routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.custom_field_section_type.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(CustomFieldSectionType::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['section', 'section'],
+    ['fieldset', 'fieldset'],
+    ['headless', 'headless'],
+]);
