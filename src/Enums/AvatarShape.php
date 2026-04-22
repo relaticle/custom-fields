@@ -14,8 +14,8 @@ enum AvatarShape: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Circle => 'Circle',
-            self::Square => 'Square',
+            self::Circle => __('custom-fields::custom-fields.enums.avatar_shape.circle'),
+            self::Square => __('custom-fields::custom-fields.enums.avatar_shape.square'),
         };
     }
 
