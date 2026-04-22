@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -306,3 +307,36 @@ arch('Complex methods are properly documented')
     ->expect('Relaticle\CustomFields')
     ->toHaveDocumentedComplexMethods()
     ->ignoring(['tests', 'migrations']);
+
+test('every HasLabel enum in Relaticle\\CustomFields\\Enums routes getLabel through __()', function (): void {
+    $dir = dirname(__DIR__).'/src/Enums';
+    $files = glob($dir.'/*.php');
+
+    $violations = [];
+
+    foreach ($files as $file) {
+        $class = 'Relaticle\\CustomFields\\Enums\\'.pathinfo($file, PATHINFO_FILENAME);
+
+        if (! enum_exists($class)) {
+            continue;
+        }
+
+        if (! is_subclass_of($class, HasLabel::class)) {
+            continue;
+        }
+
+        $source = file_get_contents($file);
+
+        if (! preg_match('/public function getLabel\(\)[^{]*\{(.*?)\n    \}/s', $source, $m)) {
+            $violations[] = $class.': getLabel() not found';
+
+            continue;
+        }
+
+        if (! str_contains($m[1], '__(')) {
+            $violations[] = $class.': getLabel() does not call __()';
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
