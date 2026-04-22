@@ -56,7 +56,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(CustomsFieldsMigrators::class, CustomFieldsMigrator::class);
         $this->app->singleton(ValueResolvers::class, ValueResolver::class);
-        $this->app->singleton(LookupCache::class);
+        $this->app->scoped(LookupCache::class);
 
         $this->app->singleton(TenantContextService::class);
         $this->app->singleton(BackendVisibilityService::class);
