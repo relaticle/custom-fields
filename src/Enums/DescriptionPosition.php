@@ -14,8 +14,8 @@ enum DescriptionPosition: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::BELOW => __('custom-fields::custom-fields.field.form.description_position_options.below'),
-            self::ABOVE => __('custom-fields::custom-fields.field.form.description_position_options.above'),
+            self::BELOW => __('custom-fields::custom-fields.enums.description_position.below'),
+            self::ABOVE => __('custom-fields::custom-fields.enums.description_position.above'),
         };
     }
 }

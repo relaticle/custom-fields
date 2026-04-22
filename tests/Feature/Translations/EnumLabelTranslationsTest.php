@@ -10,6 +10,7 @@ use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
+use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
@@ -160,3 +161,24 @@ it('EntityFeature routes every case getDescription through translator', function
     ['lookup_source', 'lookup_source'],
     ['scoped_management', 'scoped_management'],
 ]);
+
+it('DescriptionPosition::BELOW routes to new enums key', function (): void {
+    Lang::addLines([
+        'custom-fields.enums.description_position.below' => 'SENTINEL_BELOW',
+    ], App::getLocale(), 'custom-fields');
+
+    expect(DescriptionPosition::BELOW->getLabel())->toBe('SENTINEL_BELOW');
+});
+
+it('DescriptionPosition::ABOVE routes to new enums key', function (): void {
+    Lang::addLines([
+        'custom-fields.enums.description_position.above' => 'SENTINEL_ABOVE',
+    ], App::getLocale(), 'custom-fields');
+
+    expect(DescriptionPosition::ABOVE->getLabel())->toBe('SENTINEL_ABOVE');
+});
+
+it('BC: old field.form.description_position_options keys still exist', function (): void {
+    expect(Lang::has('custom-fields::custom-fields.field.form.description_position_options.below'))->toBeTrue();
+    expect(Lang::has('custom-fields::custom-fields.field.form.description_position_options.above'))->toBeTrue();
+});
