@@ -18,3 +18,11 @@ it('ManageCustomField row actions use translated labels and modal headings', fun
         ->toContain('custom-fields::custom-fields.field.actions.delete_modal_description')
         ->toContain('custom-fields::custom-fields.field.actions.duplicate');
 });
+
+it('ManageFieldsTable edit and delete actions set explicit modal headings', function (): void {
+    $source = file_get_contents(dirname(__DIR__, 3).'/src/Livewire/ManageFieldsTable.php');
+
+    expect($source)
+        ->toContain('custom-fields::custom-fields.field.actions.edit_modal_heading')
+        ->toContain('custom-fields::custom-fields.field.actions.delete_modal_heading');
+});
