@@ -18,7 +18,7 @@ final readonly class MinSelectionsCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Minimum Selections';
+        return __('custom-fields::custom-fields.validation.min_selections');
     }
 
     /** @return array<int, Component> */
@@ -29,7 +29,7 @@ final readonly class MinSelectionsCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(0)
-                ->label('Minimum Selections'),
+                ->label(__('custom-fields::custom-fields.validation.min_selections')),
         ];
     }
 

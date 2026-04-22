@@ -18,7 +18,7 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Accepted File Types';
+        return __('custom-fields::custom-fields.validation.accepted_file_types');
     }
 
     /** @return array<int, Component> */
@@ -26,8 +26,8 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
     {
         return [
             TagsInput::make($statePath.'.accepted_types')
-                ->label('Accepted File Types')
-                ->placeholder('e.g. image/png, application/pdf'),
+                ->label(__('custom-fields::custom-fields.validation.accepted_file_types'))
+                ->placeholder(__('custom-fields::custom-fields.validation.accepted_file_types_placeholder')),
         ];
     }
 

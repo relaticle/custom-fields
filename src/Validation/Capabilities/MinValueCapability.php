@@ -18,7 +18,7 @@ final readonly class MinValueCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Minimum Value';
+        return __('custom-fields::custom-fields.validation.min_value');
     }
 
     /** @return array<int, Component> */
@@ -27,7 +27,7 @@ final readonly class MinValueCapability implements ValidationCapability
         return [
             TextInput::make($statePath.'.min_value')
                 ->numeric()
-                ->label('Minimum Value'),
+                ->label(__('custom-fields::custom-fields.validation.min_value')),
         ];
     }
 

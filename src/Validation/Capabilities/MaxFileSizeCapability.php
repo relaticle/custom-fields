@@ -18,7 +18,7 @@ final readonly class MaxFileSizeCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Maximum File Size (KB)';
+        return __('custom-fields::custom-fields.validation.max_file_size_kb');
     }
 
     /** @return array<int, Component> */
@@ -29,7 +29,7 @@ final readonly class MaxFileSizeCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(1)
-                ->label('Maximum File Size (KB)'),
+                ->label(__('custom-fields::custom-fields.validation.max_file_size_kb')),
         ];
     }
 

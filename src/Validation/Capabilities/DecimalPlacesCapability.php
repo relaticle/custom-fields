@@ -18,7 +18,7 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Decimal Places';
+        return __('custom-fields::custom-fields.validation.decimal_places');
     }
 
     /** @return array<int, Component> */
@@ -30,8 +30,8 @@ final readonly class DecimalPlacesCapability implements ValidationCapability
                 ->integer()
                 ->minValue(0)
                 ->maxValue(4)
-                ->placeholder('Enter a value between 0 and 4')
-                ->label('Decimal Places'),
+                ->placeholder(__('custom-fields::custom-fields.validation.decimal_places_placeholder'))
+                ->label(__('custom-fields::custom-fields.validation.decimal_places')),
         ];
     }
 

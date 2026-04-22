@@ -18,7 +18,7 @@ final readonly class MinLengthCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Minimum Length';
+        return __('custom-fields::custom-fields.validation.min_length');
     }
 
     /** @return array<int, Component> */
@@ -29,7 +29,7 @@ final readonly class MinLengthCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(0)
-                ->label('Minimum Length'),
+                ->label(__('custom-fields::custom-fields.validation.min_length')),
         ];
     }
 

@@ -18,7 +18,7 @@ final readonly class MaxSelectionsCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Maximum Selections';
+        return __('custom-fields::custom-fields.validation.max_selections');
     }
 
     /** @return array<int, Component> */
@@ -29,7 +29,7 @@ final readonly class MaxSelectionsCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(1)
-                ->label('Maximum Selections'),
+                ->label(__('custom-fields::custom-fields.validation.max_selections')),
         ];
     }
 
