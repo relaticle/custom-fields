@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
@@ -335,6 +336,30 @@ test('every HasLabel enum in Relaticle\\CustomFields\\Enums routes getLabel thro
 
         if (! str_contains($m[1], '__(')) {
             $violations[] = $class.': getLabel() does not call __()';
+        }
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+test('every Action::make() in src/Livewire has a translated ->label()', function (): void {
+    $dir = dirname(__DIR__).'/src/Livewire';
+    $files = glob($dir.'/*.php');
+
+    $violations = [];
+
+    foreach ($files as $file) {
+        $source = file_get_contents($file);
+
+        // Capture each `Action::make(...)` call plus its chained method calls up to the terminating `;`.
+        if (! preg_match_all('/(Action|BulkAction|TestAction)::make\([^)]+\).*?(?=\s*;|\)\s*,)/s', $source, $matches)) {
+            continue;
+        }
+
+        foreach ($matches[0] as $chain) {
+            if (! preg_match('/->label\(\s*__\(/', $chain)) {
+                $violations[] = basename($file).': Action::make() without ->label(__()): '.substr(preg_replace('/\s+/', ' ', $chain), 0, 120);
+            }
         }
     }
 
