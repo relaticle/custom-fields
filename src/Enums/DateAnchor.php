@@ -16,10 +16,10 @@ enum DateAnchor: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Today => 'Today',
-            self::FixedDate => 'Fixed Date',
-            self::CustomField => 'Another Field',
-            self::RecordCreated => 'Record Creation Date',
+            self::Today => __('custom-fields::custom-fields.enums.date_anchor.today'),
+            self::FixedDate => __('custom-fields::custom-fields.enums.date_anchor.fixed_date'),
+            self::CustomField => __('custom-fields::custom-fields.enums.date_anchor.custom_field'),
+            self::RecordCreated => __('custom-fields::custom-fields.enums.date_anchor.record_created'),
         };
     }
 

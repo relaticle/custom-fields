@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Lang;
 use Relaticle\CustomFields\Enums\AvatarShape;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\DateAnchor;
+use Relaticle\CustomFields\Enums\DateOffsetDirection;
+use Relaticle\CustomFields\Enums\DateUnit;
 
 it('AvatarShape::Circle routes getLabel through translator', function (): void {
     Lang::addLines([
@@ -50,4 +53,42 @@ it('CustomFieldSectionType routes every case getLabel through translator', funct
     ['section', 'section'],
     ['fieldset', 'fieldset'],
     ['headless', 'headless'],
+]);
+
+it('DateAnchor routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.date_anchor.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(DateAnchor::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['today', 'today'],
+    ['fixed_date', 'fixed_date'],
+    ['custom_field', 'custom_field'],
+    ['record_created', 'record_created'],
+]);
+
+it('DateUnit routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.date_unit.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(DateUnit::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['days', 'days'],
+    ['weeks', 'weeks'],
+    ['months', 'months'],
+    ['quarters', 'quarters'],
+    ['years', 'years'],
+]);
+
+it('DateOffsetDirection routes every case getLabel through translator', function (string $case, string $key): void {
+    Lang::addLines([
+        "custom-fields.enums.date_offset_direction.{$key}" => 'SENTINEL_'.$key,
+    ], App::getLocale(), 'custom-fields');
+
+    expect(DateOffsetDirection::from($case)->getLabel())->toBe('SENTINEL_'.$key);
+})->with([
+    ['before', 'before'],
+    ['after', 'after'],
 ]);

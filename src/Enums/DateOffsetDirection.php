@@ -14,8 +14,8 @@ enum DateOffsetDirection: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Before => 'Before',
-            self::After => 'After',
+            self::Before => __('custom-fields::custom-fields.enums.date_offset_direction.before'),
+            self::After => __('custom-fields::custom-fields.enums.date_offset_direction.after'),
         };
     }
 }
