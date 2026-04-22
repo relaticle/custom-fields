@@ -38,19 +38,26 @@ it('fires one query on first call and zero on second call for the same ids', fun
 
     $resolver = app(LookupResolver::class);
 
-    $queries = 0;
-    DB::listen(function ($query) use (&$queries): void {
-        if (str_contains($query->sql, '"posts"') || str_contains($query->sql, '`posts`')) {
-            $queries++;
-        }
-    });
+    DB::flushQueryLog();
+    DB::enableQueryLog();
 
-    $first = $resolver->resolveLookupValues($ids, $this->field);
-    $second = $resolver->resolveLookupValues($ids, $this->field);
+    try {
+        $first = $resolver->resolveLookupValues($ids, $this->field);
+        $second = $resolver->resolveLookupValues($ids, $this->field);
 
-    expect($queries)->toBe(1)
-        ->and($first->all())->toBe($posts->pluck('title')->all())
-        ->and($second->all())->toBe($posts->pluck('title')->all());
+        $postQueries = count(array_filter(
+            DB::getQueryLog(),
+            static fn (array $entry): bool => str_contains($entry['query'], '"posts"')
+                || str_contains($entry['query'], '`posts`'),
+        ));
+
+        expect($postQueries)->toBe(1)
+            ->and($first->all())->toBe($posts->pluck('title')->all())
+            ->and($second->all())->toBe($posts->pluck('title')->all());
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
 });
 
 it('fires one query for missing ids even when some are already cached', function (): void {
@@ -60,16 +67,23 @@ it('fires one query for missing ids even when some are already cached', function
     $resolver = app(LookupResolver::class);
     $resolver->resolveLookupValues([$allIds[0], $allIds[1]], $this->field);
 
-    $queries = 0;
-    DB::listen(function ($query) use (&$queries): void {
-        if (str_contains($query->sql, '"posts"') || str_contains($query->sql, '`posts`')) {
-            $queries++;
-        }
-    });
+    DB::flushQueryLog();
+    DB::enableQueryLog();
 
-    $resolver->resolveLookupValues($allIds, $this->field);
+    try {
+        $resolver->resolveLookupValues($allIds, $this->field);
 
-    expect($queries)->toBe(1);
+        $postQueries = count(array_filter(
+            DB::getQueryLog(),
+            static fn (array $entry): bool => str_contains($entry['query'], '"posts"')
+                || str_contains($entry['query'], '`posts`'),
+        ));
+
+        expect($postQueries)->toBe(1);
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
 });
 
 it('returns titles in the order of submitted ids', function (): void {
@@ -88,18 +102,25 @@ it('returns titles in the order of submitted ids', function (): void {
 it('skips non-scalar lookup values without hitting the database', function (): void {
     Post::factory()->create();
 
-    $queries = 0;
-    DB::listen(function ($query) use (&$queries): void {
-        if (str_contains($query->sql, '"posts"') || str_contains($query->sql, '`posts`')) {
-            $queries++;
-        }
-    });
+    DB::flushQueryLog();
+    DB::enableQueryLog();
 
-    $result = app(LookupResolver::class)
-        ->resolveLookupValues([['nested' => 'object']], $this->field);
+    try {
+        $result = app(LookupResolver::class)
+            ->resolveLookupValues([['nested' => 'object']], $this->field);
 
-    expect($queries)->toBe(0)
-        ->and($result->all())->toBe([]);
+        $postQueries = count(array_filter(
+            DB::getQueryLog(),
+            static fn (array $entry): bool => str_contains($entry['query'], '"posts"')
+                || str_contains($entry['query'], '`posts`'),
+        ));
+
+        expect($postQueries)->toBe(0)
+            ->and($result->all())->toBe([]);
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
 });
 
 describe('scopeWithCustomFieldValues preloading', function (): void {
@@ -126,20 +147,86 @@ describe('scopeWithCustomFieldValues preloading', function (): void {
 
         $resolver = app(LookupResolver::class);
 
-        $queries = 0;
-        DB::listen(function ($query) use (&$queries): void {
-            if (str_contains($query->sql, '"posts"') || str_contains($query->sql, '`posts`')) {
-                $queries++;
-            }
-        });
+        DB::flushQueryLog();
+        DB::enableQueryLog();
 
-        $titles = $loaded->map(function (Post $host) use ($resolver): string {
-            $value = $host->getCustomFieldValue($this->field);
+        try {
+            $titles = $loaded->map(function (Post $host) use ($resolver): string {
+                $value = $host->getCustomFieldValue($this->field);
 
-            return $resolver->resolveLookupValues([$value], $this->field)->first() ?? '';
-        });
+                return $resolver->resolveLookupValues([$value], $this->field)->first() ?? '';
+            });
 
-        expect($queries)->toBe(0)
-            ->and($titles->all())->toBe($targets->pluck('title')->all());
+            $postQueries = count(array_filter(
+                DB::getQueryLog(),
+                static fn (array $entry): bool => str_contains($entry['query'], '"posts"')
+                    || str_contains($entry['query'], '`posts`'),
+            ));
+
+            expect($postQueries)->toBe(0)
+                ->and($titles->all())->toBe($targets->pluck('title')->all());
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+    });
+});
+
+describe('Preload handles Collection-shaped values and empty strings', function (): void {
+    it('preloads lookup titles from multi-choice values stored as Collection (json_value cast)', function (): void {
+        $section = CustomFieldSection::factory()
+            ->forEntityType(Post::class)
+            ->create(['active' => true]);
+
+        $multiField = CustomField::factory()->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => Post::class,
+            'code' => 'related_posts',
+            'name' => 'Related Posts',
+            'type' => 'multi-select',
+            'lookup_type' => Post::class,
+            'settings' => new CustomFieldSettingsData(allow_multiple: true),
+        ]);
+
+        $targets = Post::factory()->count(3)->create();
+
+        $host = Post::factory()->create();
+        CustomFieldValue::factory()->create([
+            'custom_field_id' => $multiField->getKey(),
+            'entity_type' => Post::class,
+            'entity_id' => $host->getKey(),
+            'json_value' => $targets->pluck('id')->all(),
+        ]);
+
+        app(LookupCache::class)->flush();
+
+        Post::query()->where('id', $host->getKey())->withCustomFieldValues()->get();
+
+        expect(app(LookupCache::class)->titleFor(Post::class, $targets[0]->id))->toBe($targets[0]->title)
+            ->and(app(LookupCache::class)->titleFor(Post::class, $targets[1]->id))->toBe($targets[1]->title)
+            ->and(app(LookupCache::class)->titleFor(Post::class, $targets[2]->id))->toBe($targets[2]->title);
+    });
+
+    it('ignores blank-string ids without hitting the database', function (): void {
+        Post::factory()->create();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        try {
+            $result = app(LookupResolver::class)->resolveLookupValues(['', null], $this->field);
+
+            $postQueries = count(array_filter(
+                DB::getQueryLog(),
+                static fn (array $entry): bool => str_contains($entry['query'], '"posts"')
+                    || str_contains($entry['query'], '`posts`'),
+            ));
+
+            expect($postQueries)->toBe(0)
+                ->and($result->all())->toBe([]);
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
     });
 });
