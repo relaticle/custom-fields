@@ -98,3 +98,16 @@ it('preserves backwards-compatible description_position keys', function (string 
     'field.form.description_position_options.below',
     'field.form.description_position_options.above',
 ]);
+
+it('has no duplicate top-level keys in any language file (PHP silently drops earlier definitions)', function (string $path): void {
+    $contents = file_get_contents($path);
+    preg_match_all("/^    '([^']+)' =>/m", $contents, $matches);
+
+    $duplicates = array_filter(array_count_values($matches[1]), fn (int $count): bool => $count > 1);
+
+    expect($duplicates)->toBe([], sprintf(
+        'Duplicate top-level key(s) in %s: %s. PHP keeps only the last definition, masking earlier values.',
+        basename(dirname($path)).'/'.basename($path),
+        implode(', ', array_keys($duplicates)),
+    ));
+})->with(fn () => glob(__DIR__.'/../../../resources/lang/*/*.php'));
