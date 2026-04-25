@@ -34,6 +34,7 @@ use Relaticle\CustomFields\Providers\ImportsServiceProvider;
 use Relaticle\CustomFields\Providers\ValidationServiceProvider;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Services\ValueResolver\LookupCache;
 use Relaticle\CustomFields\Services\ValueResolver\ValueResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -55,6 +56,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(CustomsFieldsMigrators::class, CustomFieldsMigrator::class);
         $this->app->singleton(ValueResolvers::class, ValueResolver::class);
+        $this->app->scoped(LookupCache::class);
 
         $this->app->singleton(TenantContextService::class);
         $this->app->singleton(BackendVisibilityService::class);

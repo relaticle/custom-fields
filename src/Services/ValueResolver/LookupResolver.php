@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
-use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
-use Relaticle\CustomFields\Exceptions\MissingRecordTitleAttributeException;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Throwable;
 
 final readonly class LookupResolver
 {
+    public function __construct(
+        private LookupCache $cache,
+        private LookupAttributeResolver $attributes,
+    ) {}
+
     /**
      * Resolve lookup values based on the custom field configuration.
      *
@@ -36,30 +38,39 @@ final readonly class LookupResolver
             return $customField->options->whereIn('id', $values)->pluck('name');
         }
 
-        [$lookupInstance, $recordTitleAttribute] = $this->getLookupAttributes($customField->lookup_type);
-
-        return $lookupInstance->whereIn('id', $values)->pluck($recordTitleAttribute);
+        return $this->resolveAgainstLookupModel($customField->lookup_type, $values);
     }
 
     /**
-     * @return array{0: mixed, 1: string}
+     * @param  array<int, mixed>  $values
+     * @return Collection<int, string>
      *
      * @throws Throwable
      */
-    private function getLookupAttributes(string $lookupType): array
+    private function resolveAgainstLookupModel(string $lookupType, array $values): Collection
     {
-        $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
-        $lookupInstance = app($lookupModelPath);
+        $scalarIds = array_values(array_filter(
+            $values,
+            static fn (mixed $id): bool => is_int($id) || (is_string($id) && $id !== ''),
+        ));
 
-        $resourcePath = Filament::getModelResource($lookupModelPath);
-        $resourceInstance = app($resourcePath);
-        $recordTitleAttribute = $resourceInstance->getRecordTitleAttribute();
+        $missing = $this->cache->missing($lookupType, $scalarIds);
 
-        throw_if(
-            $recordTitleAttribute === null,
-            new MissingRecordTitleAttributeException(sprintf('The `%s` does not have a record title custom attribute.', $resourcePath))
-        );
+        if ($missing !== []) {
+            [$lookupInstance, $recordTitleAttribute] = $this->attributes->resolve($lookupType);
 
-        return [$lookupInstance, $recordTitleAttribute];
+            $freshTitles = $lookupInstance->newQuery()
+                ->whereIn('id', $missing)
+                ->pluck($recordTitleAttribute, 'id')
+                ->map(static fn (mixed $title): string => (string) $title)
+                ->all();
+
+            $this->cache->remember($lookupType, $freshTitles);
+        }
+
+        return collect($scalarIds)
+            ->map(fn (int|string $id): ?string => $this->cache->titleFor($lookupType, $id))
+            ->reject(static fn (?string $title): bool => $title === null)
+            ->values();
     }
 }

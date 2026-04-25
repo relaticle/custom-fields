@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Models\Concerns;
 
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
@@ -17,6 +18,7 @@ use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
+use Relaticle\CustomFields\Services\ValueResolver\LookupPreloader;
 
 /**
  * @see HasCustomFields
@@ -124,7 +126,13 @@ trait UsesCustomFields
 
     public function scopeWithCustomFieldValues(Builder $query): Builder
     {
-        return $query->with('customFieldValues.customField.options');
+        return $query
+            ->with('customFieldValues.customField.options')
+            ->afterQuery(function ($records): void {
+                if ($records instanceof EloquentCollection) {
+                    app(LookupPreloader::class)->preload($records);
+                }
+            });
     }
 
     public function getCustomFieldValue(CustomField $customField): mixed
