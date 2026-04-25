@@ -32,9 +32,4 @@ enum EntityFeature: string implements HasLabel
             self::SCOPED_MANAGEMENT => __('custom-fields::custom-fields.enums.entity_feature.descriptions.scoped_management'),
         };
     }
-
-    public function description(): string
-    {
-        return $this->getDescription();
-    }
 }
