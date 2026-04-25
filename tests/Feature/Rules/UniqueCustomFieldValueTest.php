@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -377,6 +378,69 @@ describe('Non-scalar value handling', function (): void {
         );
 
         expect($errors)->not->toBeEmpty();
+    });
+});
+
+describe('Query efficiency', function (): void {
+    it('issues a single query when validating a multi-value link field with many values', function (): void {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        try {
+            $rule = new UniqueCustomFieldValue($this->linkField);
+            $errors = [];
+
+            $rule->validate(
+                'custom_fields.domains',
+                ['a.com', 'b.com', 'c.com', 'd.com', 'e.com'],
+                function (string $message) use (&$errors): void {
+                    $errors[] = $message;
+                }
+            );
+
+            $queries = count(array_filter(
+                DB::getQueryLog(),
+                static fn (array $entry): bool => str_contains($entry['query'], 'custom_field_values'),
+            ));
+
+            expect($queries)->toBe(1);
+            expect($errors)->toBeEmpty();
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+    });
+
+    it('issues a single query when validating a multi-value field where one value already exists', function (): void {
+        $existing = Post::factory()->create();
+        storeLinkValueForPost($existing, $this->linkField, ['taken.com']);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        try {
+            $rule = new UniqueCustomFieldValue($this->linkField);
+            $errors = [];
+
+            $rule->validate(
+                'custom_fields.domains',
+                ['fresh.com', 'another.com', 'taken.com', 'more.com', 'last.com'],
+                function (string $message) use (&$errors): void {
+                    $errors[] = $message;
+                }
+            );
+
+            $queries = count(array_filter(
+                DB::getQueryLog(),
+                static fn (array $entry): bool => str_contains($entry['query'], 'custom_field_values'),
+            ));
+
+            expect($queries)->toBe(1);
+            expect($errors)->not->toBeEmpty();
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
     });
 });
 
