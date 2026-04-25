@@ -18,7 +18,7 @@ final readonly class MaxLengthCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Maximum Length';
+        return __('custom-fields::custom-fields.validation.max_length');
     }
 
     /** @return array<int, Component> */
@@ -29,7 +29,7 @@ final readonly class MaxLengthCapability implements ValidationCapability
                 ->numeric()
                 ->integer()
                 ->minValue(1)
-                ->label('Maximum Length'),
+                ->label(__('custom-fields::custom-fields.validation.max_length')),
         ];
     }
 

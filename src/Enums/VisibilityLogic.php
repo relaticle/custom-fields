@@ -17,8 +17,8 @@ enum VisibilityLogic: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::ALL => 'All conditions must be met (AND)',
-            self::ANY => 'Any condition must be met (OR)',
+            self::ALL => __('custom-fields::custom-fields.enums.visibility_logic.all'),
+            self::ANY => __('custom-fields::custom-fields.enums.visibility_logic.any'),
         };
     }
 

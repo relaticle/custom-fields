@@ -18,9 +18,9 @@ enum VisibilityMode: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::ALWAYS_VISIBLE => 'Always visible',
-            self::SHOW_WHEN => 'Show when conditions are met',
-            self::HIDE_WHEN => 'Hide when conditions are met',
+            self::ALWAYS_VISIBLE => __('custom-fields::custom-fields.enums.visibility_mode.always_visible'),
+            self::SHOW_WHEN => __('custom-fields::custom-fields.enums.visibility_mode.show_when'),
+            self::HIDE_WHEN => __('custom-fields::custom-fields.enums.visibility_mode.hide_when'),
         };
     }
 

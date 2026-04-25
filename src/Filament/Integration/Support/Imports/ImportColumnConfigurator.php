@@ -116,7 +116,7 @@ final class ImportColumnConfigurator
             });
 
             $column->example('tag1, tag2, tag3');
-            $column->helperText('Separate multiple values with commas');
+            $column->helperText(__('custom-fields::custom-fields.import.multi_value_helper'));
         } elseif ($customField->typeData->requiresLookupType) {
             // Lookup fields (Record type) handle entity references
             $this->configureLookup($column, $customField, true);
@@ -410,7 +410,7 @@ final class ImportColumnConfigurator
                 $column->example($example);
 
                 if ($multiple) {
-                    $column->helperText('Separate multiple values with commas');
+                    $column->helperText(__('custom-fields::custom-fields.import.multi_value_helper'));
                 }
             }
         } catch (Throwable) {

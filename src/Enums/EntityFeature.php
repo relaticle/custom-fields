@@ -18,18 +18,18 @@ enum EntityFeature: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::CUSTOM_FIELDS => 'Custom Fields',
-            self::LOOKUP_SOURCE => 'Lookup Source',
-            self::SCOPED_MANAGEMENT => 'Scoped Management',
+            self::CUSTOM_FIELDS => __('custom-fields::custom-fields.enums.entity_feature.labels.custom_fields'),
+            self::LOOKUP_SOURCE => __('custom-fields::custom-fields.enums.entity_feature.labels.lookup_source'),
+            self::SCOPED_MANAGEMENT => __('custom-fields::custom-fields.enums.entity_feature.labels.scoped_management'),
         };
     }
 
-    public function description(): string
+    public function getDescription(): string
     {
         return match ($this) {
-            self::CUSTOM_FIELDS => 'Entity can have custom fields attached',
-            self::LOOKUP_SOURCE => 'Entity can be used as a lookup source for choice fields',
-            self::SCOPED_MANAGEMENT => 'Entity custom fields are managed per-parent record, not on the global management page',
+            self::CUSTOM_FIELDS => __('custom-fields::custom-fields.enums.entity_feature.descriptions.custom_fields'),
+            self::LOOKUP_SOURCE => __('custom-fields::custom-fields.enums.entity_feature.descriptions.lookup_source'),
+            self::SCOPED_MANAGEMENT => __('custom-fields::custom-fields.enums.entity_feature.descriptions.scoped_management'),
         };
     }
 }

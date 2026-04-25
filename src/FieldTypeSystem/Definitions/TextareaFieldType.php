@@ -22,7 +22,7 @@ final class TextareaFieldType extends BaseFieldType
     {
         return FieldSchema::text()
             ->key('textarea')
-            ->label('Textarea')
+            ->label(__('custom-fields::custom-fields.field_types.textarea'))
             ->icon('mdi-form-textarea')
             ->formComponent(TextareaFormComponent::class)
             ->tableColumn(TextColumn::class)

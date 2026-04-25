@@ -29,6 +29,13 @@ return [
         'notifications' => [
             'created' => 'Section created',
         ],
+        'actions' => [
+            'activate' => 'Activate',
+            'deactivate' => 'Deactivate',
+            'edit_modal_heading' => 'Edit section',
+            'delete_modal_heading' => 'Delete section',
+            'delete_modal_description' => 'Are you sure you want to delete this section? This cannot be undone.',
+        ],
     ],
 
     'field' => [
@@ -114,6 +121,10 @@ return [
         'actions' => [
             'activate' => 'Activate',
             'deactivate' => 'Deactivate',
+            'duplicate' => 'Duplicate',
+            'edit_modal_heading' => 'Edit field',
+            'delete_modal_heading' => 'Delete field',
+            'delete_modal_description' => 'Are you sure you want to delete this field? This cannot be undone.',
         ],
     ],
 
@@ -407,6 +418,161 @@ return [
     'record' => [
         'search_placeholder' => 'Search records...',
         'add_record_placeholder' => 'Add record...',
+    ],
+
+    'enums' => [
+        'avatar_shape' => [
+            'circle' => 'Circle',
+            'square' => 'Square',
+        ],
+        'condition_source' => [
+            'custom_field' => 'Custom Field',
+            'model_attribute' => 'Model Attribute',
+        ],
+        'custom_field_section_type' => [
+            'section' => 'Section',
+            'fieldset' => 'Fieldset',
+            'headless' => 'Headless',
+        ],
+        'custom_field_width' => [
+            '25' => '25%',
+            '33' => '33%',
+            '50' => '50%',
+            '66' => '66%',
+            '75' => '75%',
+            '100' => 'Full',
+        ],
+        'date_anchor' => [
+            'today' => 'Today',
+            'fixed_date' => 'Fixed Date',
+            'custom_field' => 'Another Field',
+            'record_created' => 'Record Creation Date',
+        ],
+        'date_offset_direction' => [
+            'before' => 'Before',
+            'after' => 'After',
+        ],
+        'date_unit' => [
+            'days' => 'Days',
+            'weeks' => 'Weeks',
+            'months' => 'Months',
+            'quarters' => 'Quarters',
+            'years' => 'Years',
+        ],
+        'description_position' => [
+            'below' => 'Below field',
+            'above' => 'Above field',
+        ],
+        'entity_feature' => [
+            'labels' => [
+                'custom_fields' => 'Custom Fields',
+                'lookup_source' => 'Lookup Source',
+                'scoped_management' => 'Scoped Management',
+            ],
+            'descriptions' => [
+                'custom_fields' => 'Entity can have custom fields attached',
+                'lookup_source' => 'Entity can be used as a lookup source for choice fields',
+                'scoped_management' => 'Entity custom fields are managed per-parent record, not on the global management page',
+            ],
+        ],
+        'visibility_logic' => [
+            'all' => 'All conditions must be met (AND)',
+            'any' => 'Any condition must be met (OR)',
+        ],
+        'visibility_mode' => [
+            'always_visible' => 'Always visible',
+            'show_when' => 'Show when conditions are met',
+            'hide_when' => 'Hide when conditions are met',
+        ],
+        'visibility_operator' => [
+            'equals' => 'Equals',
+            'not_equals' => 'Does not equal',
+            'contains' => 'Contains',
+            'not_contains' => 'Does not contain',
+            'greater_than' => 'Greater than',
+            'less_than' => 'Less than',
+            'is_empty' => 'Is empty',
+            'is_not_empty' => 'Is not empty',
+        ],
+    ],
+
+    'visibility' => [
+        'heading' => 'Conditional Visibility',
+        'mode' => 'Visibility',
+        'logic' => 'Condition Logic',
+        'conditions' => 'Conditions',
+        'source' => 'Source',
+        'field' => 'Field',
+        'operator' => 'Operator',
+        'value' => 'Value',
+    ],
+
+    'date_constraint' => [
+        'constraint' => 'Constraint',
+        'offset_value' => 'Offset value',
+        'unit' => 'Unit',
+        'direction' => 'Direction',
+        'reference_field' => 'Reference field',
+        'date' => 'Date',
+    ],
+
+    'field_types' => [
+        'toggle' => 'Toggle',
+        'toggle_buttons' => 'Toggle Buttons',
+        'number' => 'Number',
+        'record' => 'Record',
+        'file_upload' => 'File Upload',
+        'multi_select' => 'Multi Select',
+        'checkbox_list' => 'Checkbox List',
+        'color_picker' => 'Color Picker',
+        'checkbox' => 'Checkbox',
+        'date' => 'Date',
+        'radio' => 'Radio',
+        'link' => 'Link',
+        'text' => 'Text',
+        'date_time' => 'Date and Time',
+        'rich_editor' => 'Rich Editor',
+        'currency' => 'Currency',
+        'phone' => 'Phone Number',
+        'email' => 'Email',
+        'textarea' => 'Textarea',
+        'markdown_editor' => 'Markdown Editor',
+        'select' => 'Select',
+        'tags_input' => 'Tags Input',
+    ],
+
+    'validation' => [
+        'min_length' => 'Minimum Length',
+        'max_length' => 'Maximum Length',
+        'min_value' => 'Minimum Value',
+        'max_value' => 'Maximum Value',
+        'min_selections' => 'Minimum Selections',
+        'max_selections' => 'Maximum Selections',
+        'max_file_size_kb' => 'Maximum File Size (KB)',
+        'accepted_file_types' => 'Accepted File Types',
+        'accepted_file_types_placeholder' => 'e.g. image/png, application/pdf',
+        'decimal_places' => 'Decimal Places',
+        'decimal_places_placeholder' => 'Enter a value between 0 and 4',
+    ],
+
+    'currency' => [
+        'fieldset' => 'Currency Settings',
+        'currency' => 'Currency',
+        'display' => 'Display',
+        'decimal_places' => 'Decimal Places',
+        'decimal_places_helper' => 'Auto-detected from currency. Override only if needed.',
+        'display_options' => [
+            'symbol' => 'Symbol ($1,200.50)',
+            'code' => 'Code (USD 1,200.50)',
+        ],
+    ],
+
+    'import' => [
+        'multi_value_helper' => 'Separate multiple values with commas',
+    ],
+
+    'file_upload' => [
+        'placeholder' => 'Choose a file or drag and drop',
     ],
 
 ];

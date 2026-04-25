@@ -22,7 +22,7 @@ final class MarkdownEditorFieldType extends BaseFieldType
     {
         return FieldSchema::text()
             ->key('markdown-editor')
-            ->label('Markdown Editor')
+            ->label(__('custom-fields::custom-fields.field_types.markdown_editor'))
             ->icon('mdi-language-markdown')
             ->formComponent(MarkdownEditorComponent::class)
             ->tableColumn(RichTextColumn::class)

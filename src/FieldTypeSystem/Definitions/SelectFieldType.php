@@ -17,7 +17,7 @@ class SelectFieldType extends BaseFieldType
     {
         return FieldSchema::singleChoice()
             ->key('select')
-            ->label('Select')
+            ->label(__('custom-fields::custom-fields.field_types.select'))
             ->icon('mdi-form-select')
             ->formComponent(SelectComponent::class)
             ->tableColumn(SingleChoiceColumn::class)

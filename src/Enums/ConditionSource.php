@@ -14,8 +14,8 @@ enum ConditionSource: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::CustomField => 'Custom Field',
-            self::ModelAttribute => 'Model Attribute',
+            self::CustomField => __('custom-fields::custom-fields.enums.condition_source.custom_field'),
+            self::ModelAttribute => __('custom-fields::custom-fields.enums.condition_source.model_attribute'),
         };
     }
 }

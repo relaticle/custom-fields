@@ -23,7 +23,7 @@ class MultiSelectFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('multi-select')
-            ->label('Multi Select')
+            ->label(__('custom-fields::custom-fields.field_types.multi_select'))
             ->icon('mdi-form-dropdown')
             ->formComponent(MultiSelectComponent::class)
             ->tableColumn(MultiChoiceColumn::class)

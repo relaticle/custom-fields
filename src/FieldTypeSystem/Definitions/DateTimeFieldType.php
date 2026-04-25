@@ -18,7 +18,7 @@ class DateTimeFieldType extends BaseFieldType
     {
         return FieldSchema::dateTime()
             ->key('date-time')
-            ->label('Date and Time')
+            ->label(__('custom-fields::custom-fields.field_types.date_time'))
             ->icon('mdi-calendar-clock')
             ->formComponent(DateTimeComponent::class)
             ->tableColumn(DateTimeColumn::class)

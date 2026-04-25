@@ -18,7 +18,7 @@ final readonly class MaxValueCapability implements ValidationCapability
 
     public function label(): string
     {
-        return 'Maximum Value';
+        return __('custom-fields::custom-fields.validation.max_value');
     }
 
     /** @return array<int, Component> */
@@ -27,7 +27,7 @@ final readonly class MaxValueCapability implements ValidationCapability
         return [
             TextInput::make($statePath.'.max_value')
                 ->numeric()
-                ->label('Maximum Value'),
+                ->label(__('custom-fields::custom-fields.validation.max_value')),
         ];
     }
 

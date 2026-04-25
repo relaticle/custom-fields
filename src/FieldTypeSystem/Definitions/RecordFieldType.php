@@ -19,7 +19,7 @@ class RecordFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('record')
-            ->label('Record')
+            ->label(__('custom-fields::custom-fields.field_types.record'))
             ->icon('heroicon-o-link')
             ->formComponent(RecordSelectComponent::class)
             ->tableColumn(RecordColumn::class)

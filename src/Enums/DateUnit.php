@@ -17,11 +17,11 @@ enum DateUnit: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Days => 'Days',
-            self::Weeks => 'Weeks',
-            self::Months => 'Months',
-            self::Quarters => 'Quarters',
-            self::Years => 'Years',
+            self::Days => __('custom-fields::custom-fields.enums.date_unit.days'),
+            self::Weeks => __('custom-fields::custom-fields.enums.date_unit.weeks'),
+            self::Months => __('custom-fields::custom-fields.enums.date_unit.months'),
+            self::Quarters => __('custom-fields::custom-fields.enums.date_unit.quarters'),
+            self::Years => __('custom-fields::custom-fields.enums.date_unit.years'),
         };
     }
 }

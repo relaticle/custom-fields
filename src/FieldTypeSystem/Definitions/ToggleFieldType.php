@@ -20,7 +20,7 @@ class ToggleFieldType extends BaseFieldType
     {
         return FieldSchema::boolean()
             ->key('toggle')
-            ->label('Toggle')
+            ->label(__('custom-fields::custom-fields.field_types.toggle'))
             ->icon('mdi-toggle-switch')
             ->formComponent(ToggleComponent::class)
             ->tableColumn(IconColumn::class)

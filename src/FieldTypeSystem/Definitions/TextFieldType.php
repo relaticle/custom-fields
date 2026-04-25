@@ -22,7 +22,7 @@ class TextFieldType extends BaseFieldType
     {
         return FieldSchema::text()
             ->key('text')
-            ->label('Text')
+            ->label(__('custom-fields::custom-fields.field_types.text'))
             ->icon('mdi-form-textbox')
             ->formComponent(TextInputComponent::class)
             ->tableColumn(TextColumn::class)

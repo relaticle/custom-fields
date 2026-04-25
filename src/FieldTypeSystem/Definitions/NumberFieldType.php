@@ -23,7 +23,7 @@ class NumberFieldType extends BaseFieldType
     {
         return FieldSchema::numeric()
             ->key('number')
-            ->label('Number')
+            ->label(__('custom-fields::custom-fields.field_types.number'))
             ->icon('mdi-numeric')
             ->formComponent(NumberComponent::class)
             ->tableColumn(TextColumn::class)

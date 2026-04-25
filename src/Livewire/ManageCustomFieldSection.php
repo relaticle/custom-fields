@@ -88,6 +88,8 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         }
 
         return Action::make('edit')
+            ->label(__('filament-actions::edit.single.label'))
+            ->modalHeading(__('custom-fields::custom-fields.section.actions.edit_modal_heading'))
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::sectionModel())
             ->slideOver(false)
@@ -106,6 +108,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     public function activateAction(): Action
     {
         return Action::make('activate')
+            ->label(__('custom-fields::custom-fields.section.actions.activate'))
             ->icon('heroicon-o-archive-box')
             ->model(CustomFields::sectionModel())
             ->record($this->section)
@@ -116,6 +119,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     public function deactivateAction(): Action
     {
         return Action::make('deactivate')
+            ->label(__('custom-fields::custom-fields.section.actions.deactivate'))
             ->icon('heroicon-o-archive-box-x-mark')
             ->model(CustomFields::sectionModel())
             ->record($this->section)
@@ -126,6 +130,9 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     public function deleteAction(): Action
     {
         return Action::make('delete')
+            ->label(__('filament-actions::delete.single.label'))
+            ->modalHeading(__('custom-fields::custom-fields.section.actions.delete_modal_heading'))
+            ->modalDescription(__('custom-fields::custom-fields.section.actions.delete_modal_description'))
             ->requiresConfirmation()
             ->icon('heroicon-o-trash')
             ->model(CustomFields::sectionModel())

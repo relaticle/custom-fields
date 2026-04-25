@@ -95,6 +95,7 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
     {
         return Action::make('editField')
             ->label(__('filament-actions::edit.single.label'))
+            ->modalHeading(__('custom-fields::custom-fields.field.actions.edit_modal_heading'))
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::customFieldModel())
             ->record(fn (array $arguments): ?CustomField => $this->findField($arguments['fieldId']))
@@ -142,6 +143,8 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
     {
         return Action::make('deleteField')
             ->label(__('filament-actions::delete.single.label'))
+            ->modalHeading(__('custom-fields::custom-fields.field.actions.delete_modal_heading'))
+            ->modalDescription(__('custom-fields::custom-fields.field.actions.delete_modal_description'))
             ->requiresConfirmation()
             ->icon('heroicon-o-trash')
             ->color('danger')

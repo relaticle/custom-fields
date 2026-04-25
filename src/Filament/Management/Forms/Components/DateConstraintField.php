@@ -31,7 +31,7 @@ final class DateConstraintField
             Fieldset::make($label)
                 ->schema([
                     Select::make($statePath.'.preset')
-                        ->label('Constraint')
+                        ->label(__('custom-fields::custom-fields.date_constraint.constraint'))
                         ->options(self::presetOptions($context))
                         ->default('none')
                         ->live()
@@ -55,7 +55,7 @@ final class DateConstraintField
                         ->columnSpanFull(),
 
                     TextInput::make($statePath.'.offset')
-                        ->label('Offset value')
+                        ->label(__('custom-fields::custom-fields.date_constraint.offset_value'))
                         ->numeric()
                         ->integer()
                         ->minValue(0)
@@ -67,7 +67,7 @@ final class DateConstraintField
                         )),
 
                     Select::make($statePath.'.offset_unit')
-                        ->label('Unit')
+                        ->label(__('custom-fields::custom-fields.date_constraint.unit'))
                         ->options(DateUnit::class)
                         ->default(DateUnit::Days->value)
                         ->visible(fn (Get $get): bool => in_array(
@@ -77,13 +77,13 @@ final class DateConstraintField
                         )),
 
                     Select::make($statePath.'.offset_direction')
-                        ->label('Direction')
+                        ->label(__('custom-fields::custom-fields.date_constraint.direction'))
                         ->options(DateOffsetDirection::class)
                         ->default(DateOffsetDirection::After->value)
                         ->visible(fn (Get $get): bool => $get($statePath.'.preset') === 'today_offset'),
 
                     Select::make($statePath.'.field_reference')
-                        ->label('Reference field')
+                        ->label(__('custom-fields::custom-fields.date_constraint.reference_field'))
                         ->options(function (Get $get, ?CustomField $record): array {
                             $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
                             $currentCode = $record?->code ?? $get('../../../code'); // @phpstan-ignore nullsafe.neverNull
@@ -129,7 +129,7 @@ final class DateConstraintField
                         ->visible(fn (Get $get): bool => $get($statePath.'.preset') === 'custom_field'),
 
                     DatePicker::make($statePath.'.fixed_date')
-                        ->label('Date')
+                        ->label(__('custom-fields::custom-fields.date_constraint.date'))
                         ->native(false)
                         ->format('Y-m-d')
                         ->required()

@@ -57,9 +57,9 @@ final class VisibilityComponent extends Component
 
     private function buildFieldset(): Fieldset
     {
-        return Fieldset::make('Conditional Visibility')->schema([
+        return Fieldset::make(__('custom-fields::custom-fields.visibility.heading'))->schema([
             Select::make('settings.visibility.mode')
-                ->label('Visibility')
+                ->label(__('custom-fields::custom-fields.visibility.mode'))
                 ->options(VisibilityMode::class)
                 ->default(VisibilityMode::ALWAYS_VISIBLE)
                 ->required()
@@ -72,14 +72,14 @@ final class VisibilityComponent extends Component
                 ->live(),
 
             Select::make('settings.visibility.logic')
-                ->label('Condition VisibilityLogic')
+                ->label(__('custom-fields::custom-fields.visibility.logic'))
                 ->options(VisibilityLogic::class)
                 ->default(VisibilityLogic::ALL)
                 ->required()
                 ->visible(fn (Get $get): bool => $this->modeRequiresConditions($get)),
 
             Repeater::make('settings.visibility.conditions')
-                ->label('Conditions')
+                ->label(__('custom-fields::custom-fields.visibility.conditions'))
                 ->schema($this->buildConditionSchema())
                 ->visible(fn (Get $get): bool => $this->modeRequiresConditions($get))
                 ->defaultItems(1)
@@ -104,7 +104,7 @@ final class VisibilityComponent extends Component
 
         if ($modelAttrsEnabled) {
             $schema[] = Select::make('source')
-                ->label('Source')
+                ->label(__('custom-fields::custom-fields.visibility.source'))
                 ->options(ConditionSource::class)
                 ->default(ConditionSource::CustomField)
                 ->required()
@@ -120,7 +120,7 @@ final class VisibilityComponent extends Component
         $valueSpan = $modelAttrsEnabled ? 4 : 5;
 
         $schema[] = Select::make('field_code')
-            ->label('Field')
+            ->label(__('custom-fields::custom-fields.visibility.field'))
             ->options(fn (Get $get): array => $this->getAvailableFields($get))
             ->required()
             ->live()
@@ -128,7 +128,7 @@ final class VisibilityComponent extends Component
             ->columnSpan($fieldCodeSpan);
 
         $schema[] = Select::make('operator')
-            ->label('VisibilityOperator')
+            ->label(__('custom-fields::custom-fields.visibility.operator'))
             ->options(fn (Get $get): array => $this->getCompatibleOperators($get))
             ->required()
             ->live()
@@ -151,7 +151,7 @@ final class VisibilityComponent extends Component
     {
         return [
             Select::make('single_value')
-                ->label('Value')
+                ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->live()
                 ->searchable()
                 ->options(fn (Get $get): array => $this->getFieldOptions($get))
@@ -162,7 +162,7 @@ final class VisibilityComponent extends Component
                 ->columnSpan($columnSpan),
 
             Select::make('multiple_values')
-                ->label('Value')
+                ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->live()
                 ->searchable()
                 ->multiple()
@@ -175,14 +175,14 @@ final class VisibilityComponent extends Component
 
             Toggle::make('boolean_value')
                 ->inline(false)
-                ->label('Value')
+                ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->visible(fn (Get $get): bool => $this->shouldShowToggle($get))
                 ->afterStateHydrated(fn (Toggle $component, Get $get): Toggle => $component->state($get('value')))
                 ->afterStateUpdated(fn (bool $state, Set $set): mixed => $set('value', $state))
                 ->columnSpan($columnSpan),
 
             TextInput::make('text_value')
-                ->label('Value')
+                ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
                 ->visible(fn (Get $get): bool => $this->shouldShowTextInput($get))
                 ->afterStateHydrated(fn (TextInput $component, Get $get): TextInput => $component->state($get('value') ?? ''))

@@ -22,7 +22,7 @@ class DateFieldType extends BaseFieldType
     {
         return FieldSchema::date()
             ->key('date')
-            ->label('Date')
+            ->label(__('custom-fields::custom-fields.field_types.date'))
             ->icon('mdi-calendar')
             ->formComponent(DateComponent::class)
             ->tableColumn(DateTimeColumn::class)

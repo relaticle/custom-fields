@@ -23,7 +23,7 @@ class CheckboxListFieldType extends BaseFieldType
     {
         return FieldSchema::multiChoice()
             ->key('checkbox-list')
-            ->label('Checkbox List')
+            ->label(__('custom-fields::custom-fields.field_types.checkbox_list'))
             ->icon('mdi-checkbox-multiple-marked')
             ->formComponent(CheckboxListComponent::class)
             ->tableColumn(MultiChoiceColumn::class)

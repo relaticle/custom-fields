@@ -21,7 +21,7 @@ class ToggleButtonsFieldType extends BaseFieldType
     {
         return FieldSchema::singleChoice()
             ->key('toggle-buttons')
-            ->label('Toggle Buttons')
+            ->label(__('custom-fields::custom-fields.field_types.toggle_buttons'))
             ->icon('mdi-toggle-switch-off-outline')
             ->formComponent(ToggleButtonsComponent::class)
             ->tableColumn(SingleChoiceColumn::class)
