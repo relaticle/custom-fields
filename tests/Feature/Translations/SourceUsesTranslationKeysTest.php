@@ -80,9 +80,11 @@ it('source file has no hardcoded English labels and references expected translat
         'forbidden' => [],
         'required' => [
             'field.actions.edit_modal_heading',
+            'field.actions.duplicate',
+            'field.actions.activate',
+            'field.actions.deactivate',
             'field.actions.delete_modal_heading',
             'field.actions.delete_modal_description',
-            'field.actions.duplicate',
         ],
     ],
     'ManageCustomFieldSection' => [
@@ -90,10 +92,10 @@ it('source file has no hardcoded English labels and references expected translat
         'forbidden' => [],
         'required' => [
             'section.actions.edit_modal_heading',
-            'section.actions.delete_modal_heading',
-            'section.actions.delete_modal_description',
             'section.actions.activate',
             'section.actions.deactivate',
+            'section.actions.delete_modal_heading',
+            'section.actions.delete_modal_description',
         ],
     ],
     'ManageFieldsTable' => [
@@ -101,7 +103,10 @@ it('source file has no hardcoded English labels and references expected translat
         'forbidden' => [],
         'required' => [
             'field.actions.edit_modal_heading',
+            'field.actions.activate',
+            'field.actions.deactivate',
             'field.actions.delete_modal_heading',
+            'field.actions.delete_modal_description',
         ],
     ],
     'CurrencyFieldType inner form' => [
