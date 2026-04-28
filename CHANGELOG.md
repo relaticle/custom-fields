@@ -2,6 +2,21 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.6 - 2026-04-28
+
+### What's Changed
+
+* Adds Laravel 13 support — the package now installs and tests cleanly on both Laravel 12 and Laravel 13.
+* Replaces transitive `postare/blade-mdi` dependency with `manukminasyan/blade-mdi`, a Packagist-published fork that widens the `illuminate/support` constraint to include `^13.0`. Same `Postare\BladeMdi\` namespace, no source changes.
+* CI matrix now runs against Laravel 12.* + 13.* on every push.
+
+### Compatibility
+
+* Laravel 12 users: drop-in compatible, no changes required.
+* Laravel 13 users: `composer require relaticle/custom-fields` now works without extra setup.
+
+PR: https://github.com/relaticle/custom-fields/pull/145
+
 ## v3.1.5 - 2026-04-21
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
