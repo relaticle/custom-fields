@@ -124,7 +124,7 @@ final class VisibilityComponent extends Component
             ->options(fn (Get $get): array => $this->getAvailableFields($get))
             ->required()
             ->live()
-            ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetConditionValues($get, $set))
+            ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetValuesAndOperator($get, $set))
             ->columnSpan($fieldCodeSpan);
 
         $schema[] = Select::make('operator')
@@ -465,6 +465,12 @@ final class VisibilityComponent extends Component
         if ($get instanceof Get) {
             $set('operator', array_key_first($this->getCompatibleOperators($get)));
         }
+    }
+
+    private function resetValuesAndOperator(Get $get, Set $set): void
+    {
+        $this->clearAllValueFields($set);
+        $set('operator', array_key_first($this->getCompatibleOperators($get)));
     }
 
     private function clearAllValueFields(Set $set): void
