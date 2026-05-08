@@ -2,6 +2,25 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.1.7 - 2026-05-08
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.1.7 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump ip-address from 10.1.0 to 10.2.0 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/147
+* chore(deps): bump the npm_and_yarn group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/148
+* chore(deps): bump nuxt-og-image from 6.3.7 to 6.5.0 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/150
+* fix: prevent self-clear of field_code in visibility condition repeater by @erikpach in https://github.com/relaticle/custom-fields/pull/146
+* fix(phpstan): use covariant Model in Scope apply signatures for laravel 13 [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/151
+
+### New Contributors
+
+* @erikpach made their first contribution in https://github.com/relaticle/custom-fields/pull/146
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.6...v3.1.7
+
 ## v3.1.6 - 2026-04-28
 
 ### What's Changed
