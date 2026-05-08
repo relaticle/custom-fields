@@ -17,6 +17,8 @@ class CustomFieldsActivableScope extends ActivableScope
 {
     /**
      * Apply the scope to a given Eloquent query builder.
+     *
+     * @param  Builder<covariant Model>  $builder
      */
     #[Override]
     public function apply(Builder $builder, Model $model): void
