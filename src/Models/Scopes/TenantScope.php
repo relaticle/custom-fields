@@ -14,7 +14,7 @@ use Relaticle\CustomFields\Services\TenantContextService;
 class TenantScope implements Scope
 {
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<covariant Model>  $builder
      */
     public function apply(Builder $builder, Model $model): void
     {
