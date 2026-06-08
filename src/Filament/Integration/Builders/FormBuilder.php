@@ -76,10 +76,14 @@ class FormBuilder extends BaseBuilder
         $allFields = $this->getAllFields();
         $dependentFieldCodes = $this->getDependentFieldCodes($allFields);
 
+        // Resolve record for visibility (null for create forms — fail-open)
+        $record = isset($this->model) && $this->model->exists ? $this->model : null;
+
         $createField = fn (CustomField $customField) => $fieldComponentFactory->create(
             $customField,
             $dependentFieldCodes,
-            $allFields
+            $allFields,
+            $record
         );
 
         // Return flat fields if sections are disabled or withoutSections is set
@@ -87,9 +91,6 @@ class FormBuilder extends BaseBuilder
         if ($this->withoutSections || $sectionsDisabled) {
             return $allFields->map($createField);
         }
-
-        // Resolve record for section visibility (null for create forms)
-        $record = isset($this->model) && $this->model->exists ? $this->model : null;
 
         return $this->getFilteredSections()
             ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField, $allFields, $record) {

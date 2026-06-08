@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Text;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FormComponentInterface;
@@ -14,6 +15,7 @@ use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValidationService;
+use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
 
@@ -40,19 +42,20 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * @param  array<string>  $dependentFieldCodes
      * @param  Collection<int, CustomField>|null  $allFields
      */
-    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null): Field
+    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
     {
         $field = $this->create($customField);
         $allFields ??= collect();
 
-        return $this->configure($field, $customField, $allFields, $dependentFieldCodes);
+        return $this->configure($field, $customField, $allFields, $dependentFieldCodes, $record);
     }
 
     protected function configure(
         Field $field,
         CustomField $customField,
         Collection $allFields,
-        array $dependentFieldCodes
+        array $dependentFieldCodes,
+        ?Model $record = null
     ): Field {
         $field
             ->name($customField->getFieldName())
@@ -105,7 +108,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                 fn (Field $field): Field => $this->applyVisibility(
                     $field,
                     $customField,
-                    $allFields
+                    $allFields,
+                    $record
                 )
             )
             ->when(
@@ -181,7 +185,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     private function applyVisibility(
         Field $field,
         CustomField $customField,
-        Collection $allFields
+        Collection $allFields,
+        ?Model $record
     ): Field {
         $jsExpression = $this->frontendVisibilityService->buildVisibilityExpression(
             $customField,
@@ -189,6 +194,13 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         );
 
         if (blank($jsExpression) || $jsExpression === '0') {
+            // Task 7 guarantees a blank/null expression when relation-attribute conditions are present.
+            // For those fields, fall back to server-side evaluation against the loaded record.
+            if ($record instanceof Model && $this->coreVisibilityLogic->getVisibilityData($customField)->hasRelationAttributeConditions()) {
+                return $field->visible(fn (): bool => app(BackendVisibilityService::class)
+                    ->isFieldVisible($record, $customField, $allFields));
+            }
+
             return $field;
         }
 
