@@ -19,6 +19,8 @@ enum VisibilityOperator: string
     case LESS_THAN = 'less_than';
     case IS_EMPTY = 'is_empty';
     case IS_NOT_EMPTY = 'is_not_empty';
+    case IS_IN = 'is_in';
+    case IS_NOT_IN = 'is_not_in';
 
     public function getLabel(): string
     {
@@ -31,6 +33,8 @@ enum VisibilityOperator: string
             self::LESS_THAN => __('custom-fields::custom-fields.enums.visibility_operator.less_than'),
             self::IS_EMPTY => __('custom-fields::custom-fields.enums.visibility_operator.is_empty'),
             self::IS_NOT_EMPTY => __('custom-fields::custom-fields.enums.visibility_operator.is_not_empty'),
+            self::IS_IN => __('custom-fields::custom-fields.enums.visibility_operator.is_in'),
+            self::IS_NOT_IN => __('custom-fields::custom-fields.enums.visibility_operator.is_not_in'),
         };
     }
 
@@ -53,6 +57,8 @@ enum VisibilityOperator: string
             self::LESS_THAN => $this->evaluateLessThan($fieldValue, $expectedValue),
             self::IS_EMPTY => $this->evaluateIsEmpty($fieldValue),
             self::IS_NOT_EMPTY => ! $this->evaluateIsEmpty($fieldValue),
+            self::IS_IN => $this->evaluateIsIn($fieldValue, $expectedValue),
+            self::IS_NOT_IN => ! $this->evaluateIsIn($fieldValue, $expectedValue),
         };
     }
 
@@ -153,6 +159,32 @@ enum VisibilityOperator: string
         }
 
         return false;
+    }
+
+    private function evaluateIsIn(mixed $fieldValue, mixed $expectedValue): bool
+    {
+        $haystack = $this->normalizeToStringSet($fieldValue);
+        $needles = $this->normalizeToStringSet($expectedValue);
+
+        if ($needles === []) {
+            return false;
+        }
+
+        return array_intersect($haystack, $needles) !== [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeToStringSet(mixed $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        $items = is_array($value) ? $value : [$value];
+
+        return array_values(array_unique(array_map(static fn (mixed $item): string => (string) $item, $items)));
     }
 
     /**

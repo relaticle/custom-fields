@@ -504,6 +504,8 @@ return [
             'less_than' => 'Less than',
             'is_empty' => 'Is empty',
             'is_not_empty' => 'Is not empty',
+            'is_in' => 'Is in',
+            'is_not_in' => 'Is not in',
         ],
     ],
 
