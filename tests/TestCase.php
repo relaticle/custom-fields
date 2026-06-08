@@ -29,8 +29,10 @@ use Relaticle\CustomFields\EntitySystem\EntityModel;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
+use Relaticle\CustomFields\Tests\Database\Factories\TagFactory;
 use Relaticle\CustomFields\Tests\database\factories\UserFactory;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Providers\AdminPanelProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
@@ -52,6 +54,7 @@ class TestCase extends BaseTestCase
 
         Factory::guessFactoryNamesUsing(
             fn (string $modelName): string => match ($modelName) {
+                Tag::class => TagFactory::class,
                 User::class => UserFactory::class,
                 default => 'Relaticle\\CustomFields\\Database\\Factories\\'.class_basename($modelName).'Factory'
             }
