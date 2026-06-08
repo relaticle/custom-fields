@@ -14,7 +14,9 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
 
 beforeEach(function (): void {
     config()->set('custom-fields.features', FeatureConfigurator::configure()
@@ -231,5 +233,41 @@ describe('Section visibility with always_visible mode', function (): void {
 
         $post = Post::factory()->create(['is_published' => false]);
         expect($this->coreLogic->evaluateSectionVisibility($section, [], $post))->toBeTrue();
+    });
+});
+
+describe('Section visibility with relation conditions', function (): void {
+    it('evaluates a relation condition on a section server-side', function (): void {
+        $matching = Tag::factory()->create();
+
+        $postMatch = Post::factory()->create();
+        $postMatch->tagModels()->attach($matching);
+        $commentMatch = Comment::factory()->create(['post_id' => $postMatch->id]);
+
+        $postNoMatch = Post::factory()->create();
+        $commentNoMatch = Comment::factory()->create(['post_id' => $postNoMatch->id]);
+
+        $section = CustomFieldSection::factory()->create([
+            'name' => 'Relation Condition Section',
+            'entity_type' => Comment::class,
+            'active' => true,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'post.tagModels',
+                            'operator' => VisibilityOperator::IS_IN,
+                            'value' => [$matching->id],
+                            'source' => ConditionSource::RelationAttribute,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        expect($this->backendService->isSectionVisible($commentMatch, $section, collect()))->toBeTrue()
+            ->and($this->backendService->isSectionVisible($commentNoMatch, $section, collect()))->toBeFalse();
     });
 });
