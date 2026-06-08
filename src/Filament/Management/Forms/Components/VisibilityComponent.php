@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -25,7 +26,9 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
+use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
+use Relaticle\CustomFields\Support\RelationConditionConfig;
 
 final class VisibilityComponent extends Component
 {
@@ -105,7 +108,7 @@ final class VisibilityComponent extends Component
         if ($modelAttrsEnabled) {
             $schema[] = Select::make('source')
                 ->label(__('custom-fields::custom-fields.visibility.source'))
-                ->options(ConditionSource::class)
+                ->options(fn (Get $get): array => $this->getAvailableSourceOptions($get))
                 ->default(ConditionSource::CustomField)
                 ->required()
                 ->live()
@@ -188,18 +191,64 @@ final class VisibilityComponent extends Component
                 ->afterStateHydrated(fn (TextInput $component, Get $get): TextInput => $component->state($get('value') ?? ''))
                 ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
                 ->columnSpan($columnSpan),
+
+            Select::make('relation_values')
+                ->label(__('custom-fields::custom-fields.visibility.value'))
+                ->multiple()
+                ->searchable()
+                ->options(fn (Get $get): array => $this->getRelationValueOptions($get))
+                ->visible(fn (Get $get): bool => $this->isRelationAttributeSource($get) && $this->operatorRequiresValue($get))
+                ->afterStateHydrated(fn (Select $component, Get $get): Select => $component->state(value($get('value')) ? (array) $get('value') : []))
+                ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
+                ->columnSpan($columnSpan),
         ];
     }
 
-    private function isModelAttributeSource(Get $get): bool
+    /**
+     * @return array<string, string>
+     */
+    private function getAvailableSourceOptions(Get $get): array
+    {
+        $entityType = $this->getEntityType($get);
+
+        $options = [
+            ConditionSource::CustomField->value => ConditionSource::CustomField->getLabel(),
+        ];
+
+        $config = app(RelationConditionConfig::class);
+
+        // Show the model-attribute option while entity_type is not yet resolved (e.g. a blank form),
+        // preserving the legacy behavior where the source was always available.
+        if (blank($entityType) || $config->isModelAttributeSourceAvailable($entityType)) {
+            $options[ConditionSource::ModelAttribute->value] = ConditionSource::ModelAttribute->getLabel();
+        }
+
+        if (! blank($entityType) && $config->isRelationSourceAvailable($entityType)) {
+            $options[ConditionSource::RelationAttribute->value] = ConditionSource::RelationAttribute->getLabel();
+        }
+
+        return $options;
+    }
+
+    private function sourceIs(Get $get, ConditionSource $expected): bool
     {
         $source = $get('source');
 
         if ($source instanceof ConditionSource) {
-            return $source === ConditionSource::ModelAttribute;
+            return $source === $expected;
         }
 
-        return $source === ConditionSource::ModelAttribute->value;
+        return $source === $expected->value;
+    }
+
+    private function isModelAttributeSource(Get $get): bool
+    {
+        return $this->sourceIs($get, ConditionSource::ModelAttribute);
+    }
+
+    private function isRelationAttributeSource(Get $get): bool
+    {
+        return $this->sourceIs($get, ConditionSource::RelationAttribute);
     }
 
     private function shouldShowSingleSelect(Get $get): bool
@@ -209,6 +258,10 @@ final class VisibilityComponent extends Component
         }
 
         if ($this->isModelAttributeSource($get)) {
+            return false;
+        }
+
+        if ($this->isRelationAttributeSource($get)) {
             return false;
         }
 
@@ -236,6 +289,10 @@ final class VisibilityComponent extends Component
             return false;
         }
 
+        if ($this->isRelationAttributeSource($get)) {
+            return false;
+        }
+
         $fieldData = $this->getFieldTypeData($get);
         if ($fieldData === null) {
             return false;
@@ -248,6 +305,10 @@ final class VisibilityComponent extends Component
     private function shouldShowToggle(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
+            return false;
+        }
+
+        if ($this->isRelationAttributeSource($get)) {
             return false;
         }
 
@@ -275,6 +336,10 @@ final class VisibilityComponent extends Component
     private function shouldShowTextInput(Get $get): bool
     {
         if (! $this->operatorRequiresValue($get)) {
+            return false;
+        }
+
+        if ($this->isRelationAttributeSource($get)) {
             return false;
         }
 
@@ -379,6 +444,10 @@ final class VisibilityComponent extends Component
             return [];
         }
 
+        if ($this->isRelationAttributeSource($get)) {
+            return app(RelationConditionConfig::class)->relationsFor($entityType);
+        }
+
         if ($this->isModelAttributeSource($get)) {
             return rescue(
                 fn (): array => app(ModelAttributeDiscoveryService::class)->getAttributeOptions($entityType),
@@ -403,8 +472,17 @@ final class VisibilityComponent extends Component
      */
     private function getCompatibleOperators(Get $get): array
     {
+        if ($this->isRelationAttributeSource($get)) {
+            return [
+                VisibilityOperator::IS_IN->value => VisibilityOperator::IS_IN->getLabel(),
+                VisibilityOperator::IS_NOT_IN->value => VisibilityOperator::IS_NOT_IN->getLabel(),
+            ];
+        }
+
         if ($this->isModelAttributeSource($get)) {
-            return VisibilityOperator::options();
+            return collect(VisibilityOperator::options())
+                ->except([VisibilityOperator::IS_IN->value, VisibilityOperator::IS_NOT_IN->value])
+                ->all();
         }
 
         $fieldData = $this->getFieldTypeData($get);
@@ -412,6 +490,40 @@ final class VisibilityComponent extends Component
         return $fieldData
             ? $fieldData->getCompatibleOperatorOptions()
             : VisibilityOperator::options();
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    private function getRelationValueOptions(Get $get): array
+    {
+        $path = $get('field_code');
+
+        if (blank($path)) {
+            return [];
+        }
+
+        $entityType = $this->getEntityType($get);
+        if (blank($entityType)) {
+            return [];
+        }
+
+        $related = app(RelationConditionResolver::class)->resolveTerminalRelatedModel($entityType, (string) $path);
+
+        if (! $related instanceof Model) {
+            return [];
+        }
+
+        static $labelColumns = [];
+        $modelClass = $related::class;
+        if (! isset($labelColumns[$modelClass])) {
+            $labelColumns[$modelClass] = collect(['name', 'title', 'label'])
+                ->first(fn (string $column): bool => $related->getConnection()->getSchemaBuilder()->hasColumn($related->getTable(), $column))
+                ?? $related->getKeyName();
+        }
+        $labelColumn = $labelColumns[$modelClass];
+
+        return $related::query()->pluck($labelColumn, $related->getKeyName())->all();
     }
 
     private function getFieldTypeData(Get $get): ?object
@@ -480,6 +592,7 @@ final class VisibilityComponent extends Component
         $set('boolean_value', false);
         $set('single_value', null);
         $set('multiple_values', []);
+        $set('relation_values', []);
     }
 
     private function isContainsOperator(?string $operator): bool
