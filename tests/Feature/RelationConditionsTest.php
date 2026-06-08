@@ -8,6 +8,7 @@ use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Services\RelationConditionResolver;
+use Relaticle\CustomFields\Support\RelationConditionConfig;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
@@ -124,4 +125,38 @@ it('returns null when reflecting an invalid path', function () {
     $resolver = app(RelationConditionResolver::class);
 
     expect($resolver->resolveTerminalRelatedModel(Comment::class, 'post.nonExistentRelation'))->toBeNull();
+});
+
+it('reads per-entity relation and scoping config', function () {
+    config()->set('custom-fields.visibility', [
+        'restrict_to_configured' => true,
+        'sources' => [
+            Comment::class => [
+                'relations' => ['post.tagModels' => 'Post → Tags'],
+            ],
+        ],
+    ]);
+
+    $config = app(RelationConditionConfig::class);
+
+    expect($config->restrictToConfigured())->toBeTrue()
+        ->and($config->relationsFor(Comment::class))->toBe(['post.tagModels' => 'Post → Tags'])
+        ->and($config->isRelationSourceAvailable(Comment::class))->toBeTrue()
+        ->and($config->isRelationSourceAvailable(Post::class))->toBeFalse()
+        ->and($config->isModelAttributeSourceAvailable(Post::class))->toBeFalse(); // restricted + no attributes
+});
+
+it('defaults to legacy behavior (model-attribute available everywhere) when not restricted', function () {
+    config()->set('custom-fields.visibility', ['restrict_to_configured' => false, 'sources' => []]);
+
+    expect(app(RelationConditionConfig::class)->isModelAttributeSourceAvailable(Post::class))->toBeTrue();
+});
+
+it('does not expose the relation source unless a path is configured, even when unrestricted', function () {
+    config()->set('custom-fields.visibility', ['restrict_to_configured' => false, 'sources' => []]);
+
+    $config = app(RelationConditionConfig::class);
+
+    expect($config->isRelationSourceAvailable(Post::class))->toBeFalse()
+        ->and($config->isModelAttributeSourceAvailable(Post::class))->toBeTrue();
 });

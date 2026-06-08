@@ -139,4 +139,29 @@ return [
             'tenant_foreign_key' => 'tenant_id',
         ],
     ],
+    /*
+    |--------------------------------------------------------------------------
+    | Visibility Condition Sources (cross-record / model-attribute)
+    |--------------------------------------------------------------------------
+    |
+    | Opt-in scoping for non-custom-field condition sources. Defaults preserve
+    | historical behavior: when restrict_to_configured is false, the
+    | MODEL_ATTRIBUTE_CONDITIONS feature exposes own-column conditions for all
+    | entities. Set it true to expose the own-column source only for entities
+    | listed below.
+    |
+    | The relation-attribute source is never auto-discovered: a relation path
+    | appears only when explicitly listed under an entity's 'relations', regardless
+    | of restrict_to_configured. The restrict flag governs only the own-column source.
+    |
+    */
+    'visibility' => [
+        'restrict_to_configured' => false,
+        'sources' => [
+            // \App\Models\HouseholdMember::class => [
+            //     'relations' => ['household.projects' => 'Household → Projects'],
+            //     'attributes' => ['status' => 'Status'],
+            // ],
+        ],
+    ],
 ];
