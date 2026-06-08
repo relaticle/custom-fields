@@ -29,4 +29,9 @@ class VisibilityConditionData extends Data
     {
         return $this->source === ConditionSource::CustomField;
     }
+
+    public function isRelationAttribute(): bool
+    {
+        return $this->source === ConditionSource::RelationAttribute;
+    }
 }

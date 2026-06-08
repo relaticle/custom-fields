@@ -439,6 +439,7 @@ return [
         'condition_source' => [
             'custom_field' => 'Custom Field',
             'model_attribute' => 'Model Attribute',
+            'relation_attribute' => 'Related record',
         ],
         'custom_field_section_type' => [
             'section' => 'Section',
