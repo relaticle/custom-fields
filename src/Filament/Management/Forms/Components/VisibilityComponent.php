@@ -160,7 +160,9 @@ final class VisibilityComponent extends Component
                 ->options(fn (Get $get): array => $this->getFieldOptions($get))
                 ->visible(fn (Get $get): bool => $this->shouldShowSingleSelect($get))
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
-                ->afterStateHydrated(fn (Select $component, Get $get): Select => $component->state($get('value')))
+                // Scalar value inputs must ignore array values (relation/multi-choice conditions), else hydrating
+                // an array into a single-select throws "Array to string conversion".
+                ->afterStateHydrated(fn (Select $component, Get $get): Select => $component->state(is_array($get('value')) ? null : $get('value')))
                 ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
                 ->columnSpan($columnSpan),
 
@@ -180,7 +182,7 @@ final class VisibilityComponent extends Component
                 ->inline(false)
                 ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->visible(fn (Get $get): bool => $this->shouldShowToggle($get))
-                ->afterStateHydrated(fn (Toggle $component, Get $get): Toggle => $component->state($get('value')))
+                ->afterStateHydrated(fn (Toggle $component, Get $get): Toggle => $component->state(is_array($get('value')) ? false : $get('value')))
                 ->afterStateUpdated(fn (bool $state, Set $set): mixed => $set('value', $state))
                 ->columnSpan($columnSpan),
 
@@ -188,7 +190,7 @@ final class VisibilityComponent extends Component
                 ->label(__('custom-fields::custom-fields.visibility.value'))
                 ->placeholder(fn (Get $get): string => $this->getPlaceholder($get))
                 ->visible(fn (Get $get): bool => $this->shouldShowTextInput($get))
-                ->afterStateHydrated(fn (TextInput $component, Get $get): TextInput => $component->state($get('value') ?? ''))
+                ->afterStateHydrated(fn (TextInput $component, Get $get): TextInput => $component->state(is_array($get('value')) ? '' : ($get('value') ?? '')))
                 ->afterStateUpdated(fn (mixed $state, Set $set): mixed => $set('value', $state))
                 ->columnSpan($columnSpan),
 
