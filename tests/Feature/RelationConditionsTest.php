@@ -2,10 +2,81 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Data\VisibilityData;
+use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\VisibilityLogic;
+use Relaticle\CustomFields\Enums\VisibilityMode;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
+
+it('shows when the related set matches, hides when it does not (the 3 AC cases)', function () {
+    $matching = Tag::factory()->create();
+    $other = Tag::factory()->create();
+
+    $postWithMatch = Post::factory()->create();
+    $postWithMatch->tagModels()->attach($matching);
+    $commentMatch = Comment::factory()->create(['post_id' => $postWithMatch->id]);
+
+    $postNoMatch = Post::factory()->create();
+    $postNoMatch->tagModels()->attach($other);
+    $commentNoMatch = Comment::factory()->create(['post_id' => $postNoMatch->id]);
+
+    $postNoTags = Post::factory()->create();
+    $commentNoTags = Comment::factory()->create(['post_id' => $postNoTags->id]);
+
+    $visibility = VisibilityData::from([
+        'mode' => VisibilityMode::SHOW_WHEN,
+        'logic' => VisibilityLogic::ALL,
+        'conditions' => [[
+            'field_code' => 'post.tagModels',
+            'operator' => VisibilityOperator::IS_IN,
+            'value' => [$matching->id],
+            'source' => ConditionSource::RelationAttribute,
+        ]],
+    ]);
+
+    expect($visibility->evaluate([], $commentMatch))->toBeTrue()
+        ->and($visibility->evaluate([], $commentNoMatch))->toBeFalse()
+        ->and($visibility->evaluate([], $commentNoTags))->toBeFalse()
+        ->and($visibility->evaluate([], null))->toBeTrue(); // create form: fail-open
+});
+
+it('is_not_in shows for a member with no related records', function () {
+    $tag = Tag::factory()->create();
+    $postNoTags = Post::factory()->create();
+    $comment = Comment::factory()->create(['post_id' => $postNoTags->id]);
+
+    $visibility = VisibilityData::from([
+        'mode' => VisibilityMode::SHOW_WHEN,
+        'logic' => VisibilityLogic::ALL,
+        'conditions' => [[
+            'field_code' => 'post.tagModels',
+            'operator' => VisibilityOperator::IS_NOT_IN,
+            'value' => [$tag->id],
+            'source' => ConditionSource::RelationAttribute,
+        ]],
+    ]);
+
+    expect($visibility->evaluate([], $comment))->toBeTrue();
+});
+
+it('has a helper to detect relation-attribute conditions', function () {
+    $visibility = VisibilityData::from([
+        'mode' => VisibilityMode::SHOW_WHEN,
+        'logic' => VisibilityLogic::ALL,
+        'conditions' => [[
+            'field_code' => 'post.tagModels',
+            'operator' => VisibilityOperator::IS_IN,
+            'value' => [1],
+            'source' => ConditionSource::RelationAttribute,
+        ]],
+    ]);
+
+    expect($visibility->hasRelationAttributeConditions())->toBeTrue();
+});
 
 it('wires the Post belongsToMany Tag fixture', function () {
     $post = Post::factory()->create();

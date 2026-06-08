@@ -9,6 +9,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Data;
@@ -48,7 +49,10 @@ class VisibilityData extends Data
         $results = [];
 
         foreach ($this->conditions as $condition) {
-            if ($condition->isModelAttribute() && ! $modelAttributesEnabled) {
+            // MODEL_ATTRIBUTE_CONDITIONS is the master switch for every non-custom-field
+            // condition source (model-attribute and relation-attribute). Finer per-source
+            // and per-entity exposure is controlled by the visibility.sources config, not here.
+            if (($condition->isModelAttribute() || $condition->isRelationAttribute()) && ! $modelAttributesEnabled) {
                 continue;
             }
 
@@ -69,6 +73,19 @@ class VisibilityData extends Data
      */
     private function evaluateCondition(VisibilityConditionData $condition, array $fieldValues, ?Model $record = null): bool
     {
+        if ($condition->isRelationAttribute()) {
+            if (! $record instanceof Model) {
+                return true;
+            }
+
+            // Walks the relation path on the record (lazy-loads relations). Fine for
+            // single-record forms/infolists; table/export surfaces evaluating per row
+            // should eager-load the configured paths to avoid N+1.
+            $relatedKeys = app(RelationConditionResolver::class)->resolveRelatedKeys($record, $condition->field_code);
+
+            return $condition->operator->evaluate($relatedKeys, $condition->value);
+        }
+
         if ($condition->isModelAttribute()) {
             if (! $record instanceof Model) {
                 return true;
@@ -112,6 +129,21 @@ class VisibilityData extends Data
 
         foreach ($this->conditions as $condition) {
             if ($condition->isModelAttribute()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function hasRelationAttributeConditions(): bool
+    {
+        if (! $this->conditions instanceof DataCollection) {
+            return false;
+        }
+
+        foreach ($this->conditions as $condition) {
+            if ($condition->isRelationAttribute()) {
                 return true;
             }
         }

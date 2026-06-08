@@ -126,6 +126,7 @@ class TestCase extends BaseTestCase
         config()->set('custom-fields.features', FeatureConfigurator::configure()
             ->enable(
                 CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
+                CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS,
                 CustomFieldsFeature::UI_TABLE_COLUMNS,
                 CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
                 CustomFieldsFeature::UI_TABLE_FILTERS,
