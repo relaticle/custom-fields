@@ -16,7 +16,7 @@ describe('IS_IN / IS_NOT_IN are not offered by any field data type', function ()
         foreach (FieldDataType::cases() as $dataType) {
             foreach ($forbidden as $operator) {
                 expect($dataType->getCompatibleOperators())
-                    ->not->toContain($operator, "FieldDataType::{$dataType->name} must not include {$operator->name}");
+                    ->not->toContain($operator, sprintf('FieldDataType::%s must not include %s', $dataType->name, $operator->name));
             }
         }
     });
@@ -28,12 +28,12 @@ describe('IS_IN / IS_NOT_IN are not offered by any field data type', function ()
         foreach ($fieldTypes as $type) {
             $fieldTypeData = CustomFieldsType::getFieldType($type);
 
-            expect($fieldTypeData)->not->toBeNull("Field type '{$type}' must be registered");
+            expect($fieldTypeData)->not->toBeNull(sprintf("Field type '%s' must be registered", $type));
 
             $operatorKeys = array_keys($fieldTypeData->getCompatibleOperatorOptions());
 
             foreach ($forbiddenValues as $value) {
-                expect($operatorKeys)->not->toContain($value, "Field type '{$type}' must not include operator '{$value}'");
+                expect($operatorKeys)->not->toContain($value, sprintf("Field type '%s' must not include operator '%s'", $type, $value));
             }
         }
     });

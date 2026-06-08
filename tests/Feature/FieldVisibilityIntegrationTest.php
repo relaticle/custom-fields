@@ -111,7 +111,7 @@ describe('Field-level server-side visibility for relation-attribute conditions',
         // Simulate what applyVisibility does when $record is null: no closure is attached,
         // field is returned plain (visible by default). Verify evaluate([], null) is true.
         $visibilityData = $field->settings->visibility;
-        expect($visibilityData->evaluate([], null))->toBeTrue();
+        expect($visibilityData->evaluate([]))->toBeTrue();
     });
 
     it('attaches a visible() closure (not visibleJs) when a relation condition field is built with a record', function (): void {
@@ -205,7 +205,7 @@ describe('Field-level server-side visibility for relation-attribute conditions',
         $factory = app(FieldComponentFactory::class);
         $allFields = collect([$triggerField, $conditionalField]);
 
-        $built = $factory->create($conditionalField, [], $allFields, null);
+        $built = $factory->create($conditionalField, [], $allFields);
 
         // Pure custom-field conditions must drive visibility through the reactive client-side JS
         // path (visibleJs + live), NOT a server-side visible() closure. Asserting only isVisible()

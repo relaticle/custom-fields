@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Throwable;
 
 final class RelationConditionResolver
 {
@@ -58,7 +59,7 @@ final class RelationConditionResolver
             }
 
             return $model;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }

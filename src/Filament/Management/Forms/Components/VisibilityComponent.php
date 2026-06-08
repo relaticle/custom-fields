@@ -521,6 +521,7 @@ final class VisibilityComponent extends Component
                 ->first(fn (string $column): bool => $related->getConnection()->getSchemaBuilder()->hasColumn($related->getTable(), $column))
                 ?? $related->getKeyName();
         }
+
         $labelColumn = $labelColumns[$modelClass];
 
         return $related::query()->pluck($labelColumn, $related->getKeyName())->all();
