@@ -356,6 +356,21 @@ describe('VisibilityData getDependentFields', function (): void {
     });
 });
 
+describe('VisibilityConditionData RelationAttribute source', function (): void {
+    it('recognizes the relation-attribute condition source', function (): void {
+        $condition = VisibilityConditionData::from([
+            'field_code' => 'household.projects',
+            'operator' => VisibilityOperator::IS_IN,
+            'value' => [1, 2],
+            'source' => ConditionSource::RelationAttribute,
+        ]);
+
+        expect($condition->isRelationAttribute())->toBeTrue()
+            ->and($condition->isCustomField())->toBeFalse()
+            ->and($condition->isModelAttribute())->toBeFalse();
+    });
+});
+
 describe('VisibilityData hasModelAttributeConditions', function (): void {
     it('returns true when model attribute conditions exist', function (): void {
         $visibility = VisibilityData::from([

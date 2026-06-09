@@ -439,6 +439,7 @@ return [
         'condition_source' => [
             'custom_field' => 'Custom Field',
             'model_attribute' => 'Model Attribute',
+            'relation_attribute' => 'Related record',
         ],
         'custom_field_section_type' => [
             'section' => 'Section',
@@ -504,6 +505,8 @@ return [
             'less_than' => 'Less than',
             'is_empty' => 'Is empty',
             'is_not_empty' => 'Is not empty',
+            'is_in' => 'Is in',
+            'is_not_in' => 'Is not in',
         ],
     ],
 

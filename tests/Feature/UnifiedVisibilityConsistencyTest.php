@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Relaticle\CustomFields\Data\VisibilityData;
+use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -14,7 +15,9 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
 beforeEach(function (): void {
@@ -383,6 +386,71 @@ test('field types without operator override use dataType defaults', function ():
 
     expect($fieldTypeData->getCompatibleOperators())
         ->toBe($fieldTypeData->dataType->getCompatibleOperators());
+});
+
+test('relation condition is consistent across field, section, backend and JS surfaces', function (): void {
+    $matchingTag = Tag::factory()->create();
+    $otherTag = Tag::factory()->create();
+
+    $postMatch = Post::factory()->create();
+    $postMatch->tagModels()->attach($matchingTag);
+    $commentMatch = Comment::factory()->create(['post_id' => $postMatch->id]);
+
+    $postNoMatch = Post::factory()->create();
+    $postNoMatch->tagModels()->attach($otherTag);
+    $commentNoMatch = Comment::factory()->create(['post_id' => $postNoMatch->id]);
+
+    $section = CustomFieldSection::factory()->create([
+        'name' => 'Parity Section',
+        'entity_type' => Comment::class,
+        'active' => true,
+        'settings' => [
+            'visibility' => [
+                'mode' => VisibilityMode::SHOW_WHEN,
+                'logic' => VisibilityLogic::ALL,
+                'conditions' => [[
+                    'field_code' => 'post.tagModels',
+                    'operator' => VisibilityOperator::IS_IN,
+                    'value' => [$matchingTag->id],
+                    'source' => ConditionSource::RelationAttribute,
+                ]],
+            ],
+        ],
+    ]);
+
+    $field = CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Parity Field',
+        'code' => 'parity_field',
+        'type' => 'text',
+        'entity_type' => Comment::class,
+        'settings' => [
+            'visibility' => [
+                'mode' => VisibilityMode::SHOW_WHEN,
+                'logic' => VisibilityLogic::ALL,
+                'conditions' => [[
+                    'field_code' => 'post.tagModels',
+                    'operator' => VisibilityOperator::IS_IN,
+                    'value' => [$matchingTag->id],
+                    'source' => ConditionSource::RelationAttribute,
+                ]],
+            ],
+        ],
+    ]);
+
+    $allFields = collect([$field]);
+
+    // Backend field visibility agrees with match vs no-match
+    expect($this->backendService->isFieldVisible($commentMatch, $field, $allFields))->toBeTrue()
+        ->and($this->backendService->isFieldVisible($commentNoMatch, $field, $allFields))->toBeFalse();
+
+    // Backend section visibility agrees with match vs no-match
+    expect($this->backendService->isSectionVisible($commentMatch, $section, $allFields))->toBeTrue()
+        ->and($this->backendService->isSectionVisible($commentNoMatch, $section, $allFields))->toBeFalse();
+
+    // Relation conditions must never generate client JS
+    expect($this->frontendService->buildVisibilityExpression($field, $allFields))->toBeNull()
+        ->and($this->frontendService->buildSectionVisibilityExpression($section, $allFields))->toBeNull();
 });
 
 class TestRepeaterFieldType extends BaseFieldType

@@ -23,14 +23,19 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 use Override;
 use Postare\BladeMdi\BladeMdiServiceProvider;
 use Propaganistas\LaravelPhone\PhoneServiceProvider;
+use Relaticle\CustomFields\Contracts\EntityManagerInterface;
 use Relaticle\CustomFields\CustomFieldsServiceProvider;
 use Relaticle\CustomFields\EntitySystem\EntityConfigurator;
+use Relaticle\CustomFields\EntitySystem\EntityManager;
 use Relaticle\CustomFields\EntitySystem\EntityModel;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
+use Relaticle\CustomFields\Tests\Database\Factories\TagFactory;
 use Relaticle\CustomFields\Tests\database\factories\UserFactory;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Providers\AdminPanelProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
@@ -52,6 +57,7 @@ class TestCase extends BaseTestCase
 
         Factory::guessFactoryNamesUsing(
             fn (string $modelName): string => match ($modelName) {
+                Tag::class => TagFactory::class,
                 User::class => UserFactory::class,
                 default => 'Relaticle\\CustomFields\\Database\\Factories\\'.class_basename($modelName).'Factory'
             }
@@ -123,6 +129,7 @@ class TestCase extends BaseTestCase
         config()->set('custom-fields.features', FeatureConfigurator::configure()
             ->enable(
                 CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
+                CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS,
                 CustomFieldsFeature::UI_TABLE_COLUMNS,
                 CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
                 CustomFieldsFeature::UI_TABLE_FILTERS,
@@ -132,18 +139,7 @@ class TestCase extends BaseTestCase
         );
 
         // Entity configuration for tests using the new builder
-        config()->set('custom-fields.entity_configuration',
-            EntityConfigurator::configure()
-                ->autoDiscover(false)
-                ->models([
-                    EntityModel::configure(
-                        modelClass: Post::class,
-                        labelSingular: 'Post',
-                        searchAttributes: ['title', 'content'],
-                        features: [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE]
-                    ),
-                ])
-        );
+        $this->registerTestEntities();
 
         // Filament configuration
         config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
@@ -170,5 +166,61 @@ class TestCase extends BaseTestCase
             $table->string('name');
             $table->timestamps();
         });
+    }
+
+    /**
+     * Register the default test entities. The Comment entity declares a cross-record
+     * relation path so RelationAttribute condition tests can resolve it via the registry.
+     *
+     * @param  array<class-string, array<string, string>>  $conditionRelationOverrides  modelClass => (path => label)
+     */
+    protected function registerTestEntities(array $conditionRelationOverrides = []): void
+    {
+        $commentRelations = $conditionRelationOverrides[Comment::class]
+            ?? ['post.tagModels' => 'Post → Tags'];
+
+        $postRelations = $conditionRelationOverrides[Post::class] ?? [];
+
+        config()->set('custom-fields.entity_configuration',
+            EntityConfigurator::configure()
+                ->autoDiscover(false)
+                ->cache(false)
+                ->models([
+                    EntityModel::configure(
+                        modelClass: Post::class,
+                        labelSingular: 'Post',
+                        searchAttributes: ['title', 'content'],
+                        features: [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE],
+                        conditionRelations: $postRelations,
+                    ),
+                    EntityModel::configure(
+                        modelClass: Comment::class,
+                        labelSingular: 'Comment',
+                        features: [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE],
+                        conditionRelations: $commentRelations,
+                    ),
+                ])
+        );
+    }
+
+    /**
+     * Re-register test entities with custom cross-record relation paths and rebuild the registry.
+     * Use inside a test to override the defaults set by defineEnvironment().
+     *
+     * @param  array<class-string, array<string, string>>  $conditionRelations  modelClass => (path => label)
+     */
+    protected function setEntityConditionRelations(array $conditionRelations): void
+    {
+        $this->registerTestEntities($conditionRelations);
+        $this->refreshEntityManager();
+    }
+
+    /**
+     * Forget the EntityManager singletons so the next resolution rebuilds from current config.
+     */
+    protected function refreshEntityManager(): void
+    {
+        $this->app->forgetInstance(EntityManager::class);
+        $this->app->forgetInstance(EntityManagerInterface::class);
     }
 }

@@ -10,12 +10,14 @@ enum ConditionSource: string implements HasLabel
 {
     case CustomField = 'custom_field';
     case ModelAttribute = 'model_attribute';
+    case RelationAttribute = 'relation_attribute';
 
     public function getLabel(): string
     {
         return match ($this) {
             self::CustomField => __('custom-fields::custom-fields.enums.condition_source.custom_field'),
             self::ModelAttribute => __('custom-fields::custom-fields.enums.condition_source.model_attribute'),
+            self::RelationAttribute => __('custom-fields::custom-fields.enums.condition_source.relation_attribute'),
         };
     }
 }

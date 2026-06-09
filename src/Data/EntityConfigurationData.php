@@ -36,6 +36,7 @@ final class EntityConfigurationData extends Data
         public ?Collection $features = null,
         public int $priority = 999,
         public array $metadata = [],
+        public array $conditionRelations = [],
         public ?AvatarConfiguration $avatarConfiguration = null,
     ) {
         $this->features ??= collect([
@@ -207,7 +208,16 @@ final class EntityConfigurationData extends Data
 
     public function getRelationships(): array
     {
-        return [];
+        return $this->conditionRelations;
+    }
+
+    /**
+     * @return array<string, string> path => label allowlist of relation paths usable as
+     *                               cross-record visibility-condition sources for this entity.
+     */
+    public function getConditionRelations(): array
+    {
+        return $this->conditionRelations;
     }
 
     public function getFeatures(): array
@@ -315,6 +325,7 @@ final class EntityConfigurationData extends Data
             features: $properties['features'] ?? collect(),
             priority: $properties['priority'] ?? 999,
             metadata: $properties['metadata'] ?? [],
+            conditionRelations: $properties['conditionRelations'] ?? [],
             avatarConfiguration: $properties['avatarConfiguration'] ?? null,
         );
     }

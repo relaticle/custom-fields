@@ -388,6 +388,104 @@ describe('Create form fail-open', function (): void {
     });
 });
 
+describe('Frontend JS generation for relation attribute conditions', function (): void {
+    it('returns null JS for field with a relation attribute condition', function (): void {
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Relation Guarded Field',
+            'code' => 'relation_guarded',
+            'type' => 'text',
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'tagModels',
+                            'operator' => VisibilityOperator::IS_IN,
+                            'value' => [1],
+                            'source' => ConditionSource::RelationAttribute,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $fields = collect([$field]);
+        $jsExpression = $this->frontendService->buildVisibilityExpression($field, $fields);
+
+        expect($jsExpression)->toBeNull();
+    });
+
+    it('returns null JS for section with a relation attribute condition', function (): void {
+        $section = CustomFieldSection::factory()->create([
+            'name' => 'Relation Section',
+            'entity_type' => Post::class,
+            'active' => true,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'tagModels',
+                            'operator' => VisibilityOperator::IS_IN,
+                            'value' => [1],
+                            'source' => ConditionSource::RelationAttribute,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $jsExpression = $this->frontendService->buildSectionVisibilityExpression($section, collect());
+
+        expect($jsExpression)->toBeNull();
+    });
+
+    it('returns null JS for field with mixed custom field and relation attribute conditions', function (): void {
+        $triggerField = CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Trigger For Relation',
+            'code' => 'trigger_for_relation',
+            'type' => 'text',
+        ]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Mixed Relation Guarded',
+            'code' => 'mixed_relation_guarded',
+            'type' => 'text',
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'trigger_for_relation',
+                            'operator' => VisibilityOperator::EQUALS,
+                            'value' => 'yes',
+                            'source' => ConditionSource::CustomField,
+                        ],
+                        [
+                            'field_code' => 'tagModels',
+                            'operator' => VisibilityOperator::IS_IN,
+                            'value' => [1],
+                            'source' => ConditionSource::RelationAttribute,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $fields = collect([$triggerField, $field]);
+        $jsExpression = $this->frontendService->buildVisibilityExpression($field, $fields);
+
+        // Entire set emits null because a relation condition is present (server-side only)
+        expect($jsExpression)->toBeNull();
+    });
+});
+
 describe('Frontend JS generation for model attributes', function (): void {
     it('generates correct JS path for model attribute conditions', function (): void {
         $field = CustomField::factory()->create([

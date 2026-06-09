@@ -52,6 +52,11 @@ final readonly class FrontendVisibilityService
             return null;
         }
 
+        // Relation conditions have no client-side $get equivalent; force whole-set server-side evaluation.
+        if ($visibility->hasRelationAttributeConditions()) {
+            return null;
+        }
+
         $conditions = $visibility->conditions->all();
         $mode = $visibility->mode;
         $logic = $visibility->logic;
@@ -80,6 +85,10 @@ final readonly class FrontendVisibilityService
         VisibilityConditionData $condition,
         ?Collection $allFields
     ): bool {
+        if ($condition->isRelationAttribute()) {
+            return false;
+        }
+
         if ($condition->isModelAttribute()) {
             return FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
         }
@@ -101,6 +110,13 @@ final readonly class FrontendVisibilityService
             ! $this->coreLogic->hasVisibilityConditions($field) ||
             ! $allFields instanceof Collection
         ) {
+            return null;
+        }
+
+        $visibility = $this->coreLogic->getVisibilityData($field);
+
+        // Relation conditions have no client-side $get equivalent; force whole-set server-side evaluation.
+        if ($visibility->hasRelationAttributeConditions()) {
             return null;
         }
 
@@ -199,6 +215,10 @@ final readonly class FrontendVisibilityService
         VisibilityMode $mode,
         ?Collection $allFields
     ): ?string {
+        if ($condition->isRelationAttribute()) {
+            return null;
+        }
+
         $isModelAttribute = $condition->isModelAttribute();
         $escapedCode = addslashes($condition->field_code);
 
@@ -281,6 +301,10 @@ final readonly class FrontendVisibilityService
                 $fieldValue,
                 false
             ),
+            // IS_IN / IS_NOT_IN are relation-only operators evaluated server-side.
+            // The set-level guard already returns null for relation conditions; this
+            // arm keeps the match exhaustive and emits no JS if one ever leaks through.
+            VisibilityOperator::IS_IN, VisibilityOperator::IS_NOT_IN => null,
         };
     }
 
