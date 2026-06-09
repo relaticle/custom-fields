@@ -2,6 +2,24 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.2.0 - 2026-06-09
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.2.0 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump fast-uri from 3.1.0 to 3.1.2 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/152
+* chore(deps): bump devalue from 5.8.0 to 5.8.1 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/153
+* chore(deps): bump the npm_and_yarn group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/156
+* chore(deps): bump brace-expansion from 2.1.0 to 5.0.6 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/157
+* chore(deps): bump the npm_and_yarn group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/158
+* chore(deps): bump hono from 4.12.18 to 4.12.23 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/160
+* fix: render tags-input infolist entries as badges by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/155
+* feat: cross-record (relation-path) visibility conditions [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/161
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.1.7...v3.2.0
+
 ## v3.1.7 - 2026-05-08
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.1.7 -->
