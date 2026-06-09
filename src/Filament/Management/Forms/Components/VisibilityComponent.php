@@ -103,28 +103,19 @@ final class VisibilityComponent extends Component
     {
         $schema = [];
 
-        $modelAttrsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
-        $relationsAvailable = app(RelationConditionConfig::class)
-            ->isRelationSourceAvailable((string) $this->getEntityType());
-
-        $showSourceSelect = $modelAttrsEnabled || $relationsAvailable;
-
-        if ($showSourceSelect) {
-            $schema[] = Select::make('source')
-                ->label(__('custom-fields::custom-fields.visibility.source'))
-                ->options(fn (Get $get): array => $this->getAvailableSourceOptions($get))
-                ->default(ConditionSource::CustomField)
-                ->required()
-                ->live()
-                ->afterStateUpdated(fn (Set $set) => $this->resetConditionValues(null, $set))
-                ->columnSpan(3);
-        } else {
-            $schema[] = Hidden::make('source')->default(ConditionSource::CustomField->value);
-        }
-
-        $fieldCodeSpan = $showSourceSelect ? 3 : 4;
-        $operatorSpan = $showSourceSelect ? 2 : 3;
-        $valueSpan = $showSourceSelect ? 4 : 5;
+        $schema[] = Select::make('source')
+            ->label(__('custom-fields::custom-fields.visibility.source'))
+            ->options(fn (Get $get): array => $this->getAvailableSourceOptions($get))
+            ->default(ConditionSource::CustomField->value)
+            ->required()
+            ->live()
+            ->afterStateUpdated(fn (Set $set) => $this->resetConditionValues(null, $set))
+            // Show the source picker only when more than the default CustomField source is available
+            // (model-attribute flag on, or the entity has configured relation paths). Decided per-render
+            // via $get so it works in Livewire action contexts where the entity is not known at build time.
+            // When hidden, the default keeps source = custom_field.
+            ->visible(fn (Get $get): bool => count($this->getAvailableSourceOptions($get)) > 1)
+            ->columnSpan(3);
 
         $schema[] = Select::make('field_code')
             ->label(__('custom-fields::custom-fields.visibility.field'))
@@ -132,7 +123,7 @@ final class VisibilityComponent extends Component
             ->required()
             ->live()
             ->afterStateUpdated(fn (Get $get, Set $set) => $this->resetValuesAndOperator($get, $set))
-            ->columnSpan($fieldCodeSpan);
+            ->columnSpan(3);
 
         $schema[] = Select::make('operator')
             ->label(__('custom-fields::custom-fields.visibility.operator'))
@@ -140,9 +131,9 @@ final class VisibilityComponent extends Component
             ->required()
             ->live()
             ->afterStateUpdated(fn (Set $set) => $this->clearAllValueFields($set))
-            ->columnSpan($operatorSpan);
+            ->columnSpan(2);
 
-        $schema = [...$schema, ...$this->getValueInputComponents($valueSpan)];
+        $schema = [...$schema, ...$this->getValueInputComponents(4)];
 
         $schema[] = Hidden::make('value')->default(null);
 

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
+use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Support\RelationConditionConfig;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
@@ -96,5 +99,47 @@ describe('custom-field fallback operator set excludes relation-only operators', 
         expect(array_keys($operators))
             ->not->toContain(VisibilityOperator::IS_IN->value, 'IS_IN must be excluded from the custom-field fallback operator list')
             ->not->toContain(VisibilityOperator::IS_NOT_IN->value, 'IS_NOT_IN must be excluded from the custom-field fallback operator list');
+    });
+});
+
+describe('source picker visibility is resolved per-render (regression: build-time gate missed relation sources)', function (): void {
+    it('getAvailableSourceOptions returns relation_attribute for a relation-configured entity even when MODEL_ATTRIBUTE_CONDITIONS is disabled', function (): void {
+        // Disable the model-attribute flag — the old build-time code would fall back to
+        // Hidden::make('source') here because $relationsAvailable was computed with a null
+        // entity (no $get in Livewire action context). The fix evaluates per-render via $get.
+        config()->set('custom-fields.features',
+            FeatureConfigurator::configure()
+                ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
+                ->disable(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS)
+        );
+
+        // Comment is registered with conditionRelations in the test harness (post.tagModels => ...).
+        $component = VisibilityComponent::makeForSection(Comment::class);
+
+        $method = new ReflectionMethod($component, 'getAvailableSourceOptions');
+        $method->setAccessible(true);
+
+        $get = new class extends Get
+        {
+            public function __construct()
+            {
+                // Skip parent constructor (which needs a Component) — we only need __invoke.
+            }
+
+            public function __invoke(string|Component $path = '', bool $isAbsolute = false): mixed
+            {
+                return null;
+            }
+        };
+
+        $options = $method->invoke($component, $get);
+
+        expect(array_keys($options))
+            ->toContain(ConditionSource::RelationAttribute->value)
+            ->not->toContain(ConditionSource::ModelAttribute->value);
+
+        // The source Select's visible() closure uses count($options) > 1 — verify that condition holds,
+        // proving the picker would be rendered (not hidden) for this entity configuration.
+        expect(count($options))->toBeGreaterThan(1);
     });
 });
