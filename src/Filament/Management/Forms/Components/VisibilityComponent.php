@@ -491,7 +491,9 @@ final class VisibilityComponent extends Component
 
         return $fieldData
             ? $fieldData->getCompatibleOperatorOptions()
-            : VisibilityOperator::options();
+            : collect(VisibilityOperator::options())
+                ->except([VisibilityOperator::IS_IN->value, VisibilityOperator::IS_NOT_IN->value])
+                ->all();
     }
 
     /**

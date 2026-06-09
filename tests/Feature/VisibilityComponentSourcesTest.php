@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Support\RelationConditionConfig;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
@@ -100,5 +103,37 @@ describe('RelationConditionConfig source availability', function (): void {
             'post.tagModels' => 'Post → Tags',
             'post' => 'Post',
         ])->and($config->relationsFor(Post::class))->toBe([]);
+    });
+});
+
+describe('custom-field fallback operator set excludes relation-only operators', function (): void {
+    it('does not include IS_IN or IS_NOT_IN when no field type data is available (custom-field source with blank field_code)', function (): void {
+        // VisibilityComponent::getCompatibleOperators() is private; we reach it via reflection
+        // to verify the fallback branch (no $fieldData) excludes relation-only operators.
+        $component = new VisibilityComponent;
+
+        $method = new ReflectionMethod($component, 'getCompatibleOperators');
+        $method->setAccessible(true);
+
+        // Build a minimal Get stub that returns null/blank for all keys (simulates blank field_code,
+        // CustomField source), forcing $fieldData to be null so the fallback branch executes.
+        $get = new class extends Get
+        {
+            public function __construct()
+            {
+                // Skip parent constructor (which needs a Component) — we only need __invoke.
+            }
+
+            public function __invoke(string|Component $path = '', bool $isAbsolute = false): mixed
+            {
+                return null;
+            }
+        };
+
+        $operators = $method->invoke($component, $get);
+
+        expect(array_keys($operators))
+            ->not->toContain(VisibilityOperator::IS_IN->value, 'IS_IN must be excluded from the custom-field fallback operator list')
+            ->not->toContain(VisibilityOperator::IS_NOT_IN->value, 'IS_NOT_IN must be excluded from the custom-field fallback operator list');
     });
 });
