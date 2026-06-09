@@ -44,56 +44,17 @@ describe('IS_IN / IS_NOT_IN are not offered by any field data type', function ()
 
 describe('RelationConditionConfig source availability', function (): void {
     it('relation source is only offered when paths are configured for the entity', function (): void {
-        config()->set('custom-fields.visibility', [
-            'restrict_to_configured' => false,
-            'sources' => [
-                Comment::class => [
-                    'relations' => ['post.tagModels' => 'Post → Tags'],
-                ],
-            ],
-        ]);
-
         $config = app(RelationConditionConfig::class);
 
         expect($config->isRelationSourceAvailable(Comment::class))->toBeTrue()
             ->and($config->isRelationSourceAvailable(Post::class))->toBeFalse();
     });
 
-    it('model-attribute source is available for all entities when not restricted', function (): void {
-        config()->set('custom-fields.visibility', ['restrict_to_configured' => false, 'sources' => []]);
-
-        $config = app(RelationConditionConfig::class);
-
-        expect($config->isModelAttributeSourceAvailable(Post::class))->toBeTrue()
-            ->and($config->isModelAttributeSourceAvailable(Comment::class))->toBeTrue();
-    });
-
-    it('model-attribute source is unavailable when restricted with no configured attributes', function (): void {
-        config()->set('custom-fields.visibility', [
-            'restrict_to_configured' => true,
-            'sources' => [
-                Comment::class => [
-                    'relations' => ['post.tagModels' => 'Post → Tags'],
-                ],
-            ],
-        ]);
-
-        $config = app(RelationConditionConfig::class);
-
-        expect($config->isModelAttributeSourceAvailable(Post::class))->toBeFalse()
-            ->and($config->isModelAttributeSourceAvailable(Comment::class))->toBeFalse();
-    });
-
     it('relationsFor returns configured paths for the entity', function (): void {
-        config()->set('custom-fields.visibility', [
-            'restrict_to_configured' => false,
-            'sources' => [
-                Comment::class => [
-                    'relations' => [
-                        'post.tagModels' => 'Post → Tags',
-                        'post' => 'Post',
-                    ],
-                ],
+        $this->setEntityConditionRelations([
+            Comment::class => [
+                'post.tagModels' => 'Post → Tags',
+                'post' => 'Post',
             ],
         ]);
 

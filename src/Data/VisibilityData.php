@@ -49,10 +49,10 @@ class VisibilityData extends Data
         $results = [];
 
         foreach ($this->conditions as $condition) {
-            // MODEL_ATTRIBUTE_CONDITIONS is the master switch for every non-custom-field
-            // condition source (model-attribute and relation-attribute). Finer per-source
-            // and per-entity exposure is controlled by the visibility.sources config, not here.
-            if (($condition->isModelAttribute() || $condition->isRelationAttribute()) && ! $modelAttributesEnabled) {
+            // MODEL_ATTRIBUTE_CONDITIONS gates only the own-column (model-attribute) source.
+            // Relation-attribute conditions are gated per-entity at authoring time (a path is
+            // offered only when the entity declares conditionRelations), so they always evaluate.
+            if ($condition->isModelAttribute() && ! $modelAttributesEnabled) {
                 continue;
             }
 

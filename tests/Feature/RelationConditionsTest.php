@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Relaticle\CustomFields\Support\RelationConditionConfig;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
@@ -127,36 +129,64 @@ it('returns null when reflecting an invalid path', function (): void {
     expect($resolver->resolveTerminalRelatedModel(Comment::class, 'post.nonExistentRelation'))->toBeNull();
 });
 
-it('reads per-entity relation and scoping config', function (): void {
-    config()->set('custom-fields.visibility', [
-        'restrict_to_configured' => true,
-        'sources' => [
-            Comment::class => [
-                'relations' => ['post.tagModels' => 'Post → Tags'],
-            ],
+it('reads per-entity relation config from the entity registry', function (): void {
+    $config = app(RelationConditionConfig::class);
+
+    expect($config->relationsFor(Comment::class))->toBe(['post.tagModels' => 'Post → Tags'])
+        ->and($config->isRelationSourceAvailable(Comment::class))->toBeTrue();
+});
+
+it('does not expose the relation source for an entity without configured paths', function (): void {
+    $config = app(RelationConditionConfig::class);
+
+    expect($config->relationsFor(Post::class))->toBe([])
+        ->and($config->isRelationSourceAvailable(Post::class))->toBeFalse();
+});
+
+it('reflects per-entity relation overrides registered at runtime', function (): void {
+    $this->setEntityConditionRelations([
+        Comment::class => [
+            'post.tagModels' => 'Post → Tags',
+            'post' => 'Post',
         ],
     ]);
 
     $config = app(RelationConditionConfig::class);
 
-    expect($config->restrictToConfigured())->toBeTrue()
-        ->and($config->relationsFor(Comment::class))->toBe(['post.tagModels' => 'Post → Tags'])
-        ->and($config->isRelationSourceAvailable(Comment::class))->toBeTrue()
-        ->and($config->isRelationSourceAvailable(Post::class))->toBeFalse()
-        ->and($config->isModelAttributeSourceAvailable(Post::class))->toBeFalse(); // restricted + no attributes
+    expect($config->relationsFor(Comment::class))->toBe([
+        'post.tagModels' => 'Post → Tags',
+        'post' => 'Post',
+    ]);
 });
 
-it('defaults to legacy behavior (model-attribute available everywhere) when not restricted', function (): void {
-    config()->set('custom-fields.visibility', ['restrict_to_configured' => false, 'sources' => []]);
+it('evaluates relation conditions even when MODEL_ATTRIBUTE_CONDITIONS is disabled', function (): void {
+    config()->set('custom-fields.features', FeatureConfigurator::configure()
+        ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
+        ->disable(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS)
+    );
 
-    expect(app(RelationConditionConfig::class)->isModelAttributeSourceAvailable(Post::class))->toBeTrue();
-});
+    $matching = Tag::factory()->create();
+    $other = Tag::factory()->create();
 
-it('does not expose the relation source unless a path is configured, even when unrestricted', function (): void {
-    config()->set('custom-fields.visibility', ['restrict_to_configured' => false, 'sources' => []]);
+    $postWithMatch = Post::factory()->create();
+    $postWithMatch->tagModels()->attach($matching);
+    $commentMatch = Comment::factory()->create(['post_id' => $postWithMatch->id]);
 
-    $config = app(RelationConditionConfig::class);
+    $postNoMatch = Post::factory()->create();
+    $postNoMatch->tagModels()->attach($other);
+    $commentNoMatch = Comment::factory()->create(['post_id' => $postNoMatch->id]);
 
-    expect($config->isRelationSourceAvailable(Post::class))->toBeFalse()
-        ->and($config->isModelAttributeSourceAvailable(Post::class))->toBeTrue();
+    $visibility = VisibilityData::from([
+        'mode' => VisibilityMode::SHOW_WHEN,
+        'logic' => VisibilityLogic::ALL,
+        'conditions' => [[
+            'field_code' => 'post.tagModels',
+            'operator' => VisibilityOperator::IS_IN,
+            'value' => [$matching->id],
+            'source' => ConditionSource::RelationAttribute,
+        ]],
+    ]);
+
+    expect($visibility->evaluate([], $commentMatch))->toBeTrue()
+        ->and($visibility->evaluate([], $commentNoMatch))->toBeFalse();
 });

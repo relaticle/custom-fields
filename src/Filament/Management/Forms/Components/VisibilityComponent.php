@@ -104,8 +104,12 @@ final class VisibilityComponent extends Component
         $schema = [];
 
         $modelAttrsEnabled = FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS);
+        $relationsAvailable = app(RelationConditionConfig::class)
+            ->isRelationSourceAvailable((string) $this->getEntityType());
 
-        if ($modelAttrsEnabled) {
+        $showSourceSelect = $modelAttrsEnabled || $relationsAvailable;
+
+        if ($showSourceSelect) {
             $schema[] = Select::make('source')
                 ->label(__('custom-fields::custom-fields.visibility.source'))
                 ->options(fn (Get $get): array => $this->getAvailableSourceOptions($get))
@@ -118,9 +122,9 @@ final class VisibilityComponent extends Component
             $schema[] = Hidden::make('source')->default(ConditionSource::CustomField->value);
         }
 
-        $fieldCodeSpan = $modelAttrsEnabled ? 3 : 4;
-        $operatorSpan = $modelAttrsEnabled ? 2 : 3;
-        $valueSpan = $modelAttrsEnabled ? 4 : 5;
+        $fieldCodeSpan = $showSourceSelect ? 3 : 4;
+        $operatorSpan = $showSourceSelect ? 2 : 3;
+        $valueSpan = $showSourceSelect ? 4 : 5;
 
         $schema[] = Select::make('field_code')
             ->label(__('custom-fields::custom-fields.visibility.field'))
@@ -217,15 +221,11 @@ final class VisibilityComponent extends Component
             ConditionSource::CustomField->value => ConditionSource::CustomField->getLabel(),
         ];
 
-        $config = app(RelationConditionConfig::class);
-
-        // Show the model-attribute option while entity_type is not yet resolved (e.g. a blank form),
-        // preserving the legacy behavior where the source was always available.
-        if (blank($entityType) || $config->isModelAttributeSourceAvailable($entityType)) {
+        if (FeatureManager::isEnabled(CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS)) {
             $options[ConditionSource::ModelAttribute->value] = ConditionSource::ModelAttribute->getLabel();
         }
 
-        if (! blank($entityType) && $config->isRelationSourceAvailable($entityType)) {
+        if (! blank($entityType) && app(RelationConditionConfig::class)->isRelationSourceAvailable($entityType)) {
             $options[ConditionSource::RelationAttribute->value] = ConditionSource::RelationAttribute->getLabel();
         }
 
@@ -563,13 +563,13 @@ final class VisibilityComponent extends Component
         });
     }
 
-    private function getEntityType(Get $get): ?string
+    private function getEntityType(?Get $get = null): ?string
     {
         if ($this->forSection && $this->sectionEntityType) {
             return $this->sectionEntityType;
         }
 
-        return $get('../../../../entity_type')
+        return ($get instanceof Get ? $get('../../../../entity_type') : null)
             ?? request('entityType')
             ?? request()->route('entityType');
     }
