@@ -2,6 +2,12 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.2.1 - 2026-06-10
+
+### Fixed
+
+- Apply section-level conditional visibility on infolists (#162). Section-level visibility conditions (including cross-record relation conditions) were only honored on forms; on infolists a section rendered for every record whenever it had any visible field. `InfolistBuilder` now evaluates each section's visibility against the record, mirroring the form path. Sections without conditions and field-level visibility are unaffected.
+
 ## v3.2.0 - 2026-06-09
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.2.0 -->
