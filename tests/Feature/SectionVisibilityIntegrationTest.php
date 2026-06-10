@@ -8,6 +8,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -269,5 +270,58 @@ describe('Section visibility with relation conditions', function (): void {
 
         expect($this->backendService->isSectionVisible($commentMatch, $section, collect()))->toBeTrue()
             ->and($this->backendService->isSectionVisible($commentNoMatch, $section, collect()))->toBeFalse();
+    });
+
+    it('honors a section relation condition when building the infolist (regression)', function (): void {
+        // The infolist builder previously ignored section-level visibility and rendered a
+        // section whenever it had any visible field, so a relation-conditioned section showed
+        // for every record. Here the section carries an always-visible field, so the only thing
+        // that can hide it is the section-level relation condition itself.
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)
+            ->enable(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY)
+        );
+
+        $matching = Tag::factory()->create();
+
+        $postMatch = Post::factory()->create();
+        $postMatch->tagModels()->attach($matching);
+        $commentMatch = Comment::factory()->create(['post_id' => $postMatch->id]);
+
+        $postNoMatch = Post::factory()->create();
+        $commentNoMatch = Comment::factory()->create(['post_id' => $postNoMatch->id]);
+
+        $section = CustomFieldSection::factory()->create([
+            'name' => 'Relation Infolist Section',
+            'entity_type' => Comment::class,
+            'active' => true,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'post.tagModels',
+                            'operator' => VisibilityOperator::IS_IN,
+                            'value' => [$matching->id],
+                            'source' => ConditionSource::RelationAttribute,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'entity_type' => Comment::class,
+            'name' => 'External Id',
+            'code' => 'external_id',
+            'type' => 'text',
+        ]);
+
+        $sectionsFor = fn (Comment $comment) => CustomFields::infolist()->forModel($comment)->values();
+
+        expect($sectionsFor($commentMatch))->toHaveCount(1)
+            ->and($sectionsFor($commentNoMatch))->toHaveCount(0);
     });
 });

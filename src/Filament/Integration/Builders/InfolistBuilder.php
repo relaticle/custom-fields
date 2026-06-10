@@ -75,8 +75,21 @@ final class InfolistBuilder extends BaseBuilder
             ->filter(fn (CustomField $field): bool => $field->typeData->infolistEntry !== null)
             ->map($createField);
 
+        // Section-level conditional visibility is evaluated server-side per record, mirroring
+        // SectionComponentFactory on the form. Without this the infolist would render a section
+        // whenever it has any visible field, ignoring the section's own visibility condition.
+        $sectionConditionalVisibilityEnabled = FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY);
+        $allFields = $this->getAllFields();
+
         return $this->getFilteredSections()
-            ->map(function (CustomFieldSection $section) use ($sectionInfolistsFactory, $getVisibleFields) {
+            ->map(function (CustomFieldSection $section) use ($sectionInfolistsFactory, $getVisibleFields, $backendVisibilityService, $sectionConditionalVisibilityEnabled, $allFields) {
+                if (
+                    $sectionConditionalVisibilityEnabled
+                    && ! $backendVisibilityService->isSectionVisible($this->model, $section, $allFields)
+                ) {
+                    return null;
+                }
+
                 $fields = $getVisibleFields($section);
 
                 return $fields->isEmpty()
