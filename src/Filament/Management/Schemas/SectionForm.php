@@ -29,6 +29,9 @@ class SectionForm implements FormInterface, SectionFormInterface
     /** @var ?Closure(Unique, Get):Unique */
     private static ?Closure $modifyUniqueRuleUsing = null;
 
+    /** @var array<int, Closure(array<int, Component>, string): array<int, Component>> */
+    private static array $schemaExtensions = [];
+
     public static function entityType(string $entityType): self
     {
         self::$entityType = $entityType;
@@ -42,6 +45,27 @@ class SectionForm implements FormInterface, SectionFormInterface
         self::$modifyUniqueRuleUsing = $callback;
 
         return $this;
+    }
+
+    /**
+     * Register a callback that can append to or modify the section form schema.
+     * Applies to both the create and edit section modals. The callback receives
+     * the current schema and the section's entity type. Register once (e.g. from
+     * a service provider); extensions persist until flushed.
+     *
+     * @param  Closure(array<int, Component>, string): array<int, Component>  $callback
+     */
+    public static function extendSchemaUsing(Closure $callback): void
+    {
+        self::$schemaExtensions[] = $callback;
+    }
+
+    /**
+     * Clear all registered schema extensions. Primarily for testing.
+     */
+    public static function flushSchemaExtensions(): void
+    {
+        self::$schemaExtensions = [];
     }
 
     private static function buildUniqueRule(Unique $rule, Get $get): Unique
@@ -66,7 +90,7 @@ class SectionForm implements FormInterface, SectionFormInterface
      */
     public static function schema(): array
     {
-        return [
+        $schema = [
             Grid::make(12)->schema([
                 TextInput::make('name')
                     ->label(
@@ -153,6 +177,12 @@ class SectionForm implements FormInterface, SectionFormInterface
                 ...self::visibilitySchema(),
             ]),
         ];
+
+        foreach (self::$schemaExtensions as $extension) {
+            $schema = $extension($schema, self::$entityType);
+        }
+
+        return $schema;
     }
 
     /**
