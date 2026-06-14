@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Filament\Forms\Components\Toggle;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage as CustomFieldsPage;
+use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -281,5 +283,75 @@ describe('ManageCustomFieldSection - Section Actions', function (): void {
             'entityType' => $this->userEntityType,
         ])->assertActionVisible('delete')
             ->assertActionEnabled('delete');
+    });
+});
+
+describe('SectionForm - extendSchemaUsing', function (): void {
+    afterEach(function (): void {
+        SectionForm::flushSchemaExtensions();
+    });
+
+    it('passes the section entity type to the extension callback', function (): void {
+        $captured = null;
+
+        SectionForm::extendSchemaUsing(function (array $schema, string $entityType) use (&$captured): array {
+            $captured = $entityType;
+
+            return $schema;
+        });
+
+        SectionForm::entityType($this->userEntityType)->schema();
+
+        expect($captured)->toBe($this->userEntityType);
+    });
+
+    it('persists a field added via extendSchemaUsing into the settings extra bag on create', function (): void {
+        SectionForm::extendSchemaUsing(fn (array $schema): array => [
+            ...$schema,
+            Toggle::make('settings.extra.render_as_tab')->label('Render as own tab'),
+        ]);
+
+        livewire(CustomFieldsPage::class)
+            ->call('setCurrentEntityType', $this->userEntityType)
+            ->callAction('createSection', [
+                'name' => 'Tabbed Section',
+                'code' => 'tabbed_section',
+                'settings' => ['extra' => ['render_as_tab' => true]],
+            ])
+            ->assertHasNoFormErrors();
+
+        $section = CustomFieldSection::query()
+            ->where('code', 'tabbed_section')
+            ->where('entity_type', $this->userEntityType)
+            ->sole();
+
+        expect($section->settings->extra)->toBe(['render_as_tab' => true]);
+    });
+
+    it('keeps the extra bag value when the section is edited', function (): void {
+        $section = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create([
+                'code' => 'tabbed_section',
+                'settings' => ['extra' => ['render_as_tab' => true]],
+            ]);
+
+        SectionForm::extendSchemaUsing(fn (array $schema): array => [
+            ...$schema,
+            Toggle::make('settings.extra.render_as_tab')->label('Render as own tab'),
+        ]);
+
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('edit', [
+                'name' => 'Renamed Section',
+                'code' => $section->code,
+                'settings' => ['extra' => ['render_as_tab' => true]],
+            ])
+            ->assertHasNoFormErrors();
+
+        expect($section->refresh()->settings->extra)->toBe(['render_as_tab' => true]);
     });
 });
