@@ -2,6 +2,15 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.3.0 - 2026-06-14
+
+### Added
+
+- **`SectionForm::extendSchemaUsing()`** — extend the custom-field section management form from application code (e.g. a service provider), with no subclassing or vendor patching. A single registration applies to both the Add and Edit section modals, and the callback receives the current schema plus the section's entity type, so extensions can be scoped per entity (#165).
+- **Free-form `extra` bag on `CustomFieldSectionSettingsData`** — consumer-defined section settings bound under `settings.extra.*` now round-trip through the typed settings DTO (and through config import/export). Enables, for example, flagging a section to render as its own tab (#165).
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.2.1...v3.3.0
+
 ## v3.2.1 - 2026-06-10
 
 ### Fixed
