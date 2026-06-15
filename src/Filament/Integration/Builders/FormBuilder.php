@@ -13,6 +13,7 @@ use Relaticle\CustomFields\Filament\Integration\Factories\FieldComponentFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionComponentFactory;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 
 class FormBuilder extends BaseBuilder
 {
@@ -42,16 +43,14 @@ class FormBuilder extends BaseBuilder
 
     private function getDependentFieldCodes(Collection $fields): array
     {
+        $service = app(CoreVisibilityLogicService::class);
         $dependentCodes = [];
 
         foreach ($fields as $field) {
-            if ($field->visibility_conditions && is_array($field->visibility_conditions)) {
-                foreach ($field->visibility_conditions as $condition) {
-                    if (isset($condition['field'])) {
-                        $dependentCodes[] = $condition['field'];
-                    }
-                }
-            }
+            $dependentCodes = array_merge(
+                $dependentCodes,
+                $service->getDependentFields($field),
+            );
 
             $validationRules = $field->validation_rules;
             if ($validationRules) {
