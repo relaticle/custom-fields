@@ -16,8 +16,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
@@ -98,11 +97,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->fillForm($this->section->toArray())
             ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
             ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())
-            ->modalWidth(
-                FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY)
-                    ? Width::ScreenLarge
-                    : Width::TwoExtraLarge
-            );
+            ->modalWidth(CustomFieldsPlugin::get()->getSectionModalWidth());
     }
 
     public function activateAction(): Action

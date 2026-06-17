@@ -2,6 +2,16 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- **Visibility condition value no longer wiped when only the operator changes.** Editing a saved section/field visibility condition and changing its operator (e.g. `Is in` → `Is not in`) reset the stored value to `null`, silently turning the condition into an "is in / is not in nothing" match. The value is now preserved whenever the new operator still takes one, and only cleared for value-less operators (`is set` / `is empty`).
+
+### Added
+
+- **Configurable section modal width.** The add/edit section modal width is now resolved through `CustomFieldsPlugin::make()->sectionModalWidth(...)` (a `Width` case or closure) or the `custom-fields.management.section_modal_width` config key. The default widens to `screen-lg` when section conditional visibility is enabled — previously the add-section modal stayed at `2xl`, cramping the conditions row — and the create/edit modals now resolve to the same width.
+
 ## v3.3.0 - 2026-06-14
 
 ### Added

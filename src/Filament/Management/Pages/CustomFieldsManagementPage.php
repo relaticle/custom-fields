@@ -9,7 +9,6 @@ use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Size;
-use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -156,7 +155,7 @@ class CustomFieldsManagementPage extends Page
             ->schema(SectionForm::entityType($this->currentEntityType)->schema())
             ->action(fn (array $data): CustomFieldSection => $this->storeSection($data))
             ->successNotificationTitle(__('custom-fields::custom-fields.section.notifications.created'))
-            ->modalWidth(Width::TwoExtraLarge);
+            ->modalWidth(CustomFieldsPlugin::get()->getSectionModalWidth());
     }
 
     /**

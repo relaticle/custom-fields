@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
+use Filament\Support\Enums\Width;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -25,6 +26,8 @@ class CustomFieldsPlugin implements Plugin
     protected ?string $dateDisplayFormat = null;
 
     protected ?string $dateTimeDisplayFormat = null;
+
+    protected Width|Closure|null $sectionModalWidth = null;
 
     public function getId(): string
     {
@@ -107,5 +110,34 @@ class CustomFieldsPlugin implements Plugin
         $this->dateTimeDisplayFormat = $format;
 
         return $this;
+    }
+
+    public function sectionModalWidth(Width|Closure|null $width): static
+    {
+        $this->sectionModalWidth = $width;
+
+        return $this;
+    }
+
+    public function getSectionModalWidth(): Width
+    {
+        $width = $this->evaluate($this->sectionModalWidth);
+
+        if (! $width instanceof Width) {
+            $configured = config('custom-fields.management.section_modal_width');
+
+            $width = match (true) {
+                $configured instanceof Width => $configured,
+                is_string($configured) => Width::tryFrom($configured),
+                default => null,
+            };
+        }
+
+        // The conditional-visibility editor adds a four-column conditions row that is unreadable
+        // at the narrower default width, so it gets the wider modal unless overridden.
+        return $width
+            ?? (FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY)
+                ? Width::ScreenLarge
+                : Width::TwoExtraLarge);
     }
 }
