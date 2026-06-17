@@ -6,7 +6,7 @@ All notable changes to `custom-fields` will be documented in this file.
 
 ### Fixed
 
-- **Visibility condition value no longer wiped when only the operator changes.** Editing a saved section/field visibility condition and changing its operator (e.g. `Is in` → `Is not in`) reset the stored value to `null`, silently turning the condition into an "is in / is not in nothing" match. The value is now preserved whenever the new operator still takes one, and only cleared for value-less operators (`is set` / `is empty`).
+- **Visibility condition value no longer wiped when only the operator changes.** Editing a saved section/field visibility condition and changing its operator (e.g. `Is in` → `Is not in`) reset the stored value to `null`, silently turning the condition into an "is in / is not in nothing" match. The value is now preserved whenever the new operator still takes one, and only cleared for value-less operators (`is empty` / `is not empty`).
 
 ### Added
 
