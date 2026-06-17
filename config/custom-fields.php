@@ -77,6 +77,11 @@ return [
         'navigation_sort' => -1,
         'navigation_group' => true,
         'cluster' => null,
+
+        // Width of the add/edit section modal. Accepts a Filament\Support\Enums\Width case or its
+        // string value (e.g. 'screen-lg'). Null falls back to a width based on conditional visibility.
+        // Overridable per panel via CustomFieldsPlugin::make()->sectionModalWidth(...).
+        'section_modal_width' => null,
     ],
 
     /*

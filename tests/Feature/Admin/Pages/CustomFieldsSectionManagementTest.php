@@ -3,14 +3,22 @@
 declare(strict_types=1);
 
 use Filament\Forms\Components\Toggle;
+use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\VisibilityLogic;
+use Relaticle\CustomFields\Enums\VisibilityMode;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage as CustomFieldsPage;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
 beforeEach(function (): void {
@@ -283,6 +291,68 @@ describe('ManageCustomFieldSection - Section Actions', function (): void {
             'entityType' => $this->userEntityType,
         ])->assertActionVisible('delete')
             ->assertActionEnabled('delete');
+    });
+});
+
+describe('ManageCustomFieldSection - condition value persistence', function (): void {
+    it('keeps a saved condition value when only the operator changes on edit', function (): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(
+                CustomFieldsFeature::SYSTEM_SECTIONS,
+                CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
+                CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
+                CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY,
+            )
+        );
+
+        $this->setEntityConditionRelations([
+            Comment::class => ['post.tagModels' => 'Post → Tags'],
+        ]);
+
+        $tag = Tag::factory()->create();
+
+        $section = CustomFieldSection::factory()
+            ->forEntityType(Comment::class)
+            ->create([
+                'name' => 'Conditional Section',
+                'code' => 'conditional_section',
+                'settings' => [
+                    'visibility' => [
+                        'mode' => VisibilityMode::SHOW_WHEN,
+                        'logic' => VisibilityLogic::ALL,
+                        'conditions' => [
+                            [
+                                'field_code' => 'post.tagModels',
+                                'operator' => VisibilityOperator::IS_IN,
+                                'value' => [$tag->id],
+                                'source' => ConditionSource::RelationAttribute,
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+
+        $statePath = 'mountedActions.0.data';
+
+        $component = livewire(ManageCustomFieldSection::class, [
+            'section' => $section,
+            'entityType' => Comment::class,
+        ])->mountAction('edit');
+
+        $conditionKey = array_key_first($component->get($statePath.'.settings.visibility.conditions'));
+
+        $component
+            ->set(sprintf('%s.settings.visibility.conditions.%s.operator', $statePath, $conditionKey), VisibilityOperator::IS_NOT_IN->value)
+            ->callMountedAction()
+            ->assertHasNoFormErrors();
+
+        $condition = app(CoreVisibilityLogicService::class)
+            ->getVisibilityDataFromSection($section->refresh())
+            ->conditions
+            ->first();
+
+        expect($condition->operator)->toBe(VisibilityOperator::IS_NOT_IN)
+            ->and($condition->value)->toBe([$tag->id]);
     });
 });
 
