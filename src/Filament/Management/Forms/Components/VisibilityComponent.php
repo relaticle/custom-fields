@@ -130,7 +130,7 @@ final class VisibilityComponent extends Component
             ->options(fn (Get $get): array => $this->getCompatibleOperators($get))
             ->required()
             ->live()
-            ->afterStateUpdated(fn (Set $set) => $this->clearAllValueFields($set))
+            ->afterStateUpdated(fn (Get $get, Set $set) => $this->clearValuesForOperatorChange($get, $set))
             ->columnSpan(2);
 
         $schema = [...$schema, ...$this->getValueInputComponents(4)];
@@ -579,6 +579,18 @@ final class VisibilityComponent extends Component
     {
         $this->clearAllValueFields($set);
         $set('operator', array_key_first($this->getCompatibleOperators($get)));
+    }
+
+    private function clearValuesForOperatorChange(Get $get, Set $set): void
+    {
+        // Switching between value-taking operators (e.g. Is in -> Is not in) must keep the value;
+        // clearing unconditionally here previously wiped a saved condition's value on any operator
+        // change, silently turning it into an "is in / is not in nothing" match.
+        if ($this->operatorRequiresValue($get)) {
+            return;
+        }
+
+        $this->clearAllValueFields($set);
     }
 
     private function clearAllValueFields(Set $set): void
