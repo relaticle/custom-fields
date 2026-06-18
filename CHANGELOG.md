@@ -2,6 +2,14 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.4.1 - 2026-06-18
+
+### Fixed
+
+- **Date validation "After another field" reference dropdown now populates when creating a field.** The reference-field selector showed "No options available" while creating a new date custom field — it only worked when editing an existing one. The options closure resolved the entity type through the relative state path `$get('../../../entity_type')`, which inside the field-management action modal (`mountedActions.0.data.*`) climbed past the form-data scope to the Livewire root and returned `null`, short-circuiting to an empty list. It now resolves `entity_type`/`code` via absolute data-scope paths, correct in both the action-modal and page-form contexts (#172).
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.4.0...v3.4.1
+
 ## v3.4.0 - 2026-06-17
 
 ### Fixed
