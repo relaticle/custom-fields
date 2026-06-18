@@ -85,8 +85,8 @@ final class DateConstraintField
                     Select::make($statePath.'.field_reference')
                         ->label(__('custom-fields::custom-fields.date_constraint.reference_field'))
                         ->options(function (Get $get, ?CustomField $record): array {
-                            $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
-                            $currentCode = $record?->code ?? $get('../../../code'); // @phpstan-ignore nullsafe.neverNull
+                            $entityType = $record?->entity_type ?? $get('entity_type'); // @phpstan-ignore nullsafe.neverNull
+                            $currentCode = $record?->code ?? $get('code'); // @phpstan-ignore nullsafe.neverNull
 
                             if (! $entityType) {
                                 return [];
@@ -107,13 +107,13 @@ final class DateConstraintField
                                     return;
                                 }
 
-                                $currentCode = $record?->code ?? $get('../../../code'); // @phpstan-ignore nullsafe.neverNull
+                                $currentCode = $record?->code ?? $get('code'); // @phpstan-ignore nullsafe.neverNull
 
                                 if (! $currentCode) {
                                     return;
                                 }
 
-                                $entityType = $record?->entity_type ?? $get('../../../entity_type'); // @phpstan-ignore nullsafe.neverNull
+                                $entityType = $record?->entity_type ?? $get('entity_type'); // @phpstan-ignore nullsafe.neverNull
 
                                 if (! $entityType) {
                                     return;
