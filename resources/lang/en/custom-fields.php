@@ -78,6 +78,8 @@ return [
             ],
             'add_field' => 'Add Field',
             'search_placeholder' => 'Search fields...',
+            'type_search_prompt' => 'Search field types...',
+            'type_no_results' => 'No field types found',
             'system_defined_cannot_delete' => 'System-defined fields cannot be deleted.',
             'allow_multiple' => 'Allow Multiple Values',
             'allow_multiple_help' => 'When enabled, users can enter multiple values for this field.',
@@ -400,6 +402,9 @@ return [
         'required' => 'Required',
         'system' => 'System',
         'archived' => 'Archived',
+        'add' => 'Add',
+        'click_to_add' => 'Click to add',
+        'searching' => 'Searching...',
     ],
 
     'email' => [
@@ -412,6 +417,8 @@ return [
 
     'phone' => [
         'add_phone_placeholder' => 'Add phone number...',
+        'add_label' => 'Add phone number',
+        'empty_state_label' => 'Enter phone number',
         'search_country' => 'Search country...',
         'no_results' => 'No countries found',
         'one_result' => '1 country found',
@@ -429,6 +436,7 @@ return [
     'record' => [
         'search_placeholder' => 'Search records...',
         'add_record_placeholder' => 'Add record...',
+        'empty_state_label' => 'Select record...',
     ],
 
     'enums' => [

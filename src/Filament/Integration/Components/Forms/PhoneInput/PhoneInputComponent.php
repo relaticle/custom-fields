@@ -158,7 +158,7 @@ class PhoneInputComponent extends Field implements HasNestedRecursiveValidationR
 
     public function getAddLabel(): string
     {
-        return $this->evaluate($this->addLabel) ?? __('Add phone number');
+        return $this->evaluate($this->addLabel) ?? __('custom-fields::custom-fields.phone.add_label');
     }
 
     public function emptyStateLabel(string|Closure|null $label): static
@@ -170,7 +170,7 @@ class PhoneInputComponent extends Field implements HasNestedRecursiveValidationR
 
     public function getEmptyStateLabel(): string
     {
-        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('Enter phone number');
+        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('custom-fields::custom-fields.phone.empty_state_label');
     }
 
     /**
