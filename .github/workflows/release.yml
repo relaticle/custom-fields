@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Determine if pre-release
         id: prerelease
@@ -65,7 +65,7 @@ jobs:
           echo "name=${BRANCH}" >> $GITHUB_OUTPUT
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.branch.outputs.name }}
           ssh-key: ${{ secrets.DEPLOY_KEY }}
@@ -103,7 +103,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Delete tag on test failure
         run: git push --delete origin "${{ github.ref_name }}"
