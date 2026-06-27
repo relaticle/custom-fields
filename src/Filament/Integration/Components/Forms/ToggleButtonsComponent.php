@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Forms;
 
-use Filament\Forms\Components\Field;
 use Filament\Forms\Components\ToggleButtons;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Forms\ConfiguresColorOptions;

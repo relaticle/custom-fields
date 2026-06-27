@@ -76,7 +76,8 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
 
     public function editAction(): Action
     {
-        $sectionForm = SectionForm::entityType($this->entityType);
+        $sectionForm = SectionForm::entityType($this->entityType)
+            ->scopeVisibilityToSection($this->section);
 
         if (self::$uniqueRuleModifierResolver instanceof Closure) {
             $modifier = (self::$uniqueRuleModifierResolver)($this->section);
@@ -162,7 +163,7 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->size(Size::ExtraSmall)
             ->label(__('custom-fields::custom-fields.field.form.add_field'))
             ->model(CustomFields::customFieldModel())
-            ->schema(FieldForm::schema(withOptionsRelationship: false))
+            ->schema(FieldForm::schema(withOptionsRelationship: false, section: $this->section))
             ->fillForm(['entity_type' => $this->entityType])
             ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType, $this->section->getKey()))
             ->action(fn (array $data) => $this->storeField($data))

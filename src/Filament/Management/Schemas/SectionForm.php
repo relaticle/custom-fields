@@ -29,6 +29,12 @@ class SectionForm implements FormInterface, SectionFormInterface
     /** @var ?Closure(Unique, Get):Unique */
     private static ?Closure $modifyUniqueRuleUsing = null;
 
+    /**
+     * The section being edited, handed to the conditional-visibility picker so it can be
+     * scoped to the section's parent form. Null (e.g. on section create) applies no scope.
+     */
+    private static ?CustomFieldSection $visibilityScopeSection = null;
+
     /** @var array<int, Closure(array<int, Component>, string): array<int, Component>> */
     private static array $schemaExtensions = [];
 
@@ -36,6 +42,7 @@ class SectionForm implements FormInterface, SectionFormInterface
     {
         self::$entityType = $entityType;
         self::$modifyUniqueRuleUsing = null;
+        self::$visibilityScopeSection = null;
 
         return new self;
     }
@@ -43,6 +50,13 @@ class SectionForm implements FormInterface, SectionFormInterface
     public function modifyUniqueRuleUsing(Closure $callback): self
     {
         self::$modifyUniqueRuleUsing = $callback;
+
+        return $this;
+    }
+
+    public function scopeVisibilityToSection(?CustomFieldSection $section): self
+    {
+        self::$visibilityScopeSection = $section;
 
         return $this;
     }
@@ -195,7 +209,7 @@ class SectionForm implements FormInterface, SectionFormInterface
         }
 
         return [
-            VisibilityComponent::makeForSection(self::$entityType),
+            VisibilityComponent::makeForSection(self::$entityType, self::$visibilityScopeSection),
         ];
     }
 }

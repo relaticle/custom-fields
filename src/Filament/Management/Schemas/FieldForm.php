@@ -34,10 +34,37 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\TypeField;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 
 class FieldForm implements FormInterface
 {
+    /** @var ?Closure(?CustomFieldSection): ?Closure */
+    private static ?Closure $uniqueNameRuleModifierResolver = null;
+
+    /**
+     * Register a resolver that scopes the field-name uniqueness rule beyond the default
+     * entity-type (+ tenant) scope. The resolver receives the section the field belongs to
+     * (the create target, or the edited field's section) and returns a rule modifier, or
+     * null for no extra scope. Lets a consumer allow the same field name across separate
+     * parent forms while still preventing duplicates within one form. Register once.
+     *
+     * @param  ?Closure(?CustomFieldSection $section): ?Closure  $resolver
+     */
+    public static function resolveUniqueRuleModifierUsing(?Closure $resolver): void
+    {
+        self::$uniqueNameRuleModifierResolver = $resolver;
+    }
+
+    private static function resolveUniqueNameRuleModifier(?CustomFieldSection $section): ?Closure
+    {
+        if (self::$uniqueNameRuleModifierResolver instanceof Closure) {
+            return (self::$uniqueNameRuleModifierResolver)($section);
+        }
+
+        return null;
+    }
+
     /**
      * Disable field when editing a system-defined custom field.
      */
@@ -107,8 +134,10 @@ class FieldForm implements FormInterface
     /**
      * @return array<int, Component>
      */
-    public static function schema(bool $withOptionsRelationship = true): array
+    public static function schema(bool $withOptionsRelationship = true, ?CustomFieldSection $section = null): array
     {
+        $uniqueNameRuleModifier = self::resolveUniqueNameRuleModifier($section);
+
         $optionsRepeater = Repeater::make('options')
             ->table([
                 TableColumn::make('Color')->width('150px')->hiddenHeaderLabel(),
@@ -224,15 +253,23 @@ class FieldForm implements FormInterface
                             table: CustomFields::customFieldModel(),
                             column: 'name',
                             ignoreRecord: true,
-                            modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                                ->where('entity_type', $get('entity_type'))
-                                ->when(
-                                    FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                    fn (Unique $rule) => $rule->where(
-                                        config('custom-fields.database.column_names.tenant_foreign_key'),
-                                        TenantContextService::getCurrentTenantId()
-                                    )
-                                )
+                            modifyRuleUsing: function (Unique $rule, Get $get) use ($uniqueNameRuleModifier): Unique {
+                                $rule = $rule
+                                    ->where('entity_type', $get('entity_type'))
+                                    ->when(
+                                        FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                        fn (Unique $rule) => $rule->where(
+                                            config('custom-fields.database.column_names.tenant_foreign_key'),
+                                            TenantContextService::getCurrentTenantId()
+                                        )
+                                    );
+
+                                if ($uniqueNameRuleModifier instanceof Closure) {
+                                    return $uniqueNameRuleModifier($rule, $get);
+                                }
+
+                                return $rule;
+                            }
                         )
                         ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
                             $old ??= '';
@@ -505,7 +542,7 @@ class FieldForm implements FormInterface
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
             $additionalTabs[] = Tab::make(
                 __('custom-fields::custom-fields.field.form.visibility_settings')
-            )->schema([VisibilityComponent::make()]);
+            )->schema([VisibilityComponent::make($section)]);
         }
 
         // If no additional tabs, return schema directly without tabs wrapper
