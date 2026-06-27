@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
 
+use Closure;
 use Exception;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -25,6 +26,7 @@ use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
@@ -38,22 +40,49 @@ final class VisibilityComponent extends Component
 
     private ?string $sectionEntityType = null;
 
+    /**
+     * The section the conditioned field/section belongs to. When a consumer registers a
+     * scope resolver, this is handed to it so the "depends on" picker can be constrained
+     * to a subset (e.g. only fields in the same parent form). Null applies no scope.
+     */
+    private ?CustomFieldSection $scopeSection = null;
+
+    /** @var ?Closure(string, ?CustomFieldSection): ?Closure */
+    private static ?Closure $availableFieldsScopeResolver = null;
+
     public function __construct()
     {
         $this->schema([$this->buildFieldset()]);
         $this->columnSpanFull();
     }
 
-    public static function make(): static
+    /**
+     * Register a resolver that constrains the conditional-visibility "depends on" field
+     * picker. The resolver receives the entity type and the section the conditioned
+     * field/section belongs to, and returns a query constraint closure, or null for no
+     * scope. Register once (e.g. from a service provider).
+     *
+     * @param  ?Closure(string $entityType, ?CustomFieldSection $section): ?Closure  $resolver
+     */
+    public static function resolveAvailableFieldsScopeUsing(?Closure $resolver): void
     {
-        return new self;
+        self::$availableFieldsScopeResolver = $resolver;
     }
 
-    public static function makeForSection(string $entityType): static
+    public static function make(?CustomFieldSection $scopeSection = null): static
+    {
+        $instance = new self;
+        $instance->scopeSection = $scopeSection;
+
+        return $instance;
+    }
+
+    public static function makeForSection(string $entityType, ?CustomFieldSection $scopeSection = null): static
     {
         $instance = new self;
         $instance->forSection = true;
         $instance->sectionEntityType = $entityType;
+        $instance->scopeSection = $scopeSection;
 
         return $instance;
     }
@@ -449,12 +478,23 @@ final class VisibilityComponent extends Component
         }
 
         $currentFieldCode = $this->forSection ? null : $get('../../../../code');
+        $scopeSection = $this->scopeSection;
+        $scopeResolver = self::$availableFieldsScopeResolver;
 
-        return rescue(function () use ($entityType, $currentFieldCode) {
-            return CustomFields::customFieldModel()::query()
+        return rescue(function () use ($entityType, $currentFieldCode, $scopeSection, $scopeResolver) {
+            $query = CustomFields::customFieldModel()::query()
                 ->forMorphEntity($entityType)
-                ->when($currentFieldCode, fn (mixed $query) => $query->where('code', '!=', $currentFieldCode))
-                ->orderBy('name')
+                ->when($currentFieldCode, fn (mixed $query) => $query->where('code', '!=', $currentFieldCode));
+
+            if ($scopeResolver instanceof Closure) {
+                $constraint = $scopeResolver($entityType, $scopeSection);
+
+                if ($constraint instanceof Closure) {
+                    $query = $constraint($query) ?? $query;
+                }
+            }
+
+            return $query->orderBy('name')
                 ->pluck('name', 'code')
                 ->toArray();
         }, []);

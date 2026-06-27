@@ -47,7 +47,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->icon('heroicon-o-pencil-square')
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
-            ->schema(FieldForm::schema())
+            ->schema(FieldForm::schema(section: $this->field->section))
             ->fillForm(function (): array {
                 $data = $this->field->toArray();
                 $data['options'] = $this->field->options->toArray();
