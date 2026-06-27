@@ -2,6 +2,19 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.0 - 2026-06-27
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump actions/checkout from 6 to 7 by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/174
+* fix(i18n): replace hardcoded UI strings with translation keys by @erikpach in https://github.com/relaticle/custom-fields/pull/173
+* feat: consumer hooks to scope field uniqueness + visibility picker by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/175
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.4.1...v3.5.0
+
 ## v3.4.1 - 2026-06-18
 
 ### Fixed
