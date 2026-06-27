@@ -23,9 +23,9 @@ class TypeField extends Select
             ->searchable()
             ->selectablePlaceholder(false)
             ->searchDebounce(300)
-            ->searchPrompt(__('Search field types...'))
-            ->noSearchResultsMessage(__('No field types found'))
-            ->searchingMessage(__('Searching...'))
+            ->searchPrompt(__('custom-fields::custom-fields.field.form.type_search_prompt'))
+            ->noSearchResultsMessage(__('custom-fields::custom-fields.field.form.type_no_results'))
+            ->searchingMessage(__('custom-fields::custom-fields.common.searching'))
             ->getSearchResultsUsing(fn (string $search): array => $this->getSearchResults($search))
             ->options(fn (): array => $this->getAllFormattedOptions());
     }

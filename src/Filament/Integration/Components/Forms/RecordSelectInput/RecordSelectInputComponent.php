@@ -124,7 +124,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
 
     public function getAddLabel(): string
     {
-        return $this->evaluate($this->addLabel) ?? __('Add');
+        return $this->evaluate($this->addLabel) ?? __('custom-fields::custom-fields.common.add');
     }
 
     public function emptyStateLabel(string|Closure|null $label): static
@@ -136,7 +136,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
 
     public function getEmptyStateLabel(): string
     {
-        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('Select record...');
+        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('custom-fields::custom-fields.record.empty_state_label');
     }
 
     public function maxVisiblePills(int|Closure $max): static

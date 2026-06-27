@@ -503,8 +503,9 @@ class FieldForm implements FormInterface
         }
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
-            $additionalTabs[] = Tab::make('Visibility')
-                ->schema([VisibilityComponent::make()]);
+            $additionalTabs[] = Tab::make(
+                __('custom-fields::custom-fields.field.form.visibility_settings')
+            )->schema([VisibilityComponent::make()]);
         }
 
         // If no additional tabs, return schema directly without tabs wrapper

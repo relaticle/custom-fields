@@ -112,7 +112,7 @@ class MultiValueInputComponent extends Field implements HasNestedRecursiveValida
 
     public function getAddLabel(): string
     {
-        return $this->evaluate($this->addLabel) ?? __('Add');
+        return $this->evaluate($this->addLabel) ?? __('custom-fields::custom-fields.common.add');
     }
 
     public function emptyStateLabel(string|Closure|null $label): static
@@ -124,7 +124,7 @@ class MultiValueInputComponent extends Field implements HasNestedRecursiveValida
 
     public function getEmptyStateLabel(): string
     {
-        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('Click to add');
+        return $this->evaluate($this->emptyStateLabel) ?? $this->getPlaceholder() ?? __('custom-fields::custom-fields.common.click_to_add');
     }
 
     /**
