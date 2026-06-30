@@ -6,18 +6,22 @@ namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FormComponentInterface;
+use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValidationService;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
+use Spatie\LaravelData\DataCollection;
 
 /**
  * Abstract base class for form field components.
@@ -30,6 +34,20 @@ use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
  */
 abstract readonly class AbstractFormComponent implements FormComponentInterface
 {
+    /**
+     * Operators whose result is identical whether evaluated against option ids (client visibleJs)
+     * or option names (server). Other operators (substring/ordering/membership) can diverge for
+     * choice fields, so the validation gate defers to normal validation for those.
+     *
+     * @var list<VisibilityOperator>
+     */
+    private const array CHOICE_SAFE_OPERATORS = [
+        VisibilityOperator::EQUALS,
+        VisibilityOperator::NOT_EQUALS,
+        VisibilityOperator::IS_EMPTY,
+        VisibilityOperator::IS_NOT_EMPTY,
+    ];
+
     public function __construct(
         protected ValidationService $validationService,
         protected CoreVisibilityLogicService $coreVisibilityLogic,
@@ -91,12 +109,14 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
             ->when(
                 $this->validationService->isRequired($customField) && $customField->typeData->dataType->isBoolean(),
                 fn (Field $field): Field => $field->markAsRequired(),
-                fn (Field $field): Field => $field->required($this->validationService->isRequired($customField)),
+                fn (Field $field): Field => $field->required(
+                    fn (Get $get): bool => $this->validationService->isRequired($customField)
+                        && $this->isVisibleForValidation($customField, $allFields, $get)
+                ),
             )
-            ->rules(fn (Field $component): array => $this->getFieldValidationRules(
-                $customField,
-                $component->getRecord()?->getKey()
-            ))
+            ->rules(fn (Get $get, Field $component): array => $this->isVisibleForValidation($customField, $allFields, $get)
+                ? $this->getFieldValidationRules($customField, $component->getRecord()?->getKey())
+                : [])
             ->columnSpan(
                 FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
                     ? $customField->width->getSpanValue()
@@ -180,6 +200,85 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     private function hasVisibilityConditions(CustomField $customField): bool
     {
         return $this->coreVisibilityLogic->hasVisibilityConditions($customField);
+    }
+
+    /**
+     * Decide whether a field participates in validation, based on its conditional-visibility rules.
+     *
+     * Same-record custom-field conditions are rendered client-side via visibleJs(), which does not
+     * change Filament's server-side isHidden() — so without this gate required() and the field rules
+     * would fire while the field is hidden. We mirror the field's OWN conditions on the server using
+     * the canonical CoreVisibilityLogicService against live form state.
+     *
+     * Safety: the gate only ever returns false ("skip validation") when the field's own conditions
+     * are unmet. Because the client expression is `parentConditions && ownConditions`, an unmet own
+     * condition guarantees the client also hides the field — so a visible field is never silently
+     * skipped (worst case is a redundant validation, never accepting invalid data). For condition
+     * shapes the server cannot reproduce identically to the client JS (model/relation attribute
+     * sources, or non-equality operators on choice fields, where the client compares option ids and
+     * the server compares option names) we defer to normal validation instead of guessing.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function isVisibleForValidation(
+        CustomField $customField,
+        Collection $allFields,
+        Get $get
+    ): bool {
+        if (! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
+            return true;
+        }
+
+        if (! $this->hasVisibilityConditions($customField)) {
+            return true;
+        }
+
+        $visibility = $this->coreVisibilityLogic->getVisibilityData($customField);
+
+        if (! $this->canReproduceClientVisibility($visibility, $allFields)) {
+            return true;
+        }
+
+        $rawValues = $get('custom_fields');
+        $fieldValues = is_array($rawValues) ? $rawValues : [];
+
+        $normalizedValues = app(BackendVisibilityService::class)
+            ->normalizeFieldValuesUsing($fieldValues, $allFields);
+
+        return $this->coreVisibilityLogic->evaluateVisibility($customField, $normalizedValues);
+    }
+
+    /**
+     * Whether the server can reproduce the client-side visibleJs result for this field's own
+     * conditions. Returns false for conditions the gate must not act on (to avoid skipping
+     * validation on a field the user can see): non same-record-custom-field sources, and operators
+     * on choice fields that the client evaluates against option ids rather than names.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function canReproduceClientVisibility(VisibilityData $visibility, Collection $allFields): bool
+    {
+        if (! $visibility->conditions instanceof DataCollection) {
+            return true;
+        }
+
+        $fieldsByCode = $allFields->keyBy('code');
+
+        foreach ($visibility->conditions as $condition) {
+            if (! $condition->isCustomField()) {
+                return false;
+            }
+
+            $referenced = $fieldsByCode->get($condition->field_code);
+
+            if ($referenced instanceof CustomField
+                && $referenced->isChoiceField()
+                && ! in_array($condition->operator, self::CHOICE_SAFE_OPERATORS, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function applyVisibility(
