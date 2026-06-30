@@ -4,6 +4,10 @@ includes:
 parameters:
     level: 5
     treatPhpDocTypesAsCertain: false
+    # nullsafe.neverNull inference differs between larastan versions (e.g. 3.9 vs 3.10), so some
+    # defensive `@phpstan-ignore nullsafe.neverNull` annotations are "unmatched" on newer larastan
+    # under prefer-stable CI. Tolerate unmatched ignores so analysis stays green across versions.
+    reportUnmatchedIgnoredErrors: false
     paths:
         - src
         - tests

@@ -194,16 +194,30 @@ final class BackendVisibilityService
 
         $fields = CustomFields::newCustomFieldModel()::whereIn('code', $fieldCodes)
             ->with('options')
-            ->get()
-            ->keyBy('code');
+            ->get();
+
+        return $this->normalizeFieldValuesUsing($rawValues, $fields);
+    }
+
+    /**
+     * Normalize raw field values for visibility evaluation using an already-loaded field
+     * collection, avoiding a database query. Mirrors normalizeFieldValues() for callers that
+     * already hold the fields (with options) in memory.
+     *
+     * @param  array<string, mixed>  $rawValues
+     * @param  Collection<int, CustomField>  $fields
+     * @return array<string, mixed>
+     */
+    public function normalizeFieldValuesUsing(array $rawValues, Collection $fields): array
+    {
+        $fieldsByCode = $fields->keyBy('code');
 
         $normalized = [];
 
         foreach ($rawValues as $fieldCode => $value) {
-            $field = $fields->get($fieldCode);
             $normalized[$fieldCode] = $this->normalizeValueForEvaluation(
                 $value,
-                $field
+                $fieldsByCode->get($fieldCode)
             );
         }
 
