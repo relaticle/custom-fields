@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.1 - 2026-06-30
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.5.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: ignore validation for conditionally hidden custom fields by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/176
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.0...v3.5.1
+
 ## v3.5.0 - 2026-06-27
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
