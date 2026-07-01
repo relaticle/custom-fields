@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
+use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -37,8 +39,13 @@ class VisibilityData extends Data
 
     /**
      * @param  array<string, mixed>  $fieldValues
+     * @param  array<int, string>  $membershipFieldCodes  Codes of option-backed choice fields whose
+     *                                                    contains/not-contains conditions must be
+     *                                                    evaluated as exact option membership rather
+     *                                                    than substring, to stay identical to the
+     *                                                    client (which compares option ids).
      */
-    public function evaluate(array $fieldValues, ?Model $record = null): bool
+    public function evaluate(array $fieldValues, ?Model $record = null, array $membershipFieldCodes = []): bool
     {
         if (! $this->requiresConditions() || ! $this->conditions instanceof DataCollection) {
             return $this->mode === VisibilityMode::ALWAYS_VISIBLE;
@@ -56,7 +63,7 @@ class VisibilityData extends Data
                 continue;
             }
 
-            $results[] = $this->evaluateCondition($condition, $fieldValues, $record);
+            $results[] = $this->evaluateCondition($condition, $fieldValues, $record, $membershipFieldCodes);
         }
 
         if ($results === []) {
@@ -70,8 +77,9 @@ class VisibilityData extends Data
 
     /**
      * @param  array<string, mixed>  $fieldValues
+     * @param  array<int, string>  $membershipFieldCodes
      */
-    private function evaluateCondition(VisibilityConditionData $condition, array $fieldValues, ?Model $record = null): bool
+    private function evaluateCondition(VisibilityConditionData $condition, array $fieldValues, ?Model $record = null, array $membershipFieldCodes = []): bool
     {
         if ($condition->isRelationAttribute()) {
             if (! $record instanceof Model) {
@@ -98,7 +106,56 @@ class VisibilityData extends Data
 
         $fieldValue = $fieldValues[$condition->field_code] ?? null;
 
+        if ($this->isMembershipCondition($condition, $membershipFieldCodes)) {
+            $isMember = $this->matchesOptionMembership($fieldValue, $condition->value);
+
+            return $condition->operator === VisibilityOperator::CONTAINS ? $isMember : ! $isMember;
+        }
+
         return $condition->operator->evaluate($fieldValue, $condition->value);
+    }
+
+    /**
+     * @param  array<int, string>  $membershipFieldCodes
+     */
+    private function isMembershipCondition(VisibilityConditionData $condition, array $membershipFieldCodes): bool
+    {
+        return in_array($condition->operator, [VisibilityOperator::CONTAINS, VisibilityOperator::NOT_CONTAINS], true)
+            && in_array($condition->field_code, $membershipFieldCodes, true);
+    }
+
+    /**
+     * Exact, case-insensitive option membership: true when the selected options include any of the
+     * condition's options. Mirrors the client, which resolves the condition to option ids and checks
+     * `conditionIds.some(id => selectedIds.includes(id))`.
+     */
+    private function matchesOptionMembership(mixed $fieldValue, mixed $conditionValue): bool
+    {
+        $selected = $this->normalizeMembershipValues($fieldValue);
+
+        if ($selected === []) {
+            return false;
+        }
+
+        foreach ($this->normalizeMembershipValues($conditionValue) as $wanted) {
+            if (in_array($wanted, $selected, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeMembershipValues(mixed $value): array
+    {
+        return collect(is_array($value) ? $value : [$value])
+            ->reject(fn (mixed $item): bool => $item === null || $item === '')
+            ->map(fn (mixed $item): string => Str::lower(trim((string) $item)))
+            ->values()
+            ->all();
     }
 
     /**
