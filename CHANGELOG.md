@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.2 - 2026-07-01
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.5.2 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: evaluate multi-choice visibility conditions as exact option membership by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/177
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.1...v3.5.2
+
 ## v3.5.1 - 2026-06-30
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.5.1 -->
