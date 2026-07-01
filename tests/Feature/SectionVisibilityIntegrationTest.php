@@ -11,6 +11,7 @@ use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
@@ -136,6 +137,51 @@ describe('Section visibility JS expression generation', function (): void {
             ->and($jsExpression)->toContain("\$get('custom_fields.plan')")
             ->and($jsExpression)->toContain("'pro'")
             ->and($jsExpression)->not->toContain('"');
+    });
+
+    it('generates an attribute-safe, id-based expression for a multi-choice contains section condition', function (): void {
+        $services = CustomField::factory()->create([
+            'name' => 'Services',
+            'code' => 'services',
+            'type' => 'multi-select',
+            'entity_type' => Post::class,
+        ]);
+        $other = CustomFieldOption::factory()->create([
+            'custom_field_id' => $services->id,
+            'name' => 'Other',
+            'sort_order' => 1,
+        ]);
+
+        $section = CustomFieldSection::factory()->create([
+            'name' => 'Multi Choice Section',
+            'entity_type' => Post::class,
+            'active' => true,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [
+                        [
+                            'field_code' => 'services',
+                            'operator' => VisibilityOperator::CONTAINS,
+                            'value' => ['Other'],
+                            'source' => ConditionSource::CustomField,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $jsExpression = $this->frontendService->buildSectionVisibilityExpression($section, collect([$services]));
+
+        // Same guarantees as field-level conditions: resolves the option name to its numeric id,
+        // string-normalizes, and stays safe inside the double-quoted x-bind:class attribute.
+        expect($jsExpression)->toBeString()
+            ->and($jsExpression)->toContain((string) $other->id)
+            ->and($jsExpression)->not->toContain("'Other'")
+            ->and($jsExpression)->toContain('String(v)')
+            ->and($jsExpression)->not->toContain('"')
+            ->and($jsExpression)->not->toContain("\n");
     });
 
     it('generates JS expression for section with model attribute condition', function (): void {
