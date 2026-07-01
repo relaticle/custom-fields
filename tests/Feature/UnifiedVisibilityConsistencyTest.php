@@ -11,6 +11,7 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
@@ -183,7 +184,11 @@ test('frontend service generates valid JavaScript expressions', function (): voi
 
     expect($jsExpression)->toBeString()
         ->and($jsExpression)->toContain("\$get('custom_fields.status')")
-        ->and($jsExpression)->toContain('"active"');
+        ->and($jsExpression)->toContain("'active'")
+        // Must embed safely inside Filament's double-quoted x-bind:class attribute: never emit
+        // double quotes (they truncate the attribute) and stay on a single line.
+        ->and($jsExpression)->not->toContain('"')
+        ->and($jsExpression)->not->toContain("\n");
 
     // Test always visible field returns null (no expression needed)
     $alwaysVisibleExpression = $this->frontendService->buildVisibilityExpression($this->alwaysVisibleField, $fields);
@@ -196,6 +201,53 @@ test('frontend service generates valid JavaScript expressions', function (): voi
         ->and($jsData['fields'])->toHaveKey('details')
         ->and($jsData['fields']['details']['has_visibility_conditions'])->toBeTrue()
         ->and($jsData['fields']['name']['has_visibility_conditions'])->toBeFalse();
+});
+
+test('multi-choice contains expression is attribute-safe, id-based and string-normalized', function (): void {
+    $services = CustomField::factory()->create([
+        'custom_field_section_id' => $this->section->id,
+        'name' => 'Services',
+        'code' => 'services',
+        'type' => 'multi-select',
+    ]);
+    $other = CustomFieldOption::factory()->create([
+        'custom_field_id' => $services->id,
+        'name' => 'Other',
+        'sort_order' => 1,
+    ]);
+
+    $dependent = CustomField::factory()->create([
+        'custom_field_section_id' => $this->section->id,
+        'name' => 'Other details',
+        'code' => 'other_details',
+        'type' => 'text',
+        'settings' => [
+            'visibility' => [
+                'mode' => VisibilityMode::SHOW_WHEN,
+                'logic' => VisibilityLogic::ALL,
+                'conditions' => [[
+                    'field_code' => 'services',
+                    'operator' => VisibilityOperator::CONTAINS,
+                    'value' => ['Other'],
+                ]],
+                'always_save' => false,
+            ],
+        ],
+    ]);
+
+    $expr = $this->frontendService->buildVisibilityExpression($dependent, collect([$services, $dependent]));
+
+    expect($expr)->toBeString()
+        // The option name is resolved to its numeric id — the expression never compares the
+        // selected ids against the raw option name (which would never match).
+        ->and($expr)->toContain((string) $other->id)
+        ->and($expr)->not->toContain("'Other'")
+        // Multi-select ids arrive from Livewire state as strings while the resolved condition id
+        // is an int; both sides must be stringified or strict includes() silently misses.
+        ->and($expr)->toContain('String(v)')
+        // Must embed safely inside Filament's double-quoted x-bind:class attribute.
+        ->and($expr)->not->toContain('"')
+        ->and($expr)->not->toContain("\n");
 });
 
 test('complex conditions work identically in backend and frontend', function (): void {
