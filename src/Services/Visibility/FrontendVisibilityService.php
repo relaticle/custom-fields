@@ -543,12 +543,22 @@ final readonly class FrontendVisibilityService
 
     /**
      * Build contains expression.
+     *
+     * For option-backed choice fields "contains" means exact option membership: the selected
+     * option ids include (any of) the condition's option ids. This matches the server, which
+     * evaluates the same condition as membership over normalized option names. Substring matching
+     * is kept only for free-text sources (text fields and option-less multi-value fields such as
+     * email/tags), where the client and server both compare raw values.
      */
     private function buildContainsExpression(
         string $fieldValue,
         mixed $value,
         ?CustomField $targetField
     ): string {
+        if ($targetField instanceof CustomField && $targetField->isChoiceField() && $targetField->options->isNotEmpty()) {
+            return $this->buildOptionExpression($fieldValue, $value, $targetField, 'equals');
+        }
+
         $resolvedValue = $targetField instanceof CustomField
             ? $this->resolveOptionValue($value, $targetField)
             : $value;

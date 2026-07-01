@@ -298,22 +298,95 @@ it('accepts a non-conditional required field when filled', function (): void {
 });
 
 // ===========================================================================
-// Divergence safety — gate must never skip validation on a field the user can see.
-// For condition shapes the server cannot reproduce identically to the client JS, the
-// gate defers to normal validation (the pre-fix behavior) rather than risk silent data loss.
+// Multi-choice contains — exact option membership (matches the client's option-id comparison).
+// "contains X" means the selected options include X exactly, never a substring of an option
+// name. The gate reproduces this server-side so a hidden field is not required and a visible
+// field is.
 // ===========================================================================
 
-it('still enforces required for a choice CONTAINS condition (client compares ids, server names)', function (): void {
+it('does not require a field when the multi-select does not include the trigger option', function (): void {
+    $services = cvvField($this, 'services', 'multi-select');
+    $rent = CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Rent', 'sort_order' => 1]);
+    CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Other', 'sort_order' => 2]);
+
+    cvvField($this, 'other_details', 'text', ['required' => true], cvvShowWhen('services', VisibilityOperator::CONTAINS, ['Other']));
+
+    cvvCreate(['services' => [$rent->id], 'other_details' => null])
+        ->assertHasNoFormErrors(['custom_fields.other_details'])
+        ->assertRedirect();
+});
+
+it('requires a field when the multi-select includes the trigger option', function (): void {
+    $services = cvvField($this, 'services', 'multi-select');
+    CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Rent', 'sort_order' => 1]);
+    $other = CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Other', 'sort_order' => 2]);
+
+    cvvField($this, 'other_details', 'text', ['required' => true], cvvShowWhen('services', VisibilityOperator::CONTAINS, ['Other']));
+
+    cvvCreate(['services' => [$other->id], 'other_details' => null])
+        ->assertHasFormErrors(['custom_fields.other_details' => 'required']);
+});
+
+it('treats contains as exact membership, not substring, for overlapping option names', function (): void {
     $pets = cvvField($this, 'pets', 'multi-select');
     $dog = CustomFieldOption::factory()->create(['custom_field_id' => $pets->id, 'name' => 'Dog', 'sort_order' => 1]);
     CustomFieldOption::factory()->create(['custom_field_id' => $pets->id, 'name' => 'Do', 'sort_order' => 2]);
 
-    cvvField($this, 'detail', 'text', ['required' => true], cvvShowWhen('pets', VisibilityOperator::NOT_CONTAINS, 'Do'));
+    // "Do" is a substring of "Dog". Selecting only "Dog" must NOT satisfy contains "Do":
+    // the field stays hidden (matching the client, which compares option ids) and is not required.
+    cvvField($this, 'detail', 'text', ['required' => true], cvvShowWhen('pets', VisibilityOperator::CONTAINS, ['Do']));
 
-    // Selecting only "Dog" shows "detail" on the client (NOT_CONTAINS "Do"); it must stay required.
     cvvCreate(['pets' => [$dog->id], 'detail' => null])
-        ->assertHasFormErrors(['custom_fields.detail' => 'required']);
+        ->assertHasNoFormErrors(['custom_fields.detail'])
+        ->assertRedirect();
 });
+
+it('applies exact membership to checkbox-list contains conditions', function (): void {
+    $colors = cvvField($this, 'colors', 'checkbox-list');
+    $red = CustomFieldOption::factory()->create(['custom_field_id' => $colors->id, 'name' => 'Red', 'sort_order' => 1]);
+    $blue = CustomFieldOption::factory()->create(['custom_field_id' => $colors->id, 'name' => 'Blue', 'sort_order' => 2]);
+
+    cvvField($this, 'shade', 'text', ['required' => true], cvvShowWhen('colors', VisibilityOperator::CONTAINS, ['Blue']));
+
+    cvvCreate(['colors' => [$red->id], 'shade' => null])
+        ->assertHasNoFormErrors(['custom_fields.shade'])
+        ->assertRedirect();
+
+    cvvField($this, 'shade_when_blue', 'text', ['required' => true], cvvShowWhen('colors', VisibilityOperator::CONTAINS, ['Blue']));
+
+    cvvCreate(['colors' => [$blue->id], 'shade_when_blue' => null])
+        ->assertHasFormErrors(['custom_fields.shade_when_blue' => 'required']);
+});
+
+it('hides a not-contains field when the excluded option is selected', function (): void {
+    $services = cvvField($this, 'services', 'multi-select');
+    CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Rent', 'sort_order' => 1]);
+    $other = CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Other', 'sort_order' => 2]);
+
+    cvvField($this, 'note', 'text', ['required' => true], cvvShowWhen('services', VisibilityOperator::NOT_CONTAINS, ['Other']));
+
+    cvvCreate(['services' => [$other->id], 'note' => null])
+        ->assertHasNoFormErrors(['custom_fields.note'])
+        ->assertRedirect();
+});
+
+it('requires a not-contains field when the excluded option is not selected', function (): void {
+    $services = cvvField($this, 'services', 'multi-select');
+    $rent = CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Rent', 'sort_order' => 1]);
+    CustomFieldOption::factory()->create(['custom_field_id' => $services->id, 'name' => 'Other', 'sort_order' => 2]);
+
+    cvvField($this, 'note', 'text', ['required' => true], cvvShowWhen('services', VisibilityOperator::NOT_CONTAINS, ['Other']));
+
+    cvvCreate(['services' => [$rent->id], 'note' => null])
+        ->assertHasFormErrors(['custom_fields.note' => 'required']);
+});
+
+// ===========================================================================
+// Divergence safety — gate must never skip validation on a field the user can see.
+// For condition shapes the server cannot reproduce identically to the client JS (model and
+// relation attribute sources), the gate defers to normal validation rather than risk silent
+// data loss.
+// ===========================================================================
 
 it('still enforces required for a model-attribute condition on create', function (): void {
     cvvField($this, 'why_high', 'text', ['required' => true], [

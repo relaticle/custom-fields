@@ -79,10 +79,13 @@ final readonly class CoreVisibilityLogicService
      * This is the core evaluation logic used by backend implementations.
      *
      * @param  array<string, mixed>  $fieldValues
+     * @param  array<int, string>  $membershipFieldCodes  Option-backed choice field codes whose
+     *                                                    contains/not-contains conditions evaluate
+     *                                                    as exact option membership (see VisibilityData::evaluate).
      */
-    public function evaluateVisibility(CustomField $field, array $fieldValues, ?Model $record = null): bool
+    public function evaluateVisibility(CustomField $field, array $fieldValues, ?Model $record = null, array $membershipFieldCodes = []): bool
     {
-        return $this->getVisibilityData($field)->evaluate($fieldValues, $record);
+        return $this->getVisibilityData($field)->evaluate($fieldValues, $record, $membershipFieldCodes);
     }
 
     /**

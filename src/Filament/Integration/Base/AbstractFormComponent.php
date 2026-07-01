@@ -35,15 +35,19 @@ use Spatie\LaravelData\DataCollection;
 abstract readonly class AbstractFormComponent implements FormComponentInterface
 {
     /**
-     * Operators whose result is identical whether evaluated against option ids (client visibleJs)
-     * or option names (server). Other operators (substring/ordering/membership) can diverge for
-     * choice fields, so the validation gate defers to normal validation for those.
+     * Operators the validation gate can reproduce server-side for choice fields. equals/not-equals
+     * compare a single option, empty/not-empty inspect presence, and contains/not-contains are
+     * evaluated as exact option membership (see isVisibleForValidation) — all identical to the
+     * client, which compares option ids. Ordering operators (greater/less than) are never offered
+     * for choice fields, so they are intentionally absent.
      *
      * @var list<VisibilityOperator>
      */
     private const array CHOICE_SAFE_OPERATORS = [
         VisibilityOperator::EQUALS,
         VisibilityOperator::NOT_EQUALS,
+        VisibilityOperator::CONTAINS,
+        VisibilityOperator::NOT_CONTAINS,
         VisibilityOperator::IS_EMPTY,
         VisibilityOperator::IS_NOT_EMPTY,
     ];
@@ -215,8 +219,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * condition guarantees the client also hides the field — so a visible field is never silently
      * skipped (worst case is a redundant validation, never accepting invalid data). For condition
      * shapes the server cannot reproduce identically to the client JS (model/relation attribute
-     * sources, or non-equality operators on choice fields, where the client compares option ids and
-     * the server compares option names) we defer to normal validation instead of guessing.
+     * sources) we defer to normal validation instead of guessing. Choice-field contains/not-contains
+     * are reproduced as exact option membership, matching the client's option-id comparison.
      *
      * @param  Collection<int, CustomField>  $allFields
      */
@@ -245,14 +249,35 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         $normalizedValues = app(BackendVisibilityService::class)
             ->normalizeFieldValuesUsing($fieldValues, $allFields);
 
-        return $this->coreVisibilityLogic->evaluateVisibility($customField, $normalizedValues);
+        return $this->coreVisibilityLogic->evaluateVisibility(
+            $customField,
+            $normalizedValues,
+            membershipFieldCodes: $this->optionBackedChoiceFieldCodes($allFields),
+        );
+    }
+
+    /**
+     * Codes of choice fields that carry user-defined options (e.g. multi-select, checkbox-list).
+     * Their contains/not-contains conditions are evaluated as exact option membership so the server
+     * matches the client, which resolves the condition to option ids. Option-less choice fields
+     * (email, tags, …) are excluded and keep substring matching, identical on both sides.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     * @return array<int, string>
+     */
+    private function optionBackedChoiceFieldCodes(Collection $allFields): array
+    {
+        return $allFields
+            ->filter(fn (CustomField $field): bool => $field->isChoiceField() && $field->options->isNotEmpty())
+            ->pluck('code')
+            ->all();
     }
 
     /**
      * Whether the server can reproduce the client-side visibleJs result for this field's own
      * conditions. Returns false for conditions the gate must not act on (to avoid skipping
      * validation on a field the user can see): non same-record-custom-field sources, and operators
-     * on choice fields that the client evaluates against option ids rather than names.
+     * on choice fields the gate cannot reproduce (see CHOICE_SAFE_OPERATORS).
      *
      * @param  Collection<int, CustomField>  $allFields
      */
