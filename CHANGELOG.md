@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.3 - 2026-07-01
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.5.3 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: keep multi-choice visibleJs expressions attribute-safe and id-typed by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/178
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.2...v3.5.3
+
 ## v3.5.2 - 2026-07-01
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.5.2 -->
