@@ -223,6 +223,13 @@ final readonly class FrontendVisibilityService
         $escapedCode = addslashes($condition->field_code);
 
         $targetField = $isModelAttribute ? null : $allFields?->firstWhere('code', $condition->field_code);
+
+        // Option resolution (name -> id) and the option-backed choice branch both depend on the
+        // target field's options being loaded. Callers do not always eager-load them, so guarantee
+        // it here — otherwise a choice condition falls back to comparing option names against the
+        // selected ids, which never matches and emits quoted strings that break the class binding.
+        $targetField?->loadMissing('options');
+
         $fieldValue = $isModelAttribute
             ? sprintf("\$get('%s')", $escapedCode)
             : sprintf("\$get('custom_fields.%s')", $escapedCode);
@@ -422,23 +429,21 @@ final readonly class FrontendVisibilityService
     }
 
     /**
-     * Build multi-value option condition.
+     * Build multi-value option condition as a single-line expression (no block-body arrow, no double
+     * quotes) so it embeds safely inside Filament's `x-bind:class="{ 'fi-hidden': !(…) }"` attribute.
+     * Both sides are stringified before comparison because option ids arrive from Livewire state as
+     * strings while the resolved condition ids are integers — strict includes() would otherwise miss.
      */
     private function buildMultiValueOptionCondition(
         string $fieldValue,
         mixed $resolvedValue,
         string $jsValue
     ): string {
+        $selected = sprintf('(Array.isArray(%s) ? %s : []).map(v => String(v))', $fieldValue, $fieldValue);
+
         return is_array($resolvedValue)
-            ? "(() => {
-                const fieldVal = Array.isArray({$fieldValue}) ? {$fieldValue} : [];
-                const conditionVal = {$jsValue};
-                return conditionVal.some(id => fieldVal.includes(id));
-            })()"
-            : "(() => {
-                const fieldVal = Array.isArray({$fieldValue}) ? {$fieldValue} : [];
-                return fieldVal.includes({$jsValue});
-            })()";
+            ? sprintf('(%s.map(v => String(v)).some(id => %s.includes(id)))', $jsValue, $selected)
+            : sprintf('(%s.includes(String(%s)))', $selected, $jsValue);
     }
 
     /**
@@ -448,24 +453,12 @@ final readonly class FrontendVisibilityService
         string $fieldValue,
         string $jsValue
     ): string {
-        return "(() => {
-            const fieldVal = {$fieldValue};
-            const conditionVal = {$jsValue};
+        $fieldEmpty = sprintf("(%s === null || %s === undefined || %s === '')", $fieldValue, $fieldValue, $fieldValue);
+        $conditionEmpty = sprintf("(%s === null || %s === undefined || %s === '')", $jsValue, $jsValue, $jsValue);
 
-            if (fieldVal === null || fieldVal === undefined || fieldVal === '') {
-                return conditionVal === null || conditionVal === undefined || conditionVal === '';
-            }
-
-            if (typeof fieldVal === 'number' && typeof conditionVal === 'number') {
-                return fieldVal === conditionVal;
-            }
-
-            if (typeof fieldVal === 'boolean' && typeof conditionVal === 'boolean') {
-                return fieldVal === conditionVal;
-            }
-
-            return String(fieldVal) === String(conditionVal);
-        })()";
+        // Single-line, string-compared (String() subsumes the number/boolean cases) so it stays safe
+        // inside Filament's double-quoted x-bind:class attribute.
+        return sprintf('(%s ? %s : String(%s) === String(%s))', $fieldEmpty, $conditionEmpty, $fieldValue, $jsValue);
     }
 
     /**
@@ -564,13 +557,9 @@ final readonly class FrontendVisibilityService
             : $value;
         $jsValue = $this->formatJsValue($resolvedValue);
 
-        return "(() => {
-            const fieldVal = {$fieldValue};
-            const searchVal = {$jsValue};
-            return Array.isArray(fieldVal)
-                ? fieldVal.some(item => String(item).toLowerCase().includes(String(searchVal).toLowerCase()))
-                : String(fieldVal || '').toLowerCase().includes(String(searchVal).toLowerCase());
-        })()";
+        return sprintf('(Array.isArray(%s) ', $fieldValue).
+            sprintf('? %s.some(item => String(item).toLowerCase().includes(String(%s).toLowerCase())) ', $fieldValue, $jsValue).
+            sprintf(": String(%s || '').toLowerCase().includes(String(%s).toLowerCase()))", $fieldValue, $jsValue);
     }
 
     /**
@@ -613,7 +602,7 @@ final readonly class FrontendVisibilityService
             is_bool($value) => $value ? 'true' : 'false',
             $value === 'true' => 'true',
             $value === 'false' => 'false',
-            is_string($value) => json_encode($value, JSON_UNESCAPED_UNICODE),
+            is_string($value) => $this->toJsString($value),
             is_int($value) => (string) $value,
             is_float($value) => number_format($value, 10, '.', ''),
             is_numeric($value) => str_contains($value, '.')
@@ -626,8 +615,24 @@ final readonly class FrontendVisibilityService
                         $collection->implode(', ').
                         ']'
                 ),
-            default => json_encode((string) $value, JSON_UNESCAPED_UNICODE),
+            default => $this->toJsString((string) $value),
         };
+    }
+
+    /**
+     * Emit a single-quoted JS string literal. Single quotes (never double) keep the expression safe
+     * inside Filament's double-quoted `x-bind:class="…"` attribute, and control characters are
+     * stripped so the generated visibleJs never spans multiple lines or breaks Alpine parsing.
+     */
+    private function toJsString(string $value): string
+    {
+        $escaped = str_replace(
+            ['\\', "'", "\r", "\n", "\t"],
+            ['\\\\', "\\'", '', ' ', ' '],
+            $value,
+        );
+
+        return sprintf("'%s'", $escaped);
     }
 
     /**
