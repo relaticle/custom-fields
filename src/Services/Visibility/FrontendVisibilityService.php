@@ -439,11 +439,11 @@ final readonly class FrontendVisibilityService
         mixed $resolvedValue,
         string $jsValue
     ): string {
-        $selected = "(Array.isArray({$fieldValue}) ? {$fieldValue} : []).map(v => String(v))";
+        $selected = sprintf('(Array.isArray(%s) ? %s : []).map(v => String(v))', $fieldValue, $fieldValue);
 
         return is_array($resolvedValue)
-            ? "({$jsValue}.map(v => String(v)).some(id => {$selected}.includes(id)))"
-            : "({$selected}.includes(String({$jsValue})))";
+            ? sprintf('(%s.map(v => String(v)).some(id => %s.includes(id)))', $jsValue, $selected)
+            : sprintf('(%s.includes(String(%s)))', $selected, $jsValue);
     }
 
     /**
@@ -453,12 +453,12 @@ final readonly class FrontendVisibilityService
         string $fieldValue,
         string $jsValue
     ): string {
-        $fieldEmpty = "({$fieldValue} === null || {$fieldValue} === undefined || {$fieldValue} === '')";
-        $conditionEmpty = "({$jsValue} === null || {$jsValue} === undefined || {$jsValue} === '')";
+        $fieldEmpty = sprintf("(%s === null || %s === undefined || %s === '')", $fieldValue, $fieldValue, $fieldValue);
+        $conditionEmpty = sprintf("(%s === null || %s === undefined || %s === '')", $jsValue, $jsValue, $jsValue);
 
         // Single-line, string-compared (String() subsumes the number/boolean cases) so it stays safe
         // inside Filament's double-quoted x-bind:class attribute.
-        return "({$fieldEmpty} ? {$conditionEmpty} : String({$fieldValue}) === String({$jsValue}))";
+        return sprintf('(%s ? %s : String(%s) === String(%s))', $fieldEmpty, $conditionEmpty, $fieldValue, $jsValue);
     }
 
     /**
@@ -557,9 +557,9 @@ final readonly class FrontendVisibilityService
             : $value;
         $jsValue = $this->formatJsValue($resolvedValue);
 
-        return "(Array.isArray({$fieldValue}) ".
-            "? {$fieldValue}.some(item => String(item).toLowerCase().includes(String({$jsValue}).toLowerCase())) ".
-            ": String({$fieldValue} || '').toLowerCase().includes(String({$jsValue}).toLowerCase()))";
+        return sprintf('(Array.isArray(%s) ', $fieldValue).
+            sprintf('? %s.some(item => String(item).toLowerCase().includes(String(%s).toLowerCase())) ', $fieldValue, $jsValue).
+            sprintf(": String(%s || '').toLowerCase().includes(String(%s).toLowerCase()))", $fieldValue, $jsValue);
     }
 
     /**
@@ -632,7 +632,7 @@ final readonly class FrontendVisibilityService
             $value,
         );
 
-        return "'{$escaped}'";
+        return sprintf("'%s'", $escaped);
     }
 
     /**
