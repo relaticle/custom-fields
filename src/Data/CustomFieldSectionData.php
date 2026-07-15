@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
@@ -25,6 +26,7 @@ final class CustomFieldSectionData extends Data
         public bool $active = true,
         public bool $systemDefined = false,
         public ?string $entityType = null,
-        public ?CustomFieldSectionSettingsData $settings = null
+        public ?CustomFieldSectionSettingsData $settings = null,
+        public CustomFieldWidth $width = CustomFieldWidth::_100,
     ) {}
 }
