@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
@@ -227,4 +228,20 @@ it('formats a legacy NULL width as 100 when opening the edit form', function ():
     ])->mountAction('edit');
 
     expect($component->get('mountedActions.0.data.width'))->toBe(CustomFieldWidth::_100->value);
+});
+
+it('defaults the section DTO width to 100', function (): void {
+    $data = new CustomFieldSectionData(name: 'Info', code: 'info');
+
+    expect($data->width)->toBe(CustomFieldWidth::_100);
+});
+
+it('carries an explicit width through the section DTO array', function (): void {
+    $data = new CustomFieldSectionData(
+        name: 'Info',
+        code: 'info',
+        width: CustomFieldWidth::_33,
+    );
+
+    expect($data->toArray()['width'])->toBe(CustomFieldWidth::_33->value);
 });
