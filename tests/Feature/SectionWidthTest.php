@@ -106,6 +106,19 @@ it('applies the same width rules on the infolist path', function (): void {
     expect($component->getColumnSpan('lg'))->toBe(6);
 });
 
+it('ignores section width on the infolist path when the flag is off', function (): void {
+    config(['custom-fields.features' => FeatureConfigurator::configure()
+        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)]);
+
+    $section = CustomFieldSection::factory()
+        ->width(CustomFieldWidth::_50)
+        ->create(['entity_type' => Post::class]);
+
+    $component = app(SectionInfolistsFactory::class)->create($section);
+
+    expect($component->getColumnSpan('default'))->toBe('full');
+});
+
 it('persists a chosen section width from the management form when the flag is on', function (): void {
     config(['custom-fields.features' => FeatureConfigurator::configure()->enable(
         CustomFieldsFeature::SYSTEM_SECTIONS,
