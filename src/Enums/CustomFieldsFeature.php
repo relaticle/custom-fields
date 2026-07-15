@@ -31,6 +31,7 @@ enum CustomFieldsFeature: string
     case UI_TOGGLEABLE_COLUMNS = 'ui_toggleable_columns';
     case UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT = 'ui_toggleable_columns_hidden_default';
     case UI_FIELD_WIDTH_CONTROL = 'ui_field_width_control';
+    case UI_SECTION_WIDTH_CONTROL = 'ui_section_width_control';
 
     // System-level features
     case SYSTEM_MANAGEMENT_INTERFACE = 'system_management_interface';
