@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Relaticle\CustomFields\Data\CustomFieldSectionSettingsData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
 class CustomFieldSectionFactory extends Factory
@@ -59,6 +60,13 @@ class CustomFieldSectionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => CustomFieldSectionType::FIELDSET,
+        ]);
+    }
+
+    public function width(CustomFieldWidth $width): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'width' => $width,
         ]);
     }
 }
