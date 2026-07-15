@@ -7,6 +7,8 @@ declare(strict_types=1);
 // MissingAttributeException when Model::preventAccessingMissingAttributes() is
 // enabled (Laravel strict mode).  Regression test for issue #149.
 
+use Filament\Forms\Components\Field;
+use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -84,7 +86,7 @@ describe('FormBuilder strict-mode regression (issue #149)', function (): void {
         // Act — building the form must not throw.
         $builder = app(FormBuilder::class)->forModel(new Post);
 
-        expect(fn () => $builder->values())->not->toThrow(\Illuminate\Database\Eloquent\MissingAttributeException::class);
+        expect(fn () => $builder->values())->not->toThrow(MissingAttributeException::class);
     });
 
     it('correctly resolves dependent field codes via CoreVisibilityLogicService in strict mode', function (): void {
@@ -124,5 +126,47 @@ describe('FormBuilder strict-mode regression (issue #149)', function (): void {
 
         // Assert — the form renders without exception.
         $test->assertSuccessful();
+    });
+
+    it('marks the control field live so its dependents update reactively', function (): void {
+        // The control field has no visibility conditions of its own, so it is
+        // only made ->live() when another field's visibility depends on it —
+        // i.e. only when getDependentFieldCodes() actually resolves the
+        // dependency. This locks in the behaviour behind the shape fix, not
+        // just the absence of a crash.
+        CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Control field',
+            'code' => 'control_field',
+            'type' => 'select',
+            'entity_type' => Post::class,
+        ]);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Dependent field',
+            'code' => 'dependent_field',
+            'type' => 'text',
+            'entity_type' => Post::class,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [[
+                        'field_code' => 'control_field',
+                        'operator' => VisibilityOperator::IS_NOT_EMPTY,
+                        'value' => null,
+                        'source' => ConditionSource::CustomField,
+                    ]],
+                ],
+            ],
+        ]);
+
+        livewire(CreatePost::class)
+            ->assertSuccessful()
+            ->assertFormFieldExists(
+                'custom_fields.control_field',
+                fn (Field $field): bool => $field->isLive(),
+            );
     });
 });
