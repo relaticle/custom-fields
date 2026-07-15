@@ -14,6 +14,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSectionSettingsData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldSectionFactory;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\Concerns\Activable;
 use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
@@ -25,6 +26,7 @@ use Relaticle\CustomFields\Observers\CustomFieldSectionObserver;
  * @property string $code
  * @property string $description
  * @property CustomFieldSectionType $type
+ * @property CustomFieldWidth $width
  * @property string $entity_type
  * @property ?string $lookup_type
  * @property CustomFieldSectionSettingsData $settings
@@ -51,6 +53,10 @@ class CustomFieldSection extends Model
      */
     protected $guarded = [];
 
+    protected $attributes = [
+        'width' => CustomFieldWidth::_100,
+    ];
+
     /**
      * @param  array<string, mixed>  $attributes
      */
@@ -67,6 +73,7 @@ class CustomFieldSection extends Model
     {
         return [
             'type' => CustomFieldSectionType::class,
+            'width' => CustomFieldWidth::class,
             'settings' => CustomFieldSectionSettingsData::class.':default',
             'system_defined' => 'boolean',
         ];
