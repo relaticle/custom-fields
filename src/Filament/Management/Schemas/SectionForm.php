@@ -17,6 +17,7 @@ use Illuminate\Validation\Rules\Unique;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -174,6 +175,22 @@ class SectionForm implements FormInterface, SectionFormInterface
                     ->options(CustomFieldSectionType::class)
                     ->required()
                     ->columnSpan(12),
+                Select::make('width')
+                    ->label(__('custom-fields::custom-fields.section.form.width'))
+                    ->options(CustomFieldWidth::class)
+                    ->default(CustomFieldWidth::_100->value)
+                    ->selectablePlaceholder(false)
+                    ->formatStateUsing(fn (mixed $state): string => match (true) {
+                        $state instanceof CustomFieldWidth => $state->value,
+                        is_string($state) && $state !== '' => $state,
+                        default => CustomFieldWidth::_100->value,
+                    })
+                    ->visible(fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)
+                        && in_array($get('type'), [
+                            CustomFieldSectionType::SECTION,
+                            CustomFieldSectionType::FIELDSET,
+                        ], true))
+                    ->columnSpan(6),
                 Textarea::make('description')
                     ->label(
                         __(

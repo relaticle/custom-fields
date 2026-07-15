@@ -8,8 +8,10 @@ use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionComponentFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionInfolistsFactory;
+use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
 it('defaults a new section width to 100', function (): void {
     $section = CustomFieldSection::factory()->create(['entity_type' => Post::class]);
@@ -99,4 +101,53 @@ it('applies the same width rules on the infolist path', function (): void {
     $component = app(SectionInfolistsFactory::class)->create($section);
 
     expect($component->getColumnSpan('lg'))->toBe(6);
+});
+
+it('persists a chosen section width from the management form when the flag is on', function (): void {
+    config(['custom-fields.features' => FeatureConfigurator::configure()->enable(
+        CustomFieldsFeature::SYSTEM_SECTIONS,
+        CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
+        CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL,
+    )]);
+
+    $this->actingAs(User::factory()->create());
+
+    livewire(CustomFieldsManagementPage::class)
+        ->call('setCurrentEntityType', Post::class)
+        ->callAction('createSection', [
+            'name' => 'Function Info',
+            'code' => 'function_info',
+            'width' => CustomFieldWidth::_50->value,
+        ])
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas(CustomFieldSection::class, [
+        'code' => 'function_info',
+        'entity_type' => Post::class,
+        'width' => '50',
+    ]);
+});
+
+it('does not persist section width from the form when the flag is off', function (): void {
+    config(['custom-fields.features' => FeatureConfigurator::configure()->enable(
+        CustomFieldsFeature::SYSTEM_SECTIONS,
+        CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
+    )]);
+
+    $this->actingAs(User::factory()->create());
+
+    livewire(CustomFieldsManagementPage::class)
+        ->call('setCurrentEntityType', Post::class)
+        ->callAction('createSection', [
+            'name' => 'Responsibility Info',
+            'code' => 'responsibility_info',
+            'width' => CustomFieldWidth::_50->value,
+        ])
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas(CustomFieldSection::class, [
+        'code' => 'responsibility_info',
+        'entity_type' => Post::class,
+        'width' => '100',
+    ]);
 });

@@ -17,6 +17,7 @@ return [
             'name' => 'Name',
             'code' => 'Code',
             'type' => 'Type',
+            'width' => 'Width',
             'description' => 'Description',
             'add_section' => 'Add Section',
             'system_defined_cannot_delete' => 'System-defined sections cannot be deleted.',
