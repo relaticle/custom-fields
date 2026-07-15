@@ -2,6 +2,22 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.4 - 2026-07-15
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.5.4 -->
+### What's Changed
+
+#### Other Changes
+
+* chore: apply rector 2.5.7 auto-fixes by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/180
+* fix(forms): resolve dependent fields via CoreVisibilityLogicService (fixes #149 strict-mode crash) by @crossi-dev in https://github.com/relaticle/custom-fields/pull/167
+
+### New Contributors
+
+* @crossi-dev made their first contribution in https://github.com/relaticle/custom-fields/pull/167
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.3...v3.5.4
+
 ## v3.5.3 - 2026-07-01
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.5.3 -->
