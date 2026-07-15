@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
+use Relaticle\CustomFields\Data\CustomFieldData;
 use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -257,4 +259,37 @@ it('carries an explicit width through the section DTO array', function (): void 
     );
 
     expect($data->toArray()['width'])->toBe(CustomFieldWidth::_33->value);
+});
+
+it('persists a preset section width end-to-end through the migrator', function (): void {
+    config(['custom-fields.features' => FeatureConfigurator::configure()
+        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)]);
+
+    app(CustomsFieldsMigrators::class)->new(
+        model: Post::class,
+        fieldData: new CustomFieldData(
+            name: 'Function Info',
+            code: 'function_info',
+            type: 'text',
+            section: new CustomFieldSectionData(
+                name: 'Function',
+                code: 'function_section',
+                width: CustomFieldWidth::_33,
+            ),
+            systemDefined: true,
+        ),
+    )->create();
+
+    $section = CustomFieldSection::query()
+        ->where('entity_type', Post::class)
+        ->where('code', 'function_section')
+        ->firstOrFail();
+
+    expect($section->width)->toBe(CustomFieldWidth::_33);
+
+    $this->assertDatabaseHas(CustomFieldSection::class, [
+        'code' => 'function_section',
+        'entity_type' => Post::class,
+        'width' => '33',
+    ]);
 });
