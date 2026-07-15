@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Factories\Concerns\AppliesSectionWidth;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
@@ -21,6 +21,8 @@ use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
 
 final readonly class SectionComponentFactory
 {
+    use AppliesSectionWidth;
+
     public function __construct(
         private FrontendVisibilityService $frontendVisibilityService,
         private BackendVisibilityService $backendVisibilityService,
@@ -54,21 +56,6 @@ final readonly class SectionComponentFactory
         }
 
         return $component;
-    }
-
-    private function applyWidth(Section|Fieldset $component, CustomFieldSection $section): void
-    {
-        if (
-            FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)
-            && $section->width instanceof CustomFieldWidth
-            && $section->width !== CustomFieldWidth::_100
-        ) {
-            $component->columnSpan($section->width->getSpanValue());
-
-            return;
-        }
-
-        $component->columnSpanFull();
     }
 
     private function shouldApplySectionVisibility(CustomFieldSection $section): bool

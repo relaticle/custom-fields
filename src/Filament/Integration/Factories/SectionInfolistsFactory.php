@@ -8,13 +8,13 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
-use Relaticle\CustomFields\Enums\CustomFieldWidth;
-use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Factories\Concerns\AppliesSectionWidth;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
 final class SectionInfolistsFactory
 {
+    use AppliesSectionWidth;
+
     public function create(CustomFieldSection $customFieldSection): Section|Fieldset|Grid
     {
         $component = match ($customFieldSection->type) {
@@ -33,20 +33,5 @@ final class SectionInfolistsFactory
         }
 
         return $component;
-    }
-
-    private function applyWidth(Section|Fieldset $component, CustomFieldSection $section): void
-    {
-        if (
-            FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)
-            && $section->width instanceof CustomFieldWidth
-            && $section->width !== CustomFieldWidth::_100
-        ) {
-            $component->columnSpan($section->width->getSpanValue());
-
-            return;
-        }
-
-        $component->columnSpanFull();
     }
 }
