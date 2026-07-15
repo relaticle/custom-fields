@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -36,21 +37,38 @@ final readonly class SectionComponentFactory
     ): Section|Fieldset|Grid {
         $component = match ($customFieldSection->type) {
             CustomFieldSectionType::SECTION => Section::make($customFieldSection->name)
-                ->columnSpanFull()
                 ->description($customFieldSection->description)
                 ->columns(12),
             CustomFieldSectionType::FIELDSET => Fieldset::make('custom_fields.'.$customFieldSection->code)
-                ->columnSpanFull()
                 ->label($customFieldSection->name)
                 ->columns(12),
             CustomFieldSectionType::HEADLESS => Grid::make(12)->columnSpanFull(),
         };
+
+        if (in_array($customFieldSection->type, [CustomFieldSectionType::SECTION, CustomFieldSectionType::FIELDSET], true)) {
+            $this->applyWidth($component, $customFieldSection);
+        }
 
         if ($this->shouldApplySectionVisibility($customFieldSection)) {
             $this->applySectionVisibility($component, $customFieldSection, $allFields, $record);
         }
 
         return $component;
+    }
+
+    private function applyWidth(Section|Fieldset $component, CustomFieldSection $section): void
+    {
+        if (
+            FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)
+            && $section->width instanceof CustomFieldWidth
+            && $section->width !== CustomFieldWidth::_100
+        ) {
+            $component->columnSpan($section->width->getSpanValue());
+
+            return;
+        }
+
+        $component->columnSpanFull();
     }
 
     private function shouldApplySectionVisibility(CustomFieldSection $section): bool
