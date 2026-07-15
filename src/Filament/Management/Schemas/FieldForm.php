@@ -165,7 +165,7 @@ class FieldForm implements FormInterface
                             $hasDuplicate = collect($get('../../options') ?? [])
                                 ->pluck('name')
                                 ->filter()
-                                ->map(fn ($name) => mb_strtolower($name))
+                                ->map(fn ($name): string => mb_strtolower($name))
                                 ->duplicates()
                                 ->contains(mb_strtolower($value));
 

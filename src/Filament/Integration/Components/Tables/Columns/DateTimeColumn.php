@@ -55,9 +55,6 @@ class DateTimeColumn extends AbstractTableColumn
         return $column;
     }
 
-    /**
-     * @return $this
-     */
     public function localize(Closure $locale): static
     {
         $this->locale = $locale;

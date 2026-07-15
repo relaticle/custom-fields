@@ -297,8 +297,11 @@ final class VisibilityComponent extends Component
         }
 
         $operator = $get('operator');
+        if (! $fieldData->dataType->isMultiChoiceField()) {
+            return true;
+        }
 
-        return ! ($fieldData->dataType->isMultiChoiceField() && $this->isContainsOperator($operator));
+        return ! $this->isContainsOperator($operator);
     }
 
     private function shouldShowMultipleSelect(Get $get): bool
