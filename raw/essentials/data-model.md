@@ -252,7 +252,15 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      Layout width
+      Section layout width (<code>
+        CustomFieldWidth
+      </code>
+      
+       enum: 25/33/50/66/75/100). Requires the <code>
+        UI_SECTION_WIDTH_CONTROL
+      </code>
+      
+       feature.
     </td>
   </tr>
   

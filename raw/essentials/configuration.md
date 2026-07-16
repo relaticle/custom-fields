@@ -407,6 +407,18 @@ The package supports these features that can be enabled/disabled:
   <tr>
     <td>
       <code>
+        UI_SECTION_WIDTH_CONTROL
+      </code>
+    </td>
+    
+    <td>
+      Section-level layout width (25/33/50/66/75/100)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
         SYSTEM_MANAGEMENT_INTERFACE
       </code>
     </td>
@@ -445,6 +457,14 @@ The package supports these features that can be enabled/disabled:
 <alert type="info">
 
 If your custom models include tenant-specific scoping logic, you'll need to register a [custom tenant resolver](#custom-tenant-resolution) to ensure validation works correctly.
+
+</alert>
+
+<alert type="info">
+
+`UI_SECTION_WIDTH_CONTROL` is disabled by default. Enable it by adding `CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL` to the `->enable(...)` list in your published config. Once enabled, each `SECTION` and `FIELDSET` (not headless sections) can render at a fraction of the row width using the same `CustomFieldWidth` enum used for field-level width. Section widths don't need to sum to 12 — the grid wraps, and sections stack full-width on mobile.
+
+Both section and field widths are fractions of the standard 12-column custom fields grid — `50%` renders as a 6-of-12 column span. If you embed custom fields inside a grid with a different column count, the visual fraction follows that grid instead.
 
 </alert>
 

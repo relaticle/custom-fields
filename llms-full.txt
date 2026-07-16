@@ -554,23 +554,24 @@ Customize table names and paths:
 
 The package supports these features that can be enabled/disabled:
 
-| Feature                                | Description                               |
-| -------------------------------------- | ----------------------------------------- |
-| `FIELD_CONDITIONAL_VISIBILITY`         | Show/hide fields based on conditions      |
-| `FIELD_ENCRYPTION`                     | Encrypt sensitive field values            |
-| `FIELD_OPTION_COLORS`                  | Color-coded options for select fields     |
-| `FIELD_CODE_AUTO_GENERATE`             | Auto-generate field codes from names      |
-| `FIELD_MULTI_VALUE`                    | Allow multiple values per field           |
-| `FIELD_UNIQUE_VALUE`                   | Enforce unique constraint per entity type |
-| `FIELD_VALIDATION_RULES`               | Enable validation rule configuration      |
-| `UI_TABLE_COLUMNS`                     | Show custom fields as table columns       |
-| `UI_TOGGLEABLE_COLUMNS`                | Allow users to toggle column visibility   |
-| `UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT` | Hide toggleable columns by default        |
-| `UI_TABLE_FILTERS`                     | Enable filtering by custom field values   |
-| `UI_FIELD_WIDTH_CONTROL`               | Custom field width per field              |
-| `SYSTEM_MANAGEMENT_INTERFACE`          | Enable the management interface           |
-| `SYSTEM_MULTI_TENANCY`                 | Enable multi-tenant isolation             |
-| `SYSTEM_SECTIONS`                      | Enable field grouping in sections         |
+| Feature                                | Description                                     |
+| -------------------------------------- | ----------------------------------------------- |
+| `FIELD_CONDITIONAL_VISIBILITY`         | Show/hide fields based on conditions            |
+| `FIELD_ENCRYPTION`                     | Encrypt sensitive field values                  |
+| `FIELD_OPTION_COLORS`                  | Color-coded options for select fields           |
+| `FIELD_CODE_AUTO_GENERATE`             | Auto-generate field codes from names            |
+| `FIELD_MULTI_VALUE`                    | Allow multiple values per field                 |
+| `FIELD_UNIQUE_VALUE`                   | Enforce unique constraint per entity type       |
+| `FIELD_VALIDATION_RULES`               | Enable validation rule configuration            |
+| `UI_TABLE_COLUMNS`                     | Show custom fields as table columns             |
+| `UI_TOGGLEABLE_COLUMNS`                | Allow users to toggle column visibility         |
+| `UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT` | Hide toggleable columns by default              |
+| `UI_TABLE_FILTERS`                     | Enable filtering by custom field values         |
+| `UI_FIELD_WIDTH_CONTROL`               | Custom field width per field                    |
+| `UI_SECTION_WIDTH_CONTROL`             | Section-level layout width (25/33/50/66/75/100) |
+| `SYSTEM_MANAGEMENT_INTERFACE`          | Enable the management interface                 |
+| `SYSTEM_MULTI_TENANCY`                 | Enable multi-tenant isolation                   |
+| `SYSTEM_SECTIONS`                      | Enable field grouping in sections               |
 
 ::alert{type="info"}
 If your custom models include tenant-specific scoping logic, you'll need to register a 
@@ -578,6 +579,12 @@ If your custom models include tenant-specific scoping logic, you'll need to regi
 [custom tenant resolver](https://relaticle.github.io/custom-fields/#custom-tenant-resolution)
 
  to ensure validation works correctly.
+::
+
+::alert{type="info"}
+`UI_SECTION_WIDTH_CONTROL` is disabled by default. Enable it by adding `CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL` to the `->enable(...)` list in your published config. Once enabled, each `SECTION` and `FIELDSET` (not headless sections) can render at a fraction of the row width using the same `CustomFieldWidth` enum used for field-level width. Section widths don't need to sum to 12 — the grid wraps, and sections stack full-width on mobile.
+
+Both section and field widths are fractions of the standard 12-column custom fields grid — `50%` renders as a 6-of-12 column span. If you embed custom fields inside a grid with a different column count, the visual fraction follows that grid instead.
 ::
 
 ## Configuration Examples
@@ -1642,19 +1649,19 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
 
 ::tabs
   :::tab{label="Sections"}
-  | Column           | Type   | Description                  |
-  | ---------------- | ------ | ---------------------------- |
-  | `id`             | bigint | Primary key                  |
-  | `entity_type`    | string | Polymorphic entity class     |
-  | `code`           | string | Unique identifier            |
-  | `name`           | string | Display name                 |
-  | `type`           | string | Section type                 |
-  | `width`          | string | Layout width                 |
-  | `sort_order`     | int    | Display order                |
-  | `active`         | bool   | Enabled flag                 |
-  | `system_defined` | bool   | Protected from user deletion |
-  | `settings`       | json   | Additional configuration     |
-  | `tenant_id`      | bigint | Optional multi-tenancy       |
+  | Column           | Type   | Description                                                                                                          |
+  | ---------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+  | `id`             | bigint | Primary key                                                                                                          |
+  | `entity_type`    | string | Polymorphic entity class                                                                                             |
+  | `code`           | string | Unique identifier                                                                                                    |
+  | `name`           | string | Display name                                                                                                         |
+  | `type`           | string | Section type                                                                                                         |
+  | `width`          | string | Section layout width (`CustomFieldWidth` enum: 25/33/50/66/75/100). Requires the `UI_SECTION_WIDTH_CONTROL` feature. |
+  | `sort_order`     | int    | Display order                                                                                                        |
+  | `active`         | bool   | Enabled flag                                                                                                         |
+  | `system_defined` | bool   | Protected from user deletion                                                                                         |
+  | `settings`       | json   | Additional configuration                                                                                             |
+  | `tenant_id`      | bigint | Optional multi-tenancy                                                                                               |
   :::
 
   :::tab{label="Fields"}
