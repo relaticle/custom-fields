@@ -16,7 +16,7 @@ final class EntityConfigurator implements EntityConfigurationInterface
 {
     private bool $autoDiscover = true;
 
-    private array $discoveryPaths = [];
+    private array $discoveryPaths;
 
     private array $discoveryNamespaces = ['App\\Models'];
 
