@@ -26,8 +26,12 @@ final class InfolistContainer extends Grid
     {
         $container = new self($columns);
 
-        // Defer schema generation until component is in container
-        $container->schema(fn (): array => $container->generateSchema());
+        // Defer schema generation until component is in container. Resolve the
+        // component Filament is evaluating instead of capturing `$container`:
+        // cloning a component copies this closure by reference, so a captured
+        // `$container` would keep generating the clone's schema from the
+        // original — which Filament never assigns a container to.
+        $container->schema(static fn (self $component): array => $component->generateSchema());
 
         return $container;
     }
