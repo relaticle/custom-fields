@@ -2,6 +2,26 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.5.5 - 2026-07-28
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* feat: add section-level width control (UI_SECTION_WIDTH_CONTROL) by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/181
+* chore(deps): bump the npm_and_yarn group across 2 directories with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/183
+* chore(deps): bump the npm_and_yarn group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/184
+* chore(deps): bump actions/setup-node from 6 to 7 by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/182
+* chore(deps): bump hono from 4.12.25 to 4.12.31 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/185
+* chore(deps): bump the npm_and_yarn group across 2 directories with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/186
+* fix: generate cloned container schemas from the evaluated component by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/188
+* chore(deps): bump the npm_and_yarn group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/187
+* fix: resync docs lockfile so the docs deploy can install again by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/190
+* chore(deps): bump @hono/node-server from 1.19.13 to 2.0.12 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/189
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.4...v3.5.5
+
 ## v3.5.4 - 2026-07-15
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.5.4 -->
