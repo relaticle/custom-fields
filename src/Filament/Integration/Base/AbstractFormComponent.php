@@ -331,10 +331,15 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return $field->live()->visibleJs($jsExpression);
     }
 
-    /** @return array<int, mixed> */
+    /**
+     * Presence is applied separately via ->required(), conditionally on field visibility,
+     * so only the value rules belong here.
+     *
+     * @return array<int, mixed>
+     */
     protected function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
-        return $this->validationService->getValidationRules($customField, $ignoreEntityId);
+        return $this->validationService->getValueValidationRules($customField, $ignoreEntityId);
     }
 
     /**

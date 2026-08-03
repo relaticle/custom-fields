@@ -19,19 +19,51 @@ use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 final class ValidationService
 {
     /**
-     * Get all validation rules for a custom field, applying both:
+     * Get the complete validation rule set for a custom field: the presence rule
+     * followed by the value rules.
+     *
+     * This is the rule set to use whenever the value is handed straight to a Laravel
+     * validator — imports, APIs, jobs — because nothing else supplies presence there.
+     * Filament fields supply their own presence rule and should use
+     * {@see self::getValueValidationRules()} instead.
+     *
+     * @param  CustomField  $customField  The custom field to get validation rules for
+     * @param  string|int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
+     * @return array<int, mixed> Presence rule followed by the value rules
+     */
+    public function getValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
+    {
+        return [
+            $this->getPresenceRule($customField),
+            ...$this->getValueValidationRules($customField, $ignoreEntityId),
+        ];
+    }
+
+    /**
+     * Get the presence rule for a custom field.
+     *
+     * Without it a mapped-but-empty value reaches the validator as null and every
+     * type rule (date, numeric, boolean, file, regex) rejects it, while a required
+     * field is never enforced at all.
+     */
+    public function getPresenceRule(CustomField $customField): string
+    {
+        return $this->isRequired($customField) ? 'required' : 'nullable';
+    }
+
+    /**
+     * Get the value rules for a custom field — how the value must look when present,
+     * with no presence rule. Applies:
      * - User-defined validation rules from the field configuration
      * - Database field constraints based on field type
      * - Type-specific settings (e.g., unique per entity type for email fields)
      * - Special handling for numeric values to prevent database errors
      *
-     * Returns a combined array of validation rules in Laravel validator format.
-     *
      * @param  CustomField  $customField  The custom field to get validation rules for
      * @param  string|int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
      * @return array<int, mixed> Combined array of validation rules
      */
-    public function getValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
+    public function getValueValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
         // Get capability-based rules from stored values
         $capabilityRules = $this->getCapabilityRules($customField);
