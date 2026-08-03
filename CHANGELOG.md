@@ -2,6 +2,19 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.6.0 - 2026-08-03
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.6.0 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump tar from 7.5.20 to 7.5.22 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/191
+* fix: apply presence rule to custom field validation on import [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/192
+* fix: only save custom fields the imported row carried [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/193
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.5.5...v3.6.0
+
 ## v3.5.5 - 2026-07-28
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
