@@ -106,16 +106,26 @@ final class ImporterBuilder extends BaseBuilder
         return array_unique(array_merge($typeAliases, $codeAliases));
     }
 
+    /**
+     * Persist only the fields the imported row actually carried.
+     *
+     * saveCustomFields() nulls every field missing from its payload, which is right for a form
+     * (it renders all fields, so absent means cleared) and destructive for an import, where a CSV
+     * legitimately maps a subset of columns and absent means "not in this file".
+     */
     public function saveValues(?Model $tenant = null): void
     {
-        // Get custom field data from storage or extract from provided data
         $customFieldsData = ImportDataStorage::pull($this->model);
 
         if ($customFieldsData === []) {
             return;
         }
 
-        $this->model->saveCustomFields($customFieldsData, $tenant);
+        $this->getAllFields()
+            ->filter(fn (CustomField $field): bool => array_key_exists($field->code, $customFieldsData))
+            ->each(function (CustomField $field) use ($customFieldsData, $tenant): void {
+                $this->model->saveCustomFieldValue($field, $customFieldsData[$field->code], $tenant);
+            });
     }
 
     public function filterCustomFieldsFromData(array $data): array
