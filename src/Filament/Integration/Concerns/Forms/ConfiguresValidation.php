@@ -21,6 +21,6 @@ trait ConfiguresValidation
     {
         return $field
             ->required($validationService->isRequired($customField))
-            ->rules($validationService->getValidationRules($customField));
+            ->rules($validationService->getValueValidationRules($customField));
     }
 }
