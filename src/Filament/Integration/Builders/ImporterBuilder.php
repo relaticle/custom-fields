@@ -123,11 +123,9 @@ final class ImporterBuilder extends BaseBuilder
 
         $this->getAllFields()
             ->filter(fn (CustomField $field): bool => array_key_exists($field->code, $customFieldsData))
-            ->each(fn (CustomField $field) => $this->model->saveCustomFieldValue(
-                $field,
-                $customFieldsData[$field->code],
-                $tenant,
-            ));
+            ->each(function (CustomField $field) use ($customFieldsData, $tenant): void {
+                $this->model->saveCustomFieldValue($field, $customFieldsData[$field->code], $tenant);
+            });
     }
 
     public function filterCustomFieldsFromData(array $data): array
