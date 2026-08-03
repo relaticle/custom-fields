@@ -73,3 +73,34 @@ it('does nothing when the row carried no custom field columns', function (): voi
 
     expect($post->getCustomFieldValue($this->caseworker))->toBe('Alex Rivera');
 });
+
+it('clears a value when the row carried the column but left it blank', function (): void {
+    $post = Post::factory()->create();
+
+    $post->saveCustomFieldValue($this->referralSource, 'Continuum of Care');
+
+    // A mapped-but-blank CSV cell reaches storage as null, not as an absent key.
+    ImportDataStorage::set($post, 'referral_source', null);
+
+    CustomFields::importer()->forModel($post)->saveValues();
+
+    $post->load('customFieldValues');
+
+    expect($post->getCustomFieldValue($this->referralSource))->toBeEmpty();
+});
+
+it('distinguishes a blank mapped column from an unmapped one in the same row', function (): void {
+    $post = Post::factory()->create();
+
+    $post->saveCustomFieldValue($this->referralSource, 'Continuum of Care');
+    $post->saveCustomFieldValue($this->caseworker, 'Alex Rivera');
+
+    ImportDataStorage::set($post, 'referral_source', null);
+
+    CustomFields::importer()->forModel($post)->saveValues();
+
+    $post->load('customFieldValues');
+
+    expect($post->getCustomFieldValue($this->referralSource))->toBeEmpty()
+        ->and($post->getCustomFieldValue($this->caseworker))->toBe('Alex Rivera');
+});
