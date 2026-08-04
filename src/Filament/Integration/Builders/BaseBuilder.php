@@ -52,7 +52,7 @@ abstract class BaseBuilder
         }
 
         if (! $this instanceof TableBuilder) {
-            $model->load('customFieldValues.customField.options');
+            $model->loadMissing('customFieldValues.customField.options');
         }
 
         $this->model = $model;
