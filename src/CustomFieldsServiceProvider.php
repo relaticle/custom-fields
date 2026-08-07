@@ -206,6 +206,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     {
         return [
             'create_custom_fields_table',
+            'relax_custom_fields_unique_key',
         ];
     }
 }

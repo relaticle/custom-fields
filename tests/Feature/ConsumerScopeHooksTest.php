@@ -119,25 +119,19 @@ describe('BaseBuilder onlySections() scope', function (): void {
         );
     });
 
-    it('scopes resolution to the given sections', function (): void {
+    it('scopes resolution to the given sections when two sections share a field code', function (): void {
         $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Qualifying A', 'code' => 'qualifying_a']);
         $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Qualifying B', 'code' => 'qualifying_b']);
 
-        CustomField::factory()->create([
-            'custom_field_section_id' => $sectionA->id,
-            'entity_type' => Post::class,
-            'name' => 'Alpha',
-            'code' => 'alpha',
-            'type' => 'text',
-        ]);
-
-        CustomField::factory()->create([
-            'custom_field_section_id' => $sectionB->id,
-            'entity_type' => Post::class,
-            'name' => 'Beta',
-            'code' => 'beta',
-            'type' => 'text',
-        ]);
+        foreach ([$sectionA, $sectionB] as $section) {
+            CustomField::factory()->create([
+                'custom_field_section_id' => $section->id,
+                'entity_type' => Post::class,
+                'name' => 'Shared',
+                'code' => 'shared_code',
+                'type' => 'text',
+            ]);
+        }
 
         $scoped = CustomFields::form()
             ->forModel(Post::class)
