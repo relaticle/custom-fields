@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
@@ -108,5 +109,88 @@ describe('FieldForm unique-name modifier resolver', function (): void {
         );
 
         expect(FieldForm::schema(section: $section))->toBeArray()->not->toBeEmpty();
+    });
+});
+
+describe('BaseBuilder onlySections() scope', function (): void {
+    beforeEach(function (): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY, CustomFieldsFeature::SYSTEM_SECTIONS)
+        );
+    });
+
+    it('scopes resolution to the given sections', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Qualifying A', 'code' => 'qualifying_a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Qualifying B', 'code' => 'qualifying_b']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionA->id,
+            'entity_type' => Post::class,
+            'name' => 'Alpha',
+            'code' => 'alpha',
+            'type' => 'text',
+        ]);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionB->id,
+            'entity_type' => Post::class,
+            'name' => 'Beta',
+            'code' => 'beta',
+            'type' => 'text',
+        ]);
+
+        $scoped = CustomFields::form()
+            ->forModel(Post::class)
+            ->onlySections([$sectionA->id])
+            ->values();
+
+        $unscoped = CustomFields::form()
+            ->forModel(Post::class)
+            ->values();
+
+        expect($scoped)->toHaveCount(1)
+            ->and($unscoped)->toHaveCount(2);
+    });
+
+    it('treats an empty section scope as no scope', function (): void {
+        $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Only Section', 'code' => 'only_section']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'entity_type' => Post::class,
+            'name' => 'A Field',
+            'code' => 'a_field',
+            'type' => 'text',
+        ]);
+
+        expect(
+            CustomFields::form()
+                ->forModel(Post::class)
+                ->onlySections([])
+                ->values()
+        )->toHaveCount(1);
+    });
+
+    it('composes section scope with only() field codes', function (): void {
+        $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Combo', 'code' => 'combo']);
+
+        foreach (['keep_me', 'drop_me'] as $index => $code) {
+            CustomField::factory()->create([
+                'custom_field_section_id' => $section->id,
+                'entity_type' => Post::class,
+                'name' => ucfirst($code),
+                'code' => $code,
+                'type' => 'text',
+                'sort_order' => $index,
+            ]);
+        }
+
+        expect(
+            CustomFields::form()
+                ->forModel(Post::class)
+                ->onlySections([$section->id])
+                ->only(['keep_me'])
+                ->values()
+        )->toHaveCount(1);
     });
 });

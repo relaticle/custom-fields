@@ -29,6 +29,9 @@ abstract class BaseBuilder
 
     protected array $only = [];
 
+    /** @var array<int, int> */
+    protected array $onlySections = [];
+
     public function forSchema(Schema $schema): static
     {
         /** @var Model & HasCustomFields $model */
@@ -83,6 +86,22 @@ abstract class BaseBuilder
     }
 
     /**
+     * Constrain resolution to the given custom field sections.
+     *
+     * Field codes are unique per section, not globally, in consumers that version their
+     * sections. Scoping structurally lets two sections carry the same code without one
+     * bleeding into the other's schema.
+     *
+     * @param  array<int, int>  $sectionIds
+     */
+    public function onlySections(array $sectionIds): static
+    {
+        $this->onlySections = $sectionIds;
+
+        return $this;
+    }
+
+    /**
      * @return Collection<int, CustomFieldSection>
      */
     protected function getFilteredSections(): Collection
@@ -94,6 +113,10 @@ abstract class BaseBuilder
 
         /** @var Collection<int, CustomFieldSection> $sections */
         $sections = $this->sections
+            ->when($this->onlySections !== [], fn (Builder $query): Builder => $query->whereIn(
+                $this->sections->getModel()->getQualifiedKeyName(),
+                $this->onlySections
+            ))
             ->with(['fields' => function (mixed $query): mixed {
                 return $query
                     ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInList())
@@ -127,6 +150,7 @@ abstract class BaseBuilder
             ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInView())
             ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
             ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
+            ->when($this->onlySections !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('custom_field_section_id', $this->onlySections))
             ->with('options')
             ->orderBy('sort_order')
             ->get()
