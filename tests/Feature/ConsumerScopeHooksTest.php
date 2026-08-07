@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Forms\Components\Field;
+use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema as FilamentSchema;
@@ -60,6 +61,23 @@ function availableFields(VisibilityComponent $component): array
     $method->setAccessible(true);
 
     return $method->invoke($component, nullGet());
+}
+
+/**
+ * With SYSTEM_SECTIONS enabled, FormBuilder::values()/InfolistBuilder::values() return one
+ * component per section, not one per field, so asserting a count on the outer collection
+ * can't tell "the section kept N fields" from "there are N sections" apart. Reach into the
+ * section component's raw childComponents (set by ->schema()) to count what it actually
+ * carries, without needing the full Livewire-attached schema tree just to read it back.
+ *
+ * @return array<int, mixed>
+ */
+function sectionFieldComponents(Component $section): array
+{
+    $property = new ReflectionProperty($section, 'childComponents');
+    $property->setAccessible(true);
+
+    return $property->getValue($section)['default'] ?? [];
 }
 
 describe('VisibilityComponent available-fields scope resolver', function (): void {
@@ -182,7 +200,35 @@ describe('CodeGenerator uniqueness scope resolver', function (): void {
             ->toBe('hmis_id_1');
     });
 
-    it('passes null as the section id for the sectionless caller, matching current behavior', function (): void {
+    it('applies a scope closure that returns a new builder instance instead of mutating in place', function (): void {
+        $outside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Cloned Outside', 'code' => 'cloned_outside']);
+        $inside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Cloned Inside', 'code' => 'cloned_inside']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $outside->id,
+            'entity_type' => Post::class,
+            'name' => 'HMIS ID',
+            'code' => 'hmis_id',
+            'type' => 'text',
+        ]);
+
+        /*
+         * Builder::where() mutates and returns the same instance, so a mutation-style scope
+         * closure would pass this even if the code discarded its return value. clone() is
+         * what actually discriminates: it hands back a distinct instance, so only code that
+         * reassigns $query to the closure's return value picks the narrowed clone up.
+         */
+        CodeGenerator::resolveUniquenessScopeUsing(
+            fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
+                ? fn (Builder $query): Builder => $query->clone()->where('custom_field_section_id', $sectionId)
+                : null
+        );
+
+        expect(CodeGenerator::generateUniqueFieldCode('HMIS ID', Post::class, sectionId: $inside->id))
+            ->toBe('hmis_id');
+    });
+
+    it('passes null as the section id to the resolver when generateUniqueFieldCode() is called without one', function (): void {
         $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Sectionless', 'code' => 'sectionless']);
 
         CustomField::factory()->create([
@@ -276,13 +322,20 @@ describe('BaseBuilder onlySections() scope', function (): void {
             ]);
         }
 
-        expect(
-            CustomFields::form()
-                ->forModel(Post::class)
-                ->onlySections([$section->id])
-                ->only(['keep_me'])
-                ->values()
-        )->toHaveCount(1);
+        /*
+         * With SYSTEM_SECTIONS enabled, values() returns one component per section (there is
+         * only ever the one section here), so asserting a count on the outer collection can't
+         * tell "only() dropped a field" from "only() dropped nothing" apart — it stays 1
+         * either way. Assert on the section's own field count instead so this discriminates.
+         */
+        $sections = CustomFields::form()
+            ->forModel(Post::class)
+            ->onlySections([$section->id])
+            ->only(['keep_me'])
+            ->values();
+
+        expect($sections)->toHaveCount(1)
+            ->and(sectionFieldComponents($sections->first()))->toHaveCount(1);
     });
 });
 
@@ -363,7 +416,7 @@ describe('FormContainer/InfolistContainer onlySections() scope', function (): vo
      * onlySections() — a false negative unrelated to scoping. Distinct codes per
      * section are what let the assertion actually discriminate scoped vs. unscoped.
      */
-    it('honors the section scope through build(), not just values()', function (): void {
+    it('honors the section scope through FormBuilder::build(), not just values()', function (): void {
         $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Built A', 'code' => 'built_a']);
         $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Built B', 'code' => 'built_b']);
 
@@ -399,5 +452,43 @@ describe('FormContainer/InfolistContainer onlySections() scope', function (): vo
         expect($fieldNames)->toHaveCount(1)
             ->and($fieldNames)->toContain('custom_fields.built_a_field')
             ->and($fieldNames)->not->toContain('custom_fields.built_b_field');
+    });
+
+    it('honors the section scope through InfolistBuilder::build(), not just values()', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Info Built A', 'code' => 'info_built_a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Info Built B', 'code' => 'info_built_b']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionA->id,
+            'entity_type' => Post::class,
+            'name' => 'Info Built A Field',
+            'code' => 'info_built_a_field',
+            'type' => 'text',
+        ]);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionB->id,
+            'entity_type' => Post::class,
+            'name' => 'Info Built B Field',
+            'code' => 'info_built_b_field',
+            'type' => 'text',
+        ]);
+
+        $container = CustomFields::infolist()
+            ->forModel(Post::class)
+            ->onlySections([$sectionA->id])
+            ->build();
+
+        $schema = FilamentSchema::make(livewire(CreatePost::class)->instance())
+            ->model(Post::class)
+            ->components([$container]);
+
+        $entryNames = collect($schema->getFlatComponents())
+            ->filter(fn (object $component): bool => $component instanceof Entry)
+            ->map(fn (Entry $component): string => $component->getName());
+
+        expect($entryNames)->toHaveCount(1)
+            ->and($entryNames)->toContain('custom_fields.info_built_a_field')
+            ->and($entryNames)->not->toContain('custom_fields.info_built_b_field');
     });
 });

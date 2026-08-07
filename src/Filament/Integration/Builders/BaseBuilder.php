@@ -92,6 +92,14 @@ abstract class BaseBuilder
      * sections. Scoping structurally lets two sections carry the same code without one
      * bleeding into the other's schema.
      *
+     * IMPORTANT: this only narrows resolution (what gets loaded onto the form/infolist).
+     * It does not change how UsesCustomFields::saveCustomFields() saves — that method
+     * writes by code against the model's customFields() relationship. If two sections
+     * share a code and customFields() isn't scoped to match, saveCustomFields() will
+     * write the same submitted value to both field rows. Scoping resolution alone is not
+     * sufficient; the model's customFields() relation must be scoped to the same
+     * section(s) too. See the "Builder Scoping" docs page.
+     *
      * @param  array<int, int>  $sectionIds
      */
     public function onlySections(array $sectionIds): static
