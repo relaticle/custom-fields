@@ -11,9 +11,11 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\CustomFieldsPlugin;
@@ -45,6 +47,22 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     public function updateFieldsOrder(int|string $sectionId, array $fields): void
     {
         $model = CustomFields::newCustomFieldModel();
+
+        /*
+         * Before the unique key was relaxed to include custom_field_section_id, two fields
+         * could never share a code anywhere in the entity type, so a drop target could never
+         * already hold a colliding code. Now it can — check before writing, or the second
+         * update() in the loop below throws an unhandled QueryException.
+         */
+        if ($this->fieldsHaveDuplicateCode($model, $fields)) {
+            Notification::make()
+                ->danger()
+                ->title(__('custom-fields::custom-fields.section.notifications.duplicate_field_code'))
+                ->send();
+
+            return;
+        }
+
         foreach ($fields as $index => $field) {
             $model->query()
                 ->withDeactivated()
@@ -57,6 +75,20 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
 
         // Broadcast to all section components to refresh their fields
         $this->dispatch('fields-reordered')->to('manage-custom-field-section');
+    }
+
+    /**
+     * @param  array<int, int|string>  $fieldIds
+     */
+    private function fieldsHaveDuplicateCode(Model $model, array $fieldIds): bool
+    {
+        return $model->query()
+            ->withDeactivated()
+            ->whereIn($model->getKeyName(), $fieldIds)
+            ->select('code')
+            ->groupBy('code')
+            ->havingRaw('count(*) > 1')
+            ->exists();
     }
 
     public function actions(): ?ActionGroup
