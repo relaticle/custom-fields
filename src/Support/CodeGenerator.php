@@ -61,7 +61,7 @@ final class CodeGenerator
     /**
      * Generate a unique code for a section within an entity type.
      */
-    public static function generateUniqueSectionCode(string $name, string $entityType, ?int $ignoreId = null, int|string|null $sectionId = null): string
+    public static function generateUniqueSectionCode(string $name, string $entityType, ?int $ignoreId = null): string
     {
         $baseCode = self::generateFromName($name);
 
@@ -69,8 +69,7 @@ final class CodeGenerator
             $baseCode,
             $entityType,
             'section',
-            $ignoreId,
-            $sectionId
+            $ignoreId
         );
     }
 
@@ -122,7 +121,7 @@ final class CodeGenerator
             $scope = (self::$uniquenessScopeResolver)($entityType, $type, $sectionId);
 
             if ($scope !== null) {
-                $scope($query);
+                $query = $scope($query);
             }
         }
 
