@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema as FilamentSchema;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +18,8 @@ use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\User;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
 
 /**
  * Consumer scoping hooks let an app (e.g. a versioned-form builder) constrain the
@@ -252,5 +256,59 @@ describe('BaseBuilder onlySections() scope on a sections-disabled install', func
 
         expect($customFieldsTableQueried)->toBeFalse()
             ->and($result)->toHaveCount(0);
+    });
+});
+
+describe('FormContainer/InfolistContainer onlySections() scope', function (): void {
+    beforeEach(function (): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY, CustomFieldsFeature::SYSTEM_SECTIONS)
+        );
+
+        $this->actingAs(User::factory()->create());
+    });
+
+    /*
+     * Filament's getFlatComponents() keys its result by component statePath, so two
+     * fields sharing a code would collapse into a single array entry regardless of
+     * onlySections() — a false negative unrelated to scoping. Distinct codes per
+     * section are what let the assertion actually discriminate scoped vs. unscoped.
+     */
+    it('honors the section scope through build(), not just values()', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Built A', 'code' => 'built_a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Built B', 'code' => 'built_b']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionA->id,
+            'entity_type' => Post::class,
+            'name' => 'Built A Field',
+            'code' => 'built_a_field',
+            'type' => 'text',
+        ]);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionB->id,
+            'entity_type' => Post::class,
+            'name' => 'Built B Field',
+            'code' => 'built_b_field',
+            'type' => 'text',
+        ]);
+
+        $container = CustomFields::form()
+            ->forModel(Post::class)
+            ->onlySections([$sectionA->id])
+            ->build();
+
+        $schema = FilamentSchema::make(livewire(CreatePost::class)->instance())
+            ->model(Post::class)
+            ->components([$container]);
+
+        $fieldNames = collect($schema->getFlatComponents())
+            ->filter(fn (object $component): bool => $component instanceof Field)
+            ->map(fn (Field $component): string => $component->getName());
+
+        expect($fieldNames)->toHaveCount(1)
+            ->and($fieldNames)->toContain('custom_fields.built_a_field')
+            ->and($fieldNames)->not->toContain('custom_fields.built_b_field');
     });
 });

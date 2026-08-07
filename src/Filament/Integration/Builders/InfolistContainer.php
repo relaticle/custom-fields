@@ -16,6 +16,9 @@ final class InfolistContainer extends Grid
 
     private array $only = [];
 
+    /** @var array<int, int> */
+    private array $onlySections = [];
+
     private bool $hiddenLabels = false;
 
     private bool $visibleWhenFilled = false;
@@ -53,6 +56,16 @@ final class InfolistContainer extends Grid
     public function only(array $fieldCodes): static
     {
         $this->only = $fieldCodes;
+
+        return $this;
+    }
+
+    /**
+     * @param  array<int, int>  $sectionIds
+     */
+    public function onlySections(array $sectionIds): static
+    {
+        $this->onlySections = $sectionIds;
 
         return $this;
     }
@@ -98,6 +111,7 @@ final class InfolistContainer extends Grid
             ->forModel($model)
             ->only($this->only)
             ->except($this->except)
+            ->onlySections($this->onlySections)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
             ->withoutSections($withoutSections);
