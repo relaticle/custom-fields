@@ -6,6 +6,7 @@ use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema as FilamentSchema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityCompon
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Support\CodeGenerator;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
@@ -36,6 +38,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     VisibilityComponent::resolveAvailableFieldsScopeUsing(null);
     FieldForm::resolveUniqueRuleModifierUsing(null);
+    CodeGenerator::resolveUniquenessScopeUsing(null);
 });
 
 function nullGet(): Get
@@ -117,6 +120,92 @@ describe('FieldForm unique-name modifier resolver', function (): void {
         );
 
         expect(FieldForm::schema(section: $section))->toBeArray()->not->toBeEmpty();
+    });
+});
+
+describe('CodeGenerator uniqueness scope resolver', function (): void {
+    it('suffixes a colliding code when no resolver is registered (backward compatible)', function (): void {
+        $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Scope Default', 'code' => 'scope_default']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'entity_type' => Post::class,
+            'name' => 'HMIS ID',
+            'code' => 'hmis_id',
+            'type' => 'text',
+        ]);
+
+        expect(CodeGenerator::generateUniqueFieldCode('HMIS ID', Post::class))
+            ->toBe('hmis_id_1');
+    });
+
+    it('returns the base code when the collision is outside the registered scope', function (): void {
+        $outside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Scope Outside', 'code' => 'scope_outside']);
+        $inside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Scope Inside', 'code' => 'scope_inside']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $outside->id,
+            'entity_type' => Post::class,
+            'name' => 'HMIS ID',
+            'code' => 'hmis_id',
+            'type' => 'text',
+        ]);
+
+        CodeGenerator::resolveUniquenessScopeUsing(
+            fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
+                ? fn (Builder $query): Builder => $query->where('custom_field_section_id', $sectionId)
+                : null
+        );
+
+        expect(CodeGenerator::generateUniqueFieldCode('HMIS ID', Post::class, sectionId: $inside->id))
+            ->toBe('hmis_id');
+    });
+
+    it('still suffixes when the collision is inside the registered scope', function (): void {
+        $inside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Scope Inside Only', 'code' => 'scope_inside_only']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $inside->id,
+            'entity_type' => Post::class,
+            'name' => 'HMIS ID',
+            'code' => 'hmis_id',
+            'type' => 'text',
+        ]);
+
+        CodeGenerator::resolveUniquenessScopeUsing(
+            fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
+                ? fn (Builder $query): Builder => $query->where('custom_field_section_id', $sectionId)
+                : null
+        );
+
+        expect(CodeGenerator::generateUniqueFieldCode('HMIS ID', Post::class, sectionId: $inside->id))
+            ->toBe('hmis_id_1');
+    });
+
+    it('passes null as the section id for the sectionless caller, matching current behavior', function (): void {
+        $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Sectionless', 'code' => 'sectionless']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'entity_type' => Post::class,
+            'name' => 'HMIS ID',
+            'code' => 'hmis_id',
+            'type' => 'text',
+        ]);
+
+        $receivedSectionId = 'not-called';
+
+        CodeGenerator::resolveUniquenessScopeUsing(
+            function (string $entityType, string $type, int|string|null $sectionId) use (&$receivedSectionId): ?Closure {
+                $receivedSectionId = $sectionId;
+
+                return null;
+            }
+        );
+
+        CodeGenerator::generateUniqueFieldCode('HMIS ID', Post::class);
+
+        expect($receivedSectionId)->toBeNull();
     });
 });
 
