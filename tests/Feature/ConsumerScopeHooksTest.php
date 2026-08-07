@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
@@ -186,5 +190,67 @@ describe('BaseBuilder onlySections() scope', function (): void {
                 ->only(['keep_me'])
                 ->values()
         )->toHaveCount(1);
+    });
+});
+
+describe('BaseBuilder onlySections() scope on a sections-disabled install', function (): void {
+    /*
+     * custom_field_section_id only exists on the table when SYSTEM_SECTIONS was enabled at
+     * migration time. Toggling the feature flag at runtime does not remove an already
+     * migrated column, so the column is dropped here to reproduce a genuine
+     * sections-were-never-enabled install rather than merely flipping the config flag.
+     */
+    beforeEach(function (): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
+        );
+
+        collect(Schema::getIndexes('custom_fields'))
+            ->filter(fn (array $index): bool => in_array('custom_field_section_id', $index['columns'], true))
+            ->each(fn (array $index) => DB::statement("DROP INDEX \"{$index['name']}\""));
+
+        Schema::table('custom_fields', fn (Blueprint $table) => $table->dropColumn('custom_field_section_id'));
+    });
+
+    it('returns fields unchanged when the section scope is empty', function (): void {
+        CustomField::factory()->create([
+            'entity_type' => Post::class,
+            'name' => 'Alpha',
+            'code' => 'alpha_flat',
+            'type' => 'text',
+        ]);
+
+        expect(CustomFields::form()->forModel(Post::class)->onlySections([])->values())
+            ->toHaveCount(1);
+    });
+
+    it('returns an empty collection instead of throwing when a section scope is requested', function (): void {
+        CustomField::factory()->create([
+            'entity_type' => Post::class,
+            'name' => 'Alpha',
+            'code' => 'alpha_flat',
+            'type' => 'text',
+        ]);
+
+        /*
+         * SQLite falls back to treating an unresolvable double-quoted identifier as a
+         * string literal instead of raising "no such column" (the error MySQL, the
+         * project's production driver, actually raises), so a dropped-column WHERE clause
+         * silently matches zero rows here either way. A query-log assertion is the
+         * driver-agnostic way to prove the guard short-circuits before any query runs,
+         * rather than merely happening to agree with the guarded result by accident.
+         */
+        $customFieldsTableQueried = false;
+
+        DB::listen(function (QueryExecuted $query) use (&$customFieldsTableQueried): void {
+            if (str_contains($query->sql, 'custom_fields')) {
+                $customFieldsTableQueried = true;
+            }
+        });
+
+        $result = CustomFields::form()->forModel(Post::class)->onlySections([1])->values();
+
+        expect($customFieldsTableQueried)->toBeFalse()
+            ->and($result)->toHaveCount(0);
     });
 });

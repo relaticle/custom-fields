@@ -145,12 +145,22 @@ abstract class BaseBuilder
      */
     protected function getFieldsDirectly(): Collection
     {
+        /*
+         * custom_field_section_id only exists on the table when SYSTEM_SECTIONS was
+         * enabled at migration time, and this method is exclusively the sections-disabled
+         * path (see getAllFields()). A section scope can never match anything here — there
+         * is no section table to resolve it against — so return empty rather than filter
+         * by a column that may not exist.
+         */
+        if ($this->onlySections !== [] && ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
+            return collect();
+        }
+
         return CustomFields::newCustomFieldModel()::forMorphEntity($this->model::class)
             ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInList())
             ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInView())
             ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
             ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
-            ->when($this->onlySections !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('custom_field_section_id', $this->onlySections))
             ->with('options')
             ->orderBy('sort_order')
             ->get()
