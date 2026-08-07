@@ -17,6 +17,8 @@ use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
+use Relaticle\CustomFields\Livewire\ManageCustomField;
+use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Support\CodeGenerator;
@@ -39,6 +41,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     VisibilityComponent::resolveAvailableFieldsScopeUsing(null);
     FieldForm::resolveUniqueRuleModifierUsing(null);
+    FieldForm::resolveUniqueCodeRuleModifierUsing(null);
     CodeGenerator::resolveUniquenessScopeUsing(null);
 });
 
@@ -138,6 +141,119 @@ describe('FieldForm unique-name modifier resolver', function (): void {
         );
 
         expect(FieldForm::schema(section: $section))->toBeArray()->not->toBeEmpty();
+    });
+});
+
+describe('FieldForm unique-code modifier resolver', function (): void {
+    beforeEach(function (): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY, CustomFieldsFeature::SYSTEM_SECTIONS)
+        );
+
+        $this->actingAs(User::factory()->create());
+    });
+
+    it('builds the field schema unchanged when no resolver is registered (backward compatible)', function (): void {
+        $schema = FieldForm::schema();
+
+        expect($schema)->toBeArray()->not->toBeEmpty();
+    });
+
+    it('rejects a duplicate code across sections with no resolver registered (backward compatible)', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'A', 'code' => 'a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'B', 'code' => 'b']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionA->id,
+            'entity_type' => Post::class,
+            'name' => 'Existing',
+            'code' => 'shared_code',
+            'type' => 'text',
+        ]);
+
+        livewire(ManageCustomFieldSection::class, ['entityType' => Post::class, 'section' => $sectionB])
+            ->callAction('createField', data: [
+                'name' => 'New Field',
+                'code' => 'shared_code',
+                'type' => 'text',
+            ])
+            ->assertHasActionErrors(['code']);
+    });
+
+    it('allows editing a field to reuse a code excluded by the registered resolver', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'A', 'code' => 'a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'B', 'code' => 'b']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionA->id,
+            'entity_type' => Post::class,
+            'name' => 'Original',
+            'code' => 'reused_code',
+            'type' => 'text',
+        ]);
+
+        $clone = CustomField::factory()->create([
+            'custom_field_section_id' => $sectionB->id,
+            'entity_type' => Post::class,
+            'name' => 'Cloned',
+            'code' => 'reused_code',
+            'type' => 'text',
+        ]);
+
+        /*
+         * Mirrors a consumer that scopes code uniqueness to "everything outside this set of
+         * related sections" (e.g. a version lineage) rather than "just this one section" --
+         * the shape CRITICAL-1 in the whole-branch review required.
+         */
+        FieldForm::resolveUniqueCodeRuleModifierUsing(
+            fn (?CustomFieldSection $s): ?Closure => $s instanceof CustomFieldSection
+                ? fn ($rule) => $rule->whereNotIn('custom_field_section_id', [$sectionA->id, $sectionB->id])
+                : null
+        );
+
+        livewire(ManageCustomField::class, ['field' => $clone])
+            ->callAction('edit', data: [
+                'name' => 'Cloned',
+                'code' => 'reused_code',
+                'type' => 'text',
+            ])
+            ->assertHasNoActionErrors();
+    });
+
+    it('still rejects a code collision outside the resolver-defined scope', function (): void {
+        $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'A', 'code' => 'a']);
+        $sectionB = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'B', 'code' => 'b']);
+        $sectionOutside = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'Outside', 'code' => 'outside']);
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $sectionOutside->id,
+            'entity_type' => Post::class,
+            'name' => 'Outside field',
+            'code' => 'outside_code',
+            'type' => 'text',
+        ]);
+
+        $target = CustomField::factory()->create([
+            'custom_field_section_id' => $sectionB->id,
+            'entity_type' => Post::class,
+            'name' => 'Target',
+            'code' => 'target_code',
+            'type' => 'text',
+        ]);
+
+        FieldForm::resolveUniqueCodeRuleModifierUsing(
+            fn (?CustomFieldSection $s): ?Closure => $s instanceof CustomFieldSection
+                ? fn ($rule) => $rule->whereNotIn('custom_field_section_id', [$sectionA->id, $sectionB->id])
+                : null
+        );
+
+        livewire(ManageCustomField::class, ['field' => $target])
+            ->callAction('edit', data: [
+                'name' => 'Target',
+                'code' => 'outside_code',
+                'type' => 'text',
+            ])
+            ->assertHasActionErrors(['code']);
     });
 });
 
