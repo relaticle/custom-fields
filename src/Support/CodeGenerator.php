@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -15,6 +17,9 @@ use Relaticle\CustomFields\Services\TenantContextService;
  */
 final class CodeGenerator
 {
+    /** @var (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null */
+    private static ?Closure $uniquenessScopeResolver = null;
+
     /**
      * Generate a slug-style code from a name.
      */
@@ -24,9 +29,23 @@ final class CodeGenerator
     }
 
     /**
+     * Narrow the uniqueness check to a subset of rows.
+     *
+     * The callback receives the entity type, either 'field' or 'section', and the section
+     * the code is being generated within (null when there is none). It returns a query
+     * scope closure, or null to leave the check global.
+     *
+     * @param  (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null  $callback
+     */
+    public static function resolveUniquenessScopeUsing(?Closure $callback): void
+    {
+        self::$uniquenessScopeResolver = $callback;
+    }
+
+    /**
      * Generate a unique code for a custom field within an entity type.
      */
-    public static function generateUniqueFieldCode(string $name, string $entityType, ?int $ignoreId = null): string
+    public static function generateUniqueFieldCode(string $name, string $entityType, ?int $ignoreId = null, int|string|null $sectionId = null): string
     {
         $baseCode = self::generateFromName($name);
 
@@ -34,7 +53,8 @@ final class CodeGenerator
             $baseCode,
             $entityType,
             'field',
-            $ignoreId
+            $ignoreId,
+            $sectionId
         );
     }
 
@@ -60,12 +80,13 @@ final class CodeGenerator
         string $baseCode,
         string $entityType,
         string $type,
-        ?int $ignoreId = null
+        ?int $ignoreId = null,
+        int|string|null $sectionId = null
     ): string {
         $code = $baseCode;
         $counter = 1;
 
-        while (self::codeExists($code, $entityType, $type, $ignoreId)) {
+        while (self::codeExists($code, $entityType, $type, $ignoreId, $sectionId)) {
             $code = sprintf('%s_%d', $baseCode, $counter);
             $counter++;
         }
@@ -80,7 +101,8 @@ final class CodeGenerator
         string $code,
         string $entityType,
         string $type,
-        ?int $ignoreId = null
+        ?int $ignoreId = null,
+        int|string|null $sectionId = null
     ): bool {
         $model = $type === 'field'
             ? CustomFields::newCustomFieldModel()
@@ -93,6 +115,14 @@ final class CodeGenerator
 
         if ($ignoreId !== null) {
             $query->where($model->getKeyName(), '!=', $ignoreId);
+        }
+
+        if (self::$uniquenessScopeResolver instanceof Closure) {
+            $scope = (self::$uniquenessScopeResolver)($entityType, $type, $sectionId);
+
+            if ($scope !== null) {
+                $query = $scope($query);
+            }
         }
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {

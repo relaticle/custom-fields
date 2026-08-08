@@ -188,6 +188,41 @@ describe('ManageCustomFieldSection - Field Management', function (): void {
         ]);
     });
 
+    it('notifies instead of 500ing when a drag would create a duplicate code within the target section', function (): void {
+        $targetSection = $this->section;
+        $sourceSection = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create();
+
+        $existingField = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $targetSection->getKey(),
+                'entity_type' => $this->userEntityType,
+                'code' => 'shared_code',
+                'sort_order' => 0,
+            ]);
+
+        $draggedField = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $sourceSection->getKey(),
+                'entity_type' => $this->userEntityType,
+                'code' => 'shared_code',
+                'sort_order' => 0,
+            ]);
+
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $targetSection,
+            'entityType' => $this->userEntityType,
+        ])
+            ->call('updateFieldsOrder', $targetSection->getKey(), [$existingField->getKey(), $draggedField->getKey()])
+            ->assertNotified();
+
+        expect($draggedField->fresh())
+            ->custom_field_section_id->toBe($sourceSection->getKey());
+    });
+
 });
 
 describe('ManageCustomField - Field Actions', function (): void {

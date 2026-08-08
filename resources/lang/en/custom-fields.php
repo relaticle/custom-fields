@@ -29,6 +29,7 @@ return [
         'default_section_name' => 'Default',
         'notifications' => [
             'created' => 'Section created',
+            'duplicate_field_code' => 'This section already has a field with that code. Rename one of them before moving it here.',
         ],
         'actions' => [
             'activate' => 'Activate',

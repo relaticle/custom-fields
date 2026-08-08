@@ -20,7 +20,7 @@ trait CreatesCustomFields
         }
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE) && blank($data['code'] ?? null)) {
-            $data['code'] = CodeGenerator::generateUniqueFieldCode($data['name'], $entityType);
+            $data['code'] = CodeGenerator::generateUniqueFieldCode($data['name'], $entityType, sectionId: $sectionId);
         }
 
         $result = [

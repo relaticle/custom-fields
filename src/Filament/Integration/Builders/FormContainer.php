@@ -15,6 +15,9 @@ final class FormContainer extends Grid
 
     private array $only = [];
 
+    /** @var array<int, int> */
+    private array $onlySections = [];
+
     private ?bool $withoutSections = null;
 
     public static function make(array|int|null $columns = 12): static
@@ -52,6 +55,16 @@ final class FormContainer extends Grid
         return $this;
     }
 
+    /**
+     * @param  array<int, int>  $sectionIds
+     */
+    public function onlySections(array $sectionIds): static
+    {
+        $this->onlySections = $sectionIds;
+
+        return $this;
+    }
+
     public function withoutSections(bool $withoutSections = true): static
     {
         $this->withoutSections = $withoutSections;
@@ -79,6 +92,7 @@ final class FormContainer extends Grid
             ->withoutSections($withoutSections)
             ->only($this->only)
             ->except($this->except)
+            ->onlySections($this->onlySections)
             ->values()
             ->toArray();
     }

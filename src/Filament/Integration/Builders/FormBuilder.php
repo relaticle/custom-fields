@@ -24,7 +24,8 @@ class FormBuilder extends BaseBuilder
         $container = FormContainer::make()
             ->forModel($this->explicitModel ?? null)
             ->only($this->only)
-            ->except($this->except);
+            ->except($this->except)
+            ->onlySections($this->onlySections);
 
         // Only set withoutSections if explicitly configured
         if ($this->withoutSections !== null) {

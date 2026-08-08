@@ -31,7 +31,8 @@ final class InfolistBuilder extends BaseBuilder
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
             ->only($this->only)
-            ->except($this->except);
+            ->except($this->except)
+            ->onlySections($this->onlySections);
 
         // Only set withoutSections if explicitly configured
         if ($this->withoutSections !== null) {

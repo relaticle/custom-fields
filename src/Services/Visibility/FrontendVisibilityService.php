@@ -347,6 +347,10 @@ final readonly class FrontendVisibilityService
 
     /**
      * Build standard equals expression for non-optionable fields.
+     *
+     * Two strings are compared case-insensitively to mirror VisibilityOperator::evaluateEquals(),
+     * which folds both sides through strtolower(). Without this the server shows a field for
+     * "active" vs "Active" while the client hides it.
      */
     private function buildStandardEqualsExpression(
         string $fieldValue,
@@ -359,28 +363,39 @@ final readonly class FrontendVisibilityService
                 const fieldVal = {$fieldValue};
                 const compareVal = {$jsValue};
                 if (!Array.isArray(fieldVal) || !Array.isArray(compareVal)) return false;
-                return JSON.stringify(fieldVal.sort()) === JSON.stringify(compareVal.sort());
+                const norm = a => JSON.stringify(a.map(v => String(v)).sort());
+                return norm(fieldVal) === norm(compareVal);
             })()";
         }
 
         return "(() => {
             const fieldVal = {$fieldValue};
             const compareVal = {$jsValue};
+            const isBlank = v => v === null || v === undefined;
+            const isNumericLike = v => typeof v !== 'boolean' && String(v).trim() !== '' && !isNaN(Number(v));
 
-            if (typeof fieldVal === typeof compareVal) {
-                return fieldVal === compareVal;
-            }
-
-            if ((fieldVal === null || fieldVal === undefined) && (compareVal === null || compareVal === undefined)) {
+            if (isBlank(fieldVal) && isBlank(compareVal)) {
                 return true;
             }
 
-            if (typeof fieldVal === 'number' && typeof compareVal === 'string' && !isNaN(parseFloat(compareVal))) {
-                return fieldVal === parseFloat(compareVal);
+            if (isBlank(fieldVal) || isBlank(compareVal)) {
+                return false;
             }
 
-            if (typeof fieldVal === 'string' && typeof compareVal === 'number' && !isNaN(parseFloat(fieldVal))) {
-                return parseFloat(fieldVal) === compareVal;
+            if (Array.isArray(fieldVal)) {
+                return fieldVal.map(v => String(v)).includes(String(compareVal));
+            }
+
+            if (typeof fieldVal === 'boolean' || typeof compareVal === 'boolean') {
+                return String(fieldVal).toLowerCase() === String(compareVal).toLowerCase();
+            }
+
+            if (typeof fieldVal === 'string' && typeof compareVal === 'string') {
+                return fieldVal.toLowerCase() === compareVal.toLowerCase();
+            }
+
+            if (isNumericLike(fieldVal) && isNumericLike(compareVal)) {
+                return Number(fieldVal) === Number(compareVal);
             }
 
             return String(fieldVal) === String(compareVal);
@@ -605,9 +620,6 @@ final readonly class FrontendVisibilityService
             is_string($value) => $this->toJsString($value),
             is_int($value) => (string) $value,
             is_float($value) => number_format($value, 10, '.', ''),
-            is_numeric($value) => str_contains($value, '.')
-                ? number_format((float) $value, 10, '.', '')
-                : (string) ((int) $value),
             is_array($value) => collect($value)
                 ->map(fn (mixed $item): string => $this->formatJsValue($item))
                 ->pipe(

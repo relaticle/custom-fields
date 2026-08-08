@@ -29,6 +29,9 @@ abstract class BaseBuilder
 
     protected array $only = [];
 
+    /** @var array<int, int> */
+    protected array $onlySections = [];
+
     public function forSchema(Schema $schema): static
     {
         /** @var Model & HasCustomFields $model */
@@ -83,6 +86,30 @@ abstract class BaseBuilder
     }
 
     /**
+     * Constrain resolution to the given custom field sections.
+     *
+     * Field codes are unique per section, not globally, in consumers that version their
+     * sections. Scoping structurally lets two sections carry the same code without one
+     * bleeding into the other's schema.
+     *
+     * IMPORTANT: this only narrows resolution (what gets loaded onto the form/infolist).
+     * It does not change how UsesCustomFields::saveCustomFields() saves — that method
+     * writes by code against the model's customFields() relationship. If two sections
+     * share a code and customFields() isn't scoped to match, saveCustomFields() will
+     * write the same submitted value to both field rows. Scoping resolution alone is not
+     * sufficient; the model's customFields() relation must be scoped to the same
+     * section(s) too. See the "Builder Scoping" docs page.
+     *
+     * @param  array<int, int>  $sectionIds
+     */
+    public function onlySections(array $sectionIds): static
+    {
+        $this->onlySections = $sectionIds;
+
+        return $this;
+    }
+
+    /**
      * @return Collection<int, CustomFieldSection>
      */
     protected function getFilteredSections(): Collection
@@ -94,6 +121,10 @@ abstract class BaseBuilder
 
         /** @var Collection<int, CustomFieldSection> $sections */
         $sections = $this->sections
+            ->when($this->onlySections !== [], fn (Builder $query): Builder => $query->whereIn(
+                $this->sections->getModel()->getQualifiedKeyName(),
+                $this->onlySections
+            ))
             ->with(['fields' => function (mixed $query): mixed {
                 return $query
                     ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInList())
@@ -122,6 +153,17 @@ abstract class BaseBuilder
      */
     protected function getFieldsDirectly(): Collection
     {
+        /*
+         * custom_field_section_id only exists on the table when SYSTEM_SECTIONS was
+         * enabled at migration time, and this method is exclusively the sections-disabled
+         * path (see getAllFields()). A section scope can never match anything here — there
+         * is no section table to resolve it against — so return empty rather than filter
+         * by a column that may not exist.
+         */
+        if ($this->onlySections !== [] && ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
+            return collect();
+        }
+
         return CustomFields::newCustomFieldModel()::forMorphEntity($this->model::class)
             ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInList())
             ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInView())

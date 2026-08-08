@@ -42,6 +42,9 @@ class FieldForm implements FormInterface
     /** @var ?Closure(?CustomFieldSection): ?Closure */
     private static ?Closure $uniqueNameRuleModifierResolver = null;
 
+    /** @var ?Closure(?CustomFieldSection): ?Closure */
+    private static ?Closure $uniqueCodeRuleModifierResolver = null;
+
     /**
      * Register a resolver that scopes the field-name uniqueness rule beyond the default
      * entity-type (+ tenant) scope. The resolver receives the section the field belongs to
@@ -56,10 +59,35 @@ class FieldForm implements FormInterface
         self::$uniqueNameRuleModifierResolver = $resolver;
     }
 
+    /**
+     * Register a resolver that scopes the field-code uniqueness rule beyond the default
+     * entity-type (+ tenant) scope. Same contract as resolveUniqueRuleModifierUsing(), kept
+     * as a separate hook because code and name typically need different scoping: name is a
+     * cosmetic label a consumer may want unique per parent form only, while code is a
+     * stable identity other systems (e.g. reporting) key off of, so its scope is usually
+     * "everything except a defined set of related forms" rather than "this one form".
+     * Register once.
+     *
+     * @param  ?Closure(?CustomFieldSection $section): ?Closure  $resolver
+     */
+    public static function resolveUniqueCodeRuleModifierUsing(?Closure $resolver): void
+    {
+        self::$uniqueCodeRuleModifierResolver = $resolver;
+    }
+
     private static function resolveUniqueNameRuleModifier(?CustomFieldSection $section): ?Closure
     {
         if (self::$uniqueNameRuleModifierResolver instanceof Closure) {
             return (self::$uniqueNameRuleModifierResolver)($section);
+        }
+
+        return null;
+    }
+
+    private static function resolveUniqueCodeRuleModifier(?CustomFieldSection $section): ?Closure
+    {
+        if (self::$uniqueCodeRuleModifierResolver instanceof Closure) {
+            return (self::$uniqueCodeRuleModifierResolver)($section);
         }
 
         return null;
@@ -137,6 +165,7 @@ class FieldForm implements FormInterface
     public static function schema(bool $withOptionsRelationship = true, ?CustomFieldSection $section = null): array
     {
         $uniqueNameRuleModifier = self::resolveUniqueNameRuleModifier($section);
+        $uniqueCodeRuleModifier = self::resolveUniqueCodeRuleModifier($section);
 
         $optionsRepeater = Repeater::make('options')
             ->table([
@@ -293,15 +322,23 @@ class FieldForm implements FormInterface
                             table: CustomFields::customFieldModel(),
                             column: 'code',
                             ignoreRecord: true,
-                            modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
-                                ->where('entity_type', $get('entity_type'))
-                                ->when(
-                                    FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
-                                    fn (Unique $rule) => $rule->where(
-                                        config('custom-fields.database.column_names.tenant_foreign_key'),
-                                        TenantContextService::getCurrentTenantId()
-                                    )
-                                )
+                            modifyRuleUsing: function (Unique $rule, Get $get) use ($uniqueCodeRuleModifier): Unique {
+                                $rule = $rule
+                                    ->where('entity_type', $get('entity_type'))
+                                    ->when(
+                                        FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY),
+                                        fn (Unique $rule) => $rule->where(
+                                            config('custom-fields.database.column_names.tenant_foreign_key'),
+                                            TenantContextService::getCurrentTenantId()
+                                        )
+                                    );
+
+                                if ($uniqueCodeRuleModifier instanceof Closure) {
+                                    return $uniqueCodeRuleModifier($rule, $get);
+                                }
+
+                                return $rule;
+                            }
                         )
                         ->afterStateUpdated(function (Set $set, ?string $state): void {
                             $set('code', Str::of($state)->slug('_')->toString());
