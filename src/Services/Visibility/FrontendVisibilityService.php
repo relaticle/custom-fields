@@ -605,9 +605,6 @@ final readonly class FrontendVisibilityService
             is_string($value) => $this->toJsString($value),
             is_int($value) => (string) $value,
             is_float($value) => number_format($value, 10, '.', ''),
-            is_numeric($value) => str_contains($value, '.')
-                ? number_format((float) $value, 10, '.', '')
-                : (string) ((int) $value),
             is_array($value) => collect($value)
                 ->map(fn (mixed $item): string => $this->formatJsValue($item))
                 ->pipe(
