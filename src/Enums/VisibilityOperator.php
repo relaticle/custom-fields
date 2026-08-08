@@ -62,9 +62,13 @@ enum VisibilityOperator: string
         };
     }
 
+    /**
+     * The arm order here mirrors the JavaScript emitted by FrontendVisibilityService, so a
+     * condition resolves the same way on the server and in the live form. Reordering an arm
+     * desyncs the two engines.
+     */
     private function evaluateEquals(mixed $fieldValue, mixed $expectedValue): bool
     {
-        // Handle null values
         if ($fieldValue === null && $expectedValue === null) {
             return true;
         }
@@ -73,18 +77,67 @@ enum VisibilityOperator: string
             return false;
         }
 
-        // Handle arrays
-        if (is_array($fieldValue)) {
-            return in_array($expectedValue, $fieldValue, true);
+        // Two collections compare as sets, matching the client's sorted-JSON equality.
+        if (is_array($fieldValue) && is_array($expectedValue)) {
+            return $this->normalizeSet($fieldValue) === $this->normalizeSet($expectedValue);
         }
 
-        // Handle strings (case-insensitive)
+        // A multi-value field against a single condition value means membership. Compared on the
+        // string form so a field holding [42] still matches the condition a text input stored
+        // as '42' - the same coercion the client applies.
+        if (is_array($fieldValue)) {
+            return in_array($this->stringifyScalar($expectedValue), $this->normalizeSet($fieldValue), true);
+        }
+
+        if (is_array($expectedValue)) {
+            return false;
+        }
+
+        // formatJsValue() emits booleans and the literals 'true'/'false' alike as JS booleans,
+        // so the client cannot tell a real bool from its spelling. Compare on the spelling.
+        if (is_bool($fieldValue) || is_bool($expectedValue)) {
+            return strtolower($this->stringifyScalar($fieldValue)) === strtolower($this->stringifyScalar($expectedValue));
+        }
+
+        // Two strings compare as strings, so '42.5' and '42.50' stay distinct.
         if (is_string($fieldValue) && is_string($expectedValue)) {
             return strtolower($fieldValue) === strtolower($expectedValue);
         }
 
-        // Handle numeric values
+        // Mixed number/numeric-string compares numerically, matching the client's parseFloat
+        // branches. A numeric custom field reads back as an int while its condition is stored
+        // as the string a text input produced, so strict identity never matched.
+        if (is_numeric($fieldValue) && is_numeric($expectedValue)) {
+            return (float) $fieldValue === (float) $expectedValue;
+        }
+
         return $fieldValue === $expectedValue;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @return array<int, string>
+     */
+    private function normalizeSet(array $values): array
+    {
+        $normalized = array_map(fn (mixed $value): string => $this->stringifyScalar($value), array_values($values));
+
+        sort($normalized);
+
+        return $normalized;
+    }
+
+    private function stringifyScalar(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return serialize($value);
     }
 
     private function evaluateContains(mixed $fieldValue, mixed $expectedValue): bool

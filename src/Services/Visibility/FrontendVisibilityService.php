@@ -363,32 +363,39 @@ final readonly class FrontendVisibilityService
                 const fieldVal = {$fieldValue};
                 const compareVal = {$jsValue};
                 if (!Array.isArray(fieldVal) || !Array.isArray(compareVal)) return false;
-                return JSON.stringify(fieldVal.sort()) === JSON.stringify(compareVal.sort());
+                const norm = a => JSON.stringify(a.map(v => String(v)).sort());
+                return norm(fieldVal) === norm(compareVal);
             })()";
         }
 
         return "(() => {
             const fieldVal = {$fieldValue};
             const compareVal = {$jsValue};
+            const isBlank = v => v === null || v === undefined;
+            const isNumericLike = v => typeof v !== 'boolean' && String(v).trim() !== '' && !isNaN(Number(v));
+
+            if (isBlank(fieldVal) && isBlank(compareVal)) {
+                return true;
+            }
+
+            if (isBlank(fieldVal) || isBlank(compareVal)) {
+                return false;
+            }
+
+            if (Array.isArray(fieldVal)) {
+                return fieldVal.map(v => String(v)).includes(String(compareVal));
+            }
+
+            if (typeof fieldVal === 'boolean' || typeof compareVal === 'boolean') {
+                return String(fieldVal).toLowerCase() === String(compareVal).toLowerCase();
+            }
 
             if (typeof fieldVal === 'string' && typeof compareVal === 'string') {
                 return fieldVal.toLowerCase() === compareVal.toLowerCase();
             }
 
-            if (typeof fieldVal === typeof compareVal) {
-                return fieldVal === compareVal;
-            }
-
-            if ((fieldVal === null || fieldVal === undefined) && (compareVal === null || compareVal === undefined)) {
-                return true;
-            }
-
-            if (typeof fieldVal === 'number' && typeof compareVal === 'string' && !isNaN(parseFloat(compareVal))) {
-                return fieldVal === parseFloat(compareVal);
-            }
-
-            if (typeof fieldVal === 'string' && typeof compareVal === 'number' && !isNaN(parseFloat(fieldVal))) {
-                return parseFloat(fieldVal) === compareVal;
+            if (isNumericLike(fieldVal) && isNumericLike(compareVal)) {
+                return Number(fieldVal) === Number(compareVal);
             }
 
             return String(fieldVal) === String(compareVal);

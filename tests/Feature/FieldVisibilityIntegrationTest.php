@@ -272,8 +272,8 @@ describe('Numeric-string condition values in the generated visibility JS', funct
     it('emits a numeric string as a JS string literal, and still coerces when the field holds a number', function () use ($buildEqualsJs): void {
         expect($buildEqualsJs('42'))
             ->toContain("const compareVal = '42';")
-            ->toContain("typeof fieldVal === 'number' && typeof compareVal === 'string'")
-            ->toContain("typeof fieldVal === 'string' && typeof compareVal === 'number'");
+            ->toContain('isNumericLike(fieldVal) && isNumericLike(compareVal)')
+            ->and(VisibilityOperator::EQUALS->evaluate(42, '42'))->toBeTrue();
     });
 
     it('keeps a numeric string comparable as a string, matching the backend operator', function () use ($buildEqualsJs): void {
@@ -309,5 +309,43 @@ describe('Case-insensitive string equality parity between the two visibility eng
     it('still distinguishes genuinely different strings', function () use ($buildEqualsJs): void {
         expect(VisibilityOperator::EQUALS->evaluate('inactive', 'Active'))->toBeFalse()
             ->and($buildEqualsJs('Active'))->toContain("const compareVal = 'Active';");
+    });
+});
+
+describe('VisibilityOperator equality mirrors the client expression', function (): void {
+    it('matches a numeric field value against the string a text input stored', function (): void {
+        // A NUMERIC field reads back from integer_value as an int, while its condition is
+        // whatever the text input persisted. Strict identity meant such a condition never matched.
+        expect(VisibilityOperator::EQUALS->evaluate(42, '42'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate('42', 42))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(42.5, '42.50'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(42, '43'))->toBeFalse();
+    });
+
+    it('keeps two strings on string comparison so trailing zeros still differ', function (): void {
+        expect(VisibilityOperator::EQUALS->evaluate('42.5', '42.50'))->toBeFalse();
+    });
+
+    it('compares a boolean against its spelling, which is all the client can see', function (): void {
+        expect(VisibilityOperator::EQUALS->evaluate(true, 'true'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate('TRUE', true))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(false, 'false'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(true, 'false'))->toBeFalse()
+            ->and(VisibilityOperator::EQUALS->evaluate(true, '42'))->toBeFalse();
+    });
+
+    it('compares two collections as sets rather than looking for one inside the other', function (): void {
+        expect(VisibilityOperator::EQUALS->evaluate(['a', 'b'], ['b', 'a']))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(['a', 'b'], ['a']))->toBeFalse();
+    });
+
+    it('treats a single condition value against a multi-value field as membership', function (): void {
+        expect(VisibilityOperator::EQUALS->evaluate(['a', 'b'], 'a'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate([42], '42'))->toBeTrue()
+            ->and(VisibilityOperator::EQUALS->evaluate(['a', 'b'], 'c'))->toBeFalse();
+    });
+
+    it('never matches a scalar field against a collection condition', function (): void {
+        expect(VisibilityOperator::EQUALS->evaluate('a', ['a', 'b']))->toBeFalse();
     });
 });
