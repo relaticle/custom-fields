@@ -347,6 +347,10 @@ final readonly class FrontendVisibilityService
 
     /**
      * Build standard equals expression for non-optionable fields.
+     *
+     * Two strings are compared case-insensitively to mirror VisibilityOperator::evaluateEquals(),
+     * which folds both sides through strtolower(). Without this the server shows a field for
+     * "active" vs "Active" while the client hides it.
      */
     private function buildStandardEqualsExpression(
         string $fieldValue,
@@ -366,6 +370,10 @@ final readonly class FrontendVisibilityService
         return "(() => {
             const fieldVal = {$fieldValue};
             const compareVal = {$jsValue};
+
+            if (typeof fieldVal === 'string' && typeof compareVal === 'string') {
+                return fieldVal.toLowerCase() === compareVal.toLowerCase();
+            }
 
             if (typeof fieldVal === typeof compareVal) {
                 return fieldVal === compareVal;

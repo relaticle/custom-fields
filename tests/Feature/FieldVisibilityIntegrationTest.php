@@ -229,46 +229,46 @@ describe('Field-level server-side visibility for relation-attribute conditions',
     });
 });
 
-describe('Numeric-string condition values in the generated visibility JS', function (): void {
-    $buildEqualsJs = function (string|int|float $conditionValue): string {
-        $section = CustomFieldSection::factory()->create([
-            'name' => 'Numeric Condition Section',
-            'entity_type' => Post::class,
-            'active' => true,
-        ]);
+$buildEqualsJs = function (string|int|float $conditionValue, VisibilityOperator $operator = VisibilityOperator::EQUALS): string {
+    $section = CustomFieldSection::factory()->create([
+        'name' => 'Text Condition Section',
+        'entity_type' => Post::class,
+        'active' => true,
+    ]);
 
-        $triggerField = CustomField::factory()->create([
-            'custom_field_section_id' => $section->id,
-            'name' => 'Quantity',
-            'code' => 'quantity',
-            'type' => 'text',
-            'entity_type' => Post::class,
-        ]);
+    $triggerField = CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Status',
+        'code' => 'status',
+        'type' => 'text',
+        'entity_type' => Post::class,
+    ]);
 
-        $conditionalField = CustomField::factory()->create([
-            'custom_field_section_id' => $section->id,
-            'name' => 'Gated',
-            'code' => 'gated',
-            'type' => 'text',
-            'entity_type' => Post::class,
-            'settings' => [
-                'visibility' => [
-                    'mode' => VisibilityMode::SHOW_WHEN,
-                    'logic' => VisibilityLogic::ALL,
-                    'conditions' => [[
-                        'field_code' => 'quantity',
-                        'operator' => VisibilityOperator::EQUALS,
-                        'value' => $conditionValue,
-                        'source' => ConditionSource::CustomField,
-                    ]],
-                ],
+    $conditionalField = CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'name' => 'Gated',
+        'code' => 'gated',
+        'type' => 'text',
+        'entity_type' => Post::class,
+        'settings' => [
+            'visibility' => [
+                'mode' => VisibilityMode::SHOW_WHEN,
+                'logic' => VisibilityLogic::ALL,
+                'conditions' => [[
+                    'field_code' => 'status',
+                    'operator' => $operator,
+                    'value' => $conditionValue,
+                    'source' => ConditionSource::CustomField,
+                ]],
             ],
-        ]);
+        ],
+    ]);
 
-        return (string) app(FrontendVisibilityService::class)
-            ->buildVisibilityExpression($conditionalField, collect([$triggerField, $conditionalField]));
-    };
+    return (string) app(FrontendVisibilityService::class)
+        ->buildVisibilityExpression($conditionalField, collect([$triggerField, $conditionalField]));
+};
 
+describe('Numeric-string condition values in the generated visibility JS', function () use ($buildEqualsJs): void {
     it('emits a numeric string as a JS string literal, and still coerces when the field holds a number', function () use ($buildEqualsJs): void {
         expect($buildEqualsJs('42'))
             ->toContain("const compareVal = '42';")
@@ -287,5 +287,27 @@ describe('Numeric-string condition values in the generated visibility JS', funct
     it('emits genuine int and float condition values as JS numbers', function () use ($buildEqualsJs): void {
         expect($buildEqualsJs(42))->toContain('const compareVal = 42;')
             ->and($buildEqualsJs(42.5))->toContain('const compareVal = 42.5000000000;');
+    });
+});
+
+describe('Case-insensitive string equality parity between the two visibility engines', function () use ($buildEqualsJs): void {
+    it('folds both sides before comparing, matching the backend operator', function () use ($buildEqualsJs): void {
+        // Server: strtolower('active') === strtolower('Active') is true. A case-sensitive client
+        // comparison hides the field the server would show.
+        expect(VisibilityOperator::EQUALS->evaluate('active', 'Active'))->toBeTrue()
+            ->and($buildEqualsJs('Active'))
+            ->toContain("typeof fieldVal === 'string' && typeof compareVal === 'string'")
+            ->toContain('fieldVal.toLowerCase() === compareVal.toLowerCase()');
+    });
+
+    it('applies the same folding to not_equals, which negates the equals expression', function () use ($buildEqualsJs): void {
+        expect(VisibilityOperator::NOT_EQUALS->evaluate('active', 'Active'))->toBeFalse()
+            ->and($buildEqualsJs('Active', VisibilityOperator::NOT_EQUALS))
+            ->toContain('fieldVal.toLowerCase() === compareVal.toLowerCase()');
+    });
+
+    it('still distinguishes genuinely different strings', function () use ($buildEqualsJs): void {
+        expect(VisibilityOperator::EQUALS->evaluate('inactive', 'Active'))->toBeFalse()
+            ->and($buildEqualsJs('Active'))->toContain("const compareVal = 'Active';");
     });
 });
