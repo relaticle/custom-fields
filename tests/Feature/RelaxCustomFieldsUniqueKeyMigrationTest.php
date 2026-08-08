@@ -165,6 +165,7 @@ it('computes the same index name with no prefix configured, matching current beh
 
     $defaultUniqueIndexName = new ReflectionMethod($this->migration, 'defaultUniqueIndexName');
     $defaultUniqueIndexName->setAccessible(true);
+
     $actual = $defaultUniqueIndexName->invoke($this->migration, 'custom_fields', $columns);
 
     expect($actual)->toBe('custom_fields_code_entity_type_unique');

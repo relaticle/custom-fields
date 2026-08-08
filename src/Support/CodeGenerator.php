@@ -117,7 +117,7 @@ final class CodeGenerator
             $query->where($model->getKeyName(), '!=', $ignoreId);
         }
 
-        if (self::$uniquenessScopeResolver !== null) {
+        if (self::$uniquenessScopeResolver instanceof Closure) {
             $scope = (self::$uniquenessScopeResolver)($entityType, $type, $sectionId);
 
             if ($scope !== null) {
