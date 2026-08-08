@@ -228,3 +228,64 @@ describe('Field-level server-side visibility for relation-attribute conditions',
             ->and($visibleJs)->toBe($expectedJs);
     });
 });
+
+describe('Numeric-string condition values in the generated visibility JS', function (): void {
+    $buildEqualsJs = function (string|int|float $conditionValue): string {
+        $section = CustomFieldSection::factory()->create([
+            'name' => 'Numeric Condition Section',
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+
+        $triggerField = CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'name' => 'Quantity',
+            'code' => 'quantity',
+            'type' => 'text',
+            'entity_type' => Post::class,
+        ]);
+
+        $conditionalField = CustomField::factory()->create([
+            'custom_field_section_id' => $section->id,
+            'name' => 'Gated',
+            'code' => 'gated',
+            'type' => 'text',
+            'entity_type' => Post::class,
+            'settings' => [
+                'visibility' => [
+                    'mode' => VisibilityMode::SHOW_WHEN,
+                    'logic' => VisibilityLogic::ALL,
+                    'conditions' => [[
+                        'field_code' => 'quantity',
+                        'operator' => VisibilityOperator::EQUALS,
+                        'value' => $conditionValue,
+                        'source' => ConditionSource::CustomField,
+                    ]],
+                ],
+            ],
+        ]);
+
+        return (string) app(FrontendVisibilityService::class)
+            ->buildVisibilityExpression($conditionalField, collect([$triggerField, $conditionalField]));
+    };
+
+    it('emits a numeric string as a JS string literal, and still coerces when the field holds a number', function () use ($buildEqualsJs): void {
+        expect($buildEqualsJs('42'))
+            ->toContain("const compareVal = '42';")
+            ->toContain("typeof fieldVal === 'number' && typeof compareVal === 'string'")
+            ->toContain("typeof fieldVal === 'string' && typeof compareVal === 'number'");
+    });
+
+    it('keeps a numeric string comparable as a string, matching the backend operator', function () use ($buildEqualsJs): void {
+        // VisibilityOperator::evaluateEquals() compares two strings as strings, so '42.5' and
+        // '42.50' are NOT equal on the server. Emitting the condition as a JS number would make
+        // parseFloat('42.5') === 42.5 true on the client and silently desync the two engines.
+        expect($buildEqualsJs('42.50'))->toContain("const compareVal = '42.50';")
+            ->and(VisibilityOperator::EQUALS->evaluate('42.5', '42.50'))->toBeFalse();
+    });
+
+    it('emits genuine int and float condition values as JS numbers', function () use ($buildEqualsJs): void {
+        expect($buildEqualsJs(42))->toContain('const compareVal = 42;')
+            ->and($buildEqualsJs(42.5))->toContain('const compareVal = 42.5000000000;');
+    });
+});
