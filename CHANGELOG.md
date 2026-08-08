@@ -2,6 +2,26 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.6.1 - 2026-08-08
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump brace-expansion from 2.1.1 to 2.1.4 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/194
+* chore(deps): bump ip-address from 10.2.0 to 10.4.0 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/195
+* chore(deps): bump the npm_and_yarn group across 2 directories with 5 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/196
+* chore(deps): bump the npm_and_yarn group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/199
+* perf: reuse eager-loaded relations in forModel via loadMissing by @MACscr in https://github.com/relaticle/custom-fields/pull/197
+* feat: section-scoped custom field resolution by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/198
+
+### New Contributors
+
+* @MACscr made their first contribution in https://github.com/relaticle/custom-fields/pull/197
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.6.0...v3.6.1
+
 ## v3.6.0 - 2026-08-03
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.6.0 -->
