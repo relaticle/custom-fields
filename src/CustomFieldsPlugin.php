@@ -10,6 +10,7 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
 use Filament\Support\Enums\Width;
+use InvalidArgumentException;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -29,6 +30,9 @@ class CustomFieldsPlugin implements Plugin
 
     protected Width|Closure|null $sectionModalWidth = null;
 
+    /** @var class-string<CustomFieldsManagementPage>|null */
+    protected ?string $managementPage = null;
+
     public function getId(): string
     {
         return 'custom-fields';
@@ -38,7 +42,7 @@ class CustomFieldsPlugin implements Plugin
     {
         $panel
             ->pages([
-                CustomFieldsManagementPage::class,
+                $this->getManagementPage(),
             ])
             ->tenantMiddleware([SetTenantContextMiddleware::class], true);
     }
@@ -117,6 +121,37 @@ class CustomFieldsPlugin implements Plugin
         $this->sectionModalWidth = $width;
 
         return $this;
+    }
+
+    /**
+     * Register your own management page in place of the packaged one, so the host
+     * application controls the things Filament reads off the page class itself —
+     * slug, sub-navigation, cluster, heading. The subclass keeps all packaged
+     * behaviour; only the page registered on the panel changes.
+     *
+     * @param  class-string<CustomFieldsManagementPage>  $page
+     */
+    public function managementPage(string $page): static
+    {
+        if (! is_subclass_of($page, CustomFieldsManagementPage::class)) {
+            throw new InvalidArgumentException(sprintf(
+                '[%s] must extend [%s] to be used as the management page.',
+                $page,
+                CustomFieldsManagementPage::class,
+            ));
+        }
+
+        $this->managementPage = $page;
+
+        return $this;
+    }
+
+    /**
+     * @return class-string<CustomFieldsManagementPage>
+     */
+    public function getManagementPage(): string
+    {
+        return $this->managementPage ?? CustomFieldsManagementPage::class;
     }
 
     public function getSectionModalWidth(): Width
