@@ -133,7 +133,9 @@ class CustomFieldsPlugin implements Plugin
      */
     public function managementPage(string $page): static
     {
-        if (! is_subclass_of($page, CustomFieldsManagementPage::class)) {
+        // is_a() rather than is_subclass_of(), so passing the packaged page
+        // itself is an explicit no-op rather than an error.
+        if (! is_a($page, CustomFieldsManagementPage::class, allow_string: true)) {
             throw new InvalidArgumentException(sprintf(
                 '[%s] must extend [%s] to be used as the management page.',
                 $page,

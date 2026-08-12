@@ -17,6 +17,11 @@ it('registers an overridden management page', function (): void {
         ->toBe(CustomManagementPage::class);
 });
 
+it('accepts the packaged page itself as an explicit no-op', function (): void {
+    expect(CustomFieldsPlugin::make()->managementPage(CustomFieldsManagementPage::class)->getManagementPage())
+        ->toBe(CustomFieldsManagementPage::class);
+});
+
 it('rejects a management page that does not extend the packaged one', function (): void {
     CustomFieldsPlugin::make()->managementPage(Panel::class);
 })->throws(InvalidArgumentException::class, 'must extend');
