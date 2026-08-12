@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.6.2 - 2026-08-12
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* feat: allow the host app to register its own management page by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/200
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.6.1...v3.6.2
+
 ## v3.6.1 - 2026-08-08
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
