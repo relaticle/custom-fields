@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.6.3 - 2026-08-13
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* fix: keep a persisted field's code stable when its name is renamed [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/201
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.6.2...v3.6.3
+
 ## v3.6.2 - 2026-08-12
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
