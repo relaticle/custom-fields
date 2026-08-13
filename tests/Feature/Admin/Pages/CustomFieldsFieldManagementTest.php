@@ -916,3 +916,37 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
             ->active->toBeTrue();
     });
 });
+
+describe('ManageCustomField - Code Stability On Rename', function (): void {
+    beforeEach(function (): void {
+        $this->section = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create();
+    });
+
+    it('keeps a persisted fields code stable when the name is renamed', function (): void {
+        $field = CustomField::factory()
+            ->ofType('text')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'HMIS ID',
+                'code' => 'hmis_id',
+            ]);
+
+        // The code is an identity: stored values, report columns and visibility
+        // conditions key on it, and a field cloned onto a new form version shares
+        // it with the original. Renaming must not rewrite it, even though the code
+        // still matches the slug of the previous name.
+        livewire(ManageCustomField::class, ['field' => $field])
+            ->mountAction('edit')
+            ->set('mountedActions.0.data.name', 'HMIS ID (Q/A testing added)')
+            ->assertSet('mountedActions.0.data.code', 'hmis_id')
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($field->refresh())
+            ->code->toBe('hmis_id')
+            ->name->toBe('HMIS ID (Q/A testing added)');
+    });
+});
