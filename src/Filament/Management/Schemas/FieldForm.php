@@ -300,7 +300,16 @@ class FieldForm implements FormInterface
                                 return $rule;
                             }
                         )
-                        ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state): void {
+                        ->afterStateUpdated(function (Get $get, Set $set, ?CustomField $record, ?string $old, ?string $state): void {
+                            // On a persisted field the code is an identity, not a label:
+                            // stored values, report columns and visibility conditions all
+                            // key on it, and a field cloned onto a new form version shares
+                            // it with the original. Renaming must therefore never rewrite
+                            // it — only derive the code while the field is being created.
+                            if ($record instanceof CustomField) {
+                                return;
+                            }
+
                             $old ??= '';
                             $state ??= '';
 
