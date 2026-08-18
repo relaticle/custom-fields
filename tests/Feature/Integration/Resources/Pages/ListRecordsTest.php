@@ -411,3 +411,43 @@ describe('Conditional Visibility in Tables', function (): void {
             ->assertTableColumnStateSet('custom_fields.internal_notes', 'Internal review needed', $draftPost);
     });
 });
+
+describe('Record Field Filtering', function (): void {
+    beforeEach(function (): void {
+        $this->section = CustomFieldSection::factory()->create([
+            'name' => 'Post Relations',
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+    });
+
+    it('filters by a record field regardless of cardinality', function (bool $allowMultiple, string $code): void {
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Related Post',
+            'code' => $code,
+            'type' => 'record',
+            'entity_type' => Post::class,
+            'lookup_type' => Post::class,
+            'settings' => new CustomFieldSettingsData(
+                visible_in_list: true,
+                list_toggleable_hidden: false,
+                allow_multiple: $allowMultiple,
+            ),
+        ]);
+
+        $target = Post::factory()->create();
+        $linked = Post::factory()->create();
+        $unlinked = Post::factory()->create();
+
+        $linked->saveCustomFieldValue($field, [$target->getKey()]);
+
+        livewire(ListPosts::class)
+            ->set(sprintf('tableFilters.custom_fields.%s.values', $code), [$target->getKey()])
+            ->assertCanSeeTableRecords([$linked])
+            ->assertCanNotSeeTableRecords([$unlinked]);
+    })->with([
+        'single-value' => [false, 'related_post_single'],
+        'multi-value' => [true, 'related_post_multi'],
+    ]);
+});

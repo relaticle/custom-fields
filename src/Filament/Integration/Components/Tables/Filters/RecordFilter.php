@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Filters;
 
+use Filament\Forms\Components\Select;
 use Filament\Tables\Filters\SelectFilter as FilamentSelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,33 +24,28 @@ final class RecordFilter extends AbstractTableFilter
      */
     public function make(CustomField $customField): FilamentSelectFilter
     {
-        $isMultiSelect = $customField->settings->allow_multiple ?? false;
-
         $filter = FilamentSelectFilter::make($customField->getFieldName())
             ->multiple()
             ->label($customField->name)
             ->searchable()
-            ->native(false);
+            ->native(false)
+            ->modifyFormFieldUsing(fn (Select $field): Select => $field->allowHtml());
 
         $filter = $this->configureLookup($filter, $customField->lookup_type);
 
-        $filter->query(function (array $data, Builder $query) use ($customField, $isMultiSelect): Builder {
+        $filter->query(function (array $data, Builder $query) use ($customField): Builder {
             if (empty($data['values'])) {
                 return $query;
             }
 
-            return $query->whereHas('customFieldValues', function (Builder $q) use ($customField, $data, $isMultiSelect): void {
+            return $query->whereHas('customFieldValues', function (Builder $q) use ($customField, $data): void {
                 $q->where('custom_field_id', $customField->id);
 
-                if ($isMultiSelect) {
-                    $q->where(function (Builder $subQuery) use ($data): void {
-                        foreach ($data['values'] as $value) {
-                            $subQuery->orWhereJsonContains('json_value', $value);
-                        }
-                    });
-                } else {
-                    $q->whereIn('string_value', $data['values']);
-                }
+                $q->where(function (Builder $subQuery) use ($data): void {
+                    foreach ($data['values'] as $value) {
+                        $subQuery->orWhereJsonContains('json_value', $value);
+                    }
+                });
             });
         });
 
