@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.7.0 - 2026-08-18
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.7.0 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: record filter matches nothing for single-value fields by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/202
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.6.3...v3.7.0
+
 ## v3.6.3 - 2026-08-13
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
