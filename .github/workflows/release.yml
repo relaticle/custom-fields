@@ -6,89 +6,104 @@ on:
       - 'v*.*.*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   tests:
     uses: ./.github/workflows/tests.yml
-    secrets: inherit
 
   release:
     needs: tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Determine if pre-release
         id: prerelease
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          TAG="${{ github.ref_name }}"
           if [[ "$TAG" == *"-"* ]]; then
-            echo "flag=--prerelease" >> $GITHUB_OUTPUT
+            echo "flag=--prerelease" >> "$GITHUB_OUTPUT"
           else
-            echo "flag=" >> $GITHUB_OUTPUT
+            echo "flag=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check if release exists
         id: check
-        run: |
-          if gh release view "${{ github.ref_name }}" > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create GitHub Release
         if: steps.check.outputs.exists == 'false'
-        run: gh release create "${{ github.ref_name }}" --generate-notes ${{ steps.prerelease.outputs.flag }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE_FLAG: ${{ steps.prerelease.outputs.flag }}
+        run: gh release create "$TAG" --generate-notes $PRERELEASE_FLAG
 
   changelog:
     needs: release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Determine target branch
         id: branch
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          TAG="${{ github.ref_name }}"
           MAJOR=$(echo "$TAG" | sed -E 's/^v?([0-9]+)\..*/\1/')
           BRANCH="${MAJOR}.x"
-          if ! git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" "$BRANCH" > /dev/null 2>&1; then
-            BRANCH="${{ github.event.repository.default_branch }}"
+          if ! git ls-remote --exit-code --heads "https://github.com/$REPO" "$BRANCH" > /dev/null 2>&1; then
+            BRANCH="$DEFAULT_BRANCH"
           fi
-          echo "name=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "name=${BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.branch.outputs.name }}
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Get release notes
         id: notes
-        run: |
-          NOTES=$(gh release view "${{ github.ref_name }}" --json body --jq .body)
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "body<<$EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          NOTES=$(gh release view "$TAG" --json body --jq .body)
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          {
+            echo "body<<$EOF"
+            echo "$NOTES"
+            echo "$EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update Changelog
-        uses: stefanzweifel/changelog-updater-action@v1
+        uses: stefanzweifel/changelog-updater-action@a938690fad7edf25368f37e43a1ed1b34303eb36 # v1.12.0
         with:
           latest-version: ${{ github.ref_name }}
           release-notes: ${{ steps.notes.outputs.body }}
 
       - name: Commit updated CHANGELOG
-        uses: stefanzweifel/git-auto-commit-action@v7
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           branch: ${{ steps.branch.outputs.name }}
           commit_message: "chore: update CHANGELOG for ${{ github.ref_name }}"
@@ -103,7 +118,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Delete tag on test failure
-        run: git push --delete origin "${{ github.ref_name }}"
+        env:
+          TAG: ${{ github.ref_name }}
+        run: git push --delete origin "$TAG"
