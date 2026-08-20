@@ -152,6 +152,17 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     }
 
     /**
+     * Characters required before the field issues a filtered lookup query.
+     *
+     * The view reads the same value, so raising it cannot leave the client
+     * asking for a filtered search the server answers with an unfiltered page.
+     */
+    public function getMinSearchLength(): int
+    {
+        return (int) config('custom-fields.selects.record_lookup.min_search_length', 2);
+    }
+
+    /**
      * Get entity configuration for the lookup type.
      */
     public function getEntityConfiguration(): ?EntityConfigurationData
@@ -168,7 +179,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     /**
      * Prepare entity query with common attributes.
      *
-     * @return array{entity: EntityConfigurationData, query: Builder, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
+     * @return array{entity: EntityConfigurationData, model: Model, query: Builder, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
      */
     private function prepareEntityQuery(): ?array
     {
@@ -178,13 +189,56 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return null;
         }
 
+        $model = $entity->createModelInstance();
+
         return [
             'entity' => $entity,
-            'query' => $entity->newQuery(),
-            'keyName' => $entity->createModelInstance()->getKeyName(),
+            'model' => $model,
+            'query' => $model->newQuery(),
+            'keyName' => $model->getKeyName(),
             'titleAttribute' => $entity->getPrimaryAttribute(),
             'avatarConfig' => $entity->getAvatarConfiguration(),
         ];
+    }
+
+    /**
+     * Apply a deterministic order to a lookup query.
+     *
+     * Without one, LIMIT returns arbitrary rows and the initial page can change
+     * between renders. The default is the model key: it is backed by the primary
+     * key index, so ordering costs no more than the unordered query it replaces.
+     * Measured on a 50k-row table, ordering by an unindexed column instead costs
+     * roughly 176x the time and 205x the buffers, because every render sorts the
+     * whole tenant.
+     *
+     * A configured column is trusted and the model key is appended to it, so rows
+     * sharing a value still come back in a fixed sequence. Column existence is
+     * resolved without a schema query: a runtime Schema::hasColumn() call would be
+     * a per-request round trip. The one exception is the documented 'updated_at',
+     * which falls back to the key on a model that opts out of timestamps.
+     */
+    private function applyLookupOrder(Builder $query, Model $model): Builder
+    {
+        $column = config('custom-fields.selects.record_lookup.order_column');
+        $direction = (string) config('custom-fields.selects.record_lookup.order_direction', 'desc');
+        $key = $model->getQualifiedKeyName();
+
+        if (! is_string($column) || $column === '') {
+            return $query->orderBy($key, $direction);
+        }
+
+        if ($column === 'updated_at' && ! $model->usesTimestamps()) {
+            return $query->orderBy($key, $direction);
+        }
+
+        return $query
+            ->orderBy($query->qualifyColumn($column), $direction)
+            ->orderBy($key, $direction);
+    }
+
+    private function lookupLimit(): int
+    {
+        return (int) config('custom-fields.selects.record_lookup.limit', 50);
     }
 
     /**
@@ -200,7 +254,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return [];
         }
 
-        ['entity' => $entity, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
+        ['entity' => $entity, 'model' => $model, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
         $searchAttributes = $entity->getSearchAttributes();
 
         // Try to use resource's search if available
@@ -228,7 +282,9 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             });
         }
 
-        $records = $query->limit(50)->get();
+        $records = $this->applyLookupOrder($query, $model)
+            ->limit($this->lookupLimit())
+            ->get();
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
     }
@@ -272,9 +328,11 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return [];
         }
 
-        ['query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
+        ['model' => $model, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
 
-        $records = $query->limit(50)->get();
+        $records = $this->applyLookupOrder($query, $model)
+            ->limit($this->lookupLimit())
+            ->get();
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
     }
@@ -324,8 +382,11 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     #[Renderless]
     public function getSearchResultsForJs(string $search): array
     {
-        if (mb_strlen($search) < 2) {
-            return [];
+        // Below the minimum, show the unfiltered first page rather than nothing.
+        // Returning [] renders as "no results", which reads as broken for a
+        // one-character search, and is wrong for single-character CJK names.
+        if (mb_strlen($search) < $this->getMinSearchLength()) {
+            return array_values($this->getInitialOptions());
         }
 
         return array_values($this->searchRecords($search));

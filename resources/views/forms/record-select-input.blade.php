@@ -9,6 +9,8 @@
     $emptyStateLabel = $getEmptyStateLabel();
     $placeholder = $getPlaceholder() ?? __('Search records...');
     $key = $getKey();
+    $minSearchLength = $getMinSearchLength();
+    $shortSearchMessage = __('Type at least :count characters to search', ['count' => $minSearchLength]);
 
     // Get initial records data for selected values
     $state = $getState() ?? [];
@@ -39,6 +41,7 @@
             recordsCache: @js($initialRecords),
             initialOptions: @js(array_values($initialOptions)),
             maxVisibleValues: @js($maxVisiblePills),
+            minSearchLength: @js($minSearchLength),
             selectedSnapshot: [],
             activeIndex: -1,
             documentClickListener: null,
@@ -50,7 +53,7 @@
                 this.state = this.state.filter(v => v && v !== '');
 
                 this.$watch('search', (value) => {
-                    if (value.trim().length >= 2) {
+                    if (value.trim().length >= this.minSearchLength) {
                         this.performSearch();
                     } else {
                         this.searchResults = [];
@@ -143,8 +146,8 @@
             get sortedOptions() {
                 const searchLower = this.search.toLowerCase().trim();
 
-                // If searching (>=2 chars) and have server results, use those
-                if (searchLower.length >= 2 && this.searchResults.length > 0) {
+                // If searching (at or above the minimum) and have server results, use those
+                if (searchLower.length >= this.minSearchLength && this.searchResults.length > 0) {
                     return this.sortBySelected([...this.searchResults]);
                 }
 
@@ -179,11 +182,11 @@
 
             get emptyStateMessage() {
                 const searchLength = this.search.trim().length;
-                if (searchLength >= 2) {
+                if (searchLength >= this.minSearchLength) {
                     return '{{ __('No records found') }}';
                 }
                 if (searchLength > 0) {
-                    return '{{ __('Type at least 2 characters to search') }}';
+                    return @js($shortSearchMessage);
                 }
                 if (this.initialOptions.length === 0) {
                     return '{{ __('No records available') }}';
@@ -194,7 +197,7 @@
             async performSearch() {
                 const query = this.search.trim();
 
-                if (query.length < 2) {
+                if (query.length < this.minSearchLength) {
                     this.searchResults = [];
                     return;
                 }

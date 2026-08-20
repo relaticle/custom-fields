@@ -378,6 +378,26 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     }
 
     /**
+     * Whether an option-backed select should render a search box.
+     *
+     * Filtering for static options happens client-side, so this is a readability
+     * choice rather than a performance one. A threshold of 0 always shows the box,
+     * which is the pre-3.8 behavior.
+     *
+     * @param  array<int|string, string>  $options
+     */
+    protected function shouldBeSearchable(array $options): bool
+    {
+        $threshold = (int) config('custom-fields.selects.searchable_threshold', 10);
+
+        if ($threshold <= 0) {
+            return true;
+        }
+
+        return count($options) > $threshold;
+    }
+
+    /**
      * Create the specific Filament field component.
      *
      * Concrete implementations should create the appropriate Filament component

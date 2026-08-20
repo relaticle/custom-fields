@@ -19,7 +19,7 @@ final readonly class MultiSelectComponent extends AbstractFormComponent
 
         $field = Select::make($customField->getFieldName())
             ->multiple()
-            ->searchable()
+            ->searchable($this->shouldBeSearchable($options))
             ->options($options);
 
         if ($this->hasColorOptionsEnabled($customField)) {
