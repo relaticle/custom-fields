@@ -168,7 +168,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     /**
      * Prepare entity query with common attributes.
      *
-     * @return array{entity: EntityConfigurationData, query: Builder, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
+     * @return array{entity: EntityConfigurationData, model: Model, query: Builder, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
      */
     private function prepareEntityQuery(): ?array
     {
@@ -178,13 +178,47 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return null;
         }
 
+        $model = $entity->createModelInstance();
+
         return [
             'entity' => $entity,
-            'query' => $entity->newQuery(),
-            'keyName' => $entity->createModelInstance()->getKeyName(),
+            'model' => $model,
+            'query' => $model->newQuery(),
+            'keyName' => $model->getKeyName(),
             'titleAttribute' => $entity->getPrimaryAttribute(),
             'avatarConfig' => $entity->getAvatarConfiguration(),
         ];
+    }
+
+    /**
+     * Apply a deterministic order to a lookup query.
+     *
+     * Without one, LIMIT returns arbitrary rows and the initial page can change
+     * between renders. The model key is always appended so rows sharing an
+     * order value still come back in a fixed sequence.
+     *
+     * Column existence is resolved without a schema query: a runtime
+     * Schema::hasColumn() call would be a per-request round trip. An explicitly
+     * configured column is trusted, because silently overriding a consumer's
+     * deliberate setting is worse than a clear error.
+     */
+    private function applyLookupOrder(Builder $query, Model $model): Builder
+    {
+        $column = (string) config('custom-fields.selects.record_lookup.order_column', 'updated_at');
+        $direction = (string) config('custom-fields.selects.record_lookup.order_direction', 'desc');
+
+        if ($column === 'updated_at' && ! $model->usesTimestamps()) {
+            return $query->orderBy($model->getQualifiedKeyName(), $direction);
+        }
+
+        return $query
+            ->orderBy($query->qualifyColumn($column), $direction)
+            ->orderBy($model->getQualifiedKeyName(), $direction);
+    }
+
+    private function lookupLimit(): int
+    {
+        return (int) config('custom-fields.selects.record_lookup.limit', 50);
     }
 
     /**
@@ -200,7 +234,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return [];
         }
 
-        ['entity' => $entity, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
+        ['entity' => $entity, 'model' => $model, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
         $searchAttributes = $entity->getSearchAttributes();
 
         // Try to use resource's search if available
@@ -228,7 +262,9 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             });
         }
 
-        $records = $query->limit(50)->get();
+        $records = $this->applyLookupOrder($query, $model)
+            ->limit($this->lookupLimit())
+            ->get();
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
     }
@@ -272,9 +308,11 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
             return [];
         }
 
-        ['query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
+        ['model' => $model, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
 
-        $records = $query->limit(50)->get();
+        $records = $this->applyLookupOrder($query, $model)
+            ->limit($this->lookupLimit())
+            ->get();
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
     }
