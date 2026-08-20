@@ -117,16 +117,18 @@ return [
     | box. Set it to 0 to always show one, which is the pre-3.8 behavior.
     |
     | record_lookup governs the record-select field's initial page and search.
-    | order_column must be a real column on the looked-up model; when it is left
-    | at the default and the model does not use timestamps, the model key is used
-    | instead so the order is always deterministic.
+    | order_column null means the model's key, which is backed by the primary
+    | key index and so costs no more than an unordered query. Naming a column
+    | instead (for example 'updated_at' for most-recently-touched-first) is
+    | supported, but on a large lookup table an unindexed column makes every
+    | render sort the whole tenant, so index it before you switch.
     |
     */
     'selects' => [
         'searchable_threshold' => 10,
 
         'record_lookup' => [
-            'order_column' => 'updated_at',
+            'order_column' => null,
             'order_direction' => 'desc',
             'limit' => 50,
             'min_search_length' => 2,
