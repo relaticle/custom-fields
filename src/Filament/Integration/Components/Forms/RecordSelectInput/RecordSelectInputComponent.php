@@ -152,6 +152,17 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     }
 
     /**
+     * Characters required before the field issues a filtered lookup query.
+     *
+     * The view reads the same value, so raising it cannot leave the client
+     * asking for a filtered search the server answers with an unfiltered page.
+     */
+    public function getMinSearchLength(): int
+    {
+        return (int) config('custom-fields.selects.record_lookup.min_search_length', 2);
+    }
+
+    /**
      * Get entity configuration for the lookup type.
      */
     public function getEntityConfiguration(): ?EntityConfigurationData
@@ -362,8 +373,11 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     #[Renderless]
     public function getSearchResultsForJs(string $search): array
     {
-        if (mb_strlen($search) < 2) {
-            return [];
+        // Below the minimum, show the unfiltered first page rather than nothing.
+        // Returning [] renders as "no results", which reads as broken for a
+        // one-character search, and is wrong for single-character CJK names.
+        if (mb_strlen($search) < $this->getMinSearchLength()) {
+            return array_values($this->getInitialOptions());
         }
 
         return array_values($this->searchRecords($search));
