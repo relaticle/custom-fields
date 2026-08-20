@@ -2,6 +2,55 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.8.0 - 2026-08-20
+
+Deterministic record lookups, a configurable search minimum, and an option-count threshold for option-backed selects. All three are reachable from a new `selects` config block, so 3.7 behaviour can be restored exactly.
+
+### Deterministic record lookups
+
+`RecordSelectInputComponent` ran `limit(50)` with no `orderBy`, so the initial page was whatever the database returned and could differ between two renders of the same form. It now orders by the model key descending, which is deterministic and backed by the primary key index.
+
+Measured on a seeded 50,000-row tenant with `EXPLAIN (ANALYZE, BUFFERS)`:
+
+| Variant | Plan | Time | Shared buffers |
+|---|---|---|---|
+| Model key desc (the new default) | Index Scan Backward on the primary key | 0.036 ms | 7 |
+| No `ORDER BY` (3.7 behaviour) | Seq Scan stops at 50 rows | 0.043 ms | 4 |
+| `updated_at desc, id desc` | Seq Scan 50,004 rows, top-N heapsort, Limit | 7.59 ms | 822 |
+
+Determinism therefore costs nothing. Set `record_lookup.order_column` to `'updated_at'` if you prefer most-recently-touched-first, and index that column when the lookup table is large. A configured column always gets the model key appended as a tiebreaker.
+
+### Minimum search length, configurable end to end
+
+`getSearchResultsForJs()` returned `[]` below 2 characters. It now returns the unfiltered first page, and the minimum comes from `record_lookup.min_search_length` rather than a literal. The field's JavaScript reads the same value, so raising the minimum can no longer leave the client asking for a filtered search that the server answers with an unfiltered page.
+
+### Search box only above an option-count threshold (behaviour change)
+
+`SelectComponent` and `MultiSelectComponent` called `->searchable()` unconditionally, so a three-option status field rendered a search box above three items. They now gate on option count, default 10.
+
+This is a taste change, not a bug fix. It carries no performance benefit: filtering for static options already happened client-side at zero server cost. The only effect is that the search box disappears on small option sets.
+
+**Opt-out:** set `custom-fields.selects.searchable_threshold` to `0` to always render the search box, which is exactly the pre-3.8 behaviour.
+
+### Config
+
+```php
+'selects' => [
+    'searchable_threshold' => 10,   // 0 always shows the search box (pre-3.8 behaviour)
+
+    'record_lookup' => [
+        'order_column' => null,     // null means the model key, index-backed
+        'order_direction' => 'desc',
+        'limit' => 50,
+        'min_search_length' => 2,
+    ],
+],
+
+```
+Consumers who published `config/custom-fields.php` before 3.8 do not have this block. Every read passes the same value as its default, so nothing breaks and the new defaults apply.
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.7.0...v3.8.0
+
 ## v3.7.0 - 2026-08-18
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.7.0 -->
