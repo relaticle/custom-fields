@@ -18,7 +18,7 @@ final readonly class SelectComponent extends AbstractFormComponent
         $options = $this->getCustomFieldOptions($customField);
 
         $field = Select::make($customField->getFieldName())
-            ->searchable()
+            ->searchable($this->shouldBeSearchable($options))
             ->options($options);
 
         if ($this->hasColorOptionsEnabled($customField)) {
