@@ -110,6 +110,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Select & Record Lookup Behavior
+    |--------------------------------------------------------------------------
+    |
+    | searchable_threshold controls when option-backed selects render a search
+    | box. Set it to 0 to always show one, which is the pre-3.8 behavior.
+    |
+    | record_lookup governs the record-select field's initial page and search.
+    | order_column must be a real column on the looked-up model; when it is left
+    | at the default and the model does not use timestamps, the model key is used
+    | instead so the order is always deterministic.
+    |
+    */
+    'selects' => [
+        'searchable_threshold' => 10,
+
+        'record_lookup' => [
+            'order_column' => 'updated_at',
+            'order_direction' => 'desc',
+            'limit' => 50,
+            'min_search_length' => 2,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Database Configuration
     |--------------------------------------------------------------------------
     |
