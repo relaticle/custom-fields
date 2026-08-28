@@ -234,8 +234,8 @@ final class CustomFields
     public static function importDateFormat(): ImportDateFormat
     {
         return ImportDateFormat::tryFrom(
-            (string) config('custom-fields.imports.date_format', 'european')
-        ) ?? ImportDateFormat::EUROPEAN;
+            (string) config('custom-fields.imports.date_format', 'iso')
+        ) ?? ImportDateFormat::ISO;
     }
 
     /**

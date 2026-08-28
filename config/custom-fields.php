@@ -170,8 +170,9 @@ return [
     |
     */
     'imports' => [
-        // 'european' (day first), 'american' (month first), or 'iso' (Y-m-d only).
-        'date_format' => env('CUSTOM_FIELDS_IMPORT_DATE_FORMAT', 'european'),
+        // 'iso' (Y-m-d only), 'european' (day first), or 'american' (month first).
+        // Every convention also accepts ISO, so picking one only widens what is read.
+        'date_format' => env('CUSTOM_FIELDS_IMPORT_DATE_FORMAT', 'iso'),
 
         // 'point' (1,234.56) or 'comma' (1.234,56).
         'number_format' => env('CUSTOM_FIELDS_IMPORT_NUMBER_FORMAT', 'point'),

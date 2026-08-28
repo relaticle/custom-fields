@@ -47,6 +47,24 @@ it('accepts ISO under every convention so a Y-m-d cell is never re-read', functi
     expect($format->parse('2024-01-15')?->format('Y-m-d'))->toBe('2024-01-15');
 })->with(ImportDateFormat::cases());
 
+it('parses every example it advertises', function (ImportDateFormat $format, bool $withTime): void {
+    foreach ($format->getExamples($withTime) as $example) {
+        expect($format->parse($example, $withTime))
+            ->not->toBeNull("{$format->value} advertises '{$example}' but cannot parse it");
+    }
+})->with([
+    'iso date' => [ImportDateFormat::ISO, false],
+    'iso datetime' => [ImportDateFormat::ISO, true],
+    'european date' => [ImportDateFormat::EUROPEAN, false],
+    'european datetime' => [ImportDateFormat::EUROPEAN, true],
+    'american date' => [ImportDateFormat::AMERICAN, false],
+    'american datetime' => [ImportDateFormat::AMERICAN, true],
+]);
+
+it('keeps ISO to the Y-m-d family so a declared ISO column means exactly that', function (string $cell): void {
+    expect(ImportDateFormat::ISO->parse($cell))->toBeNull();
+})->with(['15/01/2024', '01/15/2024', 'January 15, 2024', '15 January 2024']);
+
 it('parses datetimes when asked', function (): void {
     expect(ImportDateFormat::ISO->parse('2024-01-15 10:30:00', withTime: true)?->format('Y-m-d H:i:s'))
         ->toBe('2024-01-15 10:30:00')

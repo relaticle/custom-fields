@@ -188,7 +188,7 @@ it('imports a clean row and stores every value', function (): void {
         'custom_fields_housing_program' => 'Permanent Supportive',
         'custom_fields_ra_eligible' => 'yes',
         'custom_fields_monthly_stipend' => '$1,234.56',
-        'custom_fields_move_in_target' => '15/01/2024',
+        'custom_fields_move_in_target' => '2024-01-15',
     ]]);
 
     expect($result['failures'])->toBe([])
@@ -201,6 +201,33 @@ it('imports a clean row and stores every value', function (): void {
         ->and($post->getCustomFieldValue($toggle))->toBeTrue()
         ->and($post->getCustomFieldValue($stipend))->toBe(1234.56)
         ->and($post->getCustomFieldValue($moveIn)->format('Y-m-d'))->toBe('2024-01-15');
+});
+
+it('reads a day-first date once the convention is declared', function (): void {
+    config()->set('custom-fields.imports.date_format', 'european');
+
+    $moveIn = contractField('date', 'move_in_target');
+
+    $result = runPostImport([[
+        'title' => 'Smith household',
+        'custom_fields_move_in_target' => '15/01/2024',
+    ]]);
+
+    expect($result['failures'])->toBe([])
+        ->and(Post::latest('id')->first()->load('customFieldValues')->getCustomFieldValue($moveIn)->format('Y-m-d'))
+        ->toBe('2024-01-15');
+});
+
+it('does not guess at a day-first date under the ISO default', function (): void {
+    contractField('date', 'move_in_target');
+
+    $result = runPostImport([[
+        'title' => 'Smith household',
+        'custom_fields_move_in_target' => '15/01/2024',
+    ]]);
+
+    expect($result['imported'])->toBe(0)
+        ->and($result['failures'][0])->toContain('not a valid date');
 });
 
 it('still imports a row whose optional custom fields are blank', function (): void {

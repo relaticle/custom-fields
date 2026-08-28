@@ -203,19 +203,51 @@ it('handles various date formats', function (): void {
     $castCallback = $property->getValue($column);
 
     if ($castCallback) {
-        // Test various date formats
+        // The default convention is ISO, so the Y-m-d family parses.
         expect($castCallback('2024-01-15'))->toBe('2024-01-15');
-        expect($castCallback('15/01/2024'))->toBe('2024-01-15');
-        expect($castCallback('January 15, 2024'))->toBe('2024-01-15');
         expect($castCallback('2024-01-15 10:30:00'))->toBe('2024-01-15');
         expect($castCallback(''))->toBeNull();
         expect($castCallback(null))->toBeNull();
+
+        // Day-first and textual forms are ambiguous or localised, so ISO does not
+        // guess at them. Declare `european` or `american` to accept them.
+        expect($castCallback('15/01/2024'))->toBeInstanceOf(UnresolvedValue::class);
+        expect($castCallback('January 15, 2024'))->toBeInstanceOf(UnresolvedValue::class);
 
         // A cell the cast cannot honestly convert is reported, not swallowed.
         // 13/45/2024 used to become 2027-09-13.
         expect($castCallback('invalid-date'))->toBeInstanceOf(UnresolvedValue::class);
         expect($castCallback('13/45/2024'))->toBeInstanceOf(UnresolvedValue::class);
     }
+});
+
+it('reads day-first and textual dates once a convention is declared', function (): void {
+    config()->set('custom-fields.imports.date_format', 'european');
+
+    $configurator = new ImportColumnConfigurator;
+
+    $field = new CustomField([
+        'name' => 'Date Field',
+        'code' => 'date_field',
+        'type' => 'date',
+    ]);
+
+    $field->validation_rules = collect([]);
+    $field->options = collect([]);
+
+    $column = ImportColumn::make('test_date');
+    $configurator->configure($column, $field);
+
+    $reflection = new ReflectionObject($column);
+    $property = $reflection->getProperty('castStateUsing');
+    $property->setAccessible(true);
+
+    $castCallback = $property->getValue($column);
+
+    expect($castCallback('15/01/2024'))->toBe('2024-01-15')
+        ->and($castCallback('January 15, 2024'))->toBe('2024-01-15')
+        ->and($castCallback('2024-01-15'))->toBe('2024-01-15')
+        ->and($castCallback('13/45/2024'))->toBeInstanceOf(UnresolvedValue::class);
 });
 
 /**

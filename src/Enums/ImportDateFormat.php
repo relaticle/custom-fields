@@ -26,6 +26,15 @@ enum ImportDateFormat: string implements HasLabel
      */
     private const int MINIMUM_YEAR = 1000;
 
+    /**
+     * A written-out month is unambiguous in either word order, so both named
+     * conventions accept all of these. Only `ISO` excludes them, because a column
+     * declared ISO should mean the `Y-m-d` family and nothing else.
+     *
+     * @var list<string>
+     */
+    private const array TEXTUAL_FORMATS = ['j F Y', 'j M Y', 'F j, Y', 'F jS Y', 'M j, Y', 'M jS Y'];
+
     public function getLabel(): string
     {
         return match ($this) {
@@ -117,14 +126,12 @@ enum ImportDateFormat: string implements HasLabel
             self::ISO => [],
             self::EUROPEAN => $withTime
                 ? ['d/m/Y H:i:s', 'd-m-Y H:i:s', 'd.m.Y H:i:s', 'j/n/Y H:i:s', 'd/m/Y H:i', 'j/n/Y H:i']
-                : ['d/m/Y', 'd-m-Y', 'd.m.Y', 'j/n/Y', 'j-n-Y', 'j.n.Y'],
+                : ['d/m/Y', 'd-m-Y', 'd.m.Y', 'j/n/Y', 'j-n-Y', 'j.n.Y', ...self::TEXTUAL_FORMATS],
             self::AMERICAN => $withTime
                 ? ['m/d/Y H:i:s', 'm-d-Y H:i:s', 'n/j/Y H:i:s', 'm/d/Y H:i', 'n/j/Y H:i']
-                : ['m/d/Y', 'm-d-Y', 'n/j/Y', 'n-j-Y'],
+                : ['m/d/Y', 'm-d-Y', 'n/j/Y', 'n-j-Y', ...self::TEXTUAL_FORMATS],
         };
 
-        $textual = $withTime ? [] : ['F j, Y', 'j F Y', 'M j, Y', 'j M Y'];
-
-        return [...$iso, ...$localised, ...$textual];
+        return [...$iso, ...$localised];
     }
 }
