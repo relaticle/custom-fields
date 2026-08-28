@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields;
 
 use Closure;
+use Relaticle\CustomFields\Enums\ImportDateFormat;
+use Relaticle\CustomFields\Enums\ImportNumberFormat;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -224,6 +226,26 @@ final class CustomFields
     public static function dateTimeDisplayFormat(): ?string
     {
         return self::$dateTimeDisplayFormat;
+    }
+
+    /**
+     * Date convention used when reading CSV cells during import.
+     */
+    public static function importDateFormat(): ImportDateFormat
+    {
+        return ImportDateFormat::tryFrom(
+            (string) config('custom-fields.imports.date_format', 'european')
+        ) ?? ImportDateFormat::EUROPEAN;
+    }
+
+    /**
+     * Decimal separator convention used when reading CSV cells during import.
+     */
+    public static function importNumberFormat(): ImportNumberFormat
+    {
+        return ImportNumberFormat::tryFrom(
+            (string) config('custom-fields.imports.number_format', 'point')
+        ) ?? ImportNumberFormat::POINT;
     }
 
     /**
