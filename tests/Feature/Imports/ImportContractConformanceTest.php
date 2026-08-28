@@ -125,3 +125,54 @@ it('still treats a blank cell as null, for any registered field type', function 
 
     expect($rejected)->toBe([]);
 });
+
+function conformanceFieldFor(string $name): CustomField
+{
+    return CustomField::factory()->create([
+        'custom_field_section_id' => test()->section->getKey(),
+        'entity_type' => Post::class,
+        'name' => $name,
+        'code' => str($name)->snake()->toString(),
+        'type' => 'text',
+    ]);
+}
+
+it('contains a throwing field-type transformer instead of letting it kill the row', function (): void {
+    $wrapped = app(ImportColumnConfigurator::class)->wrapTransformer(
+        fn (): never => throw new RuntimeException('transformer exploded'),
+        conformanceFieldFor('Monthly Stipend'),
+    );
+
+    $state = $wrapped('anything');
+
+    expect($state)->toBeInstanceOf(UnresolvedValue::class)
+        ->and($state->reason)->toBe('Monthly Stipend: transformer exploded')
+        ->and($state->raw)->toBe('anything');
+});
+
+it('names the field when a transformer returns an unnamed rejection', function (): void {
+    $wrapped = app(ImportColumnConfigurator::class)->wrapTransformer(
+        fn (mixed $state): UnresolvedValue => UnresolvedValue::make($state, 'is not a valid amount.'),
+        conformanceFieldFor('Monthly Stipend'),
+    );
+
+    expect($wrapped('Q/A')->reason)->toBe('Monthly Stipend: is not a valid amount.');
+});
+
+it('leaves a rejection that already names the field alone', function (): void {
+    $wrapped = app(ImportColumnConfigurator::class)->wrapTransformer(
+        fn (mixed $state): UnresolvedValue => UnresolvedValue::make($state, "'Q/A' is not valid for Monthly Stipend."),
+        conformanceFieldFor('Monthly Stipend'),
+    );
+
+    expect($wrapped('Q/A')->reason)->toBe("'Q/A' is not valid for Monthly Stipend.");
+});
+
+it('leaves a well-behaved transformer untouched', function (): void {
+    $wrapped = app(ImportColumnConfigurator::class)->wrapTransformer(
+        fn (mixed $state): string => strtoupper((string) $state),
+        conformanceFieldFor('Referral Source'),
+    );
+
+    expect($wrapped('street outreach'))->toBe('STREET OUTREACH');
+});
