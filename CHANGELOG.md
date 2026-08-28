@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.9.0 - 2026-08-28
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps-dev): bump the npm group across 1 directory with 9 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/204
+* fix(imports): report every invalid cell instead of aborting the row or silently guessing by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/206
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.8.0...v3.9.0
+
 ## v3.8.0 - 2026-08-20
 
 Deterministic record lookups, a configurable search minimum, and an option-count threshold for option-backed selects. All three are reachable from a new `selects` config block, so 3.7 behaviour can be restored exactly.
@@ -45,6 +57,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 ```
 Consumers who published `config/custom-fields.php` before 3.8 do not have this block. Every read passes the same value as its default, so nothing breaks and the new defaults apply.
