@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Filament\Actions\Imports\Exceptions\RowImportFailedException;
 use Filament\Actions\Imports\ImportColumn;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConfigurator;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportDataStorage;
+use Relaticle\CustomFields\Imports\UnresolvedValue;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 
@@ -210,7 +210,11 @@ it('handles various date formats', function (): void {
         expect($castCallback('2024-01-15 10:30:00'))->toBe('2024-01-15');
         expect($castCallback(''))->toBeNull();
         expect($castCallback(null))->toBeNull();
-        expect($castCallback('invalid-date'))->toBeNull();
+
+        // A cell the cast cannot honestly convert is reported, not swallowed.
+        // 13/45/2024 used to become 2027-09-13.
+        expect($castCallback('invalid-date'))->toBeInstanceOf(UnresolvedValue::class);
+        expect($castCallback('13/45/2024'))->toBeInstanceOf(UnresolvedValue::class);
     }
 });
 
@@ -258,9 +262,9 @@ it('resolves options case insensitively', function (): void {
         expect($castCallback('GREEN'))->toBe(3);
         expect($castCallback('2'))->toBe(2); // Numeric should work
 
-        // Test invalid option throws exception
-        expect(fn () => $castCallback('Yellow'))
-            ->toThrow(RowImportFailedException::class);
+        // An invalid option is reported through the validator instead of throwing,
+        // so the rest of the row's columns still get to report their own errors.
+        expect($castCallback('Yellow'))->toBeInstanceOf(UnresolvedValue::class);
     }
 });
 

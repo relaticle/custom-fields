@@ -7,16 +7,17 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Support\Imports;
 
-use Carbon\Carbon;
-use Exception;
-use Filament\Actions\Imports\Exceptions\RowImportFailedException;
+use Carbon\CarbonImmutable;
+use Closure;
 use Filament\Actions\Imports\ImportColumn;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
+use Relaticle\CustomFields\Imports\UnresolvedValue;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
+use Relaticle\CustomFields\Rules\RejectsUnresolvedValue;
 use Relaticle\CustomFields\Services\ValidationService;
 use Throwable;
 
@@ -42,10 +43,10 @@ final class ImportColumnConfigurator
         match ($customField->typeData->dataType) {
             FieldDataType::SINGLE_CHOICE => $this->configureSingleChoice($column, $customField),
             FieldDataType::MULTI_CHOICE => $this->configureMultiChoice($column, $customField),
-            FieldDataType::DATE => $this->configureDate($column),
-            FieldDataType::DATE_TIME => $this->configureDateTime($column),
-            FieldDataType::NUMERIC, FieldDataType::FLOAT => $column->numeric(),
-            FieldDataType::BOOLEAN => $this->configureBoolean($column),
+            FieldDataType::DATE => $this->configureDate($column, $customField),
+            FieldDataType::DATE_TIME => $this->configureDateTime($column, $customField),
+            FieldDataType::NUMERIC, FieldDataType::FLOAT => $this->configureNumeric($column, $customField),
+            FieldDataType::BOOLEAN => $this->configureBoolean($column, $customField),
             default => $this->configureText($column, $customField),
         };
 
@@ -70,7 +71,7 @@ final class ImportColumnConfigurator
             return false;
         }
 
-        $column->castStateUsing($transformer);
+        $column->castStateUsing($this->wrapTransformer($transformer, $customField));
 
         $example = $schema->getImportExample();
         if ($example !== null) {
@@ -130,7 +131,7 @@ final class ImportColumnConfigurator
      */
     private function configureLookup(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int {
+        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|int|UnresolvedValue|null {
             if (blank($state)) {
                 return $multiple ? [] : null;
             }
@@ -150,14 +151,13 @@ final class ImportColumnConfigurator
     /**
      * Resolve a single lookup value.
      */
-    private function resolveLookupValue(CustomField $customField, mixed $value): int
+    private function resolveLookupValue(CustomField $customField, mixed $value): int|UnresolvedValue
     {
         try {
             $entity = Entities::getEntity($customField->lookup_type);
             $modelInstance = $entity->createModelInstance();
             $primaryAttribute = $entity->getPrimaryAttribute();
 
-            // Try to find by primary attribute
             $record = $modelInstance->newQuery()
                 ->where($primaryAttribute, $value)
                 ->first();
@@ -166,7 +166,6 @@ final class ImportColumnConfigurator
                 return (int) $record->getKey();
             }
 
-            // Try to find by ID if numeric
             if (is_numeric($value)) {
                 $record = $modelInstance->newQuery()
                     ->where($modelInstance->getKeyName(), $value)
@@ -177,43 +176,54 @@ final class ImportColumnConfigurator
                 }
             }
 
-            throw new RowImportFailedException(
-                sprintf("No %s record found matching '%s'", $customField->lookup_type, $value)
-            );
+            return UnresolvedValue::make($value, sprintf(
+                "No %s found matching '%s' for %s.",
+                $this->lookupRecordLabel($customField),
+                is_scalar($value) ? (string) $value : gettype($value),
+                $customField->name,
+            ));
         } catch (Throwable $throwable) {
-            if ($throwable instanceof RowImportFailedException) {
-                throw $throwable;
-            }
-
-            throw new RowImportFailedException('Error resolving lookup value: '.$throwable->getMessage(), $throwable->getCode(), $throwable);
+            return UnresolvedValue::make($value, 'Error resolving lookup value: '.$throwable->getMessage());
         }
     }
 
     /**
      * Resolve multiple lookup values.
      */
-    private function resolveLookupValues(CustomField $customField, array $values): array
+    private function resolveLookupValues(CustomField $customField, array $values): array|UnresolvedValue
     {
         $foundIds = [];
         $missingValues = [];
 
         foreach ($values as $value) {
-            try {
-                $id = $this->resolveLookupValue($customField, $value);
-                $foundIds[] = $id;
-            } catch (RowImportFailedException) {
+            $id = $this->resolveLookupValue($customField, $value);
+
+            if ($id instanceof UnresolvedValue) {
                 $missingValues[] = $value;
+
+                continue;
             }
+
+            $foundIds[] = $id;
         }
 
         if ($missingValues !== []) {
-            throw new RowImportFailedException(
-                sprintf('Could not find %s records: ', $customField->lookup_type).
-                implode(', ', $missingValues)
-            );
+            return UnresolvedValue::make($values, sprintf(
+                'Could not find a %s for %s: %s',
+                $this->lookupRecordLabel($customField),
+                $customField->name,
+                implode(', ', $missingValues),
+            ));
         }
 
         return $foundIds;
+    }
+
+    private function lookupRecordLabel(CustomField $customField): string
+    {
+        return filled($customField->lookup_type)
+            ? $customField->lookup_type.' record'
+            : 'record';
     }
 
     /**
@@ -221,7 +231,7 @@ final class ImportColumnConfigurator
      */
     private function configureChoices(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
-        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|null|int|string {
+        $column->castStateUsing(function (mixed $state) use ($customField, $multiple): array|int|string|UnresolvedValue|null {
             if (blank($state)) {
                 return $multiple ? [] : null;
             }
@@ -241,7 +251,7 @@ final class ImportColumnConfigurator
     /**
      * Resolve a single choice value.
      */
-    private function resolveChoiceValue(CustomField $customField, mixed $value): int|string|null
+    private function resolveChoiceValue(CustomField $customField, mixed $value): int|string|UnresolvedValue|null
     {
         // If already numeric, assume it's a choice ID
         if (is_numeric($value)) {
@@ -254,15 +264,17 @@ final class ImportColumnConfigurator
         // Try case-insensitive match
         if (! $choice) {
             $choice = $customField->options->first(
-                fn (CustomFieldOption $opt): bool => strtolower((string) $opt->name) === strtolower($value)
+                fn (CustomFieldOption $opt): bool => strtolower((string) $opt->name) === strtolower((string) $value)
             );
         }
 
         if (! $choice) {
-            throw new RowImportFailedException(
-                sprintf("Invalid choice '%s' for %s. Valid choices: ", $value, $customField->name).
-                $customField->options->pluck('name')->implode(', ')
-            );
+            return UnresolvedValue::make($value, sprintf(
+                "Invalid choice '%s' for %s. Valid choices: %s",
+                is_scalar($value) ? (string) $value : gettype($value),
+                $customField->name,
+                $customField->options->pluck('name')->implode(', '),
+            ));
         }
 
         $key = $choice->getKey();
@@ -270,34 +282,32 @@ final class ImportColumnConfigurator
         return CustomFields::optionModelUsesStringKeys() ? (string) $key : $key;
     }
 
-    /**
-     * Resolve multiple choice values.
-     *
-     * @throws RowImportFailedException
-     */
-    private function resolveChoiceValues(CustomField $customField, array $values): array
+    private function resolveChoiceValues(CustomField $customField, array $values): array|UnresolvedValue
     {
         $foundIds = [];
         $missingValues = [];
 
         foreach ($values as $value) {
-            try {
-                $id = $this->resolveChoiceValue($customField, $value);
-                if ($id !== null) {
-                    $foundIds[] = $id;
-                }
-            } catch (RowImportFailedException) {
+            $id = $this->resolveChoiceValue($customField, $value);
+
+            if ($id instanceof UnresolvedValue) {
                 $missingValues[] = $value;
+
+                continue;
+            }
+
+            if ($id !== null) {
+                $foundIds[] = $id;
             }
         }
 
         if ($missingValues !== []) {
-            throw new RowImportFailedException(
-                sprintf('Invalid choices for %s: ', $customField->name).
-                implode(', ', $missingValues).
-                '. Valid choices: '.
-                $customField->options->pluck('name')->implode(', ')
-            );
+            return UnresolvedValue::make($values, sprintf(
+                'Invalid choices for %s: %s. Valid choices: %s',
+                $customField->name,
+                implode(', ', $missingValues),
+                $customField->options->pluck('name')->implode(', '),
+            ));
         }
 
         return $foundIds;
@@ -306,9 +316,9 @@ final class ImportColumnConfigurator
     /**
      * Configure boolean fields with string coercion for CSV values.
      */
-    private function configureBoolean(ImportColumn $column): void
+    private function configureBoolean(ImportColumn $column, CustomField $customField): void
     {
-        $column->castStateUsing(function (mixed $state): ?bool {
+        $column->castStateUsing(function (mixed $state) use ($customField): bool|UnresolvedValue|null {
             if (blank($state)) {
                 return null;
             }
@@ -317,58 +327,108 @@ final class ImportColumnConfigurator
                 return $state;
             }
 
-            $normalized = strtolower(trim((string) $state));
-
-            return match ($normalized) {
+            return match (strtolower(trim((string) $state))) {
                 '1', 'true', 'yes', 'on' => true,
                 '0', 'false', 'no', 'off' => false,
-                default => null,
+                default => UnresolvedValue::make($state, sprintf(
+                    "'%s' is not a valid value for %s. Use true or false (accepted: true, false, 1, 0, yes, no, on, off).",
+                    $state,
+                    $customField->name,
+                )),
             };
         });
 
         $column->example('true or false');
     }
 
-    /**
-     * Configure date fields.
-     */
-    private function configureDate(ImportColumn $column): void
+    private function configureDate(ImportColumn $column, CustomField $customField): void
     {
-        $column->castStateUsing(function (mixed $state): ?string {
+        $column->castStateUsing(fn (mixed $state): string|UnresolvedValue|null => $this->parseDate($state, false, $customField));
+
+        $column->example(CustomFields::importDateFormat()->getExamples()[0]);
+    }
+
+    private function configureDateTime(ImportColumn $column, CustomField $customField): void
+    {
+        $column->castStateUsing(fn (mixed $state): string|UnresolvedValue|null => $this->parseDate($state, true, $customField));
+
+        $column->example(CustomFields::importDateFormat()->getExamples(withTime: true)[0]);
+    }
+
+    private function parseDate(mixed $state, bool $withTime, CustomField $customField): string|UnresolvedValue|null
+    {
+        if (blank($state)) {
+            return null;
+        }
+
+        $format = CustomFields::importDateFormat();
+        $parsed = $format->parse((string) $state, $withTime);
+
+        if (! $parsed instanceof CarbonImmutable) {
+            return UnresolvedValue::make($state, sprintf(
+                "'%s' is not a valid date for %s. Expected format: %s.",
+                $state,
+                $customField->name,
+                implode(' or ', $format->getExamples($withTime)),
+            ));
+        }
+
+        return $parsed->format($withTime ? 'Y-m-d H:i:s' : 'Y-m-d');
+    }
+
+    private function configureNumeric(ImportColumn $column, CustomField $customField): void
+    {
+        $column->castStateUsing(function (mixed $state) use ($customField): float|UnresolvedValue|null {
             if (blank($state)) {
                 return null;
             }
 
-            try {
-                // Try to parse DD/MM/YYYY format first
-                if (preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $state, $matches)) {
-                    return Carbon::createFromFormat('d/m/Y', $state)->format('Y-m-d');
-                }
+            $format = CustomFields::importNumberFormat();
+            $parsed = $format->parse((string) $state);
 
-                // Fall back to Carbon's default parsing
-                return Carbon::parse($state)->format('Y-m-d');
-            } catch (Exception) {
-                return null;
+            if ($parsed === null) {
+                return UnresolvedValue::make($state, sprintf(
+                    "'%s' is not a valid number for %s. Expected format: %s.",
+                    $state,
+                    $customField->name,
+                    $format->getExample(),
+                ));
             }
+
+            return $parsed;
         });
+
+        $column->example('99.99');
     }
 
     /**
-     * Configure datetime fields.
+     * Field types registered by the host application supply their own import
+     * transformers. A throw from one would abort the whole row inside Filament's cast
+     * loop, taking every other column's error with it, so it is converted into a value
+     * the validator can report alongside them.
      */
-    private function configureDateTime(ImportColumn $column): void
+    public function wrapTransformer(Closure $transformer, CustomField $customField): Closure
     {
-        $column->castStateUsing(function (mixed $state): ?string {
-            if (blank($state)) {
-                return null;
+        return function (mixed $state) use ($transformer, $customField): mixed {
+            try {
+                $result = $transformer($state);
+            } catch (Throwable $throwable) {
+                $result = UnresolvedValue::make($state, $throwable->getMessage());
             }
 
-            try {
-                return Carbon::parse($state)->format('Y-m-d H:i:s');
-            } catch (Exception) {
-                return null;
+            if (! $result instanceof UnresolvedValue) {
+                return $result;
             }
-        });
+
+            // A field type does not know which field it is configuring, and ImportCsv
+            // flattens the error bag to message text, so an unnamed reason reaches the
+            // user with no way to tell which column to fix.
+            if (str_contains($result->reason, (string) $customField->name)) {
+                return $result;
+            }
+
+            return UnresolvedValue::make($result->raw, $customField->name.': '.$result->reason);
+        };
     }
 
     /**
@@ -443,16 +503,24 @@ final class ImportColumnConfigurator
 
     /**
      * Finalize column configuration.
+     *
+     * `bail` plus the sentinel rule go first so an unresolvable cell reports its own
+     * reason once, instead of also tripping the type rule behind it with a message that
+     * describes the cast's fallback rather than the user's mistake.
      */
     private function finalize(ImportColumn $column, CustomField $customField): ImportColumn
     {
-        $rules = app(ValidationService::class)->getValidationRules($customField);
-
-        if ($rules !== []) {
-            $column->rules($rules);
-        }
+        $column->rules([
+            'bail',
+            new RejectsUnresolvedValue,
+            ...app(ValidationService::class)->getValidationRules($customField),
+        ]);
 
         $column->fillRecordUsing(function (mixed $state, mixed $record) use ($customField): void {
+            if ($state instanceof UnresolvedValue) {
+                return;
+            }
+
             ImportDataStorage::set($record, $customField->code, $state);
         });
 

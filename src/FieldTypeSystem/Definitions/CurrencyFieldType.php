@@ -9,12 +9,14 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use NumberFormatter;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
+use Relaticle\CustomFields\Imports\UnresolvedValue;
 use Relaticle\CustomFields\Support\CurrencyProvider;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
@@ -40,16 +42,23 @@ class CurrencyFieldType extends BaseFieldType
                 fn (): array => $this->settingsSchema(),
             )
             ->importExample('99.99')
-            ->importTransformer(function (mixed $state): ?float {
+            ->importTransformer(function (mixed $state): float|UnresolvedValue|null {
                 if (blank($state)) {
                     return null;
                 }
 
-                if (is_string($state)) {
-                    $state = preg_replace('/[^0-9.-]/', '', $state);
+                $format = CustomFields::importNumberFormat();
+                $parsed = $format->parse((string) $state, stripCurrencySymbol: true);
+
+                if ($parsed === null) {
+                    return UnresolvedValue::make($state, sprintf(
+                        "'%s' is not a valid amount. Expected format: %s.",
+                        $state,
+                        $format->getExample(),
+                    ));
                 }
 
-                return (float) $state;
+                return $parsed;
             })
             ->exportTransformer(function (mixed $value): ?string {
                 if ($value === null) {
