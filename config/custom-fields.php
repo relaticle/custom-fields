@@ -159,6 +159,25 @@ return [
         'currencies' => null,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Imports
+    |--------------------------------------------------------------------------
+    |
+    | How CSV cells are read during import. Dates and numbers are parsed against a
+    | declared convention rather than guessed, so an ambiguous cell like 3/4/2024 has
+    | exactly one meaning. The defaults match how this package has always behaved.
+    |
+    */
+    'imports' => [
+        // 'iso' (Y-m-d only), 'european' (day first), or 'american' (month first).
+        // Every convention also accepts ISO, so picking one only widens what is read.
+        'date_format' => env('CUSTOM_FIELDS_IMPORT_DATE_FORMAT', 'iso'),
+
+        // 'point' (1,234.56) or 'comma' (1.234,56).
+        'number_format' => env('CUSTOM_FIELDS_IMPORT_NUMBER_FORMAT', 'point'),
+    ],
+
     'database' => [
         'migrations_path' => database_path('custom-fields'),
         'table_names' => [
