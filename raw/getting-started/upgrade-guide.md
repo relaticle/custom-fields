@@ -88,6 +88,35 @@ php artisan custom-fields:upgrade --skip=clear-caches
 php artisan custom-fields:upgrade --skip=email-format,phone-format
 ```
 
+## Picking Up New Migrations
+
+Package migrations are not run automatically by `php artisan migrate` after a version
+bump — they're only copied into your app on first install, or when you explicitly
+republish them:
+
+```bash
+php artisan vendor:publish --tag="custom-fields-migrations"
+php artisan migrate
+```
+
+For example, a release may relax the `custom_fields` unique key from
+`(code, entity_type[, tenant])` to `(code, entity_type[, tenant], custom_field_section_id)`
+so a field code can be reused across different sections — the shape `onlySections()` (see
+[Builder Scoping](/essentials/builder-scoping)) relies on. Existing installs need the
+republish-and-migrate step above to pick that change up; it is not applied automatically.
+
+**Before rolling that migration back**, resolve any rows that ended up sharing a code
+across sections. The migration checks for this first and aborts with a clear error rather
+than dropping the wide key and then failing to recreate the narrow one, which would leave
+the table with no unique key at all.
+
+**NULL is not unique-constrained.** `custom_field_section_id` is nullable, and both MySQL
+and Postgres treat `NULL` as distinct from every other value in a unique index — including
+one that includes it. So after this migration, two sectionless fields
+(`custom_field_section_id IS NULL`) can still share a code for the same entity type, a
+collision the narrow key used to prevent. There is no schema-level fix for this; keep
+sectionless codes unique at the application layer if you rely on that guarantee.
+
 ## Breaking Changes
 
 ### High Impact

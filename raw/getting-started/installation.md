@@ -82,3 +82,18 @@ php artisan vendor:publish --tag="custom-fields-translations"
 ```bash
 php artisan vendor:publish --tag="custom-fields-views"
 ```
+
+## Picking Up New Migrations After an Upgrade
+
+Package migrations are not run automatically by `php artisan migrate` after a version
+bump — they're only copied into your app the first time you install, or when you
+explicitly republish them. If a release adds or changes a migration, republish and run
+it:
+
+```bash
+php artisan vendor:publish --tag="custom-fields-migrations"
+php artisan migrate
+```
+
+See the [upgrade guide](/getting-started/upgrade-guide#picking-up-new-migrations) for a
+concrete example of a release that requires this step.

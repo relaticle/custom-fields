@@ -223,6 +223,198 @@ Configure the custom fields management page:
 ],
 ```
 
+#### Replacing the Management Page
+
+The config above covers the common cases. Filament reads some things off the page
+class itself rather than from config — sub-navigation, breadcrumbs, header actions —
+so when you need one of those, register your own page instead:
+
+```php
+use App\Filament\Pages\Settings\CustomFields;
+
+CustomFieldsPlugin::make()
+    ->managementPage(CustomFields::class)
+```
+
+```php
+namespace App\Filament\Pages\Settings;
+
+use Filament\Panel;
+use Filament\Pages\Enums\SubNavigationPosition;
+use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
+
+class CustomFields extends CustomFieldsManagementPage
+{
+    protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Start;
+
+    public static function getSlug(?Panel $panel = null): string
+    {
+        return 'settings/custom-fields';
+    }
+
+    public function getSubNavigation(): array
+    {
+        // Render this page inside your own settings navigation.
+    }
+}
+```
+
+The page must extend `CustomFieldsManagementPage`, and it replaces the packaged page
+rather than sitting alongside it — only one management page is registered on the panel,
+so there is no second route to the same screen.
+
+### Select Behavior
+
+Controls when option-backed selects render a search box, and how the record-select field
+orders and pages its lookups:
+
+```php
+'selects' => [
+    'searchable_threshold' => 10,
+
+    'record_lookup' => [
+        'order_column' => null,
+        'order_direction' => 'desc',
+        'limit' => 50,
+        'min_search_length' => 2,
+    ],
+],
+```
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Key
+    </th>
+    
+    <th>
+      Default
+    </th>
+    
+    <th>
+      Effect
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        searchable_threshold
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        10
+      </code>
+    </td>
+    
+    <td>
+      Select and multi-select fields render a search box only when they have more options than this. Set it to <code>
+        0
+      </code>
+      
+       to always render one.
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        record_lookup.order_column
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        null
+      </code>
+    </td>
+    
+    <td>
+      Column the record-select orders its initial page and search results by. <code>
+        null
+      </code>
+      
+       means the model's key, which is backed by the primary key index. Name a real column to override.
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        record_lookup.order_direction
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        'desc'
+      </code>
+    </td>
+    
+    <td>
+      Direction for that column. The model key is always applied after it, so rows sharing a value keep a fixed order.
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        record_lookup.limit
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        50
+      </code>
+    </td>
+    
+    <td>
+      Rows fetched for the initial page and for each search.
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        record_lookup.min_search_length
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        2
+      </code>
+    </td>
+    
+    <td>
+      Characters required before a filtered lookup query is issued. Below it, the field shows the unfiltered first page. Both the server and the field's JavaScript read this value.
+    </td>
+  </tr>
+</tbody>
+</table>
+
+<alert type="info">
+
+Before 3.8 every select rendered a search box, including a three-option status field. Set
+`searchable_threshold` to `0` to restore that behavior exactly.
+
+</alert>
+
+The default exists to make the initial page deterministic without paying for it. Measured on a
+50,000-row lookup table, ordering by the model key plans as an index scan and costs the same as
+the unordered query it replaces, while ordering by an unindexed `updated_at` sorts the whole
+tenant on every render (roughly 176x the time and 205x the buffers). If you prefer
+most-recently-touched-first, set `order_column` to `'updated_at'` and index that column.
+
+When `order_column` is set to `updated_at` and the looked-up model returns `false` from
+`usesTimestamps()`, the model key is used instead, so the order is always deterministic.
+
 ### Database Configuration
 
 Customize table names and paths:

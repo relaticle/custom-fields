@@ -204,7 +204,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      Unique identifier
+      Unique per entity type (+ tenant, when multi-tenancy is enabled)
     </td>
   </tr>
   
@@ -426,7 +426,9 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      Unique identifier
+      Unique per entity type and section (+ tenant, when multi-tenancy is enabled) — not globally unique, so the same code can exist in two different sections. See <a href="/essentials/builder-scoping">
+        Builder Scoping
+      </a>
     </td>
   </tr>
   

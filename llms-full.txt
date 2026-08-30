@@ -81,6 +81,21 @@ php artisan vendor:publish --tag="custom-fields-translations"
 php artisan vendor:publish --tag="custom-fields-views"
 ```
 
+## Picking Up New Migrations After an Upgrade
+
+Package migrations are not run automatically by `php artisan migrate` after a version
+bump — they're only copied into your app the first time you install, or when you
+explicitly republish them. If a release adds or changes a migration, republish and run
+it:
+
+```bash
+php artisan vendor:publish --tag="custom-fields-migrations"
+php artisan migrate
+```
+
+See the [upgrade guide](https://relaticle.github.io/custom-fields/getting-started/upgrade-guide#picking-up-new-migrations) for a
+concrete example of a release that requires this step.
+
 
 # Quickstart
 
@@ -235,6 +250,35 @@ php artisan custom-fields:upgrade --force
 php artisan custom-fields:upgrade --skip=clear-caches
 php artisan custom-fields:upgrade --skip=email-format,phone-format
 ```
+
+## Picking Up New Migrations
+
+Package migrations are not run automatically by `php artisan migrate` after a version
+bump — they're only copied into your app on first install, or when you explicitly
+republish them:
+
+```bash
+php artisan vendor:publish --tag="custom-fields-migrations"
+php artisan migrate
+```
+
+For example, a release may relax the `custom_fields` unique key from
+`(code, entity_type[, tenant])` to `(code, entity_type[, tenant], custom_field_section_id)`
+so a field code can be reused across different sections — the shape `onlySections()` (see
+[Builder Scoping](https://relaticle.github.io/custom-fields/essentials/builder-scoping)) relies on. Existing installs need the
+republish-and-migrate step above to pick that change up; it is not applied automatically.
+
+**Before rolling that migration back**, resolve any rows that ended up sharing a code
+across sections. The migration checks for this first and aborts with a clear error rather
+than dropping the wide key and then failing to recreate the narrow one, which would leave
+the table with no unique key at all.
+
+**NULL is not unique-constrained.** `custom_field_section_id` is nullable, and both MySQL
+and Postgres treat `NULL` as distinct from every other value in a unique index — including
+one that includes it. So after this migration, two sectionless fields
+(`custom_field_section_id IS NULL`) can still share a code for the same entity type, a
+collision the narrow key used to prevent. There is no schema-level fix for this; keep
+sectionless codes unique at the application layer if you rely on that guarantee.
 
 ## Breaking Changes
 
@@ -530,6 +574,94 @@ Configure the custom fields management page:
     'cluster' => null,              // Optional cluster assignment
 ],
 ```
+
+#### Replacing the Management Page
+
+The config above covers the common cases. Filament reads some things off the page
+class itself rather than from config — sub-navigation, breadcrumbs, header actions —
+so when you need one of those, register your own page instead:
+
+```php
+use App\Filament\Pages\Settings\CustomFields;
+
+CustomFieldsPlugin::make()
+    ->managementPage(CustomFields::class)
+```
+
+```php
+namespace App\Filament\Pages\Settings;
+
+use Filament\Panel;
+use Filament\Pages\Enums\SubNavigationPosition;
+use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
+
+class CustomFields extends CustomFieldsManagementPage
+{
+    protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Start;
+
+    public static function getSlug(?Panel $panel = null): string
+    {
+        return 'settings/custom-fields';
+    }
+
+    public function getSubNavigation(): array
+    {
+        // Render this page inside your own settings navigation.
+    }
+}
+```
+
+The page must extend `CustomFieldsManagementPage`, and it replaces the packaged page
+rather than sitting alongside it — only one management page is registered on the panel,
+so there is no second route to the same screen.
+
+### Select Behavior
+
+Controls when option-backed selects render a search box, and how the record-select field
+orders and pages its lookups:
+
+```php
+'selects' => [
+    'searchable_threshold' => 10,
+
+    'record_lookup' => [
+        'order_column' => null,
+        'order_direction' => 'desc',
+        'limit' => 50,
+        'min_search_length' => 2,
+    ],
+],
+```
+
+| Key                               | Default  | Effect                                                                                                                                                                          |
+| --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `searchable_threshold`            | `10`     | Select and multi-select fields render a search box only when they have more options than this. Set it to `0` to always render one.                                              |
+| `record_lookup.order_column`      | `null`   | Column the record-select orders its initial page and search results by. `null` means the model's key, which is backed by the primary key index. Name a real column to override. |
+| `record_lookup.order_direction`   | `'desc'` | Direction for that column. The model key is always applied after it, so rows sharing a value keep a fixed order.                                                                |
+| `record_lookup.limit`             | `50`     | Rows fetched for the initial page and for each search.                                                                                                                          |
+| `record_lookup.min_search_length` | `2`      | Characters required before a filtered lookup query is issued. Below it, the field shows the unfiltered first page. Both the server and the field's JavaScript read this value.  |
+
+::alert{type="info"}
+Before 3.8 every select rendered a search box, including a three-option status field. Set
+
+
+`searchable_threshold`
+
+ to 
+
+`0`
+
+ to restore that behavior exactly.
+::
+
+The default exists to make the initial page deterministic without paying for it. Measured on a
+50,000-row lookup table, ordering by the model key plans as an index scan and costs the same as
+the unordered query it replaces, while ordering by an unindexed `updated_at` sorts the whole
+tenant on every render (roughly 176x the time and 205x the buffers). If you prefer
+most-recently-touched-first, set `order_column` to `'updated_at'` and index that column.
+
+When `order_column` is set to `updated_at` and the looked-up model returns `false` from
+`usesTimestamps()`, the model key is used instead, so the order is always deterministic.
 
 ### Database Configuration
 
@@ -1653,7 +1785,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
   | ---------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
   | `id`             | bigint | Primary key                                                                                                          |
   | `entity_type`    | string | Polymorphic entity class                                                                                             |
-  | `code`           | string | Unique identifier                                                                                                    |
+  | `code`           | string | Unique per entity type (+ tenant, when multi-tenancy is enabled)                                                     |
   | `name`           | string | Display name                                                                                                         |
   | `type`           | string | Section type                                                                                                         |
   | `width`          | string | Section layout width (`CustomFieldWidth` enum: 25/33/50/66/75/100). Requires the `UI_SECTION_WIDTH_CONTROL` feature. |
@@ -1665,22 +1797,22 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
   :::
 
   :::tab{label="Fields"}
-  | Column                    | Type   | Description                                                                          |
-  | ------------------------- | ------ | ------------------------------------------------------------------------------------ |
-  | `id`                      | bigint | Primary key                                                                          |
-  | `custom_field_section_id` | bigint | Parent section                                                                       |
-  | `entity_type`             | string | Polymorphic entity class                                                             |
-  | `code`                    | string | Unique identifier                                                                    |
-  | `name`                    | string | Display name                                                                         |
-  | `type`                    | string | Field type (text, number, etc.)                                                      |
-  | `lookup_type`             | string | For lookup fields                                                                    |
-  | `width`                   | string | Layout width                                                                         |
-  | `sort_order`              | int    | Display order                                                                        |
-  | `validation_rules`        | json   | Capability-driven validation config (e.g. `required`, `min_value`, `decimal_places`) |
-  | `active`                  | bool   | Enabled flag                                                                         |
-  | `system_defined`          | bool   | Protected from user deletion                                                         |
-  | `settings`                | json   | Type-specific configuration                                                          |
-  | `tenant_id`               | bigint | Optional multi-tenancy                                                               |
+  | Column                    | Type   | Description                                                                                                                                                                                                                                           |
+  | ------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `id`                      | bigint | Primary key                                                                                                                                                                                                                                           |
+  | `custom_field_section_id` | bigint | Parent section                                                                                                                                                                                                                                        |
+  | `entity_type`             | string | Polymorphic entity class                                                                                                                                                                                                                              |
+  | `code`                    | string | Unique per entity type and section (+ tenant, when multi-tenancy is enabled) — not globally unique, so the same code can exist in two different sections. See [Builder Scoping](https://relaticle.github.io/custom-fields/essentials/builder-scoping) |
+  | `name`                    | string | Display name                                                                                                                                                                                                                                          |
+  | `type`                    | string | Field type (text, number, etc.)                                                                                                                                                                                                                       |
+  | `lookup_type`             | string | For lookup fields                                                                                                                                                                                                                                     |
+  | `width`                   | string | Layout width                                                                                                                                                                                                                                          |
+  | `sort_order`              | int    | Display order                                                                                                                                                                                                                                         |
+  | `validation_rules`        | json   | Capability-driven validation config (e.g. `required`, `min_value`, `decimal_places`)                                                                                                                                                                  |
+  | `active`                  | bool   | Enabled flag                                                                                                                                                                                                                                          |
+  | `system_defined`          | bool   | Protected from user deletion                                                                                                                                                                                                                          |
+  | `settings`                | json   | Type-specific configuration                                                                                                                                                                                                                           |
+  | `tenant_id`               | bigint | Optional multi-tenancy                                                                                                                                                                                                                                |
   :::
 
   :::tab{label="Options"}
@@ -1746,6 +1878,86 @@ Consider the performance implications for sparse data (many NULL values) and pla
 ## Multi-Tenancy Support
 
 When enabled, `tenant_id` is included in all unique constraints and automatically filtered through model scopes. This ensures complete data isolation while maintaining query performance through proper indexing.
+
+
+# Builder Scoping
+
+## onlySections()
+
+By default, every builder (`CustomFields::form()`, `::infolist()`, `::table()`,
+`::exporter()`, `::importer()`) resolves fields for the whole entity type. `onlySections()`
+constrains that resolution to a specific set of `custom_field_sections` rows:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFields;
+
+CustomFields::form()
+    ->forModel($model)
+    ->onlySections([$sectionA->id, $sectionB->id])
+    ->build();
+```
+
+Passing `[]` (the default) means "no scope" — existing call sites that never call
+`onlySections()` are unaffected.
+
+This exists for consumers that version their form definitions — for example, cloning a
+section (and its fields) per form version. Field codes are normally unique per entity
+type, so two versions of "the same field" would collide on `code` unless resolution is
+scoped by section. `onlySections()` lets each version's builder only see its own
+section(s), so the same code can live in more than one section without one bleeding into
+the other's schema.
+
+`onlySections()` is inherited by every builder from `BaseBuilder`, including through
+`FormBuilder::build()` / `InfolistBuilder::build()` — the scope is threaded through
+`FormContainer` / `InfolistContainer` as well, so it applies whether you call `->build()`
+or `->values()`.
+
+### The persistence contract — read this before relying on section-scoped codes
+
+`onlySections()` narrows *resolution* (which fields get loaded onto a form, infolist, or
+table). It does not change how values are *saved*. `UsesCustomFields::saveCustomFields()`
+iterates the model's custom-field-values relationship and writes each submitted value by
+**field code**. If two sections share a code and that relationship isn't scoped to match
+`onlySections()`, `saveCustomFields()` will silently write the same value to **both**
+field rows — a data-corrupting outcome that has nothing to do with whether resolution
+scoping itself is working correctly.
+
+If you use `onlySections()`, scope your model's custom-field-values relationship
+(`customFields()` by default, or your override) to the same section(s). It is
+entity-scoped by default and overridable per model.
+
+## CodeGenerator::resolveUniquenessScopeUsing()
+
+Auto-generated codes (`FIELD_CODE_AUTO_GENERATE`) are checked for collisions before use.
+Register a callback to narrow that check the same way `onlySections()` narrows
+resolution:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Relaticle\CustomFields\Support\CodeGenerator;
+
+CodeGenerator::resolveUniquenessScopeUsing(
+    fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $sectionId !== null
+        ? fn (Builder $query): Builder => $query->where('custom_field_section_id', $sectionId)
+        : null
+);
+```
+
+The callback receives:
+
+- `$entityType` — the entity the field or section belongs to.
+- `$type` — `'field'` or `'section'`, so you can scope differently per kind of code.
+- `$sectionId` — the section the code is being generated within, or `null` when there
+  isn't one (for example, the sectionless field-management table).
+
+Return `null` to leave the uniqueness check global — the default, backward-compatible
+behavior. Return a closure to narrow it: the closure receives the in-progress `Builder`
+and must **return** the query to apply. `where()`-style mutation also works (it returns
+the same instance), but a closure that hands back a different instance — e.g.
+`$query->clone()->where(...)` — is honored too, since the return value is always what's
+used.
+
+Register the callback once, typically in a service provider's `boot()` method.
 
 
 # Support
