@@ -12,10 +12,10 @@
     "devDependencies": {
         "@tailwindcss/postcss": "^4.3.3",
         "concurrently": "^10.0.5",
-        "cssnano": "^9.0.1",
+        "cssnano": "^9.0.2",
         "esbuild": "^0.28.2",
-        "postcss": "^8.5.25",
-        "postcss-cli": "^11.0.1",
+        "postcss": "^8.5.28",
+        "postcss-cli": "^12.0.0",
         "postcss-nesting": "^14.0.1",
         "postcss-prefix-selector": "^2.2.0",
         "tailwindcss": "^4.1.10"
