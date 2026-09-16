@@ -6,6 +6,11 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
+  # A merge performed with GITHUB_TOKEN does not trigger `on: push`, so every
+  # auto-merged docs bump lands without deploying. This reconciles the site with
+  # whatever is on the branch, whoever merged it.
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       version:
@@ -31,11 +36,15 @@ jobs:
     steps:
       - name: Determine version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "branch=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          # On a schedule GITHUB_REF is the default branch, which is the one to reconcile.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "branch=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
           else
-            echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+            echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set version config
