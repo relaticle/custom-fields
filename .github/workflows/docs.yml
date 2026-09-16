@@ -5,6 +5,8 @@ name: Docs
 on:
   pull_request:
     branches: [3.x]
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
