@@ -19,5 +19,11 @@
         "nuxt-fathom": "^0.0.3",
         "zod": "^4.5.4",
         "zod-to-json-schema": "^3.25.1"
+    },
+    "overrides": {
+        "@tiptap/core": "^3.30.5",
+        "esbuild": "^0.28.1",
+        "js-yaml": "^4.3.2",
+        "sharp": "^0.35.4"
     }
 }
