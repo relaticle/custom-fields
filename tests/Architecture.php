@@ -26,7 +26,7 @@ use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\PostResource;
 use Spatie\LaravelData\Data;
 
 test('configurable models are only instantiated via CustomFields facade', function (string $model, string $pattern, string $facade, array $allowedFiles): void {
-    $srcPath = dirname(__DIR__).'/src';
+    $srcPath = __DIR__.'/../src';
     $violations = [];
 
     $iterator = new RecursiveIteratorIterator(
@@ -309,7 +309,7 @@ arch('Complex methods are properly documented')
     ->ignoring(['tests', 'migrations']);
 
 test('every HasLabel enum in Relaticle\\CustomFields\\Enums routes getLabel through __()', function (): void {
-    $dir = dirname(__DIR__).'/src/Enums';
+    $dir = __DIR__.'/../src/Enums';
     $files = glob($dir.'/*.php');
 
     $violations = [];
@@ -342,7 +342,7 @@ test('every HasLabel enum in Relaticle\\CustomFields\\Enums routes getLabel thro
 });
 
 test('every Action::make() in src/Livewire has a translated ->label()', function (): void {
-    $dir = dirname(__DIR__).'/src/Livewire';
+    $dir = __DIR__.'/../src/Livewire';
     $files = glob($dir.'/*.php');
 
     $violations = [];

@@ -55,9 +55,9 @@
         "pestphp/pest-plugin-arch": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
         "pestphp/pest-plugin-type-coverage": "^4.0",
-        "phpstan/phpstan-deprecation-rules": "*",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
-        "rector/rector": "*",
+        "rector/rector": "^2.6",
         "spatie/laravel-ray": "^1.26"
     },
     "autoload": {
