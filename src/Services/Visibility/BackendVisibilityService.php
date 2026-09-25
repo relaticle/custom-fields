@@ -84,6 +84,19 @@ final class BackendVisibilityService
             $record->load('customFieldValues.customField');
         }
 
+        // Memoise against the loaded relation object so the memo has exactly
+        // the lifetime of the relation this method caches above: a refresh()
+        // or load() installs a new collection and drops the memo with it.
+        static $cache = null;
+        $cache ??= new \WeakMap();
+        $loadedValues = $record->getRelation('customFieldValues');
+        $signature = $fields->pluck('id')->implode(',');
+        $memoised = $cache[$loadedValues] ?? [];
+
+        if (array_key_exists($signature, $memoised)) {
+            return $memoised[$signature];
+        }
+
         $fieldValues = [];
 
         foreach ($fields as $field) {
@@ -93,6 +106,9 @@ final class BackendVisibilityService
                 $field
             );
         }
+
+        $memoised[$signature] = $fieldValues;
+        $cache[$loadedValues] = $memoised;
 
         return $fieldValues;
     }

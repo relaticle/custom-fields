@@ -77,6 +77,11 @@ final class FieldManager
     private array $cachedInstances = [];
 
     /**
+     * @var array<string, FieldTypeData|null>
+     */
+    private array $cachedFieldTypeData = [];
+
+    /**
      * @param  array<string, array<int, string> | string> | Closure  $fieldTypes
      */
     public function register(array|Closure $fieldTypes): static
@@ -132,7 +137,11 @@ final class FieldManager
             return null;
         }
 
-        return $this->toCollection()->firstWhere('key', $fieldType);
+        if (! array_key_exists($fieldType, $this->cachedFieldTypeData)) {
+            $this->cachedFieldTypeData[$fieldType] = $this->toCollection()->firstWhere('key', $fieldType);
+        }
+
+        return $this->cachedFieldTypeData[$fieldType];
     }
 
     /**
