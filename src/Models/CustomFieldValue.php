@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldValueFactory;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
@@ -77,10 +78,24 @@ class CustomFieldValue extends Model
         ];
     }
 
+    /**
+     * @throws \RuntimeException if $fieldType isn't in the field type
+     *                            registry (disabled via config, or renamed
+     *                            between versions). Callers that may be
+     *                            handed a stale/unregistered type -- such
+     *                            as getValue()/setValue() below -- check
+     *                            CustomFieldsType::getFieldType() first
+     *                            instead of letting this throw.
+     */
     public static function getValueColumn(string $fieldType): string
     {
-        $fieldType = CustomFieldsType::getFieldType($fieldType);
-        $dataType = $fieldType->dataType;
+        $resolvedFieldType = CustomFieldsType::getFieldType($fieldType);
+
+        if (! $resolvedFieldType instanceof FieldTypeData) {
+            throw new \RuntimeException("Unable to resolve the value column for unregistered field type [{$fieldType}].");
+        }
+
+        $dataType = $resolvedFieldType->dataType;
 
         return match ($dataType) {
             FieldDataType::STRING, FieldDataType::FILE => 'string_value',
@@ -114,6 +129,16 @@ class CustomFieldValue extends Model
 
     public function getValue(): mixed
     {
+        // The owning CustomField can be gone by the time this row is read
+        // (deactivated, or its section deactivated), or still present but
+        // pointing at a field type that's no longer registered (disabled
+        // via config, or renamed between versions) -- while this value
+        // row is untouched either way. Treat both as "no value" rather
+        // than fatal.
+        if (! $this->hasResolvableFieldType()) {
+            return null;
+        }
+
         $column = static::getValueColumn($this->customField->type);
 
         return $this->$column;
@@ -121,6 +146,12 @@ class CustomFieldValue extends Model
 
     public function setValue(mixed $value): void
     {
+        // Without a resolvable field type we don't know which column
+        // stores this field's values, so there's nothing safe to write.
+        if (! $this->hasResolvableFieldType()) {
+            return;
+        }
+
         $column = static::getValueColumn($this->customField->type);
 
         // Convert the value to a database-safe format based on the field type
@@ -131,5 +162,16 @@ class CustomFieldValue extends Model
         );
 
         $this->$column = $safeValue;
+    }
+
+    /**
+     * Whether this row's field is still present and its type still
+     * registered, i.e. whether getValueColumn() can safely resolve a
+     * column for it.
+     */
+    private function hasResolvableFieldType(): bool
+    {
+        return $this->customField instanceof CustomField
+            && CustomFieldsType::getFieldType($this->customField->type) instanceof FieldTypeData;
     }
 }

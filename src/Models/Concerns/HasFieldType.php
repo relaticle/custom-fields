@@ -6,28 +6,34 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 
 trait HasFieldType
 {
+    /**
+     * $typeData resolves to null when this field's `type` isn't in the
+     * registry (disabled via config, or renamed between versions). A field
+     * we can't classify is conservatively treated as "none of the above"
+     * rather than fataling on a null relation.
+     */
     public function isChoiceField(): bool
     {
-        return $this->typeData->dataType->isChoiceField();
+        return $this->typeData?->dataType->isChoiceField() ?? false;
     }
 
     public function isMultiChoiceField(): bool
     {
-        return $this->typeData->dataType->isMultiChoiceField();
+        return $this->typeData?->dataType->isMultiChoiceField() ?? false;
     }
 
     public function isDateField(): bool
     {
-        return $this->typeData->dataType === FieldDataType::DATE;
+        return $this->typeData?->dataType === FieldDataType::DATE;
     }
 
     public function isDateTimeField(): bool
     {
-        return $this->typeData->dataType === FieldDataType::DATE_TIME;
+        return $this->typeData?->dataType === FieldDataType::DATE_TIME;
     }
 
     public function isFilterable(): bool
     {
-        return $this->typeData->filterable === true;
+        return $this->typeData?->filterable === true;
     }
 }
