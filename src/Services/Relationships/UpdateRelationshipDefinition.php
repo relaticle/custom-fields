@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\Relationships;
 
-use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Relaticle\CustomFields\CustomFields;
@@ -97,7 +97,7 @@ final readonly class UpdateRelationshipDefinition
      * @param  array<int, string>  $ends
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeSurplus(CustomFieldRelationship $definition, array $ends, Carbon $now): array
+    private function closeSurplus(CustomFieldRelationship $definition, array $ends, CarbonInterface $now): array
     {
         $taken = [];
         $events = [];

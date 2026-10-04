@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Carbon;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Database\Factories\CustomFieldLinkFactory;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
@@ -23,8 +23,8 @@ use Relaticle\CustomFields\Models\Scopes\TenantScope;
  * @property string $to_entity_type
  * @property int|string $to_entity_id
  * @property ?int $sort_order
- * @property Carbon $active_from
- * @property ?Carbon $active_until
+ * @property CarbonInterface $active_from
+ * @property ?CarbonInterface $active_until
  * @property ?string $created_by_type
  * @property int|string|null $created_by_id
  * @property string $source
@@ -129,7 +129,7 @@ class CustomFieldLink extends Model
     /**
      * An edge is closed, never deleted, so the history stays queryable.
      */
-    public function close(Carbon $at): void
+    public function close(CarbonInterface $at): void
     {
         $this->active_until = $at;
 

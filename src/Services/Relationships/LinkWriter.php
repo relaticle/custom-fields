@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\Relationships;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -316,7 +316,7 @@ final readonly class LinkWriter
      *
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, Carbon $now): array
+    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, CarbonInterface $now): array
     {
         $cardinality = $definition->cardinality;
         $targetType = $this->targetEntityType($definition, $direction);
@@ -360,7 +360,7 @@ final readonly class LinkWriter
      * @param  Builder<CustomFieldLink>  $query
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeAll(Builder $query, Carbon $now): array
+    private function closeAll(Builder $query, CarbonInterface $now): array
     {
         $events = [];
 
@@ -371,7 +371,7 @@ final readonly class LinkWriter
         return $events;
     }
 
-    private function close(CustomFieldLink $link, Carbon $now): RelationshipLinkClosed
+    private function close(CustomFieldLink $link, CarbonInterface $now): RelationshipLinkClosed
     {
         $link->close($now);
 
@@ -388,7 +388,7 @@ final readonly class LinkWriter
         $link->save();
     }
 
-    private function insert(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, int $index, Carbon $now, ?Model $actor, string $source): CustomFieldLink
+    private function insert(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, int $index, CarbonInterface $now, ?Model $actor, string $source): CustomFieldLink
     {
         [$fromId, $toId] = $this->ends($definition, $record, $direction, $targetId);
 
