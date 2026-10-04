@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -38,7 +39,7 @@ final class UniqueCustomFieldValue implements ValidationRule
         $normalizedByOriginal = collect(Arr::wrap($value))
             ->reject(fn (mixed $v): bool => blank($v) || ! is_scalar($v))
             ->mapWithKeys(fn (mixed $v): array => [
-                (string) $v => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $v, $this->customField) : (string) $v,
+                (string) $v => $this->normalized($fieldType, (string) $v),
             ]);
 
         if ($this->exceptHeldValues && $this->ignoreEntityId !== null) {
@@ -50,7 +51,7 @@ final class UniqueCustomFieldValue implements ValidationRule
             return;
         }
 
-        $takenValues = $this->findTakenValues($normalizedByOriginal->values()->all());
+        $takenValues = $this->findTakenValues($normalizedByOriginal, $fieldType);
 
         if ($takenValues === []) {
             return;
@@ -73,32 +74,35 @@ final class UniqueCustomFieldValue implements ValidationRule
      * Executes a single query regardless of how many values are submitted,
      * avoiding the N+1 pattern of checking each value individually.
      *
-     * @param  array<int, string>  $normalizedValues
+     * @param  Collection<string, string>  $normalizedByOriginal
      * @return array<int, string>
      */
-    private function findTakenValues(array $normalizedValues): array
+    private function findTakenValues(Collection $normalizedByOriginal, ?FieldTypeDefinitionInterface $fieldType): array
     {
         $valueColumn = $this->customField->getValueColumn();
         $query = $this->baseQuery();
+        $normalizedValues = $normalizedByOriginal->values()->all();
 
         if ($valueColumn === 'json_value') {
-            $query->where(function (Builder $q) use ($normalizedValues): void {
-                foreach ($normalizedValues as $value) {
-                    $q->orWhereJsonContains('json_value', $value);
-                }
-            });
+            $stored = $query->pluck('json_value')
+                ->flatten(1)
+                ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
+                ->map(fn (mixed $value): string => $this->normalized($fieldType, (string) $value));
 
-            $stored = $query->pluck('json_value')->flatten(1)->all();
-
-            return array_values(array_intersect($normalizedValues, $stored));
+            return array_values(array_intersect($normalizedValues, $stored->all()));
         }
 
-        return $query->whereIn($valueColumn, $normalizedValues)
+        return $query->whereIn($valueColumn, $normalizedByOriginal->keys()->merge($normalizedValues)->unique(strict: true)->all())
             ->distinct()
             ->pluck($valueColumn)
-            ->map(static fn (mixed $v): string => (string) $v)
+            ->map(fn (mixed $v): string => $this->normalized($fieldType, (string) $v))
             ->values()
             ->all();
+    }
+
+    private function normalized(?FieldTypeDefinitionInterface $fieldType, string $value): string
+    {
+        return $fieldType instanceof BaseFieldType ? $fieldType->normalize($value, $this->customField) : $value;
     }
 
     /**
@@ -112,7 +116,7 @@ final class UniqueCustomFieldValue implements ValidationRule
 
         return collect($stored)
             ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
-            ->map(fn (mixed $value): string => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $value, $this->customField) : (string) $value)
+            ->map(fn (mixed $value): string => $this->normalized($fieldType, (string) $value))
             ->values()
             ->all();
     }
