@@ -190,6 +190,20 @@ it('strips stacked schemes from a domain-variant link without re-normalizing onc
         ->and($fieldType->calls)->toBeLessThanOrEqual(2);
 });
 
+it('stores a www host with no registrable part in one lowercase spelling', function (string $input): void {
+    $once = SafeValueConverter::toDbSafe([$input], 'link', $this->domainLinkField);
+
+    expect($once)->toBe(['www.co'])
+        ->and(SafeValueConverter::toDbSafe($once, 'link', $this->domainLinkField))->toBe($once);
+})->with([
+    'upper case' => 'WWW.CO',
+    'lower case' => 'www.co',
+    'scheme and path' => 'https://WWW.Co/x',
+    'padded' => '  Www.Co  ',
+    'repeated www' => 'www.www.co',
+    'trailing dot' => 'WWW.CO.',
+]);
+
 it('keeps the path of a url-variant link', function (?string $variant): void {
     $additional = $variant === null ? [] : ['link_variant' => $variant];
     $this->linkField->update(['settings' => new CustomFieldSettingsData(
