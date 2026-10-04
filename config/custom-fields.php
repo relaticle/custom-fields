@@ -147,6 +147,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Field Form
+    |--------------------------------------------------------------------------
+    |
+    | 'presentation' decides how the create and edit field form opens: 'slide_over'
+    | is the 4.0 panel, 'modal' a centered dialog. Only the container changes.
+    |
+    | 'settings' decides which optional settings the form puts in front of a user.
+    | Null offers every setting the feature flags and the field type allow; a list
+    | narrows it to the keys named. A setting left out is not removed: the value a
+    | field already stores survives an edit, and a new field takes its default. The
+    | keys are visible_in_list, visible_in_view, list_toggleable_hidden, searchable,
+    | encrypted, enable_option_colors, allow_multiple and unique_per_entity_type.
+    | max_values has no key of its own; it is the ceiling on allow_multiple.
+    |
+    */
+    'field_form' => [
+        'presentation' => 'slide_over',
+
+        'settings' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Field Settings
     |--------------------------------------------------------------------------
     |

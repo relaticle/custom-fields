@@ -13,7 +13,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Size;
-use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\View as ViewFactory;
 use Livewire\Component;
@@ -26,6 +25,7 @@ use Relaticle\CustomFields\Livewire\Concerns\ManagesFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
@@ -204,9 +204,9 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->schema(FieldForm::schema(withOptionsRelationship: false, section: $this->section, entityType: $this->entityType))
             ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType, $this->section->getKey()))
             ->action(fn (array $data): CustomField => $this->storeField($data))
-            ->modalWidth(Width::ScreenLarge)
+            ->modalWidth(FieldFormConfiguration::width())
             ->extraModalWindowAttributes($this->submitsOnMetaEnter())
-            ->slideOver();
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function render(): View

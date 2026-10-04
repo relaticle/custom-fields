@@ -10,7 +10,6 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
-use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,6 +23,7 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\RelationshipTables;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
@@ -181,9 +181,9 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
                 $this->updateField($record, $data);
                 $this->resetFieldsCache();
             })
-            ->modalWidth(Width::ScreenLarge)
+            ->modalWidth(FieldFormConfiguration::width())
             ->extraModalWindowAttributes($this->submitsOnMetaEnter())
-            ->slideOver();
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function activateFieldAction(): Action
@@ -264,9 +264,9 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
                 $this->storeField($data);
                 $this->resetFieldsCache();
             })
-            ->modalWidth(Width::ScreenLarge)
+            ->modalWidth(FieldFormConfiguration::width())
             ->extraModalWindowAttributes($this->submitsOnMetaEnter())
-            ->slideOver();
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function render(): View

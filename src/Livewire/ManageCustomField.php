@@ -11,7 +11,6 @@ use Filament\Actions\Concerns\InteractsWithRecord;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View as ViewFactory;
@@ -21,6 +20,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
 
 final class ManageCustomField extends Component implements HasActions, HasForms
 {
@@ -53,9 +53,9 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->schema(FieldForm::schema(section: $this->field->section))
             ->fillForm(fn (): array => $this->fieldFormState($this->field))
             ->action(fn (array $data) => $this->updateField($this->field, $data))
-            ->modalWidth(Width::ScreenLarge)
+            ->modalWidth(FieldFormConfiguration::width())
             ->extraModalWindowAttributes($this->submitsOnMetaEnter())
-            ->slideOver();
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function duplicateAction(): Action

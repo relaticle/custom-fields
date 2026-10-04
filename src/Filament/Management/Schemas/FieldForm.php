@@ -50,6 +50,7 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\OptionNameParser;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
@@ -848,189 +849,7 @@ final class FieldForm implements FormInterface
                     FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION) &&
                     filled($get('settings.description'))
                 ),
-            Fieldset::make(
-                __(
-                    'custom-fields::custom-fields.field.form.settings'
-                )
-            )
-                ->columnSpanFull()
-                ->columns(3)
-                ->schema([
-                    // Visibility settings
-                    Toggle::make('settings.visible_in_list')
-                        ->inline()
-                        ->live()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.visible_in_list'
-                            )
-                        )
-                        ->afterStateHydrated(function (
-                            Toggle $component,
-                            ?Model $record
-                        ): void {
-                            if (is_null($record)) {
-                                $component->state(true);
-                            }
-                        }),
-                    Toggle::make('settings.visible_in_view')
-                        ->inline()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.visible_in_view'
-                            )
-                        )
-                        ->afterStateHydrated(function (
-                            Toggle $component,
-                            ?Model $record
-                        ): void {
-                            if (is_null($record)) {
-                                $component->state(true);
-                            }
-                        }),
-                    Toggle::make('settings.list_toggleable_hidden')
-                        ->inline()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.list_toggleable_hidden'
-                            )
-                        )
-                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'))
-                        ->visible(
-                            fn (Get $get): bool => $get(
-                                'settings.visible_in_list'
-                            ) &&
-                                FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS)
-                        )
-                        ->afterStateHydrated(function (
-                            Toggle $component,
-                            ?Model $record
-                        ): void {
-                            if (is_null($record)) {
-                                $component->state(
-                                    FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT)
-                                );
-                            }
-                        }),
-                    // Data settings
-                    Toggle::make('settings.searchable')
-                        ->inline()
-                        ->visible(
-                            fn (
-                                Get $get
-                            ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
-                        )
-                        ->disabled(
-                            fn (Get $get): bool => $get(
-                                'settings.encrypted'
-                            ) === true
-                        )
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.searchable'
-                            )
-                        )
-                        ->afterStateHydrated(function (
-                            Toggle $component,
-                            mixed $state
-                        ): void {
-                            if (is_null($state)) {
-                                $component->state(false);
-                            }
-                        }),
-                    Toggle::make('settings.encrypted')
-                        ->inline()
-                        ->live()
-                        ->disabled(
-                            fn (
-                                ?CustomField $record
-                            ): bool => (bool) $record?->exists
-                        )
-                        ->dehydrated()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.encrypted'
-                            )
-                        )
-                        ->visible(
-                            fn (
-                                Get $get
-                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION) &&
-                                CustomFieldsType::getFieldType($get('type'))->encryptable
-                        )
-                        ->default(false),
-                    // Appearance settings
-                    Toggle::make('settings.enable_option_colors')
-                        ->inline()
-                        ->live()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.enable_option_colors'
-                            )
-                        )
-                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.enable_option_colors_help'))
-                        ->visible(
-                            fn (
-                                Get $get
-                            ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS) &&
-                                in_array((string) $get('type'), [
-                                    'select',
-                                    StatusFieldType::KEY,
-                                    'multi-select',
-                                    'tags-input',
-                                ], true)
-                        ),
-                    // Multi-value settings
-                    Toggle::make('settings.allow_multiple')
-                        ->inline()
-                        ->live()
-                        ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
-                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.allow_multiple_help'))
-                        ->visible(
-                            fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                                CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
-                        )
-                        ->afterStateUpdated(function (Set $set, bool $state): void {
-                            if ($state) {
-                                $set('settings.max_values', 2);
-                            }
-                        })
-                        ->default(false),
-                    TextInput::make('settings.max_values')
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.max_values'
-                            )
-                        )
-                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.max_values_help'))
-                        ->numeric()
-                        ->minValue(1)
-                        ->maxValue(20)
-                        ->default(5)
-                        ->visible(function (Get $get): bool {
-                            $fieldType = CustomFieldsType::getFieldType($get('type'));
-
-                            return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                                $fieldType?->supportsMultiValue === true &&
-                                $fieldType->requiresRelationship !== true &&
-                                $get('settings.allow_multiple') === true;
-                        }),
-                    // Uniqueness constraint
-                    Toggle::make('settings.unique_per_entity_type')
-                        ->inline()
-                        ->label(
-                            __(
-                                'custom-fields::custom-fields.field.form.unique_per_entity_type'
-                            )
-                        )
-                        ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.unique_per_entity_type_help'))
-                        ->visible(
-                            fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
-                                CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
-                        )
-                        ->disabled(self::disabledForSystemFields())
-                        ->default(false),
-                ]),
+            ...self::settingsSchema(),
 
             // Dynamic type-specific settings from field type definition
             ...self::getTypeSettingsSchema(),
@@ -1082,6 +901,251 @@ final class FieldForm implements FormInterface
                 ->columns(2)
                 ->columnSpanFull()
                 ->contained(false),
+        ];
+    }
+
+    /**
+     * A field whose options a user names and colors. Every other type stores the flag
+     * without anything reading it, so the form neither offers it nor writes it there.
+     */
+    private static function carriesOptionColors(mixed $type): bool
+    {
+        return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
+            && in_array((string) $type, ['select', StatusFieldType::KEY, 'multi-select', 'tags-input'], true);
+    }
+
+    /**
+     * A host narrows what the form asks about through custom-fields.field_form.settings.
+     * A setting it leaves out is not removed: an edit merges over what the field already
+     * stores, and a new field takes the default its data object carries.
+     *
+     * The full set keeps its own bordered group. A narrowed one sits in the form grid
+     * instead: most of what is left is gated on the field type, and a group that empties
+     * itself on a Text field is a box with a heading and nothing under it.
+     *
+     * @return list<Component>
+     */
+    private static function settingsSchema(): array
+    {
+        $components = self::settingsComponents();
+
+        $offered = array_filter(
+            $components,
+            fn (string $setting): bool => FieldFormConfiguration::offers($setting),
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        $schema = match (true) {
+            $offered === [] => [],
+            $offered === $components => [
+                Fieldset::make(__('custom-fields::custom-fields.field.form.settings'))
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->schema(array_merge(...array_values($offered))),
+            ],
+            default => array_merge(...array_values($offered)),
+        };
+
+        // Colors nobody can switch on are colors the badges, filters and record pages
+        // never draw, so a form that stops asking turns them on instead of off.
+        if (! FieldFormConfiguration::offers('enable_option_colors')) {
+            $schema[] = Toggle::make('settings.enable_option_colors')
+                ->hidden()
+                ->dehydratedWhenHidden()
+                ->dehydrated(fn (Get $get): bool => self::carriesOptionColors($get('type')))
+                ->afterStateHydrated(function (Toggle $component): void {
+                    $component->state(true);
+                });
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Every optional setting the form can offer, keyed by the name a host narrows it
+     * by. max_values rides with allow_multiple: it is the ceiling on that toggle and
+     * only ever renders beside it.
+     *
+     * @return array<string, list<Component>>
+     */
+    private static function settingsComponents(): array
+    {
+        return [
+            'visible_in_list' => [
+                Toggle::make('settings.visible_in_list')
+                    ->inline()
+                    ->live()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.visible_in_list'
+                        )
+                    )
+                    ->afterStateHydrated(function (
+                        Toggle $component,
+                        ?Model $record
+                    ): void {
+                        if (is_null($record)) {
+                            $component->state(true);
+                        }
+                    }),
+            ],
+            'visible_in_view' => [
+                Toggle::make('settings.visible_in_view')
+                    ->inline()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.visible_in_view'
+                        )
+                    )
+                    ->afterStateHydrated(function (
+                        Toggle $component,
+                        ?Model $record
+                    ): void {
+                        if (is_null($record)) {
+                            $component->state(true);
+                        }
+                    }),
+            ],
+            'list_toggleable_hidden' => [
+                Toggle::make('settings.list_toggleable_hidden')
+                    ->inline()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.list_toggleable_hidden'
+                        )
+                    )
+                    ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.list_toggleable_hidden_hint'))
+                    ->visible(
+                        fn (Get $get): bool => $get(
+                            'settings.visible_in_list'
+                        ) &&
+                            FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS)
+                    )
+                    ->afterStateHydrated(function (
+                        Toggle $component,
+                        ?Model $record
+                    ): void {
+                        if (is_null($record)) {
+                            $component->state(
+                                FeatureManager::isEnabled(CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT)
+                            );
+                        }
+                    }),
+            ],
+            'searchable' => [
+                Toggle::make('settings.searchable')
+                    ->inline()
+                    ->visible(
+                        fn (
+                            Get $get
+                        ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
+                    )
+                    ->disabled(
+                        fn (Get $get): bool => $get(
+                            'settings.encrypted'
+                        ) === true
+                    )
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.searchable'
+                        )
+                    )
+                    ->afterStateHydrated(function (
+                        Toggle $component,
+                        mixed $state
+                    ): void {
+                        if (is_null($state)) {
+                            $component->state(false);
+                        }
+                    }),
+            ],
+            'encrypted' => [
+                Toggle::make('settings.encrypted')
+                    ->inline()
+                    ->live()
+                    ->disabled(
+                        fn (
+                            ?CustomField $record
+                        ): bool => (bool) $record?->exists
+                    )
+                    ->dehydrated()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.encrypted'
+                        )
+                    )
+                    ->visible(
+                        fn (
+                            Get $get
+                        ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION) &&
+                            CustomFieldsType::getFieldType($get('type'))->encryptable
+                    )
+                    ->default(false),
+            ],
+            'enable_option_colors' => [
+                Toggle::make('settings.enable_option_colors')
+                    ->inline()
+                    ->live()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.enable_option_colors'
+                        )
+                    )
+                    ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.enable_option_colors_help'))
+                    ->visible(fn (Get $get): bool => self::carriesOptionColors($get('type'))),
+            ],
+            'allow_multiple' => [
+                Toggle::make('settings.allow_multiple')
+                    ->inline()
+                    ->live()
+                    ->label(__('custom-fields::custom-fields.field.form.allow_multiple'))
+                    ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.allow_multiple_help'))
+                    ->visible(
+                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                            CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
+                    )
+                    ->afterStateUpdated(function (Set $set, bool $state): void {
+                        if ($state) {
+                            $set('settings.max_values', 2);
+                        }
+                    })
+                    ->default(false),
+                TextInput::make('settings.max_values')
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.max_values'
+                        )
+                    )
+                    ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.max_values_help'))
+                    ->numeric()
+                    ->minValue(1)
+                    ->maxValue(20)
+                    ->default(5)
+                    ->visible(function (Get $get): bool {
+                        $fieldType = CustomFieldsType::getFieldType($get('type'));
+
+                        return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
+                            $fieldType?->supportsMultiValue === true &&
+                            $fieldType->requiresRelationship !== true &&
+                            $get('settings.allow_multiple') === true;
+                    }),
+            ],
+            'unique_per_entity_type' => [
+                Toggle::make('settings.unique_per_entity_type')
+                    ->inline()
+                    ->label(
+                        __(
+                            'custom-fields::custom-fields.field.form.unique_per_entity_type'
+                        )
+                    )
+                    ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.unique_per_entity_type_help'))
+                    ->visible(
+                        fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
+                            CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
+                    )
+                    ->disabled(self::disabledForSystemFields())
+                    ->default(false),
+            ],
         ];
     }
 }
