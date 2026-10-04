@@ -13,12 +13,15 @@ use Illuminate\Contracts\Container\CircularDependencyException;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\Filament\Integration\Builders\Concerns\ResolvesFields;
 use Relaticle\CustomFields\Filament\Integration\Factories\ExportColumnFactory;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
 final class ExporterBuilder extends BaseBuilder
 {
+    use ResolvesFields;
+
     /**
      * @return Collection<int, ExportColumn>
      *
@@ -30,10 +33,9 @@ final class ExporterBuilder extends BaseBuilder
         $exportColumnFactory = app(ExportColumnFactory::class);
         $backendVisibilityService = app(BackendVisibilityService::class);
 
-        // Get all fields using the most efficient method
         $allFields = $this->getAllFields();
 
-        return $allFields
+        return $this->getFields()
             ->filter(fn (CustomField $field): bool => $field->settings->visible_in_list ?? true)
             ->map(function (CustomField $field) use ($exportColumnFactory, $backendVisibilityService, $allFields) {
                 $column = $exportColumnFactory->create($field);

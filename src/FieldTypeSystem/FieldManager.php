@@ -80,6 +80,8 @@ final class FieldManager
      */
     private array $cachedInstances = [];
 
+    private FieldTypeCollection $cachedCollection;
+
     /**
      * @param  array<int|string, class-string<FieldTypeDefinitionInterface>> | Closure  $fieldTypes
      */
@@ -156,6 +158,10 @@ final class FieldManager
 
     public function toCollection(): FieldTypeCollection
     {
+        if (isset($this->cachedCollection)) {
+            return $this->cachedCollection;
+        }
+
         $fieldTypes = [];
 
         foreach ($this->getFieldTypes() as $fieldTypeClass) {
@@ -171,6 +177,6 @@ final class FieldManager
             $this->cachedInstances[$data->key] = $fieldType;
         }
 
-        return FieldTypeCollection::make($fieldTypes)->sortBy('priority', SORT_NATURAL)->values();
+        return $this->cachedCollection = FieldTypeCollection::make($fieldTypes)->sortBy('priority', SORT_NATURAL)->values();
     }
 }

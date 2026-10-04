@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\FieldTypeSystem;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\Data\FieldTypeData;
+use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * @property-read FieldTypeData $data Field type configuration data with full type hints
@@ -23,6 +24,14 @@ abstract class BaseFieldType implements FieldTypeDefinitionInterface
     public function setValue(string $value): string
     {
         return $value;
+    }
+
+    /**
+     * Normalize a value for one field; a field setting may choose the form.
+     */
+    public function normalize(string $value, CustomField $customField): string
+    {
+        return $this->setValue($value);
     }
 
     /**

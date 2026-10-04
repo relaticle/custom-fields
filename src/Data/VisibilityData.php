@@ -30,7 +30,11 @@ final class VisibilityData extends Data
         #[DataCollectionOf(VisibilityConditionData::class)]
         public ?DataCollection $conditions = null,
         public bool $alwaysSave = false,
-    ) {}
+    ) {
+        if (! $this->mode->requiresConditions()) {
+            $this->conditions = null;
+        }
+    }
 
     public function requiresConditions(): bool
     {

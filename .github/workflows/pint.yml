@@ -2,6 +2,8 @@ name: Pint
 
 on:
   push:
+    branches-ignore:
+      - 'gh-readonly-queue/**'
     paths:
       - '**.php'
 
@@ -14,6 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
+        # zizmor: ignore[artipacked] git-auto-commit-action pushes with this credential
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.head_ref }}

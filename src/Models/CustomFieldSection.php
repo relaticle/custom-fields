@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSectionSettingsData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldSectionFactory;
@@ -85,6 +86,11 @@ class CustomFieldSection extends Model
     {
         /** @var HasMany<CustomField, self> */
         return $this->hasMany(CustomFields::customFieldModel());
+    }
+
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        return Arr::get($this->settings->extra, $key, $default);
     }
 
     /**

@@ -30,6 +30,9 @@ final class ManageCustomFieldWidth extends Component
 
     public function render(): View
     {
-        return ViewFactory::make('custom-fields::livewire.manage-custom-field-width');
+        /** @var view-string $view */
+        $view = 'custom-fields::livewire.manage-custom-field-width';
+
+        return ViewFactory::make($view);
     }
 }

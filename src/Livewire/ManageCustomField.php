@@ -162,6 +162,9 @@ final class ManageCustomField extends Component implements HasActions, HasForms
 
     public function render(): View
     {
-        return ViewFactory::make('custom-fields::livewire.manage-custom-field');
+        /** @var view-string $view */
+        $view = 'custom-fields::livewire.manage-custom-field';
+
+        return ViewFactory::make($view);
     }
 }

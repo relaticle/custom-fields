@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Override;
@@ -41,7 +42,7 @@ use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
  * @property string $code
  * @property string $type
  * @property string $entity_type
- * @property Collection<int, string> $validation_rules
+ * @property Collection<array-key, mixed> $validation_rules
  * @property CustomFieldSettingsData $settings
  * @property int $sort_order
  * @property bool $active
@@ -324,6 +325,11 @@ class CustomField extends Model
     public function getFieldName(): string
     {
         return 'custom_fields.'.$this->code;
+    }
+
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        return Arr::get($this->settings->additional, $key, $default);
     }
 
     public function getCurrencySettings(): CurrencyFieldSettingsData

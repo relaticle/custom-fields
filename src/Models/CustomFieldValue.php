@@ -126,7 +126,8 @@ class CustomFieldValue extends Model
         // Convert the value to a database-safe format based on the field type
         $safeValue = SafeValueConverter::toDbSafe(
             $value,
-            $this->customField->type
+            $this->customField->type,
+            $this->customField,
         );
 
         $this->$column = $safeValue;

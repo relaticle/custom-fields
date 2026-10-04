@@ -26,6 +26,7 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
 use Relaticle\CustomFields\Support\FieldFormConfiguration;
+use Relaticle\CustomFields\Support\SettingsMerger;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
@@ -134,7 +135,17 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
             ->record($this->section)
             ->schema($sectionForm->schema())
             ->fillForm($this->section->toArray())
-            ->action(fn (array $data): bool => ! $this->section->hasSystemDefinedFields() && $this->section->update($data))
+            ->action(function (array $data): bool {
+                if ($this->section->hasSystemDefinedFields()) {
+                    return false;
+                }
+
+                if (isset($data['settings'])) {
+                    $data['settings'] = SettingsMerger::merge($this->section->settings->toArray(), $data['settings']);
+                }
+
+                return $this->section->update($data);
+            })
             ->visible(fn (CustomFieldSection $record): bool => ! $record->hasSystemDefinedFields())
             ->modalWidth(CustomFieldsPlugin::get()->getSectionModalWidth());
     }
@@ -211,6 +222,9 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
 
     public function render(): View
     {
-        return ViewFactory::make('custom-fields::livewire.manage-custom-field-section');
+        /** @var view-string $view */
+        $view = 'custom-fields::livewire.manage-custom-field-section';
+
+        return ViewFactory::make($view);
     }
 }

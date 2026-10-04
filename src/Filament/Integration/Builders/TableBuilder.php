@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Builders\Concerns\ResolvesFields;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\RecordColumnView;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldColumnFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldFilterFactory;
@@ -25,6 +26,8 @@ use Relaticle\CustomFields\Support\ThroughRelationResolver;
 
 final class TableBuilder extends BaseBuilder
 {
+    use ResolvesFields;
+
     private ?string $through = null;
 
     /**
@@ -50,10 +53,9 @@ final class TableBuilder extends BaseBuilder
         $fieldColumnFactory = app(FieldColumnFactory::class);
         $backendVisibilityService = app(BackendVisibilityService::class);
 
-        // Get all fields using the most efficient method
         $allFields = $this->getAllFields();
 
-        return $allFields
+        return $this->getFields()
             ->filter(fn (CustomField $field): bool => $field->typeData->tableColumn !== null)
             ->map(function (CustomField $field) use ($fieldColumnFactory, $backendVisibilityService, $allFields): Column {
                 $column = $fieldColumnFactory->create($field);
@@ -107,7 +109,7 @@ final class TableBuilder extends BaseBuilder
 
         $fieldFilterFactory = app(FieldFilterFactory::class);
 
-        return $this->getAllFields()
+        return $this->getFields()
             ->filter(fn (CustomField $field): bool => $field->isFilterable() && $field->typeData->tableFilter !== null)
             ->map(fn (CustomField $field) => $fieldFilterFactory->create($field, $this->through))
             ->filter()

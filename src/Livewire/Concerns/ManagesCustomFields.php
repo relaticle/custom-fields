@@ -22,6 +22,7 @@ use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\Relationships\UpdateRelationshipDefinition;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\CodeGenerator;
+use Relaticle\CustomFields\Support\SettingsMerger;
 
 trait ManagesCustomFields
 {
@@ -115,7 +116,7 @@ trait ManagesCustomFields
         $relationship = $this->pullRelationshipData($data);
 
         if (isset($data['settings'])) {
-            $data['settings'] = array_merge($field->settings->toArray(), $data['settings']);
+            $data['settings'] = SettingsMerger::merge($field->settings->toArray(), $data['settings']);
         }
 
         DB::transaction(function () use ($field, $data, $relationship): void {

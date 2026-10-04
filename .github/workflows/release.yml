@@ -77,6 +77,7 @@ jobs:
           echo "name=${BRANCH}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout code
+        # zizmor: ignore[artipacked] git-auto-commit-action pushes the changelog with this key
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.branch.outputs.name }}
@@ -118,6 +119,7 @@ jobs:
 
     steps:
       - name: Checkout code
+        # zizmor: ignore[artipacked] the tag deletion below pushes with this credential
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Delete tag on test failure

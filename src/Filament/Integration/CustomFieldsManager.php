@@ -14,7 +14,7 @@ final class CustomFieldsManager
 {
     public function table(): TableBuilder
     {
-        return new TableBuilder;
+        return app(TableBuilder::class);
     }
 
     public function form(): FormBuilder
@@ -24,7 +24,7 @@ final class CustomFieldsManager
 
     public function infolist(): InfolistBuilder
     {
-        return new InfolistBuilder;
+        return app(InfolistBuilder::class);
     }
 
     public function importer(): ImporterBuilder
@@ -34,6 +34,6 @@ final class CustomFieldsManager
 
     public function exporter(): ExporterBuilder
     {
-        return new ExporterBuilder;
+        return app(ExporterBuilder::class);
     }
 }

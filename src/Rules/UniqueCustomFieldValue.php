@@ -9,10 +9,14 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
@@ -24,6 +28,7 @@ final class UniqueCustomFieldValue implements ValidationRule
     public function __construct(
         private readonly CustomField $customField,
         private readonly string|int|null $ignoreEntityId = null,
+        private readonly bool $exceptHeldValues = false,
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -37,8 +42,13 @@ final class UniqueCustomFieldValue implements ValidationRule
         $normalizedByOriginal = collect(Arr::wrap($value))
             ->reject(fn (mixed $v): bool => blank($v) || ! is_scalar($v))
             ->mapWithKeys(fn (mixed $v): array => [
-                (string) $v => $fieldType?->setValue((string) $v) ?? (string) $v,
+                (string) $v => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $v, $this->customField) : (string) $v,
             ]);
+
+        if ($this->exceptHeldValues && $this->ignoreEntityId !== null) {
+            $held = $this->heldValues($fieldType);
+            $normalizedByOriginal = $normalizedByOriginal->reject(fn (string $normalized): bool => in_array($normalized, $held, true));
+        }
 
         if ($normalizedByOriginal->isEmpty()) {
             return;
@@ -96,12 +106,35 @@ final class UniqueCustomFieldValue implements ValidationRule
     }
 
     /**
+     * @return list<string>
+     */
+    private function heldValues(?FieldTypeDefinitionInterface $fieldType): array
+    {
+        $stored = $this->fieldValuesQuery()
+            ->where('entity_id', $this->ignoreEntityId)
+            ->first()?->getAttribute($this->customField->getValueColumn());
+
+        // The json cast hands back a Collection, a plain array, or a scalar depending on
+        // the column, so each shape becomes a list before the values are compared.
+        $values = match (true) {
+            $stored === null => [],
+            $stored instanceof Collection => $stored->all(),
+            is_array($stored) => array_values($stored),
+            default => [$stored],
+        };
+
+        return collect($values)
+            ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
+            ->map(fn (mixed $value): string => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $value, $this->customField) : (string) $value)
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return Builder<CustomFieldValue>
      */
-    private function baseQuery(): Builder
+    private function fieldValuesQuery(): Builder
     {
-        $valueModel = CustomFields::newValueModel();
-
         $entityType = $this->customField->entity_type;
         $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
 
@@ -113,19 +146,39 @@ final class UniqueCustomFieldValue implements ValidationRule
             ));
         }
 
-        $morphAlias = (new $entityClass)->getMorphClass();
-
-        $query = $valueModel->newQuery()
+        $query = CustomFields::newValueModel()->newQuery()
             ->where('custom_field_id', $this->customField->getKey())
-            ->where('entity_type', $morphAlias);
+            ->where('entity_type', (new $entityClass)->getMorphClass());
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
             $tenantFk = config('custom-fields.database.column_names.tenant_foreign_key');
             $query->where($tenantFk, TenantContextService::getCurrentTenantId());
         }
 
+        return $query;
+    }
+
+    /**
+     * @return Builder<CustomFieldValue>
+     */
+    private function baseQuery(): Builder
+    {
+        $entityType = $this->customField->entity_type;
+        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
+
+        $query = $this->fieldValuesQuery();
+
         if ($this->ignoreEntityId !== null) {
             $query->where('entity_id', '!=', $this->ignoreEntityId);
+        }
+
+        // Only the trashed rows are excluded: a host app's other entity scopes must never hide a taken value.
+        if (in_array(SoftDeletes::class, class_uses_recursive($entityClass), true)) {
+            $entity = new $entityClass;
+
+            $query->whereNotIn('entity_id', $entity->newQueryWithoutScopes()
+                ->select($entity->getKeyName())
+                ->whereNotNull($entity->getQualifiedDeletedAtColumn()));
         }
 
         return $query;

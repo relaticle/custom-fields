@@ -12,6 +12,8 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 
 final class InfolistContainer extends Grid
 {
+    private ?InfolistBuilder $builder = null;
+
     private Model|string|null $explicitModel = null;
 
     /** @var array<int, string> */
@@ -41,6 +43,13 @@ final class InfolistContainer extends Grid
         $container->schema(static fn (self $component): array => $component->generateSchema());
 
         return $container;
+    }
+
+    public function builder(InfolistBuilder $builder): static
+    {
+        $this->builder = clone $builder;
+
+        return $this;
     }
 
     public function forModel(Model|string|null $model): static
@@ -117,15 +126,15 @@ final class InfolistContainer extends Grid
         $withoutSections = $this->withoutSections
             ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
-        $builder = app(InfolistBuilder::class)
-            ->forModel($model)
+        $builder = $this->builder instanceof InfolistBuilder ? clone $this->builder : app(InfolistBuilder::class);
+
+        return $builder->forModel($model)
             ->only($this->only)
             ->except($this->except)
             ->onlySections($this->onlySections)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
-            ->withoutSections($withoutSections);
-
-        return $builder->values()->toArray();
+            ->withoutSections($withoutSections)
+            ->values()->toArray();
     }
 }

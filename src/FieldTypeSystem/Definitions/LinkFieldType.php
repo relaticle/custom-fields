@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Illuminate\Support\Str;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\LinkComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\LinkEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\LinkColumn;
+use Relaticle\CustomFields\Models\CustomField;
 
 class LinkFieldType extends BaseFieldType
 {
@@ -32,5 +34,32 @@ class LinkFieldType extends BaseFieldType
     public function setValue(string $value): string
     {
         return preg_replace('#^https?://#i', '', trim($value));
+    }
+
+    public function normalize(string $value, CustomField $customField): string
+    {
+        if ($customField->setting('link_variant') !== 'domain') {
+            return $this->setValue($value);
+        }
+
+        $host = (string) Str::of($value)
+            ->lower()
+            ->replaceMatches('#[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]+#u', '')
+            ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
+            ->before('/')
+            ->before('?')
+            ->before('#')
+            ->replaceMatches('#^.*@#', '')
+            ->before(':')
+            ->replaceMatches('#^(www\.)+#', '')
+            ->rtrim('.');
+
+        if ($host === '' || str_contains($host, '.')) {
+            return $host;
+        }
+
+        $unwrapped = $this->setValue($value);
+
+        return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
     }
 }

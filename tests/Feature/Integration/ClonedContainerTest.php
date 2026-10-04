@@ -28,8 +28,11 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Facades\CustomFields;
+use Relaticle\CustomFields\Filament\Integration\Builders\Concerns\ResolvesFields;
 use Relaticle\CustomFields\Filament\Integration\Builders\FormContainer;
+use Relaticle\CustomFields\Filament\Integration\Builders\InfolistBuilder;
 use Relaticle\CustomFields\Filament\Integration\Builders\InfolistContainer;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -37,6 +40,8 @@ use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
+
+mutates(FormContainer::class, InfolistBuilder::class, InfolistContainer::class, ResolvesFields::class);
 
 beforeEach(function (): void {
     $this->actingAs(User::factory()->create());
@@ -126,4 +131,64 @@ it('generates a cloned container against the model of the schema it now belongs 
 
     expect($fieldNames)->toContain('comment_only')
         ->and($fieldNames)->not->toContain('cloned_field');
+});
+
+it('preserves local and default filters once through a cloned infolist', function (): void {
+    CustomField::factory()->create([
+        'custom_field_section_id' => CustomFieldSection::query()->sole()->getKey(),
+        'entity_type' => Post::class,
+        'code' => 'retained_field',
+        'name' => 'Retained field',
+        'type' => 'text',
+    ]);
+
+    $registrations = 0;
+    $calls = [];
+
+    app()->resolving(InfolistBuilder::class, function (InfolistBuilder $builder) use (&$registrations, &$calls): void {
+        $registrations++;
+        $builder->filterFieldsUsing(function (Collection $fields) use (&$calls): Collection {
+            $calls[] = 'default';
+
+            return $fields;
+        });
+    });
+
+    $container = CustomFields::infolist()
+        ->filterFieldsUsing(function (Collection $fields) use (&$calls): Collection {
+            $calls[] = 'local';
+
+            return $fields->reject(fn (CustomField $field): bool => $field->code === 'cloned_field');
+        })
+        ->build();
+
+    $schema = Schema::make($this->livewire)
+        ->record(Post::factory()->create())
+        ->components([$container]);
+
+    $names = collect($schema->getClone()->getFlatComponents())
+        ->filter(fn (object $component): bool => $component instanceof TextEntry)
+        ->map(fn (TextEntry $entry): string => $entry->getName())->values()->all();
+
+    expect($names)->toBe(['custom_fields.retained_field'])
+        ->and($calls)->toBe(['default', 'local'])
+        ->and($registrations)->toBe(1);
+});
+
+it('evaluates instance filters against each cloned infolist record', function (): void {
+    $visible = Post::factory()->create();
+    $hidden = Post::factory()->create();
+
+    $container = CustomFields::infolist()
+        ->filterFieldsUsing(fn (Collection $fields, InfolistBuilder $builder): Collection => $builder->getRecord()?->is($visible)
+            ? $fields
+            : $fields->reject(fn (CustomField $field): bool => $field->code === 'cloned_field'))
+        ->build();
+
+    $visibleSchema = Schema::make($this->livewire)->record($visible)->components([$container->getClone()]);
+    $hiddenSchema = Schema::make($this->livewire)->record($hidden)->components([$container->getClone()]);
+
+    expect(collect($visibleSchema->getFlatComponents())->whereInstanceOf(TextEntry::class))->toHaveCount(1)
+        ->and(collect($hiddenSchema->getFlatComponents())->whereInstanceOf(TextEntry::class))->toBeEmpty()
+        ->and(collect($visibleSchema->getClone()->getFlatComponents())->whereInstanceOf(TextEntry::class))->toHaveCount(1);
 });

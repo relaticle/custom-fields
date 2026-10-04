@@ -234,7 +234,7 @@ final class ValidationService
 
         // Handle unique per entity type setting (available for any field type)
         if ($customField->settings->unique_per_entity_type) {
-            $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId);
+            $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId, exceptHeldValues: true);
         }
 
         // Cardinality is what a relationship slot may hold, so it reaches every path that

@@ -521,3 +521,57 @@ describe('Record Fields Without a Definition', function (): void {
         Exceptions::assertReportedCount(1);
     });
 });
+
+describe('Custom field table filters', function (): void {
+    beforeEach(function (): void {
+        $this->section = CustomFieldSection::factory()
+            ->forEntityType(Post::class)
+            ->create(['active' => true]);
+    });
+
+    it('matches a post holding any one of the picked multi-select options', function (): void {
+        $field = CustomField::factory()
+            ->ofType('multi-select')
+            ->withOptions(['Hot', 'Warm', 'Cold'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => Post::class,
+                'code' => 'temperature',
+            ]);
+        $optionId = fn (string $name): int|string => $field->options()->where('name', $name)->value('id');
+
+        $hot = Post::factory()->create();
+        $warm = Post::factory()->create();
+        $cold = Post::factory()->create();
+        $hot->saveCustomFieldValue($field, [$optionId('Hot')]);
+        $warm->saveCustomFieldValue($field, [$optionId('Warm')]);
+        $cold->saveCustomFieldValue($field, [$optionId('Cold')]);
+
+        livewire(ListPosts::class)
+            ->filterTable('custom_fields.temperature', [$optionId('Hot'), $optionId('Warm')])
+            ->assertCanSeeTableRecords([$hot, $warm])
+            ->assertCanNotSeeTableRecords([$cold]);
+    });
+
+    it('matches a post holding any one of the picked tags', function (): void {
+        $field = CustomField::factory()
+            ->ofType('tags-input')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => Post::class,
+                'code' => 'labels',
+            ]);
+
+        $urgent = Post::factory()->create();
+        $vip = Post::factory()->create();
+        $archived = Post::factory()->create();
+        $urgent->saveCustomFieldValue($field, ['urgent']);
+        $vip->saveCustomFieldValue($field, ['vip']);
+        $archived->saveCustomFieldValue($field, ['archived']);
+
+        livewire(ListPosts::class)
+            ->filterTable('custom_fields.labels', ['urgent', 'vip'])
+            ->assertCanSeeTableRecords([$urgent, $vip])
+            ->assertCanNotSeeTableRecords([$archived]);
+    });
+});

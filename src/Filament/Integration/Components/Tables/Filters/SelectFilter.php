@@ -27,9 +27,19 @@ final class SelectFilter extends AbstractTableFilter
             fn (array $data, Builder $query): Builder => $query->when(
                 ! empty($data['values']),
                 fn (Builder $query): Builder => $this->constrainThrough($query, $through, fn (Builder $query): Builder => $query->whereHas('customFieldValues', function (Builder $query) use ($customField, $data): void {
-                    $query->where('custom_field_id', $customField->id)
-                        ->when($customField->getValueColumn() === 'json_value', fn (Builder $query) => $query->whereJsonContains($customField->getValueColumn(), $data['values']))
-                        ->when($customField->getValueColumn() !== 'json_value', fn (Builder $query) => $query->whereIn($customField->getValueColumn(), $data['values']));
+                    $query->where('custom_field_id', $customField->id);
+
+                    if ($customField->getValueColumn() !== 'json_value') {
+                        $query->whereIn($customField->getValueColumn(), $data['values']);
+
+                        return;
+                    }
+
+                    $query->where(function (Builder $anyOption) use ($data): void {
+                        foreach ($data['values'] as $value) {
+                            $anyOption->orWhereJsonContains('json_value', [$value]);
+                        }
+                    });
                 })),
             )
         );

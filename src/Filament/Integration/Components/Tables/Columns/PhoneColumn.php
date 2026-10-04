@@ -66,8 +66,8 @@ final class PhoneColumn extends AbstractTableColumn
             return [
                 'country' => $parsed['country'],
                 'number' => $parsed['number'],
-                'display' => $entry,
-                'tel' => preg_replace('/[^0-9+]/', '', $entry),
+                'display' => $this->phoneService->displayText($entry),
+                'tel' => $this->phoneService->dialNumber($entry),
             ];
         }
 

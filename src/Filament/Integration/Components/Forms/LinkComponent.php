@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Components\Forms;
 
 use Illuminate\Support\Arr;
+use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\MultiValueInput\MultiValueInputComponent;
@@ -30,8 +31,8 @@ final readonly class LinkComponent extends AbstractFormComponent
             ->nestedRecursiveRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/'])
             ->rules(['array', 'max:'.$maxValues])
             ->dehydrateStateUsing(fn (mixed $state): array => collect(Arr::wrap($state))
-                ->map(fn (mixed $v): string => $fieldType
-                    ? $fieldType->setValue(trim((string) $v))
+                ->map(fn (mixed $v): string => $fieldType instanceof BaseFieldType
+                    ? $fieldType->normalize(trim((string) $v), $customField)
                     : trim((string) $v))
                 ->filter(fn (string $v): bool => filled($v))
                 ->values()

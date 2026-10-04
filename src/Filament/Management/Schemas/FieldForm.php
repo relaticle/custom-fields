@@ -62,6 +62,9 @@ final class FieldForm implements FormInterface
     /** @var ?Closure(?CustomFieldSection): ?Closure */
     private static ?Closure $uniqueCodeRuleModifierResolver = null;
 
+    /** @var array<int, Closure(array<int, Component>, ?CustomFieldSection): array<int, Component>> */
+    private static array $schemaExtensions = [];
+
     /**
      * Register a resolver that scopes the field-name uniqueness rule beyond the default
      * entity-type (+ tenant) scope. The resolver receives the section the field belongs to
@@ -90,6 +93,19 @@ final class FieldForm implements FormInterface
     public static function resolveUniqueCodeRuleModifierUsing(?Closure $resolver): void
     {
         self::$uniqueCodeRuleModifierResolver = $resolver;
+    }
+
+    /**
+     * @param  Closure(array<int, Component>, ?CustomFieldSection): array<int, Component>  $callback
+     */
+    public static function extendSchemaUsing(Closure $callback): void
+    {
+        self::$schemaExtensions[] = $callback;
+    }
+
+    public static function flushSchemaExtensions(): void
+    {
+        self::$schemaExtensions = [];
     }
 
     private static function resolveUniqueNameRuleModifier(?CustomFieldSection $section): ?Closure
@@ -861,6 +877,10 @@ final class FieldForm implements FormInterface
         $generalSchema[] = $optionsRepeater;
 
         $generalSchema[] = self::advancedDisclosure($uniqueCodeRuleModifier);
+
+        foreach (self::$schemaExtensions as $extension) {
+            $generalSchema = $extension($generalSchema, $section);
+        }
 
         // Build additional tabs based on feature flags
         $additionalTabs = [];

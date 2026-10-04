@@ -108,7 +108,7 @@ function recordSelectSearch(string $term, string $modelClass = Post::class): arr
 function shippedFeatureConfigurator(): FeatureConfigurator
 {
     /** @var array{features: FeatureConfigurator} $config */
-    $config = require dirname(__DIR__).'/config/custom-fields.php';
+    $config = require __DIR__.'/../config/custom-fields.php';
 
     return $config['features'];
 }

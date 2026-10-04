@@ -9,7 +9,6 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
-composer.lock export-ignore
 phpstan.neon export-ignore
 
 /docs export-ignore
