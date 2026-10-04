@@ -769,10 +769,18 @@ describe('Values stored before normalization', function (): void {
         ]);
     });
 
-    it('blocks a bare domain when another record stored it as a full url', function (): void {
+    it('blocks the same url typed again when another record stored it raw', function (): void {
         storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['https://www.acme.com/']);
 
-        $validator = validator(['v' => ['acme.com']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
+        $validator = validator(['v' => ['https://www.acme.com/']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
+
+        expect($validator->passes())->toBeFalse();
+    });
+
+    it('blocks a url when another record stored it as 3.11 saved it from the form', function (): void {
+        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['www.acme.com/']);
+
+        $validator = validator(['v' => ['https://www.acme.com/']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
 
         expect($validator->passes())->toBeFalse();
     });
@@ -791,6 +799,27 @@ describe('Values stored before normalization', function (): void {
         $validator = validator(['v' => ['https://www.acme.com']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
 
         expect($validator->passes())->toBeFalse();
+    });
+
+    it('filters stored values by the typed, normalized and pre-3.12 spellings', function (): void {
+        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['other.com']);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        try {
+            validator(['v' => ['HTTPS://www.Acme.com/x']], ['v' => [new UniqueCustomFieldValue($this->domainField)]])->passes();
+
+            $bindings = collect(DB::getQueryLog())
+                ->filter(static fn (array $entry): bool => str_contains($entry['query'], 'custom_field_values'))
+                ->flatMap(static fn (array $entry): array => $entry['bindings']);
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+
+        expect($bindings->intersect(['HTTPS://www.Acme.com/x', 'acme.com', 'www.Acme.com/x'])->unique()->values()->all())
+            ->toEqualCanonicalizing(['HTTPS://www.Acme.com/x', 'acme.com', 'www.Acme.com/x']);
     });
 
     it('allows the record to keep the legacy spelling it stored itself', function (): void {

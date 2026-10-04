@@ -83,7 +83,15 @@ final class UniqueCustomFieldValue implements ValidationRule
         $query = $this->baseQuery();
         $normalizedValues = $normalizedByOriginal->values()->all();
 
+        $candidates = $this->candidateSpellings($normalizedByOriginal, $fieldType);
+
         if ($valueColumn === 'json_value') {
+            $query->where(function (Builder $q) use ($candidates): void {
+                foreach ($candidates as $candidate) {
+                    $q->orWhereJsonContains('json_value', $candidate);
+                }
+            });
+
             $stored = $query->pluck('json_value')
                 ->flatten(1)
                 ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
@@ -92,12 +100,27 @@ final class UniqueCustomFieldValue implements ValidationRule
             return array_values(array_intersect($normalizedValues, $stored->all()));
         }
 
-        return $query->whereIn($valueColumn, $normalizedByOriginal->keys()->merge($normalizedValues)->unique(strict: true)->all())
+        return $query->whereIn($valueColumn, $candidates)
             ->distinct()
             ->pluck($valueColumn)
             ->map(fn (mixed $v): string => $this->normalized($fieldType, (string) $v))
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  Collection<string, string>  $normalizedByOriginal
+     * @return array<int, string>
+     */
+    private function candidateSpellings(Collection $normalizedByOriginal, ?FieldTypeDefinitionInterface $fieldType): array
+    {
+        $typed = $normalizedByOriginal->keys()->map(fn (int|string $original): string => (string) $original);
+
+        $preUpgrade = $fieldType instanceof BaseFieldType ?
+            $typed->map(fn (string $original): string => $fieldType->setValue($original)) :
+            collect();
+
+        return $typed->merge($normalizedByOriginal->values())->merge($preUpgrade)->unique(strict: true)->values()->all();
     }
 
     private function normalized(?FieldTypeDefinitionInterface $fieldType, string $value): string

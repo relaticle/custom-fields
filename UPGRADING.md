@@ -36,9 +36,11 @@ Links without the `domain` variant keep their path. They lose one leading `http:
 
 ### The unique rule compares normalized values
 
-`UniqueCustomFieldValue` normalizes the submitted value and every stored value before comparing them. A stored `https://www.acme.com/` now blocks a new `acme.com` on a domain link field.
+`UniqueCustomFieldValue` normalizes the submitted value and every value it finds. On a domain link field, a stored `acme.com` now blocks a typed `HTTPS://www.Acme.com/x`.
 
-For fields stored in `json_value`, the rule reads every stored value of the field. It no longer matches by exact JSON containment.
+The rule matches a stored value by its normalized form, by the form it was typed in, or by the form `setValue()` stored before 3.12. For example, a stored `www.acme.com/` blocks a typed `https://www.acme.com/`.
+
+It does not match every older spelling. A stored `https://www.acme.com/` does not block a typed `acme.com`.
 
 `ValidationService` passes `exceptHeldValues: true`. A record can keep a unique value that it already holds, even when another record holds it too.
 
@@ -54,9 +56,9 @@ If your type already overrides `setValue()`, that method now runs on every write
 
 ### No backfill ships
 
-The package does not rewrite values stored by 3.11 or earlier. Old rows keep their spelling until a record is saved again.
+The package does not rewrite values stored by 3.11 or earlier.
 
-The unique rule compares old spellings in their normalized form. Code that reads the stored text directly still sees the old spelling.
+Values stored before 3.12 keep their old spelling until you normalize them. Until then, the unique rule matches a stored value only by its normalized form, its typed form, or its pre-3.12 stored form. Code that reads the stored text directly still sees the old spelling.
 
 To normalize old rows, loop over the fields of the types you use and rewrite each stored value:
 
