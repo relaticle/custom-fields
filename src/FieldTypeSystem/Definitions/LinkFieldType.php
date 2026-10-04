@@ -58,7 +58,7 @@ class LinkFieldType extends BaseFieldType
             return $host;
         }
 
-        $unwrapped = $this->setValue($value);
+        $unwrapped = (string) preg_replace('#^(?:https?://)+#i', '', trim($value));
 
         return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
     }
