@@ -13,6 +13,7 @@ use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeColors;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Services\ValueResolver\LookupMultiValueResolver;
 
 final class MultiChoiceEntry extends AbstractInfolistEntry
@@ -62,7 +63,7 @@ final class MultiChoiceEntry extends AbstractInfolistEntry
         }
 
         return $customField->options
-            ->filter(fn ($option): bool => filled($option->settings->color))
+            ->filter(fn (CustomFieldOption $option): bool => filled($option->settings->color))
             ->pluck('settings.color', 'id')
             ->all();
     }

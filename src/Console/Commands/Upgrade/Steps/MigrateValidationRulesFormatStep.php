@@ -126,7 +126,7 @@ final class MigrateValidationRulesFormatStep implements UpgradeStep
     private function convertRules(Collection $rules, string $fieldType, array &$warnings): Collection
     {
         $newRules = collect();
-        $hasFileRule = $rules->contains(fn ($rule): bool => is_array($rule) && ($rule['name'] ?? '') === 'file');
+        $hasFileRule = $rules->contains(fn (mixed $rule): bool => is_array($rule) && ($rule['name'] ?? '') === 'file');
 
         foreach ($rules as $rule) {
             if (! is_array($rule)) {
