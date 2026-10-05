@@ -2,9 +2,11 @@
 
 The v2 to v3 steps live in the [upgrade guide](docs/content/1.getting-started/3.upgrade-guide.md). This file lists what changes between minor releases of v3.
 
-## From 3.11 to 3.12
+## From 3.11 to 3.13
 
-3.12 normalizes values when they are written. You cannot opt out of any change below.
+There is no 3.12 release. 3.13 follows 3.11.
+
+3.13 normalizes values when they are written. You cannot opt out of any change below.
 
 ### Every write path normalizes
 
@@ -27,6 +29,8 @@ A value must start with `+` to be parsed. Without it, or when it is not a possib
 ### Domain links are stored as a bare lowercase host
 
 A link field with the `link_variant` setting set to `domain` stores only the host. `HTTPS://www.Acme.com/pricing?x=1` becomes `acme.com`.
+
+`link_variant` is an internal setting. No settings form offers it, and a dedicated domain field type is planned to replace it, so do not build on it.
 
 Normalization lower-cases the value and removes whitespace, the scheme, userinfo, port, path, query, fragment, leading `www.`, and a trailing dot.
 
@@ -66,7 +70,7 @@ If your type already overrides `setValue()`, that method now runs on every write
 
 The package does not rewrite values stored by 3.11 or earlier.
 
-Values stored before 3.12 keep their old spelling until you normalize them. Until then, the unique rule matches a stored value only when it equals one of the equivalent forms above. Code that reads the stored text directly still sees the old spelling.
+Values stored before 3.13 keep their old spelling until you normalize them. Until then, the unique rule matches a stored value only when it equals one of the equivalent forms above. Code that reads the stored text directly still sees the old spelling.
 
 To normalize old rows, loop over the fields of the types you use and rewrite each stored value:
 
