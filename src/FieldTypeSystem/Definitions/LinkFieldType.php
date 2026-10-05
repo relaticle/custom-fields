@@ -14,6 +14,8 @@ use Relaticle\CustomFields\Models\CustomField;
 
 class LinkFieldType extends BaseFieldType
 {
+    private const string WHITESPACE = '[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]';
+
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
@@ -65,7 +67,7 @@ class LinkFieldType extends BaseFieldType
 
         $authority = Str::of($value)
             ->lower()
-            ->replaceMatches('#[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]+#u', '')
+            ->replaceMatches('#'.self::WHITESPACE.'+#u', '')
             ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
             ->before('/')
             ->before('?')
@@ -83,7 +85,7 @@ class LinkFieldType extends BaseFieldType
             return "www.{$host}";
         }
 
-        $unwrapped = (string) preg_replace('#^(?:https?://)+#i', '', trim($value));
+        $unwrapped = (string) preg_replace('#^(?:https?://'.self::WHITESPACE.'*)+#iu', '', trim($value));
 
         return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
     }
