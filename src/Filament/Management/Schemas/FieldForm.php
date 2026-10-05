@@ -202,7 +202,7 @@ class FieldForm implements FormInterface
                     ->required()
                     ->columnSpan(9)
                     ->rules([
-                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
+                        fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
                             if (blank($value)) {
                                 return;
                             }
@@ -210,7 +210,7 @@ class FieldForm implements FormInterface
                             $hasDuplicate = collect($get('../../options') ?? [])
                                 ->pluck('name')
                                 ->filter()
-                                ->map(fn ($name): string => mb_strtolower($name))
+                                ->map(fn (string $name): string => mb_strtolower($name))
                                 ->duplicates()
                                 ->contains(mb_strtolower($value));
 
