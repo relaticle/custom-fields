@@ -63,7 +63,7 @@ class LinkFieldType extends BaseFieldType
             return $this->setValue($value);
         }
 
-        $host = (string) Str::of($value)
+        $authority = Str::of($value)
             ->lower()
             ->replaceMatches('#[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]+#u', '')
             ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
@@ -71,15 +71,19 @@ class LinkFieldType extends BaseFieldType
             ->before('?')
             ->before('#')
             ->replaceMatches('#^.*@#', '')
-            ->before(':')
-            ->replaceMatches('#^(www\.)+#', '')
-            ->rtrim('.');
+            ->before(':');
+
+        $host = (string) $authority->replaceMatches('#^(www\.)+#', '')->rtrim('.');
 
         if ($host === '' || str_contains($host, '.')) {
             return $host;
         }
 
-        $unwrapped = $this->withoutScheme(trim($value));
+        if ($authority->startsWith('www.')) {
+            return "www.{$host}";
+        }
+
+        $unwrapped = (string) preg_replace('#^(?:https?://)+#i', '', trim($value));
 
         return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
     }

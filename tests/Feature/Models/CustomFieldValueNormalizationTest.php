@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\LinkFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -171,6 +172,37 @@ it('stores a domain-variant link saved outside the panel form as its bare host',
 
     expect(collect($stored->json_value)->all())->toBe(['acme.com']);
 });
+
+it('strips stacked schemes from a domain-variant link without re-normalizing once per scheme', function (): void {
+    $fieldType = new class extends LinkFieldType
+    {
+        public int $calls = 0;
+
+        public function normalize(string $value, CustomField $customField): string
+        {
+            $this->calls++;
+
+            return parent::normalize($value, $customField);
+        }
+    };
+
+    expect($fieldType->normalize(str_repeat('http://', 290).'Acme.com/x', $this->domainLinkField))->toBe('acme.com')
+        ->and($fieldType->calls)->toBeLessThanOrEqual(2);
+});
+
+it('stores a www host with no registrable part in one lowercase spelling', function (string $input): void {
+    $once = SafeValueConverter::toDbSafe([$input], 'link', $this->domainLinkField);
+
+    expect($once)->toBe(['www.co'])
+        ->and(SafeValueConverter::toDbSafe($once, 'link', $this->domainLinkField))->toBe($once);
+})->with([
+    'upper case' => 'WWW.CO',
+    'lower case' => 'www.co',
+    'scheme and path' => 'https://WWW.Co/x',
+    'padded' => '  Www.Co  ',
+    'repeated www' => 'www.www.co',
+    'trailing dot' => 'WWW.CO.',
+]);
 
 it('adds no scheme to a url-variant link typed without one', function (): void {
     expect(SafeValueConverter::toDbSafe(['Acme.com/Path/', 'acme.com', 'N/A'], 'link', $this->linkField))->toBe(['acme.com/Path', 'acme.com', 'N/A']);
