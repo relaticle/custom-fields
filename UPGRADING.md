@@ -28,6 +28,8 @@ A value must start with `+` to be parsed. Without it, or when it is not a possib
 
 A link field with the `link_variant` setting set to `domain` stores only the host. `HTTPS://www.Acme.com/pricing?x=1` becomes `acme.com`.
 
+`link_variant` is an internal setting. No settings form offers it, and a dedicated domain field type is planned to replace it, so do not build on it.
+
 Normalization lower-cases the value and removes whitespace, the scheme, userinfo, port, path, query, fragment, leading `www.`, and a trailing dot.
 
 A list item with no host left, such as `https://`, is dropped. A value that is not a host, such as `tel:+14155550100`, is kept as typed.
