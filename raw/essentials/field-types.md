@@ -114,7 +114,7 @@ Custom Fields includes 20+ pre-configured field types:
     </td>
     
     <td>
-      URL validation and formatting
+      URL or bare domain, normalized on save
     </td>
   </tr>
   
@@ -755,6 +755,91 @@ return FieldSchema::multiChoice()
     ->withoutUserOptions()
     ->defaultItemValidationRules(['email', 'max:254']);
 ```
+
+### Normalizing Values
+
+A field type can rewrite a value before it is stored. Three methods on `BaseFieldType` control this, and each has a default.
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Method
+    </th>
+    
+    <th>
+      Default
+    </th>
+    
+    <th>
+      Override it when
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      <code>
+        setValue(string $value): string
+      </code>
+    </td>
+    
+    <td>
+      returns the value
+    </td>
+    
+    <td>
+      the stored form depends on the value alone
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        normalize(string $value, CustomField $customField): string
+      </code>
+    </td>
+    
+    <td>
+      calls <code>
+        setValue()
+      </code>
+    </td>
+    
+    <td>
+      the stored form depends on a field setting
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <code>
+        equivalentValues(string $value, CustomField $customField): array
+      </code>
+    </td>
+    
+    <td>
+      the normalized value alone
+    </td>
+    
+    <td>
+      several stored forms count as the same value
+    </td>
+  </tr>
+</tbody>
+</table>
+
+```php
+public function setValue(string $value): string
+{
+    return strtoupper(trim($value));
+}
+```
+
+`normalize()` runs on every write path, for each item of a multi-value field. Keep it idempotent: normalizing a normalized value must return the same value.
+
+The unique rule rejects a value when another record holds any form that `equivalentValues()` returns. The [data model](/essentials/data-model#how-a-value-is-stored) page lists the stored form of each built-in type.
 
 ### Import Customization
 

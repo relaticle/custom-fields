@@ -211,6 +211,10 @@ Your resource now has dynamic custom fields! Users can:
 
 # Upgrade Guide
 
+## Upgrading Between v3 Releases
+
+This page covers v2 to v3. Changes between minor releases of v3, such as the value normalization in 3.13, are in [UPGRADING.md](https://github.com/relaticle/custom-fields/blob/3.x/UPGRADING.md){rel="&#x22;nofollow&#x22;"}.
+
 ## Requirements
 
 Custom Fields v3 requires:
@@ -877,7 +881,7 @@ Custom Fields includes 20+ pre-configured field types:
 | **Text Input**      | `text`            | Text          | Basic text input with validation        |
 | **Email**           | `email`           | Multi-choice  | Email input with validation             |
 | **Phone**           | `phone`           | Multi-choice  | Phone number input                      |
-| **Link**            | `link`            | Multi-choice  | URL validation and formatting           |
+| **Link**            | `link`            | Multi-choice  | URL or bare domain, normalized on save  |
 | **Textarea**        | `textarea`        | Text          | Multi-line text input                   |
 | **Rich Editor**     | `rich-editor`     | Text          | WYSIWYG editor with formatting          |
 | **Markdown Editor** | `markdown-editor` | Text          | Markdown syntax with preview            |
@@ -1154,6 +1158,27 @@ return FieldSchema::multiChoice()
     ->withoutUserOptions()
     ->defaultItemValidationRules(['email', 'max:254']);
 ```
+
+### Normalizing Values
+
+A field type can rewrite a value before it is stored. Three methods on `BaseFieldType` control this, and each has a default.
+
+| Method                                                             | Default                    | Override it when                             |
+| ------------------------------------------------------------------ | -------------------------- | -------------------------------------------- |
+| `setValue(string $value): string`                                  | returns the value          | the stored form depends on the value alone   |
+| `normalize(string $value, CustomField $customField): string`       | calls `setValue()`         | the stored form depends on a field setting   |
+| `equivalentValues(string $value, CustomField $customField): array` | the normalized value alone | several stored forms count as the same value |
+
+```php
+public function setValue(string $value): string
+{
+    return strtoupper(trim($value));
+}
+```
+
+`normalize()` runs on every write path, for each item of a multi-value field. Keep it idempotent: normalizing a normalized value must return the same value.
+
+The unique rule rejects a value when another record holds any form that `equivalentValues()` returns. The [data model](https://relaticle.github.io/custom-fields/essentials/data-model#how-a-value-is-stored) page lists the stored form of each built-in type.
 
 ### Import Customization
 
@@ -1827,23 +1852,120 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
   :::
 
   :::tab{label="Values"}
-  | Column            | Type     | Description              |
-  | ----------------- | -------- | ------------------------ |
-  | `id`              | bigint   | Primary key              |
-  | `entity_type`     | string   | Polymorphic entity class |
-  | `entity_id`       | bigint   | Polymorphic entity ID    |
-  | `custom_field_id` | bigint   | Field definition         |
-  | `string_value`    | string   | For text fields          |
-  | `text_value`      | text     | For textarea fields      |
-  | `boolean_value`   | bool     | For checkbox fields      |
-  | `integer_value`   | bigint   | For integer fields       |
-  | `float_value`     | double   | For decimal fields       |
-  | `date_value`      | date     | For date fields          |
-  | `datetime_value`  | datetime | For datetime fields      |
-  | `json_value`      | json     | For complex/array fields |
-  | `tenant_id`       | bigint   | Optional multi-tenancy   |
+  | Column            | Type     | Description                                                                            |
+  | ----------------- | -------- | -------------------------------------------------------------------------------------- |
+  | `id`              | bigint   | Primary key                                                                            |
+  | `entity_type`     | string   | Polymorphic entity class                                                               |
+  | `entity_id`       | bigint   | Polymorphic entity ID                                                                  |
+  | `custom_field_id` | bigint   | Field definition                                                                       |
+  | `string_value`    | text     | String and file types, and single-choice types when option keys are strings            |
+  | `text_value`      | longtext | Text types: text input, textarea, rich editor, markdown, color picker                  |
+  | `boolean_value`   | bool     | Checkbox and toggle                                                                    |
+  | `integer_value`   | bigint   | Number, and single-choice types when option keys are integers                          |
+  | `float_value`     | double   | Currency                                                                               |
+  | `date_value`      | date     | Date                                                                                   |
+  | `datetime_value`  | datetime | Date Time                                                                              |
+  | `json_value`      | json     | Every multi-choice type: email, phone, link, tags, multi-select, checkbox list, record |
+  | `tenant_id`       | bigint   | Optional multi-tenancy                                                                 |
   :::
 ::
+
+## How a Value Is Stored
+
+Each record holds one row per field in `custom_field_values`. The row uses one typed column and leaves the others `null`.
+
+### The write path
+
+Every write goes through the same four steps, whether it comes from a Filament form, an import, or your own code.
+
+1. `saveCustomFields()` or `saveCustomFieldValue()` on the model finds or creates the value row.
+2. `CustomFieldValue::setValue()` picks the column from the field type's data type.
+3. `SafeValueConverter::toDbSafe()` casts the value to that column's PHP type.
+4. The field type's `normalize()` rewrites each string into its stored form.
+
+```php
+$company->saveCustomFieldValue($websiteField, ['https://Example.com/Pricing/']);
+
+$company->getCustomFieldValue($websiteField);
+// ['https://example.com/Pricing']
+```
+
+`saveCustomFields()` takes an array keyed by field code. A field whose code is missing from the array is saved as `null`.
+
+### One column per data type
+
+The field type's data type decides the column. The [field types table](https://relaticle.github.io/custom-fields/essentials/field-types#built-in-field-types) lists the data type of every built-in type.
+
+| Data type     | Column                                                          | PHP value read back |
+| ------------- | --------------------------------------------------------------- | ------------------- |
+| String, File  | `string_value`                                                  | `string`            |
+| Text          | `text_value`                                                    | `string`            |
+| Numeric       | `integer_value`                                                 | `int`               |
+| Float         | `float_value`                                                   | `float`             |
+| Boolean       | `boolean_value`                                                 | `bool`              |
+| Date          | `date_value`                                                    | date instance       |
+| DateTime      | `datetime_value`                                                | date-time instance  |
+| Single-choice | `integer_value`, or `string_value` when option keys are strings | option key          |
+| Multi-choice  | `json_value`                                                    | `array`             |
+
+Email, phone and link are multi-choice types. They are stored as a JSON list in `json_value`, even when the field allows one value.
+
+### The stored form of each type
+
+Normalization runs on strings only. For a list it runs on each item, drops an item that becomes empty, and collapses items that become equal. A single value that becomes empty is stored as `null`.
+
+| Type                        | Typed                              | Stored                               |
+| --------------------------- | ---------------------------------- | ------------------------------------ |
+| Phone                       | `+1 (415) 555-0100`                | `+14155550100`                       |
+| Phone with an extension     | `+1 415 555 0100 ext. 12`          | `+14155550100;ext=12`                |
+| Phone without a leading `+` | `415 555 0100`                     | `415 555 0100` (trimmed, not parsed) |
+| Link                        | `https://Example.com/Pricing/`     | `https://example.com/Pricing`        |
+| Link without a scheme       | `Acme.com/Path/`                   | `acme.com/Path`                      |
+| Link, domain variant        | `HTTPS://www.Acme.com/pricing?x=1` | `acme.com`                           |
+| Email                       | `Jane@Example.com`                 | `Jane@Example.com` (as typed)        |
+| Every other type            | as typed                           | as typed                             |
+
+A link keeps its scheme because `http://` and `https://` can open different pages. The domain variant keeps only the lowercase host. It is set through the internal `link_variant` setting, which no settings form offers. A dedicated domain field type is planned to replace it, so do not build on the setting.
+
+A date-time value is stored exactly as it is given. The package converts no timezone, so pass every value in one timezone, such as UTC.
+
+### Comparing values
+
+`UniqueCustomFieldValue` compares stored forms. It asks the field type for `equivalentValues()`, the list of stored forms that count as the same value, and rejects a value when another record holds any of them.
+
+For a link, that list is the normalized value plus the value with `https://`, with `http://`, and with no scheme. A stored `https://acme.com/pricing` blocks a typed `acme.com/pricing`.
+
+Normalize a value the same way before you compare it in your own code:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFieldsType;
+
+$stored = CustomFieldsType::getFieldTypeInstance($field->type)->normalize($typed, $field);
+```
+
+### Reading and querying
+
+`getCustomFieldValue()` returns the value of the typed column, decrypted when the field is encrypted. Call the `withCustomFieldValues()` scope first when you read many records, so the values load in one query.
+
+To filter, query the typed column of the field. `CustomField::getValueColumn()` returns its name.
+
+```php
+// A scalar field
+Company::whereHas('customFieldValues', fn ($query) => $query
+    ->where('custom_field_id', $revenueField->getKey())
+    ->where($revenueField->getValueColumn(), '>=', 1_000_000));
+
+// A multi-choice field: compare against the stored form
+Company::whereHas('customFieldValues', fn ($query) => $query
+    ->where('custom_field_id', $websiteField->getKey())
+    ->whereJsonContains('json_value', 'https://example.com/pricing'));
+```
+
+An encrypted field cannot be filtered or sorted in SQL, because the column holds ciphertext.
+
+### Values stored by an older version
+
+Normalization on every write path starts in 3.13. The package rewrites no existing row, so a value saved earlier keeps its old spelling until it is saved again. The [3.13 upgrade notes](https://github.com/relaticle/custom-fields/blob/3.x/UPGRADING.md){rel="&#x22;nofollow&#x22;"} describe how to normalize old rows.
 
 ## Design Philosophy
 

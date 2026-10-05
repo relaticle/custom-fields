@@ -2,6 +2,10 @@
 
 > Upgrade Custom Fields from v2 to v3
 
+## Upgrading Between v3 Releases
+
+This page covers v2 to v3. Changes between minor releases of v3, such as the value normalization in 3.13, are in [UPGRADING.md](https://github.com/relaticle/custom-fields/blob/3.x/UPGRADING.md).
+
 ## Requirements
 
 Custom Fields v3 requires:

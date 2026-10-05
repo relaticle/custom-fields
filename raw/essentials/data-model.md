@@ -816,11 +816,11 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      string
+      text
     </td>
     
     <td>
-      For text fields
+      String and file types, and single-choice types when option keys are strings
     </td>
   </tr>
   
@@ -832,11 +832,11 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      text
+      longtext
     </td>
     
     <td>
-      For textarea fields
+      Text types: text input, textarea, rich editor, markdown, color picker
     </td>
   </tr>
   
@@ -852,7 +852,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For checkbox fields
+      Checkbox and toggle
     </td>
   </tr>
   
@@ -868,7 +868,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For integer fields
+      Number, and single-choice types when option keys are integers
     </td>
   </tr>
   
@@ -884,7 +884,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For decimal fields
+      Currency
     </td>
   </tr>
   
@@ -900,7 +900,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For date fields
+      Date
     </td>
   </tr>
   
@@ -916,7 +916,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For datetime fields
+      Date Time
     </td>
   </tr>
   
@@ -932,7 +932,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      For complex/array fields
+      Every multi-choice type: email, phone, link, tags, multi-select, checkbox list, record
     </td>
   </tr>
   
@@ -955,6 +955,428 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
 </table>
 </tab>
 </tabs>
+
+## How a Value Is Stored
+
+Each record holds one row per field in `custom_field_values`. The row uses one typed column and leaves the others `null`.
+
+### The write path
+
+Every write goes through the same four steps, whether it comes from a Filament form, an import, or your own code.
+
+1. `saveCustomFields()` or `saveCustomFieldValue()` on the model finds or creates the value row.
+2. `CustomFieldValue::setValue()` picks the column from the field type's data type.
+3. `SafeValueConverter::toDbSafe()` casts the value to that column's PHP type.
+4. The field type's `normalize()` rewrites each string into its stored form.
+
+```php
+$company->saveCustomFieldValue($websiteField, ['https://Example.com/Pricing/']);
+
+$company->getCustomFieldValue($websiteField);
+// ['https://example.com/Pricing']
+```
+
+`saveCustomFields()` takes an array keyed by field code. A field whose code is missing from the array is saved as `null`.
+
+### One column per data type
+
+The field type's data type decides the column. The [field types table](/essentials/field-types#built-in-field-types) lists the data type of every built-in type.
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Data type
+    </th>
+    
+    <th>
+      Column
+    </th>
+    
+    <th>
+      PHP value read back
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      String, File
+    </td>
+    
+    <td>
+      <code>
+        string_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        string
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Text
+    </td>
+    
+    <td>
+      <code>
+        text_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        string
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Numeric
+    </td>
+    
+    <td>
+      <code>
+        integer_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        int
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Float
+    </td>
+    
+    <td>
+      <code>
+        float_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        float
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Boolean
+    </td>
+    
+    <td>
+      <code>
+        boolean_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        bool
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Date
+    </td>
+    
+    <td>
+      <code>
+        date_value
+      </code>
+    </td>
+    
+    <td>
+      date instance
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      DateTime
+    </td>
+    
+    <td>
+      <code>
+        datetime_value
+      </code>
+    </td>
+    
+    <td>
+      date-time instance
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Single-choice
+    </td>
+    
+    <td>
+      <code>
+        integer_value
+      </code>
+      
+      , or <code>
+        string_value
+      </code>
+      
+       when option keys are strings
+    </td>
+    
+    <td>
+      option key
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Multi-choice
+    </td>
+    
+    <td>
+      <code>
+        json_value
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        array
+      </code>
+    </td>
+  </tr>
+</tbody>
+</table>
+
+Email, phone and link are multi-choice types. They are stored as a JSON list in `json_value`, even when the field allows one value.
+
+### The stored form of each type
+
+Normalization runs on strings only. For a list it runs on each item, drops an item that becomes empty, and collapses items that become equal. A single value that becomes empty is stored as `null`.
+
+<table>
+<thead>
+  <tr>
+    <th>
+      Type
+    </th>
+    
+    <th>
+      Typed
+    </th>
+    
+    <th>
+      Stored
+    </th>
+  </tr>
+</thead>
+
+<tbody>
+  <tr>
+    <td>
+      Phone
+    </td>
+    
+    <td>
+      <code>
+        +1 (415) 555-0100
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        +14155550100
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Phone with an extension
+    </td>
+    
+    <td>
+      <code>
+        +1 415 555 0100 ext. 12
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        +14155550100;ext=12
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Phone without a leading <code>
+        +
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        415 555 0100
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        415 555 0100
+      </code>
+      
+       (trimmed, not parsed)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Link
+    </td>
+    
+    <td>
+      <code>
+        https://Example.com/Pricing/
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        https://example.com/Pricing
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Link without a scheme
+    </td>
+    
+    <td>
+      <code>
+        Acme.com/Path/
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        acme.com/Path
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Link, domain variant
+    </td>
+    
+    <td>
+      <code>
+        HTTPS://www.Acme.com/pricing?x=1
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        acme.com
+      </code>
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Email
+    </td>
+    
+    <td>
+      <code>
+        Jane@Example.com
+      </code>
+    </td>
+    
+    <td>
+      <code>
+        Jane@Example.com
+      </code>
+      
+       (as typed)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      Every other type
+    </td>
+    
+    <td>
+      as typed
+    </td>
+    
+    <td>
+      as typed
+    </td>
+  </tr>
+</tbody>
+</table>
+
+A link keeps its scheme because `http://` and `https://` can open different pages. The domain variant keeps only the lowercase host. It is set through the internal `link_variant` setting, which no settings form offers. A dedicated domain field type is planned to replace it, so do not build on the setting.
+
+A date-time value is stored exactly as it is given. The package converts no timezone, so pass every value in one timezone, such as UTC.
+
+### Comparing values
+
+`UniqueCustomFieldValue` compares stored forms. It asks the field type for `equivalentValues()`, the list of stored forms that count as the same value, and rejects a value when another record holds any of them.
+
+For a link, that list is the normalized value plus the value with `https://`, with `http://`, and with no scheme. A stored `https://acme.com/pricing` blocks a typed `acme.com/pricing`.
+
+Normalize a value the same way before you compare it in your own code:
+
+```php
+use Relaticle\CustomFields\Facades\CustomFieldsType;
+
+$stored = CustomFieldsType::getFieldTypeInstance($field->type)->normalize($typed, $field);
+```
+
+### Reading and querying
+
+`getCustomFieldValue()` returns the value of the typed column, decrypted when the field is encrypted. Call the `withCustomFieldValues()` scope first when you read many records, so the values load in one query.
+
+To filter, query the typed column of the field. `CustomField::getValueColumn()` returns its name.
+
+```php
+// A scalar field
+Company::whereHas('customFieldValues', fn ($query) => $query
+    ->where('custom_field_id', $revenueField->getKey())
+    ->where($revenueField->getValueColumn(), '>=', 1_000_000));
+
+// A multi-choice field: compare against the stored form
+Company::whereHas('customFieldValues', fn ($query) => $query
+    ->where('custom_field_id', $websiteField->getKey())
+    ->whereJsonContains('json_value', 'https://example.com/pricing'));
+```
+
+An encrypted field cannot be filtered or sorted in SQL, because the column holds ciphertext.
+
+### Values stored by an older version
+
+Normalization on every write path starts in 3.13. The package rewrites no existing row, so a value saved earlier keeps its old spelling until it is saved again. The [3.13 upgrade notes](https://github.com/relaticle/custom-fields/blob/3.x/UPGRADING.md) describe how to normalize old rows.
 
 ## Design Philosophy
 
