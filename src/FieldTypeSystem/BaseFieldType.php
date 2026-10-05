@@ -35,6 +35,16 @@ abstract class BaseFieldType implements FieldTypeDefinitionInterface
     }
 
     /**
+     * Every stored form that counts as the same value for one field.
+     *
+     * @return list<string>
+     */
+    public function equivalentValues(string $value, CustomField $customField): array
+    {
+        return [$this->normalize($value, $customField)];
+    }
+
+    /**
      * Transform a stored value for display.
      */
     public function getValue(string $value): string

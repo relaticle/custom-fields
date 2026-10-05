@@ -57,19 +57,19 @@ class TrimmedTextFieldType extends BaseFieldType
     }
 }
 
-it('strips the scheme from a link saved outside the panel form', function (): void {
+it('keeps the scheme of a link saved outside the panel form', function (): void {
     $post = Post::factory()->create();
 
-    $post->saveCustomFieldValue($this->linkField, ['https://example.com/pricing']);
+    $post->saveCustomFieldValue($this->linkField, ['HTTPS://Example.com/Pricing/']);
 
     $stored = CustomFieldValue::query()->where('entity_id', $post->getKey())->where('custom_field_id', $this->linkField->getKey())->firstOrFail();
 
-    expect(collect($stored->json_value)->all())->toBe(['example.com/pricing']);
+    expect(collect($stored->json_value)->all())->toBe(['https://example.com/Pricing']);
 });
 
 it('collapses values that normalize to the same link', function (): void {
-    expect(SafeValueConverter::toDbSafe(['https://example.com', 'http://example.com', 'example.com'], 'link', $this->linkField))
-        ->toBe(['example.com']);
+    expect(SafeValueConverter::toDbSafe(['https://example.com', 'HTTPS://Example.com/', ' https://example.com '], 'link', $this->linkField))
+        ->toBe(['https://example.com']);
 });
 
 it('keeps numeric-looking values that differ as text', function (): void {
@@ -172,6 +172,17 @@ it('stores a domain-variant link saved outside the panel form as its bare host',
     expect(collect($stored->json_value)->all())->toBe(['acme.com']);
 });
 
+it('adds no scheme to a url-variant link typed without one', function (): void {
+    expect(SafeValueConverter::toDbSafe(['Acme.com/Path/', 'acme.com', 'N/A'], 'link', $this->linkField))->toBe(['acme.com/Path', 'acme.com', 'N/A']);
+});
+
+it('normalizes a url-variant link to the same value when applied twice', function (): void {
+    $once = SafeValueConverter::toDbSafe(['HTTPS://Acme.com/a/?x=1#top', 'http://acme.com//'], 'link', $this->linkField);
+
+    expect($once)->toBe(['https://acme.com/a/?x=1#top', 'http://acme.com'])
+        ->and(SafeValueConverter::toDbSafe($once, 'link', $this->linkField))->toBe($once);
+});
+
 it('keeps the path of a url-variant link', function (?string $variant): void {
     $additional = $variant === null ? [] : ['link_variant' => $variant];
     $this->linkField->update(['settings' => new CustomFieldSettingsData(
@@ -181,7 +192,7 @@ it('keeps the path of a url-variant link', function (?string $variant): void {
     )]);
 
     expect(SafeValueConverter::toDbSafe(['HTTPS://www.LinkedIn.com/Company/Acme', '  http://acme.com/Path  '], 'link', $this->linkField->refresh()))
-        ->toBe(['www.LinkedIn.com/Company/Acme', 'acme.com/Path']);
+        ->toBe(['https://www.linkedin.com/Company/Acme', 'http://acme.com/Path']);
 })->with([
     'no variant' => null,
     'url variant' => 'url',
@@ -192,8 +203,8 @@ it('drops list items that normalize to nothing', function (string $empty): void 
         ->and(SafeValueConverter::toDbSafe([$empty], 'link', $this->domainLinkField))->toBe([]);
 })->with('empty links');
 
-it('drops url-variant list items that strip down to nothing', function (): void {
-    expect(SafeValueConverter::toDbSafe(['https://', '   ', 'https://example.com'], 'link', $this->linkField))->toBe(['example.com']);
+it('drops url-variant list items that hold no host', function (): void {
+    expect(SafeValueConverter::toDbSafe(['https://', '   ', 'https://example.com'], 'link', $this->linkField))->toBe(['https://example.com']);
 });
 
 it('stores nothing for a scalar that normalizes to nothing', function (): void {
