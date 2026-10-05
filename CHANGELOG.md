@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.13.1 - 2026-10-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.13.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(link): unwrap stacked schemes split by whitespace in one pass [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/253
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.13.0...v3.13.1
+
 ## v3.13.0 - 2026-10-05
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.13.0 -->
@@ -191,6 +202,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
