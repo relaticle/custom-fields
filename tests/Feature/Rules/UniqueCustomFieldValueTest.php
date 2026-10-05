@@ -628,6 +628,19 @@ describe('Grandfathered values on save', function (): void {
         expect($validator->passes())->toBeTrue();
     });
 
+    it('rejects a value another record stores with its scheme', function (string $submitted): void {
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['https://acme.com/pricing']);
+
+        $validator = validator(['v' => [$submitted]], ['v' => [new UniqueCustomFieldValue($this->linkField)]]);
+
+        expect($validator->passes())->toBeFalse();
+    })->with([
+        'same spelling' => 'https://acme.com/pricing',
+        'no scheme' => 'acme.com/pricing',
+        'other scheme' => 'http://acme.com/pricing',
+        'uppercase host and trailing slash' => 'HTTPS://ACME.com/pricing/',
+    ]);
+
     it('rejects a value the record did not hold before in any format', function (): void {
         $taken = Post::factory()->create();
         $editing = Post::factory()->create();
