@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -36,29 +35,27 @@ final class UniqueCustomFieldValue implements ValidationRule
 
         $fieldType = app(FieldManager::class)->getFieldTypeInstance($this->customField->type);
 
-        $normalizedByOriginal = collect(Arr::wrap($value))
+        $equivalentsByOriginal = collect(Arr::wrap($value))
             ->reject(fn (mixed $v): bool => blank($v) || ! is_scalar($v))
-            ->mapWithKeys(fn (mixed $v): array => [
-                (string) $v => $this->normalized($fieldType, (string) $v),
-            ]);
+            ->mapWithKeys(fn (mixed $v): array => [(string) $v => $this->equivalents($fieldType, (string) $v)]);
 
         if ($this->exceptHeldValues && $this->ignoreEntityId !== null) {
             $held = $this->heldValues($fieldType);
-            $normalizedByOriginal = $normalizedByOriginal->reject(fn (string $normalized): bool => in_array($normalized, $held, true));
+            $equivalentsByOriginal = $equivalentsByOriginal->reject(fn (array $equivalents): bool => array_intersect($equivalents, $held) !== []);
         }
 
-        if ($normalizedByOriginal->isEmpty()) {
+        if ($equivalentsByOriginal->isEmpty()) {
             return;
         }
 
-        $takenValues = $this->findTakenValues($normalizedByOriginal, $fieldType);
+        $takenValues = $this->findTakenValues($equivalentsByOriginal->flatten()->unique()->values()->all());
 
         if ($takenValues === []) {
             return;
         }
 
-        $collision = $normalizedByOriginal->search(
-            fn (string $normalized): bool => in_array($normalized, $takenValues, true)
+        $collision = $equivalentsByOriginal->search(
+            fn (array $equivalents): bool => array_intersect($equivalents, $takenValues) !== []
         );
 
         if ($collision !== false) {
@@ -69,63 +66,45 @@ final class UniqueCustomFieldValue implements ValidationRule
     }
 
     /**
+     * @return list<string>
+     */
+    private function equivalents(?FieldTypeDefinitionInterface $fieldType, string $value): array
+    {
+        return $fieldType instanceof BaseFieldType ? $fieldType->equivalentValues($value, $this->customField) : [$value];
+    }
+
+    /**
      * Return the subset of normalized values that already exist on another entity.
      *
      * Executes a single query regardless of how many values are submitted,
      * avoiding the N+1 pattern of checking each value individually.
      *
-     * @param  Collection<string, string>  $normalizedByOriginal
+     * @param  array<int, string>  $normalizedValues
      * @return array<int, string>
      */
-    private function findTakenValues(Collection $normalizedByOriginal, ?FieldTypeDefinitionInterface $fieldType): array
+    private function findTakenValues(array $normalizedValues): array
     {
         $valueColumn = $this->customField->getValueColumn();
         $query = $this->baseQuery();
-        $normalizedValues = $normalizedByOriginal->values()->all();
-
-        $candidates = $this->candidateSpellings($normalizedByOriginal, $fieldType);
 
         if ($valueColumn === 'json_value') {
-            $query->where(function (Builder $q) use ($candidates): void {
-                foreach ($candidates as $candidate) {
-                    $q->orWhereJsonContains('json_value', $candidate);
+            $query->where(function (Builder $q) use ($normalizedValues): void {
+                foreach ($normalizedValues as $value) {
+                    $q->orWhereJsonContains('json_value', $value);
                 }
             });
 
-            $stored = $query->pluck('json_value')
-                ->flatten(1)
-                ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
-                ->map(fn (mixed $value): string => $this->normalized($fieldType, (string) $value));
+            $stored = $query->pluck('json_value')->flatten(1)->all();
 
-            return array_values(array_intersect($normalizedValues, $stored->all()));
+            return array_values(array_intersect($normalizedValues, $stored));
         }
 
-        return $query->whereIn($valueColumn, $candidates)
+        return $query->whereIn($valueColumn, $normalizedValues)
             ->distinct()
             ->pluck($valueColumn)
-            ->map(fn (mixed $v): string => $this->normalized($fieldType, (string) $v))
+            ->map(static fn (mixed $v): string => (string) $v)
             ->values()
             ->all();
-    }
-
-    /**
-     * @param  Collection<string, string>  $normalizedByOriginal
-     * @return array<int, string>
-     */
-    private function candidateSpellings(Collection $normalizedByOriginal, ?FieldTypeDefinitionInterface $fieldType): array
-    {
-        $typed = $normalizedByOriginal->keys()->map(fn (int|string $original): string => (string) $original);
-
-        $preUpgrade = $fieldType instanceof BaseFieldType ?
-            $typed->map(fn (string $original): string => $fieldType->setValue($original)) :
-            collect();
-
-        return $typed->merge($normalizedByOriginal->values())->merge($preUpgrade)->unique(strict: true)->values()->all();
-    }
-
-    private function normalized(?FieldTypeDefinitionInterface $fieldType, string $value): string
-    {
-        return $fieldType instanceof BaseFieldType ? $fieldType->normalize($value, $this->customField) : $value;
     }
 
     /**
@@ -139,7 +118,8 @@ final class UniqueCustomFieldValue implements ValidationRule
 
         return collect($stored)
             ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
-            ->map(fn (mixed $value): string => $this->normalized($fieldType, (string) $value))
+            ->flatMap(fn (mixed $value): array => $this->equivalents($fieldType, (string) $value))
+            ->unique()
             ->values()
             ->all();
     }

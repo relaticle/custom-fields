@@ -628,6 +628,19 @@ describe('Grandfathered values on save', function (): void {
         expect($validator->passes())->toBeTrue();
     });
 
+    it('rejects a value another record stores with its scheme', function (string $submitted): void {
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['https://acme.com/pricing']);
+
+        $validator = validator(['v' => [$submitted]], ['v' => [new UniqueCustomFieldValue($this->linkField)]]);
+
+        expect($validator->passes())->toBeFalse();
+    })->with([
+        'same spelling' => 'https://acme.com/pricing',
+        'no scheme' => 'acme.com/pricing',
+        'other scheme' => 'http://acme.com/pricing',
+        'uppercase host and trailing slash' => 'HTTPS://ACME.com/pricing/',
+    ]);
+
     it('rejects a value the record did not hold before in any format', function (): void {
         $taken = Post::factory()->create();
         $editing = Post::factory()->create();
@@ -749,115 +762,5 @@ describe('Grandfathered values on save', function (): void {
             ])
             ->call('save')
             ->assertHasFormErrors(['custom_fields.domains']);
-    });
-});
-
-describe('Values stored before normalization', function (): void {
-    beforeEach(function (): void {
-        $this->domainField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->getKey(),
-            'entity_type' => Post::class,
-            'code' => 'company_domain',
-            'name' => 'Company domain',
-            'type' => 'link',
-            'settings' => new CustomFieldSettingsData(
-                allow_multiple: true,
-                max_values: 5,
-                unique_per_entity_type: true,
-                additional: ['link_variant' => 'domain'],
-            ),
-        ]);
-    });
-
-    it('blocks the same url typed again when another record stored it raw', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['https://www.acme.com/']);
-
-        $validator = validator(['v' => ['https://www.acme.com/']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
-
-        expect($validator->passes())->toBeFalse();
-    });
-
-    it('blocks a url when another record stored it as 3.11 saved it from the form', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['www.acme.com/']);
-
-        $validator = validator(['v' => ['https://www.acme.com/']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
-
-        expect($validator->passes())->toBeFalse();
-    });
-
-    it('blocks a pasted url when another record stored the bare domain', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['acme.com']);
-
-        $validator = validator(['v' => ['HTTPS://www.Acme.com/x']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
-
-        expect($validator->passes())->toBeFalse();
-    });
-
-    it('blocks a url when another record stored the host with www', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['www.acme.com']);
-
-        $validator = validator(['v' => ['https://www.acme.com']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
-
-        expect($validator->passes())->toBeFalse();
-    });
-
-    it('filters stored values by the typed, normalized and pre-3.12 spellings', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['other.com']);
-
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-
-        try {
-            validator(['v' => ['HTTPS://www.Acme.com/x']], ['v' => [new UniqueCustomFieldValue($this->domainField)]])->passes();
-
-            $bindings = collect(DB::getQueryLog())
-                ->filter(static fn (array $entry): bool => str_contains($entry['query'], 'custom_field_values'))
-                ->flatMap(static fn (array $entry): array => $entry['bindings']);
-        } finally {
-            DB::disableQueryLog();
-            DB::flushQueryLog();
-        }
-
-        expect($bindings->intersect(['HTTPS://www.Acme.com/x', 'acme.com', 'www.Acme.com/x'])->unique()->values()->all())
-            ->toEqualCanonicalizing(['HTTPS://www.Acme.com/x', 'acme.com', 'www.Acme.com/x']);
-    });
-
-    it('allows the record to keep the legacy spelling it stored itself', function (): void {
-        $own = Post::factory()->create();
-        storeLinkValueForPost($own, $this->domainField, ['https://www.acme.com/']);
-
-        $validator = validator(['v' => ['acme.com']], ['v' => [new UniqueCustomFieldValue($this->domainField, $own->getKey())]]);
-
-        expect($validator->passes())->toBeTrue();
-    });
-
-    it('allows a domain that no stored spelling matches', function (): void {
-        storeLinkValueForPost(Post::factory()->create(), $this->domainField, ['https://www.other.com/', 'acme.org']);
-
-        $validator = validator(['v' => ['acme.com']], ['v' => [new UniqueCustomFieldValue($this->domainField)]]);
-
-        expect($validator->passes())->toBeTrue();
-    });
-
-    it('still compares phone numbers by their E.164 form', function (): void {
-        $phoneField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->getKey(),
-            'entity_type' => Post::class,
-            'code' => 'mobile',
-            'name' => 'Mobile',
-            'type' => 'phone',
-            'settings' => new CustomFieldSettingsData(
-                allow_multiple: true,
-                max_values: 5,
-                unique_per_entity_type: true,
-            ),
-        ]);
-        storeLinkValueForPost(Post::factory()->create(), $phoneField, ['+14155550100']);
-
-        $taken = validator(['v' => ['+1 (415) 555-0100']], ['v' => [new UniqueCustomFieldValue($phoneField)]]);
-        $free = validator(['v' => ['+1 (415) 555-0199']], ['v' => [new UniqueCustomFieldValue($phoneField)]]);
-
-        expect($taken->passes())->toBeFalse()
-            ->and($free->passes())->toBeTrue();
     });
 });

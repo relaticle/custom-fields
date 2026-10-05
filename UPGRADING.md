@@ -32,15 +32,21 @@ Normalization lower-cases the value and removes whitespace, the scheme, userinfo
 
 A list item with no host left, such as `https://`, is dropped. A value that is not a host, such as `tel:+14155550100`, is kept as typed.
 
-Links without the `domain` variant keep their path. They lose one leading `http://` or `https://`, as in 3.11.
+### Url links keep their scheme
 
-### The unique rule compares normalized values
+A link without the `domain` variant keeps its scheme, path, query and fragment. `https://Example.com/Pricing/` is stored as `https://example.com/Pricing`.
 
-`UniqueCustomFieldValue` normalizes the submitted value and every value it finds. On a domain link field, a stored `acme.com` now blocks a typed `HTTPS://www.Acme.com/x`.
+The scheme and host are lower-cased and trailing slashes are removed. A value typed without a scheme gets none. In 3.11 one leading `http://` or `https://` was stripped.
 
-The rule matches a stored value by its normalized form, by the form it was typed in, or by the form `setValue()` stored before 3.12. For example, a stored `www.acme.com/` blocks a typed `https://www.acme.com/`.
+`http://acme.com` and `https://acme.com` are two stored values. The unique rule treats them as one.
 
-It does not match every older spelling. A stored `https://www.acme.com/` does not block a typed `acme.com`.
+### The unique rule compares equivalent values
+
+`UniqueCustomFieldValue` asks the field type for every stored form that counts as the same value. `BaseFieldType::equivalentValues()` returns them.
+
+For a link, the forms are the normalized value, the stored value, and the stored value with `https://`, with `http://`, and with no scheme. On a domain link field, a stored `acme.com` blocks a typed `HTTPS://www.Acme.com/x`. On a url link field, a stored `https://acme.com/pricing` blocks a typed `acme.com/pricing`.
+
+The rule looks up those forms only. It does not match every spelling an older version stored. A stored `www.acme.com` does not block a typed `acme.com`.
 
 `ValidationService` passes `exceptHeldValues: true`. A record can keep a unique value that it already holds, even when another record holds it too.
 
@@ -52,13 +58,15 @@ Override `normalize()` when the stored form depends on a field setting, as `Link
 
 If your type already overrides `setValue()`, that method now runs on every write path, not only where your form called it.
 
+`BaseFieldType` also has `equivalentValues(string $value, CustomField $customField): array`. It returns the normalized value alone by default. A subclass that already declares a method with that name and another signature fails to load.
+
 `SafeValueConverter::toDbSafe()` takes an optional third argument, `?CustomField $customField`. Without it, no normalization runs.
 
 ### No backfill ships
 
 The package does not rewrite values stored by 3.11 or earlier.
 
-Values stored before 3.12 keep their old spelling until you normalize them. Until then, the unique rule matches a stored value only by its normalized form, its typed form, or its pre-3.12 stored form. Code that reads the stored text directly still sees the old spelling.
+Values stored before 3.12 keep their old spelling until you normalize them. Until then, the unique rule matches a stored value only when it equals one of the equivalent forms above. Code that reads the stored text directly still sees the old spelling.
 
 To normalize old rows, loop over the fields of the types you use and rewrite each stored value:
 
