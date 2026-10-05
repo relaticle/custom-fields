@@ -137,6 +137,7 @@ dataset('unparseable links', [
     'tel uri' => ['tel:+14155550100', 'tel:+14155550100'],
     'not a link' => ['N/A', 'N/A'],
     'stacked scheme' => ['http://http://localhost', 'localhost'],
+    'stacked scheme split by whitespace' => ["http:// HTTPS://\thttp://\u{00A0}localhost", 'localhost'],
 ]);
 
 dataset('empty links', [
@@ -189,6 +190,28 @@ it('strips stacked schemes from a domain-variant link without re-normalizing onc
     expect($fieldType->normalize(str_repeat('http://', 290).'Acme.com/x', $this->domainLinkField))->toBe('acme.com')
         ->and($fieldType->calls)->toBeLessThanOrEqual(2);
 });
+
+it('strips stacked schemes split by whitespace without re-normalizing once per scheme', function (string $separator): void {
+    $fieldType = new class extends LinkFieldType
+    {
+        public int $calls = 0;
+
+        public function normalize(string $value, CustomField $customField): string
+        {
+            $this->calls++;
+
+            return parent::normalize($value, $customField);
+        }
+    };
+
+    expect($fieldType->normalize(str_repeat("http://{$separator}", 250).'Acme.com/x', $this->domainLinkField))->toBe('acme.com')
+        ->and($fieldType->calls)->toBeLessThanOrEqual(2);
+})->with([
+    'space' => ' ',
+    'tab' => "\t",
+    'non-breaking space' => "\u{00A0}",
+    'zero-width space' => "\u{200B}",
+]);
 
 it('stores a www host with no registrable part in one lowercase spelling', function (string $input): void {
     $once = SafeValueConverter::toDbSafe([$input], 'link', $this->domainLinkField);
