@@ -797,7 +797,7 @@ final class FieldForm implements FormInterface
                         ): void {
                             if (blank($state)) {
                                 $component->state(
-                                    $record->type ?? CustomFieldsType::toCollection()->first()->key
+                                    $record->type ?? CustomFieldsType::toCollection()->selectable()->first()->key
                                 );
                             }
                         })

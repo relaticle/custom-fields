@@ -40,6 +40,7 @@ final class FieldTypeData extends Data implements Stringable
         public string|Closure|null $settingsSchema = null,
         /** @var array<int, VisibilityOperator>|null */
         public ?array $visibilityOperators = null,
+        public bool $systemOnly = false,
     ) {}
 
     /**

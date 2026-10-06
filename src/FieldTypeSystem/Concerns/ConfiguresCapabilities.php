@@ -22,6 +22,8 @@ trait ConfiguresCapabilities
 
     private bool $supportsUniqueConstraint = false;
 
+    private bool $systemOnly = false;
+
     private bool $withoutUserOptions = false;
 
     private bool $requiresRelationship = false;
@@ -99,6 +101,16 @@ trait ConfiguresCapabilities
     public function supportsUniqueConstraint(bool $supports = true): self
     {
         $this->supportsUniqueConstraint = $supports;
+
+        return $this;
+    }
+
+    /**
+     * Keep this type out of the field type picker. Only code can create a field of it.
+     */
+    public function systemOnly(bool $systemOnly = true): self
+    {
+        $this->systemOnly = $systemOnly;
 
         return $this;
     }
