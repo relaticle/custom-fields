@@ -9,6 +9,7 @@ use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemFirstFieldType;
 use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemProbeFieldType;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
@@ -990,7 +991,7 @@ describe('ManageCustomField - Code Stability On Rename', function (): void {
 
 describe('System-only field types', function (): void {
     beforeEach(function (): void {
-        CustomFieldsType::register([SystemProbeFieldType::class]);
+        CustomFieldsType::register([SystemProbeFieldType::class, SystemFirstFieldType::class]);
 
         $this->section = CustomFieldSection::factory()
             ->forEntityType($this->userEntityType)
@@ -1035,5 +1036,70 @@ describe('System-only field types', function (): void {
                 'entity_type' => $this->userEntityType,
             ])
             ->assertHasNoActionErrors();
+    });
+
+    it('cannot duplicate a field of a system-only type', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'system_defined' => false,
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->assertActionHidden('duplicate');
+    });
+
+    it('defaults the create form to the first selectable type', function (): void {
+        $firstSelectable = CustomFieldsType::toCollection()->selectable()->first()->key;
+
+        expect(CustomFieldsType::toCollection()->first()->key)->toBe('system-first');
+
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->mountAction('createField')
+            ->assertSet('mountedActions.0.data.type', $firstSelectable);
+    });
+
+    it('mounts and saves the edit form of a field of a system-only type', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Probe',
+                'code' => 'probe',
+                'system_defined' => false,
+            ]);
+
+        livewire(ManageCustomField::class, ['field' => $field])
+            ->mountAction('edit')
+            ->assertSet('mountedActions.0.data.type', 'system-probe')
+            ->set('mountedActions.0.data.name', 'Probe renamed')
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($field->refresh())
+            ->type->toBe('system-probe')
+            ->name->toBe('Probe renamed');
+    });
+
+    it('leaves a system-only type out of the type search results', function (): void {
+        $component = livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])->mountAction('createField');
+
+        $search = fn (string $term): array => collect($component->instance()->callSchemaComponentMethod('mountedActionSchema0.type', 'getSearchResultsForJs', ['search' => $term]))
+            ->pluck('value')
+            ->all();
+
+        expect($search('probe'))->not->toContain('system-probe')
+            ->and($search('system'))->not->toContain('system-first')
+            ->and($search('text'))->toContain('text');
     });
 });

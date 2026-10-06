@@ -76,7 +76,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->requiresConfirmation()
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
-            ->visible(fn (CustomField $record): bool => ! $record->isSystemDefined())
+            ->visible(fn (CustomField $record): bool => ! $record->isSystemDefined() && ! $record->typeData?->systemOnly)
             ->action(function (): void {
                 $code = $this->generateUniqueCode(
                     Str::slug($this->field->code).'-copy',
