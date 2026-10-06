@@ -2,6 +2,23 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.14.0 - 2026-10-06
+
+**Breaking for anyone who set the internal `link_variant` setting by hand:** a link field no longer reduces a value to its host. See `UPGRADING.md`, From 3.13 to 3.14.
+
+`FieldSchema::systemOnly()` keeps a field type out of the type picker.
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): update composer and npm dependencies [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/254
+* chore: restore full type coverage and rebuild the stylesheet [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/255
+* feat: system-only field types and remove link_variant [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/256
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.13.1...v3.14.0
+
 ## v3.13.1 - 2026-10-05
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.13.1 -->
@@ -202,6 +219,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
