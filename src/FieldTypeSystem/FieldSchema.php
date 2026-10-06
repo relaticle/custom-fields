@@ -157,7 +157,8 @@ final class FieldSchema
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema,
-            visibilityOperators: $this->visibilityOperators
+            visibilityOperators: $this->visibilityOperators,
+            systemOnly: $this->systemOnly
         );
     }
 }

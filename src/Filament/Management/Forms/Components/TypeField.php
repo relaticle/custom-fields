@@ -7,9 +7,11 @@ namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
+use Relaticle\CustomFields\Collections\FieldTypeCollection;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\UiSurface;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
 final class TypeField extends Select
@@ -90,7 +92,7 @@ final class TypeField extends Select
      */
     protected function getAllFormattedOptions(): array
     {
-        return CustomFieldsType::toCollection()
+        return $this->selectableTypes()
             ->mapWithKeys(fn (FieldTypeData $data): array => [$data->key => $this->getHtmlOption($data)])
             ->toArray();
     }
@@ -109,7 +111,7 @@ final class TypeField extends Select
 
         $searchLower = mb_strtolower(trim($search));
 
-        return CustomFieldsType::toCollection()
+        return $this->selectableTypes()
             ->filter(function (FieldTypeData $data) use ($searchLower): bool {
                 return str_contains(mb_strtolower($data->label), $searchLower) ||
                        str_contains(mb_strtolower($data->key), $searchLower);
@@ -144,5 +146,12 @@ final class TypeField extends Select
                     ->render();
             }
         );
+    }
+
+    private function selectableTypes(): FieldTypeCollection
+    {
+        $record = $this->getRecord();
+
+        return CustomFieldsType::toCollection()->selectable($record instanceof CustomField ? $record->type : null);
     }
 }

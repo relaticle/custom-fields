@@ -16,4 +16,9 @@ final class FieldTypeCollection extends Collection
     {
         return $this->filter(fn (FieldTypeData $fieldType): bool => $fieldType->acceptsArbitraryValues);
     }
+
+    public function selectable(?string $except = null): static
+    {
+        return $this->filter(fn (FieldTypeData $fieldType): bool => ! $fieldType->systemOnly || $fieldType->key === $except);
+    }
 }

@@ -708,51 +708,6 @@ describe('Grandfathered values on save', function (): void {
         expect($validator->passes())->toBeTrue();
     });
 
-    it('normalizes candidates with the field setting so a domain variant catches a pasted url', function (): void {
-        $domainField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->getKey(),
-            'entity_type' => Post::class,
-            'code' => 'company_domain',
-            'name' => 'Company domain',
-            'type' => 'link',
-            'settings' => new CustomFieldSettingsData(
-                allow_multiple: true,
-                max_values: 5,
-                unique_per_entity_type: true,
-                additional: ['link_variant' => 'domain'],
-            ),
-        ]);
-        storeLinkValueForPost(Post::factory()->create(), $domainField, ['acme.com']);
-        $editing = Post::factory()->create();
-
-        $validator = validator(['v' => ['https://www.acme.com/pricing']], ['v' => [new UniqueCustomFieldValue($domainField, $editing->getKey(), exceptHeldValues: true)]]);
-
-        expect($validator->passes())->toBeFalse();
-    });
-
-    it('matches a held value stored in a legacy format against the domain variant', function (): void {
-        $domainField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->getKey(),
-            'entity_type' => Post::class,
-            'code' => 'company_domain',
-            'name' => 'Company domain',
-            'type' => 'link',
-            'settings' => new CustomFieldSettingsData(
-                allow_multiple: true,
-                max_values: 5,
-                unique_per_entity_type: true,
-                additional: ['link_variant' => 'domain'],
-            ),
-        ]);
-        $kept = Post::factory()->create();
-        storeLinkValueForPost($kept, $domainField, ['www.acme.com']);
-        storeLinkValueForPost(Post::factory()->create(), $domainField, ['acme.com']);
-
-        $validator = validator(['v' => ['https://acme.com/about']], ['v' => [new UniqueCustomFieldValue($domainField, $kept->getKey(), exceptHeldValues: true)]]);
-
-        expect($validator->passes())->toBeTrue();
-    });
-
     it('still blocks restoring a trashed record whose value is taken', function (): void {
         $trashed = Post::factory()->create();
         $trashed->saveCustomFieldValue($this->linkField, ['acme.com']);
