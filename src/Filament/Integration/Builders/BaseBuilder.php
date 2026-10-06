@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
@@ -173,7 +175,8 @@ abstract class BaseBuilder
                 $this->sections->getModel()->getQualifiedKeyName(),
                 $this->onlySections
             ))
-            ->with(['fields' => function (mixed $query): mixed {
+            ->with(['fields' => function (Relation $query): mixed {
+                /** @var HasMany<CustomField, CustomFieldSection> $query */
                 return $query
                     ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInList())
                     ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInView())
