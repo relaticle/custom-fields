@@ -1064,6 +1064,7 @@ FieldSchema::multiChoice()   // For MULTI_CHOICE data type
 ->sortable()                        // Enable column sorting in tables (default: true)
 ->filterable()                      // Enable table filter for this field type (default: false)
 ->encryptable()                     // Allow users to enable encryption for this field
+->systemOnly()                      // Leave the type out of the field type picker
 ```
 
 ::callout{type="info"}
@@ -1339,6 +1340,7 @@ If your custom field type doesn't appear in the dropdown:
 2. Verify the field type is registered in your panel provider
 3. Clear Laravel's cache: `php artisan cache:clear`
 4. Check that the `configure()` method returns a valid `FieldSchema`
+5. Check that `configure()` does not call `systemOnly()`. A system-only type resolves and renders, but only code can create a field of it
 
 ### Components Not Rendering
 
@@ -1914,18 +1916,17 @@ Email, phone and link are multi-choice types. They are stored as a JSON list in 
 
 Normalization runs on strings only. For a list it runs on each item, drops an item that becomes empty, and collapses items that become equal. A single value that becomes empty is stored as `null`.
 
-| Type                        | Typed                              | Stored                               |
-| --------------------------- | ---------------------------------- | ------------------------------------ |
-| Phone                       | `+1 (415) 555-0100`                | `+14155550100`                       |
-| Phone with an extension     | `+1 415 555 0100 ext. 12`          | `+14155550100;ext=12`                |
-| Phone without a leading `+` | `415 555 0100`                     | `415 555 0100` (trimmed, not parsed) |
-| Link                        | `https://Example.com/Pricing/`     | `https://example.com/Pricing`        |
-| Link without a scheme       | `Acme.com/Path/`                   | `acme.com/Path`                      |
-| Link, domain variant        | `HTTPS://www.Acme.com/pricing?x=1` | `acme.com`                           |
-| Email                       | `Jane@Example.com`                 | `Jane@Example.com` (as typed)        |
-| Every other type            | as typed                           | as typed                             |
+| Type                        | Typed                          | Stored                               |
+| --------------------------- | ------------------------------ | ------------------------------------ |
+| Phone                       | `+1 (415) 555-0100`            | `+14155550100`                       |
+| Phone with an extension     | `+1 415 555 0100 ext. 12`      | `+14155550100;ext=12`                |
+| Phone without a leading `+` | `415 555 0100`                 | `415 555 0100` (trimmed, not parsed) |
+| Link                        | `https://Example.com/Pricing/` | `https://example.com/Pricing`        |
+| Link without a scheme       | `Acme.com/Path/`               | `acme.com/Path`                      |
+| Email                       | `Jane@Example.com`             | `Jane@Example.com` (as typed)        |
+| Every other type            | as typed                       | as typed                             |
 
-A link keeps its scheme because `http://` and `https://` can open different pages. The domain variant keeps only the lowercase host. It is set through the internal `link_variant` setting, which no settings form offers. A dedicated domain field type is planned to replace it, so do not build on the setting.
+A link keeps its scheme because `http://` and `https://` can open different pages.
 
 A date-time value is stored exactly as it is given. The package converts no timezone, so pass every value in one timezone, such as UTC.
 

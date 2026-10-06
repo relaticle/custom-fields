@@ -1284,24 +1284,6 @@ Normalization runs on strings only. For a list it runs on each item, drops an it
   
   <tr>
     <td>
-      Link, domain variant
-    </td>
-    
-    <td>
-      <code>
-        HTTPS://www.Acme.com/pricing?x=1
-      </code>
-    </td>
-    
-    <td>
-      <code>
-        acme.com
-      </code>
-    </td>
-  </tr>
-  
-  <tr>
-    <td>
       Email
     </td>
     
@@ -1336,7 +1318,7 @@ Normalization runs on strings only. For a list it runs on each item, drops an it
 </tbody>
 </table>
 
-A link keeps its scheme because `http://` and `https://` can open different pages. The domain variant keeps only the lowercase host. It is set through the internal `link_variant` setting, which no settings form offers. A dedicated domain field type is planned to replace it, so do not build on the setting.
+A link keeps its scheme because `http://` and `https://` can open different pages.
 
 A date-time value is stored exactly as it is given. The package converts no timezone, so pass every value in one timezone, such as UTC.
 
