@@ -32,13 +32,13 @@ final class FieldTypeData extends Data implements Stringable
         public bool $acceptsArbitraryValues = false,
         public bool $supportsMultiValue = false,
         public bool $supportsUniqueConstraint = false,
-        public bool $systemOnly = false,
         /** @var array<int, class-string<ValidationCapability>> */
         public array $validationCapabilities = [],
         public ?string $settingsDataClass = null,
         public string|Closure|null $settingsSchema = null,
         /** @var array<int, VisibilityOperator>|null */
         public ?array $visibilityOperators = null,
+        public bool $systemOnly = false,
     ) {}
 
     /**
