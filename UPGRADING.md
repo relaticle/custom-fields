@@ -10,7 +10,7 @@ The v2 to v3 steps live in the [upgrade guide](docs/content/1.getting-started/3.
 
 A field that had `link_variant` set to `domain` stops reducing new values to a host. Values already stored stay as they are. If you relied on the setting, register your own field type that overrides `setValue()` to return the host, and change the `type` of those fields to it.
 
-`LinkFieldType::equivalentValues()` is unchanged.
+`LinkFieldType::equivalentValues()` is unchanged. On a field that still carries `link_variant`, the unique rule and value matching stop treating a pasted URL as its host, so `https://www.acme.com/pricing` no longer collides with a stored `acme.com`.
 
 ### A field type can stay out of the type picker
 
