@@ -7,10 +7,12 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Tappable;
 use InvalidArgumentException;
+use LogicException;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -164,12 +166,18 @@ abstract class BaseBuilder
                 $this->sections->getModel()->getQualifiedKeyName(),
                 $this->onlySections
             ))
-            ->with(['fields' => function (mixed $query): mixed {
-                return $query
-                    ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInList())
-                    ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->visibleInView())
-                    ->when($this->only !== [], fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
-                    ->when($this->except !== [], fn (CustomFieldQueryBuilder $q, bool $condition): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
+            ->with(['fields' => function (Relation $relation): void {
+                $fields = $relation->getQuery();
+
+                if (! $fields instanceof CustomFieldQueryBuilder) {
+                    throw new LogicException('The custom field model must build its queries with CustomFieldQueryBuilder.');
+                }
+
+                $fields
+                    ->when($this instanceof TableBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInList())
+                    ->when($this instanceof InfolistBuilder, fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->visibleInView())
+                    ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
+                    ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
                     ->with('options')
                     ->orderBy('sort_order');
             }])

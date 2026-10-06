@@ -62,6 +62,8 @@ class FieldSchema
 
     private bool $supportsUniqueConstraint = false;
 
+    private bool $systemOnly = false;
+
     protected bool $withoutUserOptions = false;
 
     private bool $requiresLookupType = false;
@@ -365,6 +367,16 @@ class FieldSchema
         return $this;
     }
 
+    /**
+     * Keep this type out of the field type picker. Only code can create a field of it.
+     */
+    public function systemOnly(bool $systemOnly = true): self
+    {
+        $this->systemOnly = $systemOnly;
+
+        return $this;
+    }
+
     // ========== Data Type Specific Methods (from DataTypeConfigurators) ==========
 
     /**
@@ -646,7 +658,8 @@ class FieldSchema
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema,
-            visibilityOperators: $this->visibilityOperators
+            visibilityOperators: $this->visibilityOperators,
+            systemOnly: $this->systemOnly
         );
     }
 }

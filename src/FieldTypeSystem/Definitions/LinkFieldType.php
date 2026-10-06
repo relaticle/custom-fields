@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
-use Illuminate\Support\Str;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\LinkComponent;
@@ -14,8 +13,6 @@ use Relaticle\CustomFields\Models\CustomField;
 
 class LinkFieldType extends BaseFieldType
 {
-    private const string WHITESPACE = '[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]';
-
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
@@ -57,37 +54,6 @@ class LinkFieldType extends BaseFieldType
         $bare = $this->withoutScheme($stored);
 
         return array_values(array_unique([$this->normalize($value, $customField), $stored, $bare, "https://{$bare}", "http://{$bare}"]));
-    }
-
-    public function normalize(string $value, CustomField $customField): string
-    {
-        if ($customField->setting('link_variant') !== 'domain') {
-            return $this->setValue($value);
-        }
-
-        $authority = Str::of($value)
-            ->lower()
-            ->replaceMatches('#'.self::WHITESPACE.'+#u', '')
-            ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
-            ->before('/')
-            ->before('?')
-            ->before('#')
-            ->replaceMatches('#^.*@#', '')
-            ->before(':');
-
-        $host = (string) $authority->replaceMatches('#^(www\.)+#', '')->rtrim('.');
-
-        if ($host === '' || str_contains($host, '.')) {
-            return $host;
-        }
-
-        if ($authority->startsWith('www.')) {
-            return "www.{$host}";
-        }
-
-        $unwrapped = (string) preg_replace('#^(?:https?://'.self::WHITESPACE.'*)+#iu', '', trim($value));
-
-        return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
     }
 
     private function withoutScheme(string $value): string
