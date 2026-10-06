@@ -2,6 +2,22 @@
 
 The v2 to v3 steps live in the [upgrade guide](docs/content/1.getting-started/3.upgrade-guide.md). This file lists what changes between minor releases of v3.
 
+## From 3.13 to 3.14
+
+### The `link_variant` setting is gone
+
+`LinkFieldType` no longer reads the internal `link_variant` setting. Every link field keeps its scheme, path, query and fragment. `LinkFieldType::normalize()` is removed, so the type uses `BaseFieldType::normalize()`, which returns `setValue($value)`.
+
+A field that had `link_variant` set to `domain` stops reducing new values to a host. Values already stored stay as they are. If you relied on the setting, register your own field type that overrides `setValue()` to return the host, and change the `type` of those fields to it.
+
+`LinkFieldType::equivalentValues()` is unchanged.
+
+### A field type can stay out of the type picker
+
+`FieldSchema::systemOnly()` marks a type that only code should create. The type still resolves, validates and renders. The field type picker leaves it out, and the settings form refuses it on create. The edit form of an existing field still shows it.
+
+`FieldTypeData` has a new `systemOnly` property, `false` by default. `FieldTypeCollection::selectable(?string $except = null)` returns the types the picker offers.
+
 ## From 3.11 to 3.13
 
 There is no 3.12 release. 3.13 follows 3.11.
@@ -30,7 +46,7 @@ A value must start with `+` to be parsed. Without it, or when it is not a possib
 
 A link field with the `link_variant` setting set to `domain` stores only the host. `HTTPS://www.Acme.com/pricing?x=1` becomes `acme.com`.
 
-`link_variant` is an internal setting. No settings form offers it, and a dedicated domain field type is planned to replace it, so do not build on it.
+`link_variant` is an internal setting. No settings form offers it. 3.14 removes the setting. See From 3.13 to 3.14 above.
 
 Normalization lower-cases the value and removes whitespace, the scheme, userinfo, port, path, query, fragment, leading `www.`, and a trailing dot.
 
@@ -58,7 +74,7 @@ The rule looks up those forms only. It does not match every spelling an older ve
 
 `BaseFieldType` has a new method, `normalize(string $value, CustomField $customField): string`. It returns `setValue($value)` by default.
 
-Override `normalize()` when the stored form depends on a field setting, as `LinkFieldType` does with `link_variant`. Keep it idempotent: normalizing a normalized value must return the same value.
+Override `normalize()` when the stored form depends on a field setting, as `LinkFieldType` did with `link_variant` in 3.13. Keep it idempotent: normalizing a normalized value must return the same value.
 
 If your type already overrides `setValue()`, that method now runs on every write path, not only where your form called it.
 
