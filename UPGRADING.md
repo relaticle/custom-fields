@@ -14,7 +14,7 @@ A field that had `link_variant` set to `domain` stops reducing new values to a h
 
 ### A field type can stay out of the type picker
 
-`FieldSchema::systemOnly()` marks a type that only code should create. The type still resolves, validates and renders. The field type picker leaves it out, and the settings form refuses it on create. The edit form of an existing field still shows it.
+`FieldSchema::systemOnly()` marks a type that only code should create. The type still resolves, validates and renders. The field type picker leaves it out, and the settings form refuses it on create. The edit form of an existing field still shows it. A field of a system-only type has no duplicate action.
 
 `FieldTypeData` has a new `systemOnly` property, `false` by default. `FieldTypeCollection::selectable(?string $except = null)` returns the types the picker offers.
 
