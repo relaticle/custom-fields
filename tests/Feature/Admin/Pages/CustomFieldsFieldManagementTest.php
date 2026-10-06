@@ -1088,6 +1088,20 @@ describe('System-only field types', function (): void {
             ->name->toBe('Probe renamed');
     });
 
+    it('shows the system-only type of the field being edited', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'system_defined' => false,
+            ]);
+
+        $component = livewire(ManageCustomField::class, ['field' => $field])->mountAction('edit');
+
+        expect($component->instance()->getSchemaComponent('mountedActionSchema0.type')->getOptions())->toHaveKey('system-probe');
+    });
+
     it('leaves a system-only type out of the type search results', function (): void {
         $component = livewire(ManageCustomFieldSection::class, [
             'section' => $this->section,
