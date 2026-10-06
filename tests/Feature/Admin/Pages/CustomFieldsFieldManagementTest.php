@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemProbeFieldType;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
@@ -983,5 +985,55 @@ describe('ManageCustomField - Code Stability On Rename', function (): void {
         expect($field->refresh())
             ->code->toBe('hmis_id')
             ->name->toBe('HMIS ID (Q/A testing added)');
+    });
+});
+
+describe('System-only field types', function (): void {
+    beforeEach(function (): void {
+        CustomFieldsType::register([SystemProbeFieldType::class]);
+
+        $this->section = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create();
+    });
+
+    it('keeps a system-only type out of the selectable types', function (): void {
+        expect(CustomFieldsType::toCollection()->pluck('key'))->toContain('system-probe')
+            ->and(CustomFieldsType::toCollection()->selectable()->pluck('key'))->not->toContain('system-probe')
+            ->and(CustomFieldsType::toCollection()->selectable()->pluck('key'))->toContain('text');
+    });
+
+    it('keeps the type of the field being edited selectable', function (): void {
+        expect(CustomFieldsType::toCollection()->selectable('system-probe')->pluck('key'))->toContain('system-probe');
+    });
+
+    it('rejects a system-only type sent to the create form', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Probe',
+                'code' => 'probe',
+                'type' => 'system-probe',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasActionErrors(['type']);
+
+        expect(CustomField::query()->withoutGlobalScopes()->where('code', 'probe')->exists())->toBeFalse();
+    });
+
+    it('still creates a field of a selectable type', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Plain',
+                'code' => 'plain',
+                'type' => 'text',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasNoActionErrors();
     });
 });
