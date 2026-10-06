@@ -150,6 +150,7 @@ public function getColumns(): array
 | Date | `date` | date_value |
 | DateTime | `date-time` | datetime_value |
 | Select | `select` | string_value |
+| Status | `status` | string_value |
 | Multi-Select | `multi-select` | json_value |
 | Checkbox | `checkbox` | boolean_value |
 | Checkbox List | `checkbox-list` | json_value |
@@ -160,6 +161,7 @@ public function getColumns(): array
 | Color Picker | `color-picker` | text_value |
 | File Upload | `file-upload` | string_value |
 | Record Select | `record` | json_value |
+| Relationship | `relationship` | json_value |
 
 ### Field Type Key Naming
 
@@ -216,6 +218,9 @@ use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 | `SYSTEM_MANAGEMENT_INTERFACE` | Admin page for managing fields |
 | `SYSTEM_SECTIONS` | Organize fields into sections |
 | `SYSTEM_MULTI_TENANCY` | Tenant isolation for fields |
+
+Every flag and its shipped default lives in `config/custom-fields.php`, each with the
+reason for that default; read it there rather than assuming one.
 
 ## Configuration
 

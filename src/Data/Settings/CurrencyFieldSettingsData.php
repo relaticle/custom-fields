@@ -10,7 +10,7 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class CurrencyFieldSettingsData extends Data
+final class CurrencyFieldSettingsData extends Data
 {
     public function __construct(
         public string $currencyCode = 'USD',
@@ -18,6 +18,9 @@ class CurrencyFieldSettingsData extends Data
         public int $decimalPlaces = 2,
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $additional
+     */
     public static function fromAdditional(array $additional): self
     {
         $code = $additional['currency_code'] ?? 'USD';

@@ -19,7 +19,7 @@ use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConf
  * - Configurator is created when needed
  * - WeakMap storage is static and self-initializing
  */
-class ImportsServiceProvider extends ServiceProvider
+final class ImportsServiceProvider extends ServiceProvider
 {
     /**
      * Register import services.

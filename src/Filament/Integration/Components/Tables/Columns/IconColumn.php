@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\IconColumn as BaseIconColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSortable;
@@ -17,7 +18,7 @@ class IconColumn extends AbstractTableColumn
     use ConfiguresColumnLabel;
     use ConfiguresSortable;
 
-    public function make(CustomField $customField): Column
+    public function make(CustomField $customField, ?Model $record = null): Column
     {
         $column = BaseIconColumn::make($customField->getFieldName())->boolean();
 

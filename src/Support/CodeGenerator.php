@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Support;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -17,7 +18,7 @@ use Relaticle\CustomFields\Services\TenantContextService;
  */
 final class CodeGenerator
 {
-    /** @var (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null */
+    /** @var (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null */
     private static ?Closure $uniquenessScopeResolver = null;
 
     /**
@@ -35,7 +36,7 @@ final class CodeGenerator
      * the code is being generated within (null when there is none). It returns a query
      * scope closure, or null to leave the check global.
      *
-     * @param  (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null  $callback
+     * @param  (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null  $callback
      */
     public static function resolveUniquenessScopeUsing(?Closure $callback): void
     {
@@ -71,6 +72,23 @@ final class CodeGenerator
             'section',
             $ignoreId
         );
+    }
+
+    /**
+     * Generate a unique code for a relationship definition, whose codes are unique per tenant
+     * rather than per entity type.
+     */
+    public static function generateUniqueRelationshipCode(string $baseCode): string
+    {
+        $code = $baseCode;
+        $counter = 1;
+
+        while (CustomFields::newRelationshipModel()->newQuery()->where('code', $code)->exists()) {
+            $code = sprintf('%s_%d', $baseCode, $counter);
+            $counter++;
+        }
+
+        return $code;
     }
 
     /**

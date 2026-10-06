@@ -2,14 +2,23 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Factories\Sequence;
+use Illuminate\Support\Facades\Exceptions;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Data\VisibilityConditionData;
 use Relaticle\CustomFields\Data\VisibilityData;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
+use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\ListPosts;
@@ -20,6 +29,19 @@ beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
+
+/** @return EloquentCollection<int, Post> */
+function orderedPosts(): EloquentCollection
+{
+    return Post::factory()
+        ->count(10)
+        ->sequence(fn (Sequence $sequence): array => [
+            'title' => sprintf('Title %02d', $sequence->index + 1),
+            'is_published' => $sequence->index % 2 === 0,
+            'author_id' => User::factory()->create(['name' => sprintf('Author %02d', $sequence->index + 1)]),
+        ])
+        ->create();
+}
 
 describe('Page Rendering and Authorization', function (): void {
     it('can render the list page', function (): void {
@@ -86,7 +108,7 @@ describe('Basic Table Functionality', function (): void {
 
 describe('Table Sorting', function (): void {
     beforeEach(function (): void {
-        $this->posts = Post::factory()->count(10)->create();
+        $this->posts = orderedPosts();
     });
 
     it('can sort records by standard columns', function (string $column, string $direction): void {
@@ -107,7 +129,7 @@ describe('Table Sorting', function (): void {
 
 describe('Table Search', function (): void {
     beforeEach(function (): void {
-        $this->posts = Post::factory()->count(10)->create();
+        $this->posts = orderedPosts();
     });
 
     it('can search records by title', function (): void {
@@ -152,7 +174,7 @@ describe('Table Search', function (): void {
 
 describe('Table Filtering', function (): void {
     beforeEach(function (): void {
-        $this->posts = Post::factory()->count(10)->create();
+        $this->posts = orderedPosts();
     });
 
     it('can filter records by is_published status', function (): void {
@@ -421,33 +443,135 @@ describe('Record Field Filtering', function (): void {
         ]);
     });
 
-    it('filters by a record field regardless of cardinality', function (bool $allowMultiple, string $code): void {
-        $field = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->id,
-            'name' => 'Related Post',
-            'code' => $code,
-            'type' => 'record',
-            'entity_type' => Post::class,
-            'lookup_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(
-                visible_in_list: true,
-                list_toggleable_hidden: false,
-                allow_multiple: $allowMultiple,
-            ),
-        ]);
+    it('filters by a record field regardless of cardinality', function (RelationshipCardinality $cardinality): void {
+        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_post_'.$cardinality->value,
+            fromEntityType: (new Post)->getMorphClass(),
+            toEntityType: (new Post)->getMorphClass(),
+            cardinality: $cardinality,
+            fromField: new FieldSlotData(name: 'Related Post', sectionId: $this->section->getKey()),
+        ));
+
+        $code = $definition->fromField->code;
 
         $target = Post::factory()->create();
-        $linked = Post::factory()->create();
+        $linked = Post::factory()->create(['custom_fields' => [$code => [$target->getKey()]]]);
         $unlinked = Post::factory()->create();
-
-        $linked->saveCustomFieldValue($field, [$target->getKey()]);
 
         livewire(ListPosts::class)
             ->set(sprintf('tableFilters.custom_fields.%s.values', $code), [$target->getKey()])
             ->assertCanSeeTableRecords([$linked])
             ->assertCanNotSeeTableRecords([$unlinked]);
     })->with([
-        'single-value' => [false, 'related_post_single'],
-        'multi-value' => [true, 'related_post_multi'],
+        'single-value' => RelationshipCardinality::ManyToOne,
+        'multi-value' => RelationshipCardinality::ManyToMany,
     ]);
+
+});
+
+describe('Record Fields Without a Definition', function (): void {
+    beforeEach(function (): void {
+        $this->section = CustomFieldSection::factory()->create([
+            'name' => 'Post Table Fields',
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+    });
+
+    it('lists records through a defined field while the relationships feature is off', function (): void {
+        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_post',
+            fromEntityType: (new Post)->getMorphClass(),
+            toEntityType: (new Post)->getMorphClass(),
+            cardinality: RelationshipCardinality::ManyToMany,
+            fromField: new FieldSlotData(name: 'Related Post', sectionId: $this->section->getKey()),
+        ));
+
+        $target = Post::factory()->create(['title' => 'Linked Target']);
+        $holder = Post::factory()->create(['custom_fields' => [$definition->fromField->code => [$target->getKey()]]]);
+
+        config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
+
+        livewire(ListPosts::class)
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$holder])
+            ->assertSee('Linked Target');
+    });
+
+    it('lists records with the column skipped when a record field has no definition', function (): void {
+        Exceptions::fake();
+
+        CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->getKey(),
+            'name' => 'Orphaned Record',
+            'code' => 'orphaned_record',
+            'type' => 'record',
+            'entity_type' => Post::class,
+            'settings' => new CustomFieldSettingsData(visible_in_list: true, list_toggleable_hidden: false),
+        ]);
+
+        $post = Post::factory()->create();
+
+        livewire(ListPosts::class)
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$post])
+            ->assertDontSee('Orphaned Record');
+
+        Exceptions::assertReported(RelationshipDefinitionDoesNotExistException::class);
+        Exceptions::assertReportedCount(1);
+    });
+});
+
+describe('Custom field table filters', function (): void {
+    beforeEach(function (): void {
+        $this->section = CustomFieldSection::factory()
+            ->forEntityType(Post::class)
+            ->create(['active' => true]);
+    });
+
+    it('matches a post holding any one of the picked multi-select options', function (): void {
+        $field = CustomField::factory()
+            ->ofType('multi-select')
+            ->withOptions(['Hot', 'Warm', 'Cold'])
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => Post::class,
+                'code' => 'temperature',
+            ]);
+        $optionId = fn (string $name): int|string => $field->options()->where('name', $name)->value('id');
+
+        $hot = Post::factory()->create();
+        $warm = Post::factory()->create();
+        $cold = Post::factory()->create();
+        $hot->saveCustomFieldValue($field, [$optionId('Hot')]);
+        $warm->saveCustomFieldValue($field, [$optionId('Warm')]);
+        $cold->saveCustomFieldValue($field, [$optionId('Cold')]);
+
+        livewire(ListPosts::class)
+            ->filterTable('custom_fields.temperature', [$optionId('Hot'), $optionId('Warm')])
+            ->assertCanSeeTableRecords([$hot, $warm])
+            ->assertCanNotSeeTableRecords([$cold]);
+    });
+
+    it('matches a post holding any one of the picked tags', function (): void {
+        $field = CustomField::factory()
+            ->ofType('tags-input')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => Post::class,
+                'code' => 'labels',
+            ]);
+
+        $urgent = Post::factory()->create();
+        $vip = Post::factory()->create();
+        $archived = Post::factory()->create();
+        $urgent->saveCustomFieldValue($field, ['urgent']);
+        $vip->saveCustomFieldValue($field, ['vip']);
+        $archived->saveCustomFieldValue($field, ['archived']);
+
+        livewire(ListPosts::class)
+            ->filterTable('custom_fields.labels', ['urgent', 'vip'])
+            ->assertCanSeeTableRecords([$urgent, $vip])
+            ->assertCanNotSeeTableRecords([$archived]);
+    });
 });

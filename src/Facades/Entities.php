@@ -17,8 +17,8 @@ use Relaticle\CustomFields\EntitySystem\EntityManager;
  * @method static EntityCollection getEntities()
  * @method static EntityConfigurationData|null getEntity(string $classOrAlias)
  * @method static bool hasEntity(string $classOrAlias)
- * @method static EntityManager register(array|Closure $entities)
- * @method static EntityManager enableDiscovery(array $paths = [])
+ * @method static EntityManager register(array<mixed>|Closure $entities)
+ * @method static EntityManager enableDiscovery(array<int, string> $paths = [])
  * @method static EntityManager disableDiscovery()
  * @method static EntityManager clearCache()
  * @method static EntityCollection getEntitiesWithFeature(string $feature)
@@ -27,7 +27,7 @@ use Relaticle\CustomFields\EntitySystem\EntityManager;
  *
  * @see EntityManager
  */
-class Entities extends Facade
+final class Entities extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
@@ -36,20 +36,24 @@ class Entities extends Facade
 
     /**
      * Register entities with deferred execution
+     *
+     * @param  array<mixed>|Closure  $entities
      */
     public static function register(array|Closure $entities): void
     {
-        static::resolved(function (EntityManager $manager) use ($entities): void {
+        self::resolved(function (EntityManager $manager) use ($entities): void {
             $manager->register($entities);
         });
     }
 
     /**
      * Enable discovery with deferred execution
+     *
+     * @param  array<int, string>  $paths
      */
     public static function discover(array $paths = []): void
     {
-        static::resolved(function (EntityManager $manager) use ($paths): void {
+        self::resolved(function (EntityManager $manager) use ($paths): void {
             $manager->enableDiscovery($paths);
         });
     }
@@ -59,15 +63,17 @@ class Entities extends Facade
      */
     public static function registerEntity(EntityConfigurationData $entity): void
     {
-        static::register([$entity]);
+        self::register([$entity]);
     }
 
     /**
      * Register an entity from array configuration
+     *
+     * @param  array<string, mixed>  $config
      */
     public static function registerFromArray(array $config): void
     {
-        static::register([$config]);
+        self::register([$config]);
     }
 
     /**
@@ -75,7 +81,7 @@ class Entities extends Facade
      */
     public static function registerFromResource(string $resourceClass): void
     {
-        static::register([$resourceClass]);
+        self::register([$resourceClass]);
     }
 
     /**
@@ -83,7 +89,7 @@ class Entities extends Facade
      */
     public static function withCustomFields(): EntityCollection
     {
-        return static::getEntities()->withCustomFields();
+        return self::getEntities()->withCustomFields();
     }
 
     /**
@@ -91,7 +97,7 @@ class Entities extends Facade
      */
     public static function globallyManaged(): EntityCollection
     {
-        return static::getEntities()->globallyManaged();
+        return self::getEntities()->globallyManaged();
     }
 
     /**
@@ -99,18 +105,20 @@ class Entities extends Facade
      */
     public static function asLookupSources(): EntityCollection
     {
-        return static::getEntities()->asLookupSources();
+        return self::getEntities()->asLookupSources();
     }
 
     /**
      * Get entities as options array
+     *
+     * @return array<string, string>
      */
     public static function getOptions(bool $onlyCustomFields = true, bool $usePlural = true, bool $onlyGloballyManaged = false): array
     {
         $entities = match (true) {
-            $onlyGloballyManaged => static::globallyManaged(),
-            $onlyCustomFields => static::withCustomFields(),
-            default => static::getEntities(),
+            $onlyGloballyManaged => self::globallyManaged(),
+            $onlyCustomFields => self::withCustomFields(),
+            default => self::getEntities(),
         };
 
         return $entities->sortedByLabel()->toOptions($usePlural);
@@ -118,10 +126,12 @@ class Entities extends Facade
 
     /**
      * Get lookup options
+     *
+     * @return array<string, string>
      */
     public static function getLookupOptions(bool $usePlural = true): array
     {
-        return static::asLookupSources()
+        return self::asLookupSources()
             ->sortedByLabel()
             ->toOptions($usePlural);
     }

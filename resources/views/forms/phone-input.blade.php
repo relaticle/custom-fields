@@ -144,7 +144,7 @@
                 getTelLink(entry) {
                     if (!entry.number) return '';
                     const countryCode = this.getCallingCode(entry.country);
-                    const digitsOnly = entry.number.replace(/[^0-9]/g, '');
+                    const digitsOnly = entry.number.split(/[a-z#;]/i)[0].replace(/[^0-9]/g, '');
                     return 'tel:+' + countryCode + digitsOnly;
                 },
 

@@ -1,29 +1,22 @@
 <x-filament-panels::page>
     @if($this->isSectionsDisabled)
-        {{-- Flat layout mode: vertical tabs left, fields right --}}
-        <div class="flex gap-6">
-            {{-- Left side: Vertical entity tabs --}}
-            <div class="shrink-0 min-w-48 [&_.fi-badge]:ml-auto">
-                <x-filament::tabs label="Entity tabs" vertical>
-                    @foreach ($this->entityTypes as $key => $label)
-                        @php
-                            $entity = \Relaticle\CustomFields\Facades\Entities::getEntity($key);
-                            $fieldCount = $this->entityFieldCounts[$key] ?? 0;
-                        @endphp
-                        <x-filament::tabs.item
-                            :icon="$entity?->getIcon() ?? 'heroicon-o-document'"
-                            :active="$key === $this->currentEntityType"
-                            :badge="$fieldCount"
-                            wire:click="setCurrentEntityType('{{ addslashes($key) }}')"
-                        >
-                            {{ $label }}
-                        </x-filament::tabs.item>
-                    @endforeach
+        {{-- Flat layout mode: entity rail beside the fields, stacked on a narrow viewport --}}
+        <div class="flex flex-col gap-6 md:flex-row">
+            {{-- A rail 200px wide would leave the table unreadable on a phone, so below md the
+                 same entities scroll horizontally above it. --}}
+            <div class="md:hidden">
+                <x-filament::tabs :label="__('custom-fields::custom-fields.common.entity_tabs')">
+                    @include('custom-fields::filament.pages.partials.entity-tabs')
                 </x-filament::tabs>
             </div>
 
-            {{-- Right side: Fields (no sections needed) --}}
-            <div class="flex-1 min-w-0">
+            <div class="hidden shrink-0 md:block md:min-w-48 [&_.fi-badge]:ml-auto">
+                <x-filament::tabs :label="__('custom-fields::custom-fields.common.entity_tabs')" vertical>
+                    @include('custom-fields::filament.pages.partials.entity-tabs')
+                </x-filament::tabs>
+            </div>
+
+            <div class="min-w-0 flex-1">
                 @livewire('manage-fields-table', [
                     'entityType' => $this->currentEntityType,
                 ], key('manage-fields-table-' . $this->currentEntityType))

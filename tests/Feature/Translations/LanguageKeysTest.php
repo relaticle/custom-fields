@@ -53,6 +53,14 @@ it('has translation key', function (string $key): void {
     'enums.visibility_operator.is_not_empty',
     'enums.description_position.below',
     'enums.description_position.above',
+    'enums.option_category.unstarted',
+    'enums.option_category.started',
+    'enums.option_category.completed',
+    'enums.option_category.cancelled',
+    'enums.relationship_cardinality.one_to_one',
+    'enums.relationship_cardinality.one_to_many',
+    'enums.relationship_cardinality.many_to_one',
+    'enums.relationship_cardinality.many_to_many',
 
     // visibility.*
     'visibility.heading',
@@ -71,6 +79,10 @@ it('has translation key', function (string $key): void {
     'date_constraint.direction',
     'date_constraint.reference_field',
     'date_constraint.date',
+
+    // field.form.options.*
+    'field.form.options.category',
+    'field.form.options.category_placeholder',
 
     // field.actions.* (ManageCustomField row actions)
     'field.actions.activate',

@@ -6,9 +6,6 @@ namespace Relaticle\CustomFields\Console\Commands\Upgrade;
 
 use Illuminate\Console\Command;
 
-/**
- * Interface for modular upgrade steps in the 2.x → 3.x migration.
- */
 interface UpgradeStep
 {
     /**

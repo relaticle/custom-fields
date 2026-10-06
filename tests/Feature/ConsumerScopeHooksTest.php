@@ -60,10 +60,10 @@ function nullGet(): Get
 
 function availableFields(VisibilityComponent $component): array
 {
-    $method = new ReflectionMethod($component, 'getAvailableFields');
-    $method->setAccessible(true);
+    $property = new ReflectionProperty($component, 'conditionOptions');
+    $property->setAccessible(true);
 
-    return $method->invoke($component, nullGet());
+    return $property->getValue($component)->getAvailableFields(nullGet());
 }
 
 /**
@@ -465,11 +465,12 @@ describe('BaseBuilder onlySections() scope on a sections-disabled install', func
     beforeEach(function (): void {
         config()->set('custom-fields.features', FeatureConfigurator::configure()
             ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
+            ->disable(CustomFieldsFeature::SYSTEM_SECTIONS)
         );
 
         collect(Schema::getIndexes('custom_fields'))
             ->filter(fn (array $index): bool => in_array('custom_field_section_id', $index['columns'], true))
-            ->each(fn (array $index) => DB::statement("DROP INDEX \"{$index['name']}\""));
+            ->each(fn (array $index) => Schema::table('custom_fields', fn (Blueprint $table) => $table->dropUnique($index['name'])));
 
         Schema::table('custom_fields', fn (Blueprint $table) => $table->dropColumn('custom_field_section_id'));
     });

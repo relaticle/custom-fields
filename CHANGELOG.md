@@ -2,6 +2,140 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.13.0 - 2026-10-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.13.0 -->
+### What's Changed
+
+#### Other Changes
+
+* feat: normalize custom field values on every write path by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/244
+* chore(deps): bump undici from 6.28.0 to 6.29.0 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/242
+* chore: remove the v3.12.0 changelog entry by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/245
+* feat(link): keep the scheme of a url link [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/251
+* chore(deps-dev): bump postcss-nesting from 14.0.1 to 14.0.2 in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/247
+* chore(deps): bump @nuxt/ui from 4.11.1 to 4.11.2 in /docs in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/248
+* chore(deps): bump the npm-security group across 1 directory with 4 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/246
+* fix(link): normalizer follow-ups and 3.12 upgrade notes [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/250
+* fix(custom-fields): guard null-dereferences on deactivated/disabled c… by @kksingh000 in https://github.com/relaticle/custom-fields/pull/249
+* docs: describe how a value is stored, normalized and compared [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/252
+
+### New Contributors
+
+* @kksingh000 made their first contribution in https://github.com/relaticle/custom-fields/pull/249
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.11.0...v3.13.0
+
+## v3.11.0 - 2026-10-02
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.11.0 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(filters): match any picked value in multi-value table filters by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/243
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.10.0...v3.11.0
+
+## v3.10.0 - 2026-09-29
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.10.0 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump svgo from 4.0.2 to 4.1.0 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/224
+* chore(deps-dev): bump the npm group with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/228
+* fix(ci): adopt new lint rules by pull request, re-check at merge by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/230
+* chore(docs): override the transitive deps Dependabot cannot reach by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/231
+* chore(deps-dev): bump the npm group with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/233
+* chore(deps): bump zizmorcore/zizmor-action from 0.6.3 to 0.6.4 in the github-actions group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/234
+* chore(deps): bump the npm group in /docs with 3 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/235
+* chore(deps): bump devalue from 5.9.0 to 5.9.2 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/232
+* chore(deps): bump the npm group in /docs with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/239
+* fix: release unique custom field values on soft delete and guard restore by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/240
+* chore(deps-dev): bump cssnano from 9.0.4 to 9.0.5 in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/238
+* fix(ci): deploy the docs after a token merge by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/221
+* chore(deps): bump fast-uri from 3.1.6 to 3.1.8 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/241
+* perf: memoise extractFieldValues() and the field type registry lookup by @MyKineID in https://github.com/relaticle/custom-fields/pull/237
+
+### New Contributors
+
+* @MyKineID made their first contribution in https://github.com/relaticle/custom-fields/pull/237
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.9.1...v3.10.0
+
+## v3.9.1 - 2026-09-08
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps-dev): bump cssnano from 8.0.5 to 8.0.7 in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/207
+* chore(deps): bump the npm group in /docs with 7 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/208
+* fix(ci): make the docs deploy deterministic and gate it on pull requests by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/209
+* chore(deps): bump fast-uri from 3.1.5 to 3.1.7 in /docs by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/211
+* chore(deps): bump qs from 6.15.2 to 6.16.0 in /docs by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/212
+* chore(deps): bump @humanfs/node from 0.16.7 to 0.16.8 in /docs by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/213
+* chore(ci): drop composer.lock, group security updates, harden workflows by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/217
+* chore(deps): bump the npm group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/215
+* chore(deps): bump nanoid from 3.3.16 to 3.3.18 in /docs by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/218
+* chore(deps): bump zizmorcore/zizmor-action from 0.6.2 to 0.6.3 in the github-actions group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/220
+* chore(deps-dev): bump the npm group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/219
+* feat: native builder filters and field schema extensions by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/223
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.9.0...v3.9.1
+
+## Unreleased
+
+### Resolution filters and a field-form schema seam
+
+A consumer can now hide specific fields or sections from the Table, Infolist and
+Exporter builders. Each builder exposes `filterFieldsUsing()` and
+`filterSectionsUsing()` for local configuration. Laravel container resolving callbacks
+provide application-wide defaults for each concrete builder class. Callbacks receive a
+standard collection and the concrete builder, which exposes its model and persisted
+record. Builders also expose selected metadata through `getFields()` and `getSections()`.
+They support Laravel's `when()`, `unless()`, and `tap()` methods. Filters do not reach
+the Form or Importer builder. Conditional visibility still evaluates against every
+field. See
+[Extending](https://relaticle.github.io/custom-fields/essentials/extending) for the full walkthrough.
+
+`FieldForm::extendSchemaUsing()` mirrors the existing `SectionForm::extendSchemaUsing()`
+hook, letting a consumer append or modify components on the field create/edit form. It
+receives the field's section rather than an entity type, since a field-level extension
+usually needs to look at its section.
+
+`CustomField::setting()` and `CustomFieldSection::setting()` read a consumer-defined key
+out of `settings->additional` / `settings->extra` with a default, so a filter or schema
+extension no longer has to reach into the settings array directly. Both accessors support Laravel's dot notation and preserve stored nulls.
+
+### Fixed
+
+- Editing a section no longer erases `settings.extra` keys that have no form component.
+  The wipe happened whenever the form submitted a partial `settings` payload, for
+  example `settings.visibility` with section conditional visibility enabled, because the
+  cast rebuilt the settings object from the partial and dropped the rest.
+- Editing a field no longer erases `settings.additional` keys its form did not render,
+  for example a consumer key on a currency field whose type settings occupy the same
+  bag. The merge now recurses into associative arrays, while a submitted empty list or
+  null still clears the value it targets.
+- The Infolist builder now evaluates conditional visibility against every field for the
+  entity type, matching the Form and Table builders. Previously it evaluated a section's
+  conditions against only that section's own fields, so a condition depending on a field
+  in another section was silently ignored.
+- `VisibilityData` drops conditions whenever the mode does not use them, so switching a
+  field or section back to Always visible no longer leaves the old conditions sitting in
+  the row. Every reader already gated on the mode, so the stored conditions were dead
+  weight that would reappear the next time the mode changed.
+- The Infolist builder returns an empty collection again when it was never given a model,
+  instead of reaching for the model to evaluate visibility.
+- Infolist conditions use their own section's fields when multiple sections share a field code.
+  Fields from other sections remain available for cross-section conditions.
+- Reusing `onlySections()` replaces the previous scope, including when an empty array clears it.
+- Section filters receive separate field collections, so modifying a collection cannot corrupt subsequent resolution.
+
 ## v3.9.0 - 2026-08-28
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
@@ -57,6 +191,10 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
+
+
+
 
 
 ```

@@ -4,10 +4,22 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\RelationshipFieldType;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
+use Relaticle\CustomFields\Livewire\ManageFieldsTable;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
+use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemFirstFieldType;
+use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemProbeFieldType;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 
@@ -490,6 +502,41 @@ describe('ManageCustomField - Field Actions', function (): void {
         ])->assertActionHidden('duplicate');
     });
 
+    it('creates a tags input field without asking for an option nobody typed', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Labels',
+                'code' => 'labels',
+                'type' => 'tags-input',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasNoActionErrors();
+
+        $field = CustomField::query()->withoutGlobalScopes()->where('code', 'labels')->firstOrFail();
+
+        expect($field->type)->toBe('tags-input')
+            ->and($field->options)->toBeEmpty();
+    });
+
+    it('refuses to create a select field with no options', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Stage',
+                'code' => 'stage',
+                'type' => 'select',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasActionErrors(['options' => 'required_unless']);
+
+        expect(CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->exists())->toBeFalse();
+    });
+
     it('sets sort_order on options when creating a select field via storeField', function (): void {
         livewire(ManageCustomFieldSection::class, [
             'section' => $this->section,
@@ -824,22 +871,7 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
             expect($field)->toHaveFieldType($fieldType);
         }
     });
-    it('validates field type constraints and behaviors', function (): void {
-        // Test text field constraints
-        $textField = CustomField::factory()
-            ->ofType('text')
-            ->create([
-                'custom_field_section_id' => $this->section->getKey(),
-                'entity_type' => $this->userEntityType,
-            ]);
-
-        livewire(ManageCustomField::class, [
-            'field' => $textField,
-        ])
-            ->assertSuccessful()
-            ->assertSee($textField->name);
-
-        // Test select field with options constraint
+    it('loads the stored options into the form when editing a select field', function (): void {
         $selectField = CustomField::factory()
             ->ofType('select')
             ->withOptions([
@@ -851,19 +883,20 @@ describe('Custom Fields Management Workflow - Phase 2.1', function (): void {
                 'entity_type' => $this->userEntityType,
             ]);
 
-        expect($selectField->options)->toHaveCount(2);
-
-        livewire(ManageCustomField::class, [
+        $page = livewire(ManageCustomField::class, [
             'field' => $selectField,
         ])
             ->assertSuccessful()
             ->mountAction('edit', ['record' => $selectField->getKey()])
-            ->callMountedAction()
-            ->assertSee([
-                'Option 1',
-                'Option 2',
-            ]);
-    })->todo();
+            ->assertActionMounted('edit')
+            ->assertSchemaComponentVisible('options');
+
+        $component = $page->instance();
+        $schema = $component->{$component->getMountedActionSchemaName()};
+
+        expect(collect($schema->getRawState()['options'])->pluck('name')->all())
+            ->toBe(['Option 1', 'Option 2']);
+    });
 
     it('can handle field section management and organization', function (): void {
         // Create multiple sections
@@ -983,5 +1016,407 @@ describe('ManageCustomField - Code Stability On Rename', function (): void {
         expect($field->refresh())
             ->code->toBe('hmis_id')
             ->name->toBe('HMIS ID (Q/A testing added)');
+    });
+});
+
+describe('ManageFieldsTable - Field Management', function (): void {
+    it('creates a tags input field without asking for an option nobody typed', function (): void {
+        CustomFieldSection::factory()->forEntityType(Post::class)->create();
+
+        livewire(ManageFieldsTable::class, ['entityType' => Post::class])
+            ->callAction('createField', [
+                'name' => 'Labels',
+                'code' => 'labels',
+                'type' => 'tags-input',
+                'entity_type' => Post::class,
+            ])
+            ->assertHasNoActionErrors();
+
+        $field = CustomField::query()->withoutGlobalScopes()->where('code', 'labels')->firstOrFail();
+
+        expect($field->type)->toBe('tags-input')
+            ->and($field->options)->toBeEmpty();
+    });
+
+    it('refuses to create a select field with no options', function (): void {
+        CustomFieldSection::factory()->forEntityType(Post::class)->create();
+
+        livewire(ManageFieldsTable::class, ['entityType' => Post::class])
+            ->callAction('createField', [
+                'name' => 'Stage',
+                'code' => 'stage',
+                'type' => 'select',
+                'entity_type' => Post::class,
+            ])
+            ->assertHasActionErrors(['options' => 'required_unless']);
+
+        expect(CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->exists())->toBeFalse();
+    });
+
+    it('edits a select field without duplicating its stored options', function (): void {
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create();
+
+        $field = CustomField::factory()
+            ->ofType('select')
+            ->withOptions(['Option 1', 'Option 2'])
+            ->create([
+                'custom_field_section_id' => $section->getKey(),
+                'entity_type' => Post::class,
+            ]);
+
+        livewire(ManageFieldsTable::class, ['entityType' => Post::class])
+            ->mountAction('editField', ['fieldId' => $field->getKey()])
+            ->assertActionDataSet(['name' => $field->name])
+            ->set('mountedActions.0.data.name', 'Renamed Field')
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($field->refresh()->name)->toBe('Renamed Field')
+            ->and($field->options()->pluck('name')->all())->toBe(['Option 1', 'Option 2']);
+    });
+});
+
+function pairedCommentAuthorship(CustomFieldSection $postSection, CustomFieldSection $commentSection): CustomFieldRelationship
+{
+    return app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'comment_authorship',
+        fromEntityType: Post::class,
+        toEntityType: Comment::class,
+        cardinality: RelationshipCardinality::ManyToOne,
+        fromField: new FieldSlotData(name: 'Lead Comment', sectionId: $postSection->getKey(), type: RelationshipFieldType::KEY),
+        toField: new FieldSlotData(name: 'Leads For', sectionId: $commentSection->getKey(), type: RelationshipFieldType::KEY),
+    ));
+}
+
+describe('Record field configuration', function (): void {
+    beforeEach(function (): void {
+        $this->postSection = CustomFieldSection::factory()->forEntityType(Post::class)->create();
+        $this->commentSection = CustomFieldSection::factory()->forEntityType(Comment::class)->create();
+    });
+
+    it('creates a one-way record field on a definition of its own', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->postSection,
+            'entityType' => Post::class,
+        ])
+            ->callAction('createField', [
+                'name' => 'Related Comment',
+                'code' => 'related_comment',
+                'type' => 'record',
+                'entity_type' => Post::class,
+                'relationship' => [
+                    'target_entity_type' => Comment::class,
+                    'cardinality' => RelationshipCardinality::ManyToOne->value,
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $definition = CustomFieldRelationship::query()->sole();
+
+        expect($definition->from_entity_type)->toBe(Post::class)
+            ->and($definition->to_entity_type)->toBe(Comment::class)
+            ->and($definition->cardinality)->toBe(RelationshipCardinality::ManyToOne)
+            ->and($definition->is_symmetric)->toBeFalse()
+            ->and($definition->fromField->code)->toBe('related_comment')
+            ->and($definition->to_field_id)->toBeNull()
+            ->and(CustomField::query()->count())->toBe(1);
+    });
+
+    it('creates the paired field on the target entity when it is named', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->postSection,
+            'entityType' => Post::class,
+        ])
+            ->callAction('createField', [
+                'name' => 'Related Comment',
+                'code' => 'related_comment',
+                'type' => RelationshipFieldType::KEY,
+                'entity_type' => Post::class,
+                'relationship' => [
+                    'target_entity_type' => Comment::class,
+                    'cardinality' => RelationshipCardinality::ManyToMany->value,
+                    'paired_field_name' => 'Related Post',
+                    'paired_section_id' => $this->commentSection->getKey(),
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $definition = CustomFieldRelationship::query()->sole();
+
+        expect(CustomField::query()->count())->toBe(2)
+            ->and($definition->fromField->code)->toBe('related_comment')
+            ->and($definition->toField->name)->toBe('Related Post')
+            ->and($definition->toField->entity_type)->toBe(Comment::class)
+            ->and($definition->toField->custom_field_section_id)->toBe($this->commentSection->getKey());
+    });
+
+    it('loads the definition into the edit form and keeps the ends where they are', function (): void {
+        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_comment',
+            fromEntityType: Post::class,
+            toEntityType: Comment::class,
+            cardinality: RelationshipCardinality::ManyToMany,
+            fromField: new FieldSlotData(name: 'Related Comment', sectionId: $this->postSection->getKey()),
+        ));
+
+        livewire(ManageCustomField::class, ['field' => $definition->fromField])
+            ->mountAction('edit')
+            ->assertActionDataSet([
+                'relationship.target_entity_type' => Comment::class,
+                'relationship.cardinality' => RelationshipCardinality::ManyToMany->value,
+                'relationship.is_symmetric' => false,
+            ])
+            ->set('mountedActions.0.data.relationship.target_entity_type', Post::class)
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($definition->refresh()->to_entity_type)->toBe(Comment::class);
+    });
+
+    it('gives a duplicated record field a definition of its own', function (): void {
+        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_comment',
+            fromEntityType: Post::class,
+            toEntityType: Comment::class,
+            cardinality: RelationshipCardinality::ManyToMany,
+            fromField: new FieldSlotData(name: 'Related Comment', sectionId: $this->postSection->getKey()),
+        ));
+
+        livewire(ManageCustomField::class, ['field' => $definition->fromField])
+            ->callAction('duplicate');
+
+        $copy = CustomField::query()->whereKeyNot($definition->from_field_id)->sole();
+
+        expect(CustomFieldRelationship::query()->count())->toBe(2)
+            ->and($copy->targetEntityType())->toBe(Comment::class)
+            ->and($copy->relationshipDefinition()->cardinality)->toBe(RelationshipCardinality::ManyToMany);
+    });
+
+    it('pairs onto an entity with no sections by creating a default one', function (): void {
+        $this->commentSection->delete();
+
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->postSection,
+            'entityType' => Post::class,
+        ])
+            ->callAction('createField', [
+                'name' => 'Related Comment',
+                'code' => 'related_comment',
+                'type' => RelationshipFieldType::KEY,
+                'entity_type' => Post::class,
+                'relationship' => [
+                    'target_entity_type' => Comment::class,
+                    'cardinality' => RelationshipCardinality::ManyToMany->value,
+                    'paired_field_name' => 'Related Post',
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $paired = CustomFieldRelationship::query()->sole()->toField;
+
+        expect($paired->name)->toBe('Related Post')
+            ->and($paired->section)->not->toBeNull()
+            ->and($paired->section->entity_type)->toBe(Comment::class)
+            ->and(CustomField::query()->whereKey($paired->getKey())->exists())->toBeTrue();
+    });
+
+    it('never offers a symmetric toggle across an entity the host has not registered', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->postSection,
+            'entityType' => Post::class,
+        ])
+            ->mountAction('createField')
+            ->set('mountedActions.0.data.type', RelationshipFieldType::KEY)
+            ->set('mountedActions.0.data.entity_type', 'ghost_entity')
+            ->set('mountedActions.0.data.relationship.target_entity_type', 'other_ghost_entity')
+            ->assertSchemaComponentHidden('relationship.is_symmetric');
+    });
+
+    it('keeps a duplicated to-end field pointing the way it read', function (): void {
+        $definition = pairedCommentAuthorship($this->postSection, $this->commentSection);
+        $toField = $definition->toField;
+
+        expect($toField->allowsMultipleRecords())->toBeTrue();
+
+        livewire(ManageCustomField::class, ['field' => $toField])
+            ->callAction('duplicate');
+
+        $copy = CustomField::query()
+            ->where('entity_type', Comment::class)
+            ->whereKeyNot($toField->getKey())
+            ->sole();
+
+        expect($copy->targetEntityType())->toBe(Post::class)
+            ->and($copy->allowsMultipleRecords())->toBeTrue()
+            ->and($copy->relationshipDefinition()->cardinality)->toBe(RelationshipCardinality::OneToMany);
+    });
+
+    it('shows and stores a to-end field the cardinality from its own side', function (): void {
+        $definition = pairedCommentAuthorship($this->postSection, $this->commentSection);
+
+        livewire(ManageCustomField::class, ['field' => $definition->toField])
+            ->mountAction('edit')
+            ->assertActionDataSet(['relationship.cardinality' => RelationshipCardinality::OneToMany->value])
+            ->set('mountedActions.0.data.relationship.cardinality', RelationshipCardinality::ManyToOne->value)
+            ->set('mountedActions.0.data.relationship.keep_first', true)
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($definition->refresh()->cardinality)->toBe(RelationshipCardinality::OneToMany)
+            ->and($definition->toField->allowsMultipleRecords())->toBeFalse();
+    });
+
+    it('narrows the cardinality on confirmation, keeping the first linked record', function (): void {
+        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_comment',
+            fromEntityType: Post::class,
+            toEntityType: Comment::class,
+            cardinality: RelationshipCardinality::ManyToMany,
+            fromField: new FieldSlotData(name: 'Related Comment', sectionId: $this->postSection->getKey()),
+        ));
+
+        $field = $definition->fromField;
+        [$first, $second] = Comment::factory()->count(2)->create();
+        $post = Post::factory()->create(['custom_fields' => [$field->code => [$first->getKey(), $second->getKey()]]]);
+
+        livewire(ManageCustomField::class, ['field' => $field])
+            ->mountAction('edit')
+            ->set('mountedActions.0.data.relationship.allow_multiple', false)
+            ->set('mountedActions.0.data.relationship.keep_first', true)
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($definition->refresh()->cardinality)->toBe(RelationshipCardinality::ManyToOne)
+            ->and($post->fresh()->getCustomFieldValue($field->fresh()))->toBe([$first->getKey()])
+            ->and(CustomFieldLink::query()->whereNotNull('active_until')->count())->toBe(1);
+    });
+});
+
+describe('System-only field types', function (): void {
+    beforeEach(function (): void {
+        CustomFieldsType::register([SystemProbeFieldType::class, SystemFirstFieldType::class]);
+
+        $this->section = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create();
+    });
+
+    it('keeps a system-only type out of the selectable types', function (): void {
+        expect(CustomFieldsType::toCollection()->pluck('key'))->toContain('system-probe')
+            ->and(CustomFieldsType::toCollection()->selectable()->pluck('key'))->not->toContain('system-probe')
+            ->and(CustomFieldsType::toCollection()->selectable()->pluck('key'))->toContain('text');
+    });
+
+    it('keeps the type of the field being edited selectable', function (): void {
+        expect(CustomFieldsType::toCollection()->selectable('system-probe')->pluck('key'))->toContain('system-probe');
+    });
+
+    it('rejects a system-only type sent to the create form', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Probe',
+                'code' => 'probe',
+                'type' => 'system-probe',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasActionErrors(['type']);
+
+        expect(CustomField::query()->withoutGlobalScopes()->where('code', 'probe')->exists())->toBeFalse();
+    });
+
+    it('still creates a field of a selectable type', function (): void {
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->callAction('createField', [
+                'name' => 'Plain',
+                'code' => 'plain',
+                'type' => 'text',
+                'entity_type' => $this->userEntityType,
+            ])
+            ->assertHasNoActionErrors();
+    });
+
+    it('cannot duplicate a field of a system-only type', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'system_defined' => false,
+            ]);
+
+        livewire(ManageCustomField::class, [
+            'field' => $field,
+        ])->assertActionHidden('duplicate');
+    });
+
+    it('defaults the create form to the first selectable type', function (): void {
+        $firstSelectable = CustomFieldsType::toCollection()->selectable()->first()->key;
+
+        expect(CustomFieldsType::toCollection()->first()->key)->toBe('system-first');
+
+        livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])
+            ->mountAction('createField')
+            ->assertSet('mountedActions.0.data.type', $firstSelectable);
+    });
+
+    it('mounts and saves the edit form of a field of a system-only type', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'name' => 'Probe',
+                'code' => 'probe',
+                'system_defined' => false,
+            ]);
+
+        livewire(ManageCustomField::class, ['field' => $field])
+            ->mountAction('edit')
+            ->assertSet('mountedActions.0.data.type', 'system-probe')
+            ->set('mountedActions.0.data.name', 'Probe renamed')
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        expect($field->refresh())
+            ->type->toBe('system-probe')
+            ->name->toBe('Probe renamed');
+    });
+
+    it('shows the system-only type of the field being edited', function (): void {
+        $field = CustomField::factory()
+            ->ofType('system-probe')
+            ->create([
+                'custom_field_section_id' => $this->section->getKey(),
+                'entity_type' => $this->userEntityType,
+                'system_defined' => false,
+            ]);
+
+        $component = livewire(ManageCustomField::class, ['field' => $field])->mountAction('edit');
+
+        expect($component->instance()->getSchemaComponent('mountedActionSchema0.type')->getOptions())->toHaveKey('system-probe');
+    });
+
+    it('leaves a system-only type out of the type search results', function (): void {
+        $component = livewire(ManageCustomFieldSection::class, [
+            'section' => $this->section,
+            'entityType' => $this->userEntityType,
+        ])->mountAction('createField');
+
+        $search = fn (string $term): array => collect($component->instance()->callSchemaComponentMethod('mountedActionSchema0.type', 'getSearchResultsForJs', ['search' => $term]))
+            ->pluck('value')
+            ->all();
+
+        expect($search('probe'))->not->toContain('system-probe')
+            ->and($search('system'))->not->toContain('system-first')
+            ->and($search('text'))->toContain('text');
     });
 });

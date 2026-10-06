@@ -24,8 +24,10 @@ use Relaticle\CustomFields\FieldTypeSystem\Definitions\NumberFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\PhoneFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RadioFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RecordFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\RelationshipFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RichEditorFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\SelectFieldType;
+use Relaticle\CustomFields\FieldTypeSystem\Definitions\StatusFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\TagsInputFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\TextareaFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\TextFieldType;
@@ -56,13 +58,15 @@ final class FieldManager
         DateFieldType::class,
         DateTimeFieldType::class,
         SelectFieldType::class,
+        StatusFieldType::class,
         MultiSelectFieldType::class,
         RecordFieldType::class,
+        RelationshipFieldType::class,
         FileUploadFieldType::class,
     ];
 
     /**
-     * @var array<array<string, array<int, string> | string> | Closure>
+     * @var array<int, array<int|string, class-string<FieldTypeDefinitionInterface>> | Closure>
      */
     private array $fieldTypes = [];
 
@@ -76,8 +80,10 @@ final class FieldManager
      */
     private array $cachedInstances = [];
 
+    private FieldTypeCollection $cachedCollection;
+
     /**
-     * @param  array<string, array<int, string> | string> | Closure  $fieldTypes
+     * @param  array<int|string, class-string<FieldTypeDefinitionInterface>> | Closure  $fieldTypes
      */
     public function register(array|Closure $fieldTypes): static
     {
@@ -152,6 +158,10 @@ final class FieldManager
 
     public function toCollection(): FieldTypeCollection
     {
+        if (isset($this->cachedCollection)) {
+            return $this->cachedCollection;
+        }
+
         $fieldTypes = [];
 
         foreach ($this->getFieldTypes() as $fieldTypeClass) {
@@ -167,6 +177,6 @@ final class FieldManager
             $this->cachedInstances[$data->key] = $fieldType;
         }
 
-        return FieldTypeCollection::make($fieldTypes)->sortBy('priority', SORT_NATURAL)->values();
+        return $this->cachedCollection = FieldTypeCollection::make($fieldTypes)->sortBy('priority', SORT_NATURAL)->values();
     }
 }

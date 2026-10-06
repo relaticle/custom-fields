@@ -15,10 +15,15 @@ use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 class RecordFieldType extends BaseFieldType
 {
+    /**
+     * The key every caller that has to single out a record field compares against.
+     */
+    public const string KEY = 'record';
+
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
-            ->key('record')
+            ->key(self::KEY)
             ->label(__('custom-fields::custom-fields.field_types.record'))
             ->icon('heroicon-o-link')
             ->formComponent(RecordSelectComponent::class)
@@ -26,10 +31,9 @@ class RecordFieldType extends BaseFieldType
             ->tableFilter(RecordFilter::class)
             ->infolistEntry(RecordEntry::class)
             ->withoutUserOptions()
-            ->requiresLookupType()
-            ->supportsMultiValue()
-            ->sortable(false)
-            ->searchable(false)
+            ->requiresRelationship()
+            ->sortable()
+            ->searchable()
             ->filterable()
             ->priority(45)
             ->withValidationCapabilities(

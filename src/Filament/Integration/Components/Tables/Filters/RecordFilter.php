@@ -8,13 +8,15 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Filters\SelectFilter as FilamentSelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableFilter;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Support\Utils;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
+use Relaticle\CustomFields\QueryBuilders\EntitySearchQuery;
+use Relaticle\CustomFields\QueryBuilders\RecordLinkQuery;
+use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions;
 use Throwable;
 
 final class RecordFilter extends AbstractTableFilter
@@ -22,7 +24,7 @@ final class RecordFilter extends AbstractTableFilter
     /**
      * @throws Throwable
      */
-    public function make(CustomField $customField): FilamentSelectFilter
+    public function make(CustomField $customField, ?Model $record = null, ?string $through = null): FilamentSelectFilter
     {
         $filter = FilamentSelectFilter::make($customField->getFieldName())
             ->multiple()
@@ -31,23 +33,26 @@ final class RecordFilter extends AbstractTableFilter
             ->native(false)
             ->modifyFormFieldUsing(fn (Select $field): Select => $field->allowHtml());
 
-        $filter = $this->configureLookup($filter, $customField->lookup_type);
+        $definition = $customField->relationshipDefinition();
 
-        $filter->query(function (array $data, Builder $query) use ($customField): Builder {
-            if (empty($data['values'])) {
-                return $query;
-            }
+        // Nothing to filter by while the field points nowhere, and a filter that throws here
+        // would take the whole table with it.
+        if (! $definition instanceof CustomFieldRelationship) {
+            app(MissingRelationshipDefinitions::class)->report($customField);
 
-            return $query->whereHas('customFieldValues', function (Builder $q) use ($customField, $data): void {
-                $q->where('custom_field_id', $customField->id);
+            return $filter->hidden();
+        }
 
-                $q->where(function (Builder $subQuery) use ($data): void {
-                    foreach ($data['values'] as $value) {
-                        $subQuery->orWhereJsonContains('json_value', $value);
-                    }
-                });
-            });
-        });
+        $filter = $this->configureLookup($filter, $definition->targetEntityTypeFor($customField));
+
+        $filter->query(fn (array $data, Builder $query): Builder => empty($data['values'])
+            ? $query
+            : $this->constrainThrough($query, $through, fn (Builder $query): Builder => app(RecordLinkQuery::class)->whereLinkedTo(
+                $query,
+                $definition,
+                $definition->readDirectionFor($customField),
+                $data['values'],
+            )));
 
         return $filter;
     }
@@ -55,12 +60,8 @@ final class RecordFilter extends AbstractTableFilter
     /**
      * @throws Throwable
      */
-    private function configureLookup(FilamentSelectFilter $filter, ?string $lookupType): FilamentSelectFilter
+    private function configureLookup(FilamentSelectFilter $filter, string $lookupType): FilamentSelectFilter
     {
-        if ($lookupType === null) {
-            return $filter;
-        }
-
         $entity = Entities::getEntity($lookupType);
 
         if ($entity === null) {
@@ -69,36 +70,17 @@ final class RecordFilter extends AbstractTableFilter
 
         $entityInstance = $entity->createModelInstance();
         $recordTitleAttribute = $entity->getPrimaryAttribute();
-        $globalSearchableAttributes = $entity->getSearchAttributes();
+        $searchAttributes = $entity->getSearchAttributes();
         $avatarConfig = $entity->getAvatarConfiguration();
-        $resource = null;
+        $resourceClass = $entity->getResourceClass();
 
-        if ($entity->getResourceClass()) {
-            try {
-                $resource = App::make($entity->getResourceClass());
-            } catch (Throwable) {
-                $resource = null;
-            }
+        if ($searchAttributes === []) {
+            $searchAttributes = [$recordTitleAttribute];
         }
 
         return $filter
-            ->getSearchResultsUsing(function (string $search) use ($entityInstance, $recordTitleAttribute, $globalSearchableAttributes, $resource, $avatarConfig): array {
-                $query = $entityInstance->query();
-
-                if ($resource !== null) {
-                    Utils::invokeMethodByReflection($resource, 'applyGlobalSearchAttributeConstraints', [
-                        $query,
-                        $search,
-                        $globalSearchableAttributes,
-                    ]);
-                } else {
-                    $query->where(function (Builder $q) use ($search, $globalSearchableAttributes, $recordTitleAttribute): void {
-                        $searchAttributes = $globalSearchableAttributes === [] ? [$recordTitleAttribute] : $globalSearchableAttributes;
-                        foreach ($searchAttributes as $attribute) {
-                            $q->orWhere($attribute, 'like', sprintf('%%%s%%', $search));
-                        }
-                    });
-                }
+            ->getSearchResultsUsing(function (string $search) use ($entityInstance, $recordTitleAttribute, $searchAttributes, $avatarConfig, $resourceClass): array {
+                $query = app(EntitySearchQuery::class)->apply($entityInstance->query(), $search, $searchAttributes, $resourceClass);
 
                 $records = $query->limit(50)->get();
 
@@ -114,7 +96,7 @@ final class RecordFilter extends AbstractTableFilter
             })
             ->getOptionLabelsUsing(function (array $values) use ($entityInstance, $recordTitleAttribute, $avatarConfig): array {
                 $records = $entityInstance::query()
-                    ->whereIn('id', $values)
+                    ->whereKey($values)
                     ->get();
 
                 return $this->formatOptionsWithAvatars($records, $recordTitleAttribute, $avatarConfig);
@@ -122,6 +104,7 @@ final class RecordFilter extends AbstractTableFilter
     }
 
     /**
+     * @param  iterable<Model>  $records
      * @return array<string, string>
      */
     private function formatOptionsWithAvatars(

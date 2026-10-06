@@ -13,6 +13,9 @@ use Relaticle\CustomFields\Models\CustomField;
 
 final class ImporterBuilder extends BaseBuilder
 {
+    /**
+     * @return Collection<int, ImportColumn>
+     */
     public function columns(): Collection
     {
         return $this->getAllFields()
@@ -128,6 +131,10 @@ final class ImporterBuilder extends BaseBuilder
             });
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     public function filterCustomFieldsFromData(array $data): array
     {
         return array_filter(

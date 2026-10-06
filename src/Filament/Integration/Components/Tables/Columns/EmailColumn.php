@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
@@ -16,7 +17,7 @@ final class EmailColumn extends AbstractTableColumn
     use ConfiguresColumnLabel;
     use ConfiguresSearchable;
 
-    public function make(CustomField $customField): BaseTextColumn
+    public function make(CustomField $customField, ?Model $record = null): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName())
             ->view('custom-fields::tables.columns.email-column');

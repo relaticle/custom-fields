@@ -23,6 +23,12 @@ use Spatie\LaravelData\Data;
 
 final class EntityConfigurationData extends Data
 {
+    /**
+     * @param  array<int, string>  $searchAttributes
+     * @param  ?Collection<int, EntityFeature>  $features
+     * @param  array<string, mixed>  $metadata
+     * @param  array<string, string>  $conditionRelations
+     */
     public function __construct(
         public string $modelClass,
         public string $alias,
@@ -186,6 +192,9 @@ final class EntityConfigurationData extends Data
         return $this->primaryAttribute;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getSearchAttributes(): array
     {
         return $this->searchAttributes;
@@ -201,11 +210,17 @@ final class EntityConfigurationData extends Data
         return $this->recordPage;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getScopes(): array
     {
         return [];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getRelationships(): array
     {
         return $this->conditionRelations;
@@ -220,6 +235,9 @@ final class EntityConfigurationData extends Data
         return $this->conditionRelations;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getFeatures(): array
     {
         return $this->features?->map(fn (EntityFeature $f) => $f->value)->toArray() ?? [];
@@ -230,6 +248,9 @@ final class EntityConfigurationData extends Data
         return $this->priority;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getMetadata(): array
     {
         return $this->metadata;
@@ -252,6 +273,8 @@ final class EntityConfigurationData extends Data
 
     /**
      * Get a query builder for this entity
+     *
+     * @return Builder<Model>
      */
     public function newQuery(): Builder
     {
@@ -276,6 +299,7 @@ final class EntityConfigurationData extends Data
 
         $model = new $modelClass;
 
+        /** @var array<int, EntityFeature> $features */
         $features = [EntityFeature::LOOKUP_SOURCE];
         if (in_array(HasCustomFields::class, class_implements($modelClass), true)) {
             $features[] = EntityFeature::CUSTOM_FIELDS;
@@ -309,6 +333,8 @@ final class EntityConfigurationData extends Data
     /**
      * Recreate object from var_export() for Laravel config:cache
      * Uses direct constructor instead of ::from() to avoid Laravel Data config dependency
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

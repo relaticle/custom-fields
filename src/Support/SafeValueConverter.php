@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\Log;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
+use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
+use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * Handles safe conversion of values to database-compatible formats
  * to prevent issues like numeric overflow.
  */
-class SafeValueConverter
+final class SafeValueConverter
 {
     /**
      * Maximum allowable integer for BIGINT in most SQL databases
@@ -31,9 +33,10 @@ class SafeValueConverter
      *
      * @param  mixed  $value  The value to convert
      * @param  string  $fieldType  The field type key (e.g. 'select', 'email')
+     * @param  CustomField|null  $customField  When given, string values are normalized for this field
      * @return mixed The converted value
      */
-    public static function toDbSafe(mixed $value, string $fieldType): mixed
+    public static function toDbSafe(mixed $value, string $fieldType, ?CustomField $customField = null): mixed
     {
         $fieldTypeData = CustomFieldsType::getFieldType($fieldType);
 
@@ -41,7 +44,29 @@ class SafeValueConverter
             return $value;
         }
 
-        return self::convertByDataType($value, $fieldTypeData->dataType);
+        $converted = self::convertByDataType($value, $fieldTypeData->dataType);
+        $definition = CustomFieldsType::getFieldTypeInstance($fieldType);
+
+        if (! $customField instanceof CustomField || ! $definition instanceof BaseFieldType) {
+            return $converted;
+        }
+
+        if (is_array($converted)) {
+            return collect($converted)
+                ->map(fn (mixed $item): mixed => is_string($item) && $item !== '' ? $definition->normalize($item, $customField) : $item)
+                ->reject(fn (mixed $item): bool => $item === '')
+                ->unique(strict: true)
+                ->values()
+                ->all();
+        }
+
+        if (! is_string($converted) || $converted === '') {
+            return $converted;
+        }
+
+        $normalized = $definition->normalize($converted, $customField);
+
+        return $normalized === '' ? null : $normalized;
     }
 
     public static function convertByDataType(mixed $value, FieldDataType $dataType): mixed

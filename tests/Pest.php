@@ -12,6 +12,14 @@ use Relaticle\CustomFields\Tests\TestCase;
 // Apply base test configuration to all tests
 uses(TestCase::class, RefreshDatabase::class)->in(__DIR__);
 
+// Eloquent memoises each model's column listing to decide what is guardable, and a test that
+// migrates a column mid-run would poison every test that follows it.
+uses()->afterEach(function (): void {
+    Closure::bind(static function (): void {
+        Model::$guardableColumns = [];
+    }, null, Model::class)();
+})->in(__DIR__);
+
 /**
  * Livewire testing helper - replacement for pest-plugin-livewire.
  *

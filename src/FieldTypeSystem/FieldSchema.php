@@ -4,80 +4,27 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem;
 
-use Closure;
-use InvalidArgumentException;
-use Relaticle\CustomFields\Contracts\ValidationCapability;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\FieldDataType;
-use Relaticle\CustomFields\Enums\VisibilityOperator;
-use Spatie\LaravelData\Data;
+use Relaticle\CustomFields\FieldTypeSystem\Concerns\ConfiguresCapabilities;
+use Relaticle\CustomFields\FieldTypeSystem\Concerns\ConfiguresComponents;
+use Relaticle\CustomFields\FieldTypeSystem\Concerns\ConfiguresIdentity;
+use Relaticle\CustomFields\FieldTypeSystem\Concerns\ConfiguresImportExport;
+use Relaticle\CustomFields\FieldTypeSystem\Concerns\ConfiguresValidationRules;
 
 /**
  * Schema builder for defining field type capabilities and behaviors.
  * Provides a chainable API for configuring field type features.
  */
-class FieldSchema
+final class FieldSchema
 {
+    use ConfiguresCapabilities;
+    use ConfiguresComponents;
+    use ConfiguresIdentity;
+    use ConfiguresImportExport;
+    use ConfiguresValidationRules;
+
     private FieldDataType $dataType;
-
-    // Field identity
-    private string $key = '';
-
-    private string $label = '';
-
-    private string $icon = '';
-
-    // Component definitions
-    private string|Closure|null $formComponent = null;
-
-    private string|Closure|null $tableColumn = null;
-
-    private string|Closure|null $tableFilter = null;
-
-    private string|Closure|null $infolistEntry = null;
-
-    // Field properties
-    private int $priority = 500;
-
-    private array $defaultValidationRules = [];
-
-    private array $defaultItemValidationRules = [];
-
-    // Validation capabilities
-    /** @var array<int, class-string<ValidationCapability>> */
-    private array $validationCapabilities = [];
-
-    // Capabilities
-    private bool $searchable = true;
-
-    private bool $sortable = true;
-
-    private bool $filterable = false;
-
-    private bool $encryptable = false;
-
-    private bool $acceptsArbitraryValues = false;
-
-    private bool $supportsMultiValue = false;
-
-    private bool $supportsUniqueConstraint = false;
-
-    protected bool $withoutUserOptions = false;
-
-    private bool $requiresLookupType = false;
-
-    /** @var array<int, VisibilityOperator>|null */
-    private ?array $visibilityOperators = null;
-
-    private ?string $settingsDataClass = null;
-
-    private string|Closure|null $settingsSchema = null;
-
-    private ?string $importExample = null;
-
-    private ?Closure $importTransformer = null;
-
-    private ?Closure $exportTransformer = null;
 
     public function __construct(FieldDataType $dataType)
     {
@@ -176,450 +123,12 @@ class FieldSchema
         return new self(FieldDataType::MULTI_CHOICE);
     }
 
-    // ========== Field Identity Configuration Methods ==========
-
-    /**
-     * Set the field key
-     */
-    public function key(string $key): self
-    {
-        $this->key = $key;
-
-        return $this;
-    }
-
-    /**
-     * Set the field label
-     */
-    public function label(string $label): self
-    {
-        $this->label = $label;
-
-        return $this;
-    }
-
-    /**
-     * Set the field icon
-     */
-    public function icon(string $icon): self
-    {
-        $this->icon = $icon;
-
-        return $this;
-    }
-
-    // ========== Component Configuration Methods ==========
-
-    /**
-     * Set the form component for this field type
-     */
-    public function formComponent(string|Closure $component): self
-    {
-        $this->formComponent = $component;
-
-        return $this;
-    }
-
-    /**
-     * Set the table column for this field type
-     */
-    public function tableColumn(string|Closure $column): self
-    {
-        $this->tableColumn = $column;
-
-        return $this;
-    }
-
-    /**
-     * Set the table filter for this field type
-     */
-    public function tableFilter(string|Closure $filter): self
-    {
-        $this->tableFilter = $filter;
-
-        return $this;
-    }
-
-    /**
-     * Set the infolist entry for this field type
-     */
-    public function infolistEntry(string|Closure $entry): self
-    {
-        $this->infolistEntry = $entry;
-
-        return $this;
-    }
-
-    /**
-     * Set the priority for field ordering
-     */
-    public function priority(int $priority): self
-    {
-        $this->priority = $priority;
-
-        return $this;
-    }
-
-    /**
-     * Set default validation rules that are always applied.
-     *
-     * @param  array<string>  $rules
-     */
-    public function defaultValidationRules(array $rules): self
-    {
-        $this->defaultValidationRules = $rules;
-
-        return $this;
-    }
-
-    /**
-     * Set default validation rules for individual items in multi-value fields.
-     * Only available for MULTI_CHOICE data type.
-     *
-     * @param  array<string>  $rules
-     *
-     * @throws InvalidArgumentException if used with non-MULTI_CHOICE data type
-     */
-    public function defaultItemValidationRules(array $rules): self
-    {
-        if ($this->dataType !== FieldDataType::MULTI_CHOICE) {
-            throw new InvalidArgumentException(
-                'defaultItemValidationRules is only available for multi-value field types (MULTI_CHOICE)'
-            );
-        }
-
-        $this->defaultItemValidationRules = $rules;
-
-        return $this;
-    }
-
-    // ========== Common Capability Methods ==========
-
-    /**
-     * Configure searchability in tables
-     */
-    public function searchable(bool $searchable = true): self
-    {
-        $this->searchable = $searchable;
-
-        return $this;
-    }
-
-    /**
-     * Configure sortability in tables
-     */
-    public function sortable(bool $sortable = true): self
-    {
-        $this->sortable = $sortable;
-
-        return $this;
-    }
-
-    /**
-     * Configure filterability in tables
-     */
-    public function filterable(bool $filterable = true): self
-    {
-        $this->filterable = $filterable;
-
-        return $this;
-    }
-
-    /**
-     * Configure encryption capability
-     */
-    public function encryptable(bool $encryptable = true): self
-    {
-        $this->encryptable = $encryptable;
-
-        return $this;
-    }
-
-    /**
-     * Configure whether field accepts arbitrary values (like tags input)
-     */
-    public function withArbitraryValues(bool $accepts = true): self
-    {
-        $this->acceptsArbitraryValues = $accepts;
-
-        return $this;
-    }
-
-    /**
-     * Configure whether field supports multiple values (e.g., multiple emails, phones)
-     */
-    public function supportsMultiValue(bool $supports = true): self
-    {
-        $this->supportsMultiValue = $supports;
-
-        return $this;
-    }
-
-    /**
-     * Configure whether field supports unique value constraint per entity type
-     */
-    public function supportsUniqueConstraint(bool $supports = true): self
-    {
-        $this->supportsUniqueConstraint = $supports;
-
-        return $this;
-    }
-
-    // ========== Data Type Specific Methods (from DataTypeConfigurators) ==========
-
-    /**
-     * Enable encryption for this field (text fields)
-     */
-    public function encrypted(): self
-    {
-        $this->encryptable();
-
-        return $this;
-    }
-
-    /**
-     * Configure as a long text field (textarea)
-     */
-    public function longText(): self
-    {
-        return $this;
-    }
-
-    /**
-     * Allow users to create new options on the fly (choice fields)
-     */
-    public function allowArbitraryValues(): self
-    {
-        $this->withArbitraryValues();
-
-        return $this;
-    }
-
-    /**
-     * Field doesn't need user-configured options (choice fields)
-     * This disables database options UI and enables dynamic extraction from components
-     */
-    public function withoutUserOptions(): self
-    {
-        $this->withoutUserOptions = true;
-
-        return $this;
-    }
-
-    /**
-     * Override the default visibility operators derived from the data type.
-     *
-     * @param  array<int, VisibilityOperator>  $operators
-     */
-    public function visibilityOperators(array $operators): self
-    {
-        $this->visibilityOperators = $operators;
-
-        return $this;
-    }
-
-    /**
-     * Field requires lookup_type selection (entity type selector)
-     * This shows the entity selector directly without the options toggle
-     */
-    public function requiresLookupType(bool $requires = true): self
-    {
-        $this->requiresLookupType = $requires;
-
-        return $this;
-    }
-
-    // ========== Validation Capability Methods ==========
-
-    /** @param class-string<ValidationCapability> ...$capabilityClasses */
-    public function withValidationCapabilities(string ...$capabilityClasses): self
-    {
-        $this->validationCapabilities = [
-            ...$this->validationCapabilities,
-            ...$capabilityClasses,
-        ];
-
-        return $this;
-    }
-
-    /** @return array<int, class-string<ValidationCapability>> */
-    public function getValidationCapabilities(): array
-    {
-        return $this->validationCapabilities;
-    }
-
-    // ========== Export Configuration ==========
-
-    /**
-     * Get the field key
-     */
-    public function getKey(): string
-    {
-        return $this->key;
-    }
-
-    /**
-     * Get the field label
-     */
-    public function getLabel(): string
-    {
-        return $this->label;
-    }
-
-    /**
-     * Get the field icon
-     */
-    public function getIcon(): string
-    {
-        return $this->icon;
-    }
-
     /**
      * Get the data type for this configuration
      */
     public function getDataType(): FieldDataType
     {
         return $this->dataType;
-    }
-
-    /**
-     * Get the form component
-     */
-    public function getFormComponent(): string|Closure|null
-    {
-        return $this->formComponent;
-    }
-
-    /**
-     * Get the priority
-     */
-    public function getPriority(): int
-    {
-        return $this->priority;
-    }
-
-    /**
-     * Get the default validation rules (always applied)
-     */
-    public function getDefaultValidationRules(): array
-    {
-        return $this->defaultValidationRules;
-    }
-
-    /**
-     * Get the default validation rules for individual items in multi-value fields.
-     *
-     * @return array<int, string>
-     */
-    public function getDefaultItemValidationRules(): array
-    {
-        return $this->defaultItemValidationRules;
-    }
-
-    /**
-     * Check if field is searchable
-     */
-    public function isSearchable(): bool
-    {
-        return $this->searchable;
-    }
-
-    /**
-     * Check if field is sortable
-     */
-    public function isSortable(): bool
-    {
-        return $this->sortable;
-    }
-
-    /**
-     * Check if field is filterable
-     */
-    public function isFilterable(): bool
-    {
-        return $this->filterable;
-    }
-
-    /**
-     * Check if field is encryptable
-     */
-    public function isEncryptable(): bool
-    {
-        return $this->encryptable;
-    }
-
-    /**
-     * Check if field accepts arbitrary values
-     */
-    public function acceptsArbitraryValues(): bool
-    {
-        return $this->acceptsArbitraryValues;
-    }
-
-    public function withSettings(string $dataClass, string|Closure $schema): self
-    {
-        if (! is_subclass_of($dataClass, Data::class)) {
-            throw new InvalidArgumentException('Settings data class must extend '.Data::class);
-        }
-
-        $this->settingsDataClass = $dataClass;
-        $this->settingsSchema = $schema;
-
-        return $this;
-    }
-
-    /**
-     * Set import example value for templates
-     */
-    public function importExample(string $example): self
-    {
-        $this->importExample = $example;
-
-        return $this;
-    }
-
-    /**
-     * Set custom import column transformer
-     */
-    public function importTransformer(Closure $transformer): self
-    {
-        $this->importTransformer = $transformer;
-
-        return $this;
-    }
-
-    /**
-     * Set custom export value transformer
-     */
-    public function exportTransformer(Closure $transformer): self
-    {
-        $this->exportTransformer = $transformer;
-
-        return $this;
-    }
-
-    /**
-     * Get import example
-     */
-    public function getImportExample(): ?string
-    {
-        return $this->importExample;
-    }
-
-    /**
-     * Get import transformer
-     */
-    public function getImportTransformer(): ?Closure
-    {
-        return $this->importTransformer;
-    }
-
-    /**
-     * Get export transformer
-     */
-    public function getExportTransformer(): ?Closure
-    {
-        return $this->exportTransformer;
     }
 
     public function data(): FieldTypeData
@@ -639,14 +148,17 @@ class FieldSchema
             filterable: $this->filterable,
             encryptable: $this->encryptable,
             withoutUserOptions: $this->withoutUserOptions,
-            requiresLookupType: $this->requiresLookupType,
+            requiresRelationship: $this->requiresRelationship,
+            supportsPairing: $this->supportsPairing,
+            carriesOptionCategories: $this->carriesOptionCategories,
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
             supportsMultiValue: $this->supportsMultiValue,
             supportsUniqueConstraint: $this->supportsUniqueConstraint,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema,
-            visibilityOperators: $this->visibilityOperators
+            visibilityOperators: $this->visibilityOperators,
+            systemOnly: $this->systemOnly
         );
     }
 }

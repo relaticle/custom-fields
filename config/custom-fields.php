@@ -45,21 +45,53 @@ return [
     | Configure package features using the type-safe enum-based configurator.
     | This consolidates all feature settings into a single, organized system.
     |
+    | Every feature is listed below, on or off, with the reason for its default.
+    | A feature is on when it only adds a control to the field editor and is a
+    | no-op for fields that do not use it; it is off when turning it on would
+    | change how existing values are stored, validated, or displayed.
+    |
     */
     'features' => FeatureConfigurator::configure()
         ->enable(
             CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
             CustomFieldsFeature::FIELD_ENCRYPTION,
             CustomFieldsFeature::FIELD_OPTION_COLORS,
+            CustomFieldsFeature::FIELD_DESCRIPTION,
             CustomFieldsFeature::UI_TABLE_COLUMNS,
             CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS,
             CustomFieldsFeature::UI_TABLE_FILTERS,
-            CustomFieldsFeature::FIELD_DESCRIPTION,
             CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL,
             CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
             CustomFieldsFeature::SYSTEM_SECTIONS,
+
+            // Turned on at 4.0. Three change nothing about what you already store: a
+            // field with no rules validates as before,
+            CustomFieldsFeature::FIELD_VALIDATION_RULES,
+            // an unset position still renders the description below the input,
+            CustomFieldsFeature::FIELD_DESCRIPTION_POSITION,
+            // and a section with no conditions renders on every record.
+            CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY,
+            // Sections stay full width too, with one exception: a preset migration that
+            // passed a width stored it even while this was off, and it now applies.
+            CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL,
+            // New at 4.0: while off, the relationship migrations and the upgrade steps
+            // never run; a record field with a definition still reads, writes, and deletes its links.
+            CustomFieldsFeature::SYSTEM_RELATIONSHIPS,
         )
         ->disable(
+            // Would take the code away from whoever creates the field, and codes are the
+            // identifier host code and imports address a field by.
+            CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE,
+            // Turns a field's storage into a list of values; that is a data-shape decision.
+            CustomFieldsFeature::FIELD_MULTI_VALUE,
+            // Adds a uniqueness rule over values that already exist.
+            CustomFieldsFeature::FIELD_UNIQUE_VALUE,
+            // Offers the host's own model columns as condition sources; only the host knows
+            // which of its columns are safe to expose in the field editor.
+            CustomFieldsFeature::MODEL_ATTRIBUTE_CONDITIONS,
+            // Would hide existing custom-field columns from tables that show them today.
+            CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT,
+            // Tenant isolation depends on the host's tenancy; see the multi-tenancy docs.
             CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
         ),
 
@@ -75,13 +107,65 @@ return [
     'management' => [
         'slug' => 'custom-fields',
         'navigation_sort' => -1,
-        'navigation_group' => true,
+
+        // Nest the management page under its own navigation group instead of top-level.
+        'navigation_group_enabled' => true,
+
         'cluster' => null,
 
         // Width of the add/edit section modal. Accepts a Filament\Support\Enums\Width case or its
         // string value (e.g. 'screen-lg'). Null falls back to a width based on conditional visibility.
         // Overridable per panel via CustomFieldsPlugin::make()->sectionModalWidth(...).
         'section_modal_width' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | UI Flavor
+    |--------------------------------------------------------------------------
+    |
+    | Five surfaces have no Filament primitive behind them, so each ships in two
+    | presentations of the same Livewire class: 'native' renders the view the surface
+    | shipped with before the 4.0 redesign, 'polished' renders the redesigned one.
+    | Only views fork, never the logic underneath, which is what keeps a second
+    | presentation cheap enough to carry.
+    |
+    | Polished is the default because it is the experience the package is designed
+    | around. Switch the whole panel with 'flavor', or name single surfaces in
+    | 'flavor_overrides'. The only accepted keys there are the five forked surfaces:
+    | relationship-configurator, record-chips, record-picker, type-picker, and
+    | attribute-table. Anything else throws rather than falling back silently.
+    |
+    */
+    'ui' => [
+        'flavor' => 'polished',
+
+        'flavor_overrides' => [
+            // 'attribute-table' => 'native',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Field Form
+    |--------------------------------------------------------------------------
+    |
+    | 'presentation' decides how the create and edit field form opens: 'slide_over'
+    | is the 4.0 panel, 'modal' a centered dialog. Only the container changes.
+    |
+    | 'settings' decides which optional settings the form puts in front of a user.
+    | Null offers every setting the feature flags and the field type allow; a list
+    | narrows it to the keys named. A setting left out is not removed: the value a
+    | field already stores survives an edit, and a new field takes its default. The
+    | keys are visible_in_list, visible_in_view, list_toggleable_hidden, searchable,
+    | encrypted, enable_option_colors, allow_multiple and unique_per_entity_type.
+    | max_values has no key of its own; it is the ceiling on allow_multiple.
+    |
+    */
+    'field_form' => [
+        'presentation' => 'slide_over',
+
+        'settings' => null,
     ],
 
     /*
@@ -116,7 +200,7 @@ return [
     | searchable_threshold controls when option-backed selects render a search
     | box. Set it to 0 to always show one, which is the pre-3.8 behavior.
     |
-    | record_lookup governs the record-select field's initial page and search.
+    | record governs the record-select field's initial page and search.
     | order_column null means the model's key, which is backed by the primary
     | key index and so costs no more than an unordered query. Naming a column
     | instead (for example 'updated_at' for most-recently-touched-first) is
@@ -127,7 +211,7 @@ return [
     'selects' => [
         'searchable_threshold' => 10,
 
-        'record_lookup' => [
+        'record' => [
             'order_column' => null,
             'order_direction' => 'desc',
             'limit' => 50,
@@ -135,14 +219,6 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Database Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure database table names and migration paths.
-    |
-    */
     /*
     |--------------------------------------------------------------------------
     | Currency Configuration
@@ -180,11 +256,18 @@ return [
 
     'database' => [
         'migrations_path' => database_path('custom-fields'),
+
+        // Key type of the tables added in 4.0: 'bigint', 'ulid', or 'uuid'. A ULID or UUID host
+        // sets it here instead of hand-editing them; the older tables keep the hand-edit path.
+        'key_type' => 'bigint',
+
         'table_names' => [
             'custom_field_sections' => 'custom_field_sections',
             'custom_fields' => 'custom_fields',
             'custom_field_values' => 'custom_field_values',
             'custom_field_options' => 'custom_field_options',
+            'custom_field_relationships' => 'custom_field_relationships',
+            'custom_field_links' => 'custom_field_links',
         ],
         'column_names' => [
             'tenant_foreign_key' => 'tenant_id',

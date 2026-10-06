@@ -6,116 +6,71 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Infolists;
 
 use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
-use Relaticle\CustomFields\Data\AvatarConfiguration;
+use Relaticle\CustomFields\Enums\UiSurface;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
+use Relaticle\CustomFields\Filament\Integration\Support\RecordChips;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
+use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions;
+use Relaticle\CustomFields\Support\ViewFlavor;
 
 final class RecordEntry extends AbstractInfolistEntry
 {
-    public function make(CustomField $customField): ViewEntry
+    public function make(CustomField $customField, ?Model $record = null): ViewEntry
     {
-        if ($customField->lookup_type === null) {
+        $definition = $customField->relationshipDefinition();
+
+        // The entry has nothing to read without a definition, so it leaves the infolist alone.
+        if (! $definition instanceof CustomFieldRelationship) {
+            app(MissingRelationshipDefinitions::class)->report($customField);
+
             return ViewEntry::make($customField->getFieldName())
                 ->label($customField->name)
                 ->view('custom-fields::infolists.record-entry')
-                ->state(['records' => [], 'multiple' => false]);
+                ->state(['records' => [], 'multiple' => false, 'chipsView' => null])
+                ->hidden();
         }
 
-        $entity = Entities::getEntity($customField->lookup_type);
-        $isMultiSelect = $customField->settings->allow_multiple ?? false;
+        $entity = Entities::getEntity($definition->targetEntityTypeFor($customField));
+        $isMultiSelect = $customField->allowsMultipleRecords();
 
         return ViewEntry::make($customField->getFieldName())
             ->label($customField->name)
             ->view('custom-fields::infolists.record-entry')
             ->state(function (HasCustomFields $record) use ($customField, $entity, $isMultiSelect): array {
                 $value = $record->getCustomFieldValue($customField);
+                $recordIds = match (true) {
+                    $value === null => [],
+                    is_array($value) => $value,
+                    default => [$value],
+                };
 
-                if ($value === null || (is_array($value) && $value === [])) {
-                    return ['records' => [], 'multiple' => $isMultiSelect];
-                }
-
-                if ($entity === null) {
-                    return ['records' => [], 'multiple' => $isMultiSelect];
-                }
-
-                $avatarConfig = $entity->getAvatarConfiguration();
-                $titleAttribute = $entity->getPrimaryAttribute();
-
-                $recordIds = is_array($value) ? $value : [$value];
-                $records = $entity->newQuery()->whereIn('id', $recordIds)->get()
-                    ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $recordIds, true));
-
-                $formattedRecords = $records->map(function (Model $relatedRecord) use ($avatarConfig, $titleAttribute, $entity): array {
-                    return $this->formatRecord($relatedRecord, $avatarConfig, $titleAttribute, $entity);
-                })->toArray();
+                $chips = app(RecordChips::class);
 
                 return [
-                    'records' => $formattedRecords,
+                    'records' => $chips->build($entity, $recordIds, $this->provenance($chips, $record, $customField)),
                     'multiple' => $isMultiSelect,
+                    'chipsView' => $customField->supportsPairing() ? ViewFlavor::view(UiSurface::RecordChips) : null,
                 ];
             });
     }
 
-    private function formatRecord(
-        Model $record,
-        ?AvatarConfiguration $avatarConfig,
-        string $titleAttribute,
-        mixed $entity,
-    ): array {
-        $name = $record->getAttribute($titleAttribute) ?? '';
-        $avatarUrl = $this->getAvatarUrl($record, $avatarConfig);
-        $shapeClass = $avatarConfig?->getCssClass() ?? 'rounded-full';
-        $url = $this->getRecordUrl($record, $entity);
-
-        return [
-            'name' => $name,
-            'avatarUrl' => $avatarUrl,
-            'avatarShape' => $shapeClass,
-            'url' => $url,
-        ];
-    }
-
-    private function getAvatarUrl(Model $record, ?AvatarConfiguration $avatarConfig): ?string
+    /**
+     * One record's page can afford the actor morph, which a table page cannot, so this is the
+     * one surface that says who made the link rather than only when it was made.
+     *
+     * @return array<string, string>
+     */
+    private function provenance(RecordChips $chips, HasCustomFields $record, CustomField $customField): array
     {
-        if (! $avatarConfig instanceof AvatarConfiguration || ! $avatarConfig->hasAttribute()) {
-            return null;
+        if (! $customField->supportsPairing() || ! $record instanceof Model) {
+            return [];
         }
 
-        return $record->getAttribute($avatarConfig->attribute);
-    }
+        $record->loadMissing(['outgoingLinks.createdBy', 'incomingLinks.createdBy']);
 
-    private function getRecordUrl(Model $record, mixed $entity): ?string
-    {
-        $recordPage = $entity->getRecordPage();
-
-        if ($recordPage === null) {
-            return null;
-        }
-
-        $resourceClass = $entity->getResourceClass();
-
-        if ($resourceClass === null || ! class_exists($resourceClass)) {
-            return null;
-        }
-
-        if (! method_exists($resourceClass, 'getUrl')) {
-            return null;
-        }
-
-        if (! array_key_exists($recordPage, $resourceClass::getPages())) {
-            throw new InvalidArgumentException(sprintf(
-                "Entity '%s' has recordPage '%s' but %s does not define a '%s' page. Available pages: %s.",
-                $entity->getLabelSingular(),
-                $recordPage,
-                class_basename($resourceClass),
-                $recordPage,
-                implode(', ', array_keys($resourceClass::getPages())),
-            ));
-        }
-
-        return $resourceClass::getUrl($recordPage, ['record' => $record]);
+        return $chips->provenance($record, $customField);
     }
 }

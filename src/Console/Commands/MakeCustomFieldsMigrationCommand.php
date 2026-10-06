@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
  * ABOUTME: Artisan command to generate custom fields migration files
  * ABOUTME: Creates migration stubs in database/custom-fields directory for preset custom fields
  */
-class MakeCustomFieldsMigrationCommand extends GeneratorCommand
+final class MakeCustomFieldsMigrationCommand extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
@@ -50,7 +50,7 @@ class MakeCustomFieldsMigrationCommand extends GeneratorCommand
     /**
      * Get the date prefix for the migration.
      */
-    protected function getDatePrefix(): string
+    private function getDatePrefix(): string
     {
         return date('Y_m_d_His');
     }

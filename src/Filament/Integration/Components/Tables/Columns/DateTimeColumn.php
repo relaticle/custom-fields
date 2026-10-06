@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 use Closure;
 use Filament\Tables\Columns\Column as BaseColumn;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -22,7 +23,7 @@ class DateTimeColumn extends AbstractTableColumn
 
     protected ?Closure $locale = null;
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?Model $record = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 

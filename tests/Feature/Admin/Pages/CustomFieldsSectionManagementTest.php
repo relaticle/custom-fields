@@ -137,6 +137,23 @@ describe('CustomFieldsPage - Section Management', function (): void {
         // Assert
         $component->assertDontSee($section->name);
     });
+
+    it('refreshes sections without creating a dynamic property', function (): void {
+        // Arrange
+        $section = CustomFieldSection::factory()
+            ->forEntityType($this->userEntityType)
+            ->create();
+
+        $component = livewire(CustomFieldsPage::class)
+            ->call('setCurrentEntityType', $this->userEntityType);
+
+        // Act
+        $section->delete();
+        $component->call('sectionDeleted');
+
+        // Assert
+        expect((new ReflectionObject($component->instance()))->hasProperty('sections'))->toBeFalse();
+    });
 });
 
 describe('ManageCustomFieldSection - Section Actions', function (): void {

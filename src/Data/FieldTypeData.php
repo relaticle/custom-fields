@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Data;
 
 use Closure;
-use Relaticle\CustomFields\Contracts\ValidationCapability;
+use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Spatie\LaravelData\Data;
@@ -28,16 +28,19 @@ final class FieldTypeData extends Data implements Stringable
         public bool $filterable = false,
         public bool $encryptable = false,
         public bool $withoutUserOptions = false,
-        public bool $requiresLookupType = false,
+        public bool $requiresRelationship = false,
+        public bool $supportsPairing = false,
+        public bool $carriesOptionCategories = false,
         public bool $acceptsArbitraryValues = false,
         public bool $supportsMultiValue = false,
         public bool $supportsUniqueConstraint = false,
-        /** @var array<int, class-string<ValidationCapability>> */
+        /** @var array<int, class-string<ValidationCapabilityInterface>> */
         public array $validationCapabilities = [],
         public ?string $settingsDataClass = null,
         public string|Closure|null $settingsSchema = null,
         /** @var array<int, VisibilityOperator>|null */
         public ?array $visibilityOperators = null,
+        public bool $systemOnly = false,
     ) {}
 
     /**

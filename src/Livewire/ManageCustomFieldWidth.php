@@ -5,39 +5,22 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Livewire;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\View as ViewFactory;
 use Livewire\Component;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
 
-class ManageCustomFieldWidth extends Component
+final class ManageCustomFieldWidth extends Component
 {
-    /**
-     * @var int
-     */
-    public $selectedWidth = 100; // @pest-ignore-type
+    public CustomFieldWidth $selectedWidth = CustomFieldWidth::_100;
 
     /**
      * @var array<int, int>
      */
-    public $widthOptions = [ // @pest-ignore-type
+    public array $widthOptions = [
         25, 33, 50, 66, 75, 100,
     ];
 
-    /**
-     * @var array<string, string>
-     */
-    public $widthMap = [ // @pest-ignore-type
-        '25' => 'col-span-3',
-        '33' => 'col-span-4',
-        '50' => 'col-span-6',
-        '66' => 'col-span-8',
-        '75' => 'col-span-9',
-        '100' => 'col-span-12',
-    ];
-
-    /**
-     * @var int|string
-     */
-    public $fieldId; // @pest-ignore-type
+    public int|string $fieldId;
 
     public function mount(CustomFieldWidth $selectedWidth, int|string $fieldId): void
     {
@@ -47,6 +30,9 @@ class ManageCustomFieldWidth extends Component
 
     public function render(): View
     {
-        return view('custom-fields::livewire.manage-custom-field-width');
+        /** @var view-string $view */
+        $view = 'custom-fields::livewire.manage-custom-field-width';
+
+        return ViewFactory::make($view);
     }
 }

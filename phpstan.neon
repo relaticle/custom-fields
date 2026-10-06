@@ -2,7 +2,7 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 5
+    level: 6
     treatPhpDocTypesAsCertain: false
     # nullsafe.neverNull inference differs between larastan versions (e.g. 3.9 vs 3.10), so some
     # defensive `@phpstan-ignore nullsafe.neverNull` annotations are "unmatched" on newer larastan
@@ -12,8 +12,6 @@ parameters:
         - src
         - tests
     excludePaths:
-        - src/Filament/Management/Pages/CustomFieldsManagementPage.php
-        - src/Livewire
         - tests
     ignoreErrors:
         # Ignore unused trait warnings for library traits meant to be consumed by package users
@@ -26,6 +24,12 @@ parameters:
         -
             identifier: argument.type
             path: src/Filament/Integration/Components/Tables/Columns/*
+            reportUnmatched: false
+        # Laravel 13 made the Scope interface generic; Laravel 12 has the template on apply() only,
+        # so @implements Scope<Model> is required on one CI leg and rejected on the other
+        -
+            identifier: generics.notGeneric
+            path: src/Models/Scopes/*
             reportUnmatched: false
     parallel:
     		maximumNumberOfProcesses: 3

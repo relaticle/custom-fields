@@ -13,20 +13,21 @@ use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Concerns\HasExtraAlpineAttributes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 use Livewire\Attributes\Renderless;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
+use Relaticle\CustomFields\Data\RecordLinkPayload;
 use Relaticle\CustomFields\Facades\Entities;
-use Relaticle\CustomFields\Support\Utils;
-use Throwable;
+use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\QueryBuilders\EntitySearchQuery;
 
 /**
- * A custom Filament form field for selecting records from other entities
- * with search, avatars, and single/multiple mode support.
+ * The one-way record field's input: a searchable select with avatars, showing one record or a
+ * row of removable pills. It is the same control in every flavor, because a flavor decides how
+ * a surface looks and this type has only ever had the one look.
  *
- * Single value: Shows a searchable select dropdown
- * Multiple values: Shows pills + add button with searchable dropdown
+ * The paired type extends it with what pairing adds: chips, the inline move confirmation, and
+ * provenance on hover.
  */
 class RecordSelectInputComponent extends Field implements HasNestedRecursiveValidationRulesContract
 {
@@ -47,6 +48,8 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     protected string|Closure|null $emptyStateLabel = null;
 
     protected int|Closure $maxVisiblePills = 3;
+
+    protected ?CustomField $customField = null;
 
     protected function setUp(): void
     {
@@ -74,9 +77,45 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
                 return $state !== null ? [$state] : [];
             }
 
-            // Filter out empty values
-            return array_values(array_filter($state, fn (mixed $value): bool => filled($value)));
+            // The map form carries the confirmation the writer needs before it takes a record
+            // from its holder, so it travels whole; only its ids are cleaned.
+            if (array_key_exists('ids', $state)) {
+                $ids = self::filledIds($state['ids']);
+
+                return [
+                    'ids' => $ids,
+                    'confirmed' => RecordLinkPayload::confirmedIds($state, $ids),
+                ];
+            }
+
+            return self::filledIds($state);
         });
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private static function filledIds(mixed $ids): array
+    {
+        return is_array($ids)
+            ? array_values(array_filter($ids, fn (mixed $value): bool => filled($value)))
+            : [];
+    }
+
+    /**
+     * The field the picker writes, so it can ask the same guard the writer asks before it
+     * offers to move a record away from whoever holds it.
+     */
+    public function customField(?CustomField $customField): static
+    {
+        $this->customField = $customField;
+
+        return $this;
+    }
+
+    public function getCustomField(): ?CustomField
+    {
+        return $this->customField;
     }
 
     public function allowMultiple(bool|Closure $allow = true): static
@@ -159,7 +198,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
      */
     public function getMinSearchLength(): int
     {
-        return (int) config('custom-fields.selects.record_lookup.min_search_length', 2);
+        return (int) config('custom-fields.selects.record.min_search_length', 2);
     }
 
     /**
@@ -179,7 +218,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     /**
      * Prepare entity query with common attributes.
      *
-     * @return array{entity: EntityConfigurationData, model: Model, query: Builder, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
+     * @return array{entity: EntityConfigurationData, model: Model, query: Builder<Model>, keyName: string, titleAttribute: string, avatarConfig: ?AvatarConfiguration}|null
      */
     private function prepareEntityQuery(): ?array
     {
@@ -216,11 +255,14 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
      * resolved without a schema query: a runtime Schema::hasColumn() call would be
      * a per-request round trip. The one exception is the documented 'updated_at',
      * which falls back to the key on a model that opts out of timestamps.
+     *
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
      */
     private function applyLookupOrder(Builder $query, Model $model): Builder
     {
-        $column = config('custom-fields.selects.record_lookup.order_column');
-        $direction = (string) config('custom-fields.selects.record_lookup.order_direction', 'desc');
+        $column = config('custom-fields.selects.record.order_column');
+        $direction = (string) config('custom-fields.selects.record.order_direction', 'desc');
         $key = $model->getQualifiedKeyName();
 
         if (! is_string($column) || $column === '') {
@@ -238,13 +280,13 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
 
     private function lookupLimit(): int
     {
-        return (int) config('custom-fields.selects.record_lookup.limit', 50);
+        return (int) config('custom-fields.selects.record.limit', 50);
     }
 
     /**
      * Search for records matching the query.
      *
-     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string}>
+     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     public function searchRecords(string $search): array
     {
@@ -257,30 +299,11 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
         ['entity' => $entity, 'model' => $model, 'query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
         $searchAttributes = $entity->getSearchAttributes();
 
-        // Try to use resource's search if available
-        $resource = null;
-        if ($entity->getResourceClass()) {
-            try {
-                $resource = App::make($entity->getResourceClass());
-            } catch (Throwable) {
-                $resource = null;
-            }
+        if ($searchAttributes === []) {
+            $searchAttributes = [$titleAttribute];
         }
 
-        if ($resource !== null) {
-            Utils::invokeMethodByReflection($resource, 'applyGlobalSearchAttributeConstraints', [
-                $query,
-                $search,
-                $searchAttributes,
-            ]);
-        } else {
-            $query->where(function (Builder $q) use ($search, $searchAttributes, $titleAttribute): void {
-                $attrs = $searchAttributes === [] ? [$titleAttribute] : $searchAttributes;
-                foreach ($attrs as $attribute) {
-                    $q->orWhere($attribute, 'like', sprintf('%%%s%%', $search));
-                }
-            });
-        }
+        $query = app(EntitySearchQuery::class)->apply($query, $search, $searchAttributes, $entity->getResourceClass());
 
         $records = $this->applyLookupOrder($query, $model)
             ->limit($this->lookupLimit())
@@ -293,7 +316,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
      * Get records by their IDs.
      *
      * @param  array<string>  $ids
-     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string}>
+     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     public function getRecordsByIds(array $ids): array
     {
@@ -312,13 +335,33 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
         $records = $query->whereIn($keyName, $ids)->get()
             ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $ids, true));
 
-        return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig);
+        return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig, $this->provenance());
+    }
+
+    /**
+     * Where each selected record's link came from, for the surfaces with somewhere to show it.
+     * A plain select draws no chip, so it says nothing.
+     *
+     * @return array<string, string>
+     */
+    protected function provenance(): array
+    {
+        return [];
+    }
+
+    /**
+     * Whether taking a record could take it away from another holder. The record type never
+     * offers that move, so its select never asks.
+     */
+    public function checksHolderConflicts(): bool
+    {
+        return false;
     }
 
     /**
      * Get initial options (first 50 records).
      *
-     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string}>
+     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     public function getInitialOptions(): array
     {
@@ -340,13 +383,16 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     /**
      * Format records for JavaScript consumption.
      *
-     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string}>
+     * @param  iterable<Model>  $records
+     * @param  array<string, string>  $provenance
+     * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     private function formatRecordsForJs(
         iterable $records,
         string $keyName,
         string $titleAttribute,
-        ?AvatarConfiguration $avatarConfig
+        ?AvatarConfiguration $avatarConfig,
+        array $provenance = []
     ): array {
         $result = [];
 
@@ -357,6 +403,7 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
                 'label' => $record->getAttribute($titleAttribute) ?? '',
                 'avatar' => $this->getAvatarUrl($record, $avatarConfig),
                 'avatarShape' => $avatarConfig?->getCssClass() ?? 'rounded-full',
+                'provenance' => $provenance[$id] ?? null,
             ];
         }
 
@@ -373,10 +420,9 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
     }
 
     /**
-     * Search records via Livewire call.
-     * Called from Alpine.js when user types in search box.
+     * Search records via Livewire call, from Alpine when the user types in the search box.
      *
-     * @return array<int, array{id: string, label: string, avatar: ?string, avatarShape: string}>
+     * @return array<int, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     #[ExposedLivewireMethod]
     #[Renderless]

@@ -303,4 +303,35 @@ describe('PhoneInputComponent Livewire Integration', function (): void {
 
         expect($value->getValue())->toContain('+14155551234');
     });
+
+    it('keeps a phone extension through the panel form', function (): void {
+        CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'code' => 'contact',
+            'type' => 'phone',
+            'entity_type' => Post::class,
+        ]);
+
+        $newData = Post::factory()->make();
+
+        livewire(CreatePost::class)
+            ->fillForm([
+                'author_id' => $newData->author->getKey(),
+                'title' => $newData->title,
+                'rating' => $newData->rating,
+                'custom_fields' => [
+                    'contact' => [['country' => 'US', 'number' => '4155551234 ext. 12']],
+                ],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect();
+
+        $post = Post::query()->firstWhere('title', $newData->title);
+        $value = $post->customFieldValues()
+            ->whereHas('customField', fn ($q) => $q->where('code', 'contact'))
+            ->first();
+
+        expect(collect($value->getValue())->all())->toBe(['+14155551234;ext=12']);
+    });
 });

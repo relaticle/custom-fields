@@ -29,7 +29,6 @@ final class CustomFieldData extends Data
         public CustomFieldWidth $width = CustomFieldWidth::_100,
         public ?string $entityType = null,
         public ?array $options = null,
-        public ?string $lookupType = null,
         public ?CustomFieldSettingsData $settings = null,
     ) {}
 }

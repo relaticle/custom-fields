@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Database\Eloquent\Builder;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
@@ -35,7 +36,7 @@ final class DateConstraintField
                         ->options(self::presetOptions($context))
                         ->default('none')
                         ->live()
-                        ->afterStateHydrated(function ($component, Get $get) use ($statePath): void {
+                        ->afterStateHydrated(function (Component $component, Get $get) use ($statePath): void {
                             $anchor = $get($statePath.'.anchor');
 
                             if ($anchor === null) {
@@ -95,7 +96,7 @@ final class DateConstraintField
                             return CustomFields::newCustomFieldModel()::query()
                                 ->where('entity_type', $entityType)
                                 ->whereIn('type', ['date', 'date-time'])
-                                ->when($currentCode, fn ($q) => $q->where('code', '!=', $currentCode))
+                                ->when($currentCode, fn (Builder $q): Builder => $q->where('code', '!=', $currentCode))
                                 ->where('active', true)
                                 ->pluck('name', 'code')
                                 ->all();

@@ -5,16 +5,15 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Migrations;
 
 use Illuminate\Database\Migrations\Migration;
-use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
 
 abstract class CustomFieldsMigration extends Migration
 {
-    protected CustomsFieldsMigrators $migrator;
+    protected CustomFieldsMigrator $migrator;
 
     abstract public function up(): void;
 
     public function __construct()
     {
-        $this->migrator = app(CustomsFieldsMigrators::class);
+        $this->migrator = app(CustomFieldsMigrator::class);
     }
 }

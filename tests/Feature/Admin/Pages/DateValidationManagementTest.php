@@ -6,6 +6,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
+use Relaticle\CustomFields\Livewire\ManageFieldsTable;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
@@ -434,4 +435,46 @@ it('rejects circular field references via edit action', function (): void {
             ],
         ])
         ->assertHasActionErrors();
+});
+
+it('strips the preset from a date constraint saved through the flat field table', function (): void {
+    $field = CustomField::factory()
+        ->ofType('date')
+        ->create([
+            'custom_field_section_id' => $this->section->getKey(),
+            'entity_type' => $this->entityType,
+            'name' => 'Renewal',
+            'code' => 'renewal',
+        ]);
+
+    livewire(ManageFieldsTable::class, ['entityType' => $this->entityType])
+        ->callAction('editField', [
+            'name' => 'Renewal',
+            'code' => 'renewal',
+            'type' => 'date',
+            'validation_rules' => [
+                'min_date' => [
+                    'preset' => 'today_preset',
+                    'anchor' => 'today',
+                    'offset' => 0,
+                    'offset_unit' => 'days',
+                    'offset_direction' => 'after',
+                ],
+                'max_date' => [
+                    'preset' => 'today_offset',
+                    'anchor' => 'today',
+                    'offset' => 30,
+                    'offset_unit' => 'days',
+                    'offset_direction' => 'after',
+                ],
+            ],
+        ], ['fieldId' => $field->getKey()])
+        ->assertHasNoActionErrors();
+
+    $rules = $field->refresh()->validation_rules;
+
+    expect($rules->get('min_date'))->toMatchArray(['anchor' => 'today', 'offset' => 0])
+        ->and($rules->get('min_date'))->not->toHaveKey('preset')
+        ->and($rules->get('max_date'))->toMatchArray(['anchor' => 'today', 'offset' => 30])
+        ->and($rules->get('max_date'))->not->toHaveKey('preset');
 });

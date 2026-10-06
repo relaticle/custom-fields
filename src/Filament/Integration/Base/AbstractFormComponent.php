@@ -72,6 +72,10 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return $this->configure($field, $customField, $allFields, $dependentFieldCodes, $record);
     }
 
+    /**
+     * @param  Collection<int, CustomField>  $allFields
+     * @param  array<int, string>  $dependentFieldCodes
+     */
     protected function configure(
         Field $field,
         CustomField $customField,
@@ -105,10 +109,13 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     )
                 )
             )
+            // Empty is a value: a field the user cleared has to reach the writer, or a
+            // relationship could never lose its last record. A clear is destructive, so it
+            // travels only on a field the server can prove the form showed.
             ->dehydrated(
-                fn (mixed $state): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY) ||
-                    $this->coreVisibilityLogic->shouldAlwaysSave($customField) ||
-                    filled($state)
+                fn (Get $get, mixed $state): bool => $this->coreVisibilityLogic->shouldAlwaysSave($customField) ||
+                    filled($state) ||
+                    $this->isProvablyVisible($customField, $allFields, $get)
             )
             ->when(
                 $this->validationService->isRequired($customField) && $customField->typeData->dataType->isBoolean(),
@@ -229,6 +236,36 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         Collection $allFields,
         Get $get
     ): bool {
+        return $this->reproducedVisibility($customField, $allFields, $get) ?? true;
+    }
+
+    /**
+     * Whether the server can PROVE the form is showing the field. Dehydration resolves an
+     * unreproducible expression the other way from validation: a redundant validation costs a
+     * user one more click, while dehydrating a state the form never showed writes an empty
+     * value over a stored one.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function isProvablyVisible(
+        CustomField $customField,
+        Collection $allFields,
+        Get $get
+    ): bool {
+        return $this->reproducedVisibility($customField, $allFields, $get) === true;
+    }
+
+    /**
+     * The field's own conditions evaluated against live form state, or null when the server
+     * cannot reproduce the expression the client renders (see canReproduceClientVisibility).
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function reproducedVisibility(
+        CustomField $customField,
+        Collection $allFields,
+        Get $get
+    ): ?bool {
         if (! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
             return true;
         }
@@ -240,7 +277,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         $visibility = $this->coreVisibilityLogic->getVisibilityData($customField);
 
         if (! $this->canReproduceClientVisibility($visibility, $allFields)) {
-            return true;
+            return null;
         }
 
         $rawValues = $get('custom_fields');
@@ -306,6 +343,9 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return true;
     }
 
+    /**
+     * @param  Collection<int, CustomField>  $allFields
+     */
     private function applyVisibility(
         Field $field,
         CustomField $customField,
@@ -344,6 +384,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
 
     /**
      * Apply settings dynamically to any Filament component
+     *
+     * @param  array<string, mixed>  $settings
      */
     protected function applySettingsToComponent(Field $component, array $settings): Field
     {

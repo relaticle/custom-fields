@@ -37,4 +37,23 @@ enum CustomFieldsFeature: string
     case SYSTEM_MANAGEMENT_INTERFACE = 'system_management_interface';
     case SYSTEM_MULTI_TENANCY = 'system_multi_tenancy';
     case SYSTEM_SECTIONS = 'system_sections';
+    case SYSTEM_RELATIONSHIPS = 'system_relationships';
+
+    /**
+     * The package default a host inherits for a flag its published config does not list.
+     * A flag is off by default only when turning it on changes stored, validated, or
+     * displayed data; every other flag is on.
+     */
+    public function isEnabledByDefault(): bool
+    {
+        return match ($this) {
+            self::FIELD_CODE_AUTO_GENERATE,
+            self::FIELD_MULTI_VALUE,
+            self::FIELD_UNIQUE_VALUE,
+            self::MODEL_ATTRIBUTE_CONDITIONS,
+            self::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT,
+            self::SYSTEM_MULTI_TENANCY => false,
+            default => true,
+        };
+    }
 }

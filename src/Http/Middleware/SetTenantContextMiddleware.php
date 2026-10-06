@@ -11,7 +11,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Symfony\Component\HttpFoundation\Response;
 
-class SetTenantContextMiddleware
+final class SetTenantContextMiddleware
 {
     /**
      * Handle an incoming request.

@@ -10,7 +10,7 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 
 use function Laravel\Prompts\select;
 
-class MakeFieldTypeCommand extends GeneratorCommand
+final class MakeFieldTypeCommand extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
@@ -105,7 +105,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the class name from the full name.
      */
-    protected function getClassName(string $name): string
+    private function getClassName(string $name): string
     {
         $className = class_basename($name);
 
@@ -120,7 +120,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the field type name (without "FieldType" suffix).
      */
-    protected function getFieldTypeName(string $name): string
+    private function getFieldTypeName(string $name): string
     {
         $className = class_basename($name);
 
@@ -130,7 +130,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the data type for the field type.
      */
-    protected function getDataType(): FieldDataType
+    private function getDataType(): FieldDataType
     {
         $typeOption = $this->option('type');
 
@@ -165,7 +165,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the appropriate configurator method for the given data type.
      */
-    protected function getConfiguratorForDataType(FieldDataType $dataType): string
+    private function getConfiguratorForDataType(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'text()',
@@ -184,7 +184,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the appropriate form component import for the given data type.
      */
-    protected function getFormComponentImport(FieldDataType $dataType): string
+    private function getFormComponentImport(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'use Filament\Forms\Components\TextInput;',
@@ -203,7 +203,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the appropriate form component code for the given data type.
      */
-    protected function getFormComponent(FieldDataType $dataType): string
+    private function getFormComponent(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'return TextInput::make($customField->getFieldName())
@@ -251,7 +251,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Check if the field type should use withoutUserOptions().
      */
-    protected function shouldUseWithoutUserOptions(FieldDataType $dataType): bool
+    private function shouldUseWithoutUserOptions(FieldDataType $dataType): bool
     {
         return $dataType === FieldDataType::SINGLE_CHOICE;
     }
@@ -259,7 +259,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get comment for choice field types explaining the behavior.
      */
-    protected function getChoiceFieldComment(FieldDataType $dataType): string
+    private function getChoiceFieldComment(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::SINGLE_CHOICE => '// withoutUserOptions() showcases built-in options - can be used with both single and multi choice',

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
 use Relaticle\CustomFields\Data\CustomFieldData;
 use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
@@ -12,6 +11,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionComponentFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionInfolistsFactory;
+use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -37,8 +37,10 @@ it('casts the stored section width to the CustomFieldWidth enum', function (): v
     ]);
 });
 
-it('has UI_SECTION_WIDTH_CONTROL disabled by default', function (): void {
-    expect(FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL))->toBeFalse();
+it('ships UI_SECTION_WIDTH_CONTROL enabled', function (): void {
+    config(['custom-fields.features' => shippedFeatureConfigurator()]);
+
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL))->toBeTrue();
 });
 
 it('renders a fractional column span when the flag is on and width is non-100', function (): void {
@@ -69,7 +71,8 @@ it('renders full width when the flag is on but width is 100', function (): void 
 
 it('ignores section width when the flag is off', function (): void {
     config(['custom-fields.features' => FeatureConfigurator::configure()
-        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)]);
+        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)
+        ->disable(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)]);
 
     $section = CustomFieldSection::factory()
         ->width(CustomFieldWidth::_50)
@@ -110,7 +113,8 @@ it('applies the same width rules on the infolist path', function (): void {
 
 it('ignores section width on the infolist path when the flag is off', function (): void {
     config(['custom-fields.features' => FeatureConfigurator::configure()
-        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)]);
+        ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)
+        ->disable(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)]);
 
     $section = CustomFieldSection::factory()
         ->width(CustomFieldWidth::_50)
@@ -147,10 +151,12 @@ it('persists a chosen section width from the management form when the flag is on
 });
 
 it('does not persist section width from the form when the flag is off', function (): void {
-    config(['custom-fields.features' => FeatureConfigurator::configure()->enable(
-        CustomFieldsFeature::SYSTEM_SECTIONS,
-        CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
-    )]);
+    config(['custom-fields.features' => FeatureConfigurator::configure()
+        ->enable(
+            CustomFieldsFeature::SYSTEM_SECTIONS,
+            CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
+        )
+        ->disable(CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL)]);
 
     $this->actingAs(User::factory()->create());
 
@@ -265,7 +271,7 @@ it('persists a preset section width end-to-end through the migrator', function (
     config(['custom-fields.features' => FeatureConfigurator::configure()
         ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)]);
 
-    app(CustomsFieldsMigrators::class)->new(
+    app(CustomFieldsMigrator::class)->new(
         model: Post::class,
         fieldData: new CustomFieldData(
             name: 'Function Info',

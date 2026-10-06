@@ -34,11 +34,13 @@ final readonly class LookupResolver
             return collect($values);
         }
 
-        if ($customField->lookup_type === null) {
+        $lookupType = $customField->targetEntityType();
+
+        if ($lookupType === null) {
             return $customField->options->whereIn('id', $values)->pluck('name');
         }
 
-        return $this->resolveAgainstLookupModel($customField->lookup_type, $values);
+        return $this->resolveAgainstLookupModel($lookupType, $values);
     }
 
     /**

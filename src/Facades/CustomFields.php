@@ -21,7 +21,7 @@ use Relaticle\CustomFields\Filament\Integration\CustomFieldsManager;
  *
  * @see CustomFieldsManager
  */
-class CustomFields extends Facade
+final class CustomFields extends Facade
 {
     protected static function getFacadeAccessor(): string
     {

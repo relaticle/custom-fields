@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
-use Relaticle\CustomFields\Contracts\ValueResolvers;
+use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 
-readonly class ValueResolver implements ValueResolvers
+final readonly class ValueResolver implements ValueResolverInterface
 {
     public function __construct(
         private LookupMultiValueResolver $multiValueResolver,

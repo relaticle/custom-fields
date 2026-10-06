@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Relaticle\CustomFields\Data\CustomFieldSettingsData;
-use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\ValueResolver\LookupCache;
 use Relaticle\CustomFields\Services\ValueResolver\LookupResolver;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
@@ -21,15 +23,13 @@ beforeEach(function (): void {
         ->forEntityType(Post::class)
         ->create(['active' => true]);
 
-    $this->field = CustomField::factory()->create([
-        'custom_field_section_id' => $section->getKey(),
-        'entity_type' => Post::class,
-        'code' => 'parent_post',
-        'name' => 'Parent Post',
-        'type' => 'select',
-        'lookup_type' => Post::class,
-        'settings' => new CustomFieldSettingsData,
-    ]);
+    $this->field = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'parent_post',
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::ManyToOne,
+        fromField: new FieldSlotData(name: 'Parent Post', sectionId: $section->getKey()),
+    ))->fromField;
 });
 
 it('fires one query on first call and zero on second call for the same ids', function (): void {
@@ -130,12 +130,7 @@ describe('scopeWithCustomFieldValues preloading', function (): void {
         $hosts = Post::factory()->count(3)->create();
 
         foreach ($hosts as $index => $host) {
-            CustomFieldValue::factory()->create([
-                'custom_field_id' => $this->field->getKey(),
-                'entity_type' => Post::class,
-                'entity_id' => $host->getKey(),
-                'integer_value' => $targets[$index]->getKey(),
-            ]);
+            $host->update(['custom_fields' => [$this->field->code => [$targets[$index]->getKey()]]]);
         }
 
         app(LookupCache::class)->flush();
@@ -154,7 +149,7 @@ describe('scopeWithCustomFieldValues preloading', function (): void {
             $titles = $loaded->map(function (Post $host) use ($resolver): string {
                 $value = $host->getCustomFieldValue($this->field);
 
-                return $resolver->resolveLookupValues([$value], $this->field)->first() ?? '';
+                return $resolver->resolveLookupValues($value, $this->field)->first() ?? '';
             });
 
             $postQueries = count(array_filter(
@@ -178,15 +173,13 @@ describe('Preload handles Collection-shaped values and empty strings', function 
             ->forEntityType(Post::class)
             ->create(['active' => true]);
 
-        $multiField = CustomField::factory()->create([
-            'custom_field_section_id' => $section->getKey(),
-            'entity_type' => Post::class,
-            'code' => 'related_posts',
-            'name' => 'Related Posts',
-            'type' => 'multi-select',
-            'lookup_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(allow_multiple: true),
-        ]);
+        $multiField = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+            code: 'related_posts',
+            fromEntityType: (new Post)->getMorphClass(),
+            toEntityType: (new Post)->getMorphClass(),
+            cardinality: RelationshipCardinality::ManyToMany,
+            fromField: new FieldSlotData(name: 'Related Posts', sectionId: $section->getKey()),
+        ))->fromField;
 
         $targets = Post::factory()->count(3)->create();
 

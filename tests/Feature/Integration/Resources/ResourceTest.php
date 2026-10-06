@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;

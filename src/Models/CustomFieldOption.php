@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Crypt;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldOptionFactory;
+use Relaticle\CustomFields\Enums\OptionCategory;
 use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 
@@ -79,6 +81,8 @@ class CustomFieldOption extends Model
 
     /**
      * Handle decryption of option name based on parent field settings
+     *
+     * @return Attribute<?string, never>
      */
     protected function name(): Attribute
     {
@@ -125,5 +129,14 @@ class CustomFieldOption extends Model
     {
         /** @var BelongsTo<CustomField, self> */
         return $this->belongsTo(CustomFields::customFieldModel());
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeWhereCategory(Builder $query, OptionCategory $category): Builder
+    {
+        return $query->where('settings->category', $category->value);
     }
 }

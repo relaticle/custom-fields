@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Tables\Columns\Column as BaseColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Contracts\TableColumnInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
@@ -17,5 +18,5 @@ abstract class AbstractTableColumn implements TableColumnInterface
     /**
      * Create and configure a table column.
      */
-    abstract public function make(CustomField $customField): BaseColumn;
+    abstract public function make(CustomField $customField, ?Model $record = null): BaseColumn;
 }

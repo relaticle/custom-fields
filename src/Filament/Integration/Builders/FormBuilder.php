@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 // ABOUTME: Builder for creating Filament form schemas from custom fields
 // ABOUTME: Handles form generation with sections, validation, and field dependencies
 
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Component;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -15,11 +17,11 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 
-class FormBuilder extends BaseBuilder
+final class FormBuilder extends BaseBuilder
 {
     private ?bool $withoutSections = null;
 
-    public function build(): Grid
+    public function build(): FormContainer
     {
         $container = FormContainer::make()
             ->forModel($this->explicitModel ?? null)
@@ -42,6 +44,10 @@ class FormBuilder extends BaseBuilder
         return $this;
     }
 
+    /**
+     * @param  Collection<int, CustomField>  $fields
+     * @return array<int, string>
+     */
     private function getDependentFieldCodes(Collection $fields): array
     {
         $service = app(CoreVisibilityLogicService::class);
@@ -67,6 +73,9 @@ class FormBuilder extends BaseBuilder
         return array_unique($dependentCodes);
     }
 
+    /**
+     * @return Collection<int, covariant Component>
+     */
     public function values(): Collection
     {
         $fieldComponentFactory = app(FieldComponentFactory::class);
@@ -79,7 +88,7 @@ class FormBuilder extends BaseBuilder
         // Resolve record for visibility (null for create forms — fail-open)
         $record = isset($this->model) && $this->model->exists ? $this->model : null;
 
-        $createField = fn (CustomField $customField) => $fieldComponentFactory->create(
+        $createField = fn (CustomField $customField): Component => $fieldComponentFactory->create(
             $customField,
             $dependentFieldCodes,
             $allFields,
@@ -93,7 +102,7 @@ class FormBuilder extends BaseBuilder
         }
 
         return $this->getFilteredSections()
-            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField, $allFields, $record) {
+            ->map(function (CustomFieldSection $section) use ($sectionComponentFactory, $createField, $allFields, $record): ?Component {
                 $fields = $section->fields->map($createField);
 
                 return $fields->isEmpty()

@@ -9,7 +9,7 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class CustomFieldSectionSettingsData extends Data
+final class CustomFieldSectionSettingsData extends Data
 {
     /**
      * @param  array<string, mixed>  $extra  Free-form bag for consumer-defined section settings.

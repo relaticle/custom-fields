@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -42,58 +41,8 @@ return new class extends Migration
         );
     }
 
-    public function down(): void
-    {
-        $this->assertNoDuplicatesUnderNarrowKey();
-
-        $this->swapUniqueKey(
-            from: $this->wideColumns(),
-            fromIndexName: $this->wideIndexName(),
-            to: $this->narrowColumns(),
-            toIndexName: null,
-        );
-    }
-
     /**
-     * MySQL runs each ALTER TABLE as its own auto-committing DDL statement, so dropping
-     * the wide key and adding the narrow one are not transactional together. If rows exist
-     * that share (code, entity_type[, tenant]) across different sections — exactly the
-     * shape the wide key exists to allow — the DROP succeeds and the subsequent ADD fails
-     * on the duplicate, leaving the table with neither unique key. Check first and abort
-     * before touching anything.
-     */
-    private function assertNoDuplicatesUnderNarrowKey(): void
-    {
-        $table = config('custom-fields.database.table_names.custom_fields');
-
-        if (! Schema::hasColumn($table, 'custom_field_section_id')) {
-            return;
-        }
-
-        $columns = $this->narrowColumns();
-
-        $duplicateCodes = DB::table($table)
-            ->select($columns)
-            ->groupBy($columns)
-            ->havingRaw('count(*) > 1')
-            ->pluck('code');
-
-        if ($duplicateCodes->isEmpty()) {
-            return;
-        }
-
-        throw new RuntimeException(sprintf(
-            'Cannot roll back the custom_fields unique key: %d code(s) — including "%s" — are shared by more than one row for the same (%s), only differing by custom_field_section_id. onlySections() allows this under the wide key, but the narrow key being restored cannot. Resolve or remove the duplicate rows before rolling back this migration.',
-            $duplicateCodes->count(),
-            $duplicateCodes->first(),
-            implode(', ', $columns)
-        ));
-    }
-
-    /**
-     * Drops $from's unique key if present and adds $to's if absent. Shared by both
-     * directions: up() widens (code, entity_type[, tenant]) to also include
-     * custom_field_section_id; down() narrows it back to the original key.
+     * Drops $from's unique key if present and adds $to's if absent.
      *
      * @param  array<int, string>  $from
      * @param  array<int, string>  $to

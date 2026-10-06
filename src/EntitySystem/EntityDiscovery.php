@@ -21,8 +21,13 @@ use Symfony\Component\Finder\Finder;
 
 final class EntityDiscovery
 {
+    /** @var array<int, EntityConfigurationData> */
     private array $discoveredCache = [];
 
+    /**
+     * @param  array<int, string>  $paths
+     * @param  array<int, string>  $namespaces
+     */
     public function __construct(
         private array $paths = [],
         private array $namespaces = []
@@ -40,6 +45,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from multiple sources
+     *
+     * @return array<int, EntityConfigurationData>
      */
     public function discover(): array
     {
@@ -80,6 +87,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from Filament Resources
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromFilamentResources(): array
     {
@@ -115,6 +124,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from configured paths
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromPaths(): array
     {
@@ -147,6 +158,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from namespaces
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromNamespaces(): array
     {
@@ -285,6 +298,8 @@ final class EntityDiscovery
 
     /**
      * Get model search attributes
+     *
+     * @return array<int, string>
      */
     private function getModelSearchAttributes(string $modelClass): array
     {
@@ -326,6 +341,8 @@ final class EntityDiscovery
 
     /**
      * Get classes in a namespace (using declared classes)
+     *
+     * @return array<int, class-string>
      */
     private function getClassesInNamespace(string $namespace): array
     {

@@ -20,10 +20,13 @@ final class FieldTypeConfigurator
 
     private string $cacheStore = 'default';
 
+    /** @var array<int, string> */
     private array $cacheTags = ['field-types', 'configuration'];
 
+    /** @var array<int, string> */
     private array $enabledFieldTypes = [];
 
+    /** @var array<int, string> */
     private array $disabledFieldTypes = [];
 
     private function __construct()
@@ -51,6 +54,8 @@ final class FieldTypeConfigurator
 
     /**
      * Configure caching settings
+     *
+     * @param  array<int, string>  $tags
      */
     public function cache(bool $enabled = true, int $ttl = 3600, ?string $store = null, array $tags = []): self
     {
@@ -82,6 +87,8 @@ final class FieldTypeConfigurator
 
     /**
      * Enable only specific field types (empty array = all enabled)
+     *
+     * @param  array<int, string>  $fieldTypes
      */
     public function enabled(array $fieldTypes = []): self
     {
@@ -92,6 +99,8 @@ final class FieldTypeConfigurator
 
     /**
      * Disable specific field types
+     *
+     * @param  array<int, string>  $fieldTypes
      */
     public function disabled(array $fieldTypes = []): self
     {
@@ -121,6 +130,8 @@ final class FieldTypeConfigurator
 
     /**
      * Restore the configurator from var_export
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

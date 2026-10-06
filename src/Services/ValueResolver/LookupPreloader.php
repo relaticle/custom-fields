@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 
 /**
  * Scans a set of loaded host records for their custom-field lookup references
- * and primes the LookupCache with one query per lookup_type.
+ * and primes the LookupCache with one query per target entity type.
  *
  * Called by scopeWithCustomFieldValues's afterQuery hook so tables and
  * infolists get batched lookup resolution for free.
@@ -41,6 +42,12 @@ final readonly class LookupPreloader
                 continue;
             }
 
+            foreach ($this->linkedEnds($record) as $linkedType => $linkedIds) {
+                foreach ($linkedIds as $linkedId) {
+                    $idsByLookupType[$linkedType][] = $linkedId;
+                }
+            }
+
             if (! $record->relationLoaded('customFieldValues')) {
                 continue;
             }
@@ -55,12 +62,14 @@ final readonly class LookupPreloader
                     continue;
                 }
 
-                if ($field->lookup_type === null) {
+                $lookupType = $field->targetEntityType();
+
+                if ($lookupType === null) {
                     continue;
                 }
 
                 foreach ($this->scalarIdsFromValue($value->getValue()) as $id) {
-                    $idsByLookupType[$field->lookup_type][] = $id;
+                    $idsByLookupType[$lookupType][] = $id;
                 }
             }
         }
@@ -82,6 +91,35 @@ final readonly class LookupPreloader
 
             $this->cache->remember($lookupType, $titles);
         }
+    }
+
+    /**
+     * Record fields keep no value row, so their titles come off the loaded edges instead.
+     *
+     * @return array<string, array<int, int|string>>
+     */
+    private function linkedEnds(Model $record): array
+    {
+        $ends = [];
+
+        foreach (['outgoingLinks' => 'to', 'incomingLinks' => 'from'] as $relation => $end) {
+            if (! $record->relationLoaded($relation)) {
+                continue;
+            }
+
+            /** @var iterable<CustomFieldLink> $links */
+            $links = $record->getRelation($relation);
+
+            foreach ($links as $link) {
+                if ($link->active_until !== null) {
+                    continue;
+                }
+
+                $ends[$link->{$end.'_entity_type'}][] = $link->{$end.'_entity_id'};
+            }
+        }
+
+        return $ends;
     }
 
     /**

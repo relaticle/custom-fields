@@ -19,7 +19,7 @@ use Spatie\LaravelData\DataCollection;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class VisibilityData extends Data
+final class VisibilityData extends Data
 {
     /**
      * @param  DataCollection<int, VisibilityConditionData>|null  $conditions
@@ -30,7 +30,11 @@ class VisibilityData extends Data
         #[DataCollectionOf(VisibilityConditionData::class)]
         public ?DataCollection $conditions = null,
         public bool $alwaysSave = false,
-    ) {}
+    ) {
+        if (! $this->mode->requiresConditions()) {
+            $this->conditions = null;
+        }
+    }
 
     public function requiresConditions(): bool
     {

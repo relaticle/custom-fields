@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
-use ReflectionClass;
-use ReflectionException;
-
 final class Utils
 {
     public static function getResourceCluster(): ?string
@@ -50,24 +47,5 @@ final class Utils
 
         // Return black for light colors, white for dark colors
         return $luminance > 0.5 ? '#000000' : '#ffffff';
-    }
-
-    /**
-     * Invoke a protected or private method on an object using reflection.
-     *
-     * @param  object  $object  The object instance
-     * @param  string  $method  The method name to invoke
-     * @param  array  $parameters  The parameters to pass to the method
-     * @return mixed The method's return value
-     *
-     * @throws ReflectionException
-     */
-    public static function invokeMethodByReflection(object $object, string $method, array $parameters = []): mixed
-    {
-        $reflection = new ReflectionClass($object);
-        $method = $reflection->getMethod($method);
-        $method->setAccessible(true);
-
-        return $method->invokeArgs($object, $parameters);
     }
 }

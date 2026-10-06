@@ -12,13 +12,23 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\RecordLinkPayload;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Exceptions\UniqueCustomFieldValueTakenException;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
+use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
+use Relaticle\CustomFields\Services\Relationships\LinkReader;
+use Relaticle\CustomFields\Services\Relationships\LinkWriter;
+use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Services\ValueResolver\LookupPreloader;
+use Relaticle\CustomFields\Support\RelationshipTables;
 
 /**
  * @see HasCustomFields
@@ -81,7 +91,71 @@ trait UsesCustomFields
             }
 
             $model->customFieldValues()->delete();
+            $model->deleteCustomFieldLinks();
         });
+
+        // A trashed record gives up its unique values, so it may only come back while they are still free.
+        static::registerModelEvent('restoring', function (Model $model): void {
+            $taken = $model->takenUniqueCustomFieldValues()->first();
+
+            if ($taken !== null) {
+                throw new UniqueCustomFieldValueTakenException($model, $taken['customField'], $taken['value']);
+            }
+        });
+    }
+
+    /**
+     * @return Collection<int, array{customField: CustomField, value: string}>
+     */
+    public function takenUniqueCustomFieldValues(): Collection
+    {
+        $tenantKey = (string) config('custom-fields.database.column_names.tenant_foreign_key');
+
+        return $this->customFieldValues()
+            ->with('customField')
+            ->get()
+            ->filter(fn (CustomFieldValue $value): bool => $value->customField?->active && $value->customField->settings->unique_per_entity_type)
+            ->flatMap(fn (CustomFieldValue $value): Collection => TenantContextService::withTenant(
+                $value->getAttribute($tenantKey),
+                fn (): Collection => collect($value->getValue())
+                    ->filter(fn (mixed $candidate): bool => is_scalar($candidate) && filled($candidate))
+                    ->reject(fn (mixed $candidate): bool => validator(
+                        ['value' => $candidate],
+                        ['value' => [new UniqueCustomFieldValue($value->customField, $this->getKey())]],
+                    )->passes())
+                    ->map(fn (mixed $candidate): array => ['customField' => $value->customField, 'value' => (string) $candidate])
+                    ->values(),
+            ))
+            ->values();
+    }
+
+    /**
+     * The saved hook writes custom fields after the record row is already written, and a
+     * rejected link throws there, so a pending payload puts the whole save in one
+     * transaction (a savepoint when the host already opened one).
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function save(array $options = []): bool
+    {
+        if (! $this->hasPendingCustomFields()) {
+            return parent::save($options);
+        }
+
+        return (bool) $this->getConnection()->transaction(fn (): bool => parent::save($options));
+    }
+
+    /**
+     * A payload reaches save() either as an attribute or, when it came through the
+     * constructor, already parked in the temporary store.
+     */
+    protected function hasPendingCustomFields(): bool
+    {
+        if (isset($this->custom_fields) && is_array($this->custom_fields)) {
+            return true;
+        }
+
+        return isset(self::$tempCustomFields[spl_object_id($this)]);
     }
 
     /**
@@ -102,8 +176,15 @@ trait UsesCustomFields
     {
         $objectId = spl_object_id($this);
 
-        if (isset(self::$tempCustomFields[$objectId]) && method_exists($this, 'saveCustomFields')) {
+        if (! isset(self::$tempCustomFields[$objectId]) || ! method_exists($this, 'saveCustomFields')) {
+            return;
+        }
+
+        // A rejected payload rolls its record back, and the store is keyed on an object id
+        // PHP reuses after collection, so the entry goes whichever way the write ends.
+        try {
             $this->saveCustomFields(self::$tempCustomFields[$objectId]);
+        } finally {
             unset(self::$tempCustomFields[$objectId]);
         }
     }
@@ -124,9 +205,68 @@ trait UsesCustomFields
         return $this->morphMany(CustomFields::valueModel(), 'entity');
     }
 
+    /**
+     * @return MorphMany<CustomFieldLink>
+     */
+    public function outgoingLinks(): MorphMany
+    {
+        return $this->morphMany(CustomFields::linkModel(), 'from_entity');
+    }
+
+    /**
+     * @return MorphMany<CustomFieldLink>
+     */
+    public function incomingLinks(): MorphMany
+    {
+        return $this->morphMany(CustomFields::linkModel(), 'to_entity');
+    }
+
+    /**
+     * A record that is really gone leaves no edge behind, in either direction and not in
+     * history either: one delete per end, each on its own reverse index. A soft delete
+     * never reaches this, so a restored record finds its links where it left them.
+     *
+     * The tenant scope is dropped because the record is already identified, and no context
+     * a delete happens in may strand an edge.
+     */
+    protected function deleteCustomFieldLinks(): void
+    {
+        if (! RelationshipTables::exist()) {
+            return;
+        }
+
+        $ends = [CustomFieldRelationship::DIRECTION_FROM, CustomFieldRelationship::DIRECTION_TO];
+
+        foreach ($ends as $end) {
+            CustomFields::newLinkModel()
+                ->newQuery()
+                ->withoutGlobalScope(TenantScope::class)
+                ->where($end.'_entity_type', $this->getMorphClass())
+                ->where($end.'_entity_id', $this->getKey())
+                ->delete();
+        }
+    }
+
+    /**
+     * The ledger keeps closed edges forever, so only the active ones are worth carrying
+     * into a page render.
+     */
+    public function scopeWithActiveCustomFieldLinks(Builder $query): Builder
+    {
+        if (! RelationshipTables::exist()) {
+            return $query;
+        }
+
+        return $query->with([
+            'outgoingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
+            'incomingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
+        ]);
+    }
+
     public function scopeWithCustomFieldValues(Builder $query): Builder
     {
         return $query
+            ->withActiveCustomFieldLinks()
             ->with('customFieldValues.customField.options')
             ->afterQuery(function ($records): void {
                 if ($records instanceof EloquentCollection) {
@@ -137,6 +277,12 @@ trait UsesCustomFields
 
     public function getCustomFieldValue(CustomField $customField): mixed
     {
+        $definition = $customField->relationshipDefinition();
+
+        if ($definition instanceof CustomFieldRelationship) {
+            return app(LinkReader::class)->orderedIdsFor($this, $definition, $definition->readDirectionFor($customField));
+        }
+
         $fieldValue = $this->customFieldValues
             ->firstWhere('custom_field_id', $customField->getKey())
             ?->getValue();
@@ -156,6 +302,14 @@ trait UsesCustomFields
 
     public function saveCustomFieldValue(CustomField $customField, mixed $value, ?Model $tenant = null): void
     {
+        if ($this->writesLinksFor($customField)) {
+            $payload = RecordLinkPayload::fromValue($value);
+
+            app(LinkWriter::class)->apply($this, $customField, $payload->ids, confirmed: $payload->confirmed);
+
+            return;
+        }
+
         $data = ['custom_field_id' => $customField->getKey()];
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
@@ -171,6 +325,16 @@ trait UsesCustomFields
         $customFieldValue = $customFieldValue->firstOrNew($data);
         $customFieldValue->setValue($value);
         $customFieldValue->save();
+    }
+
+    /**
+     * A definition is the write fork, exactly as it already is for reads: no definition can
+     * exist without the tables it lives in, so a host that never enabled the feature keeps
+     * writing value rows either way.
+     */
+    protected function writesLinksFor(CustomField $customField): bool
+    {
+        return $customField->relationshipDefinition() instanceof CustomFieldRelationship;
     }
 
     /**
@@ -201,6 +365,12 @@ trait UsesCustomFields
     public function saveCustomFields(array $customFields, ?Model $tenant = null): void
     {
         $this->customFields()->each(function (CustomField $customField) use ($customFields, $tenant): void {
+            // A relationship has no row to overwrite with null: an absent key means the
+            // payload said nothing about those edges, so they stay as they are.
+            if (! array_key_exists($customField->code, $customFields) && $this->writesLinksFor($customField)) {
+                return;
+            }
+
             $value = $customFields[$customField->code] ?? null;
             $this->saveCustomFieldValue($customField, $value, $tenant);
         });

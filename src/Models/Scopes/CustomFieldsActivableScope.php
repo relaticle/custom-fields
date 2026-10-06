@@ -13,7 +13,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 /**
  * Custom fields activable scope that also checks section activation.
  */
-class CustomFieldsActivableScope extends ActivableScope
+final class CustomFieldsActivableScope extends ActivableScope
 {
     /**
      * Apply the scope to a given Eloquent query builder.

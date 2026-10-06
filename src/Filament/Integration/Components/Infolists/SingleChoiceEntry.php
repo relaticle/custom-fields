@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Infolists;
 
 use Filament\Infolists\Components\Entry;
 use Filament\Infolists\Components\TextEntry as BaseTextEntry;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeColors;
 use Relaticle\CustomFields\Models\CustomField;
@@ -19,7 +20,7 @@ final class SingleChoiceEntry extends AbstractInfolistEntry
         private readonly LookupSingleValueResolver $valueResolver
     ) {}
 
-    public function make(CustomField $customField): Entry
+    public function make(CustomField $customField, ?Model $record = null): Entry
     {
         $entry = BaseTextEntry::make($customField->getFieldName())
             ->label($customField->name);
