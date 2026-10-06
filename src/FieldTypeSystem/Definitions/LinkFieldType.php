@@ -14,6 +14,8 @@ use Relaticle\CustomFields\Models\CustomField;
 
 class LinkFieldType extends BaseFieldType
 {
+    private const string WHITESPACE = '[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]';
+
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
@@ -33,7 +35,28 @@ class LinkFieldType extends BaseFieldType
 
     public function setValue(string $value): string
     {
-        return preg_replace('#^https?://#i', '', trim($value));
+        $value = trim($value);
+
+        if (preg_match('#^https?://$#i', $value) === 1) {
+            return '';
+        }
+
+        if (preg_match('#^((?:https?://)?[^\s/?\#]+\.[^\s/?\#]+)(.*)$#is', $value, $parts) !== 1) {
+            return $value;
+        }
+
+        return (string) preg_replace('#/+$#', '', strtolower($parts[1]).$parts[2]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function equivalentValues(string $value, CustomField $customField): array
+    {
+        $stored = $this->setValue($value);
+        $bare = $this->withoutScheme($stored);
+
+        return array_values(array_unique([$this->normalize($value, $customField), $stored, $bare, "https://{$bare}", "http://{$bare}"]));
     }
 
     public function normalize(string $value, CustomField $customField): string
@@ -42,24 +65,33 @@ class LinkFieldType extends BaseFieldType
             return $this->setValue($value);
         }
 
-        $host = (string) Str::of($value)
+        $authority = Str::of($value)
             ->lower()
-            ->replaceMatches('#[\s\x{00A0}\x{200B}\x{FEFF}\x{3000}]+#u', '')
+            ->replaceMatches('#'.self::WHITESPACE.'+#u', '')
             ->replaceMatches('#^[a-z][a-z0-9+.-]*://#', '')
             ->before('/')
             ->before('?')
             ->before('#')
             ->replaceMatches('#^.*@#', '')
-            ->before(':')
-            ->replaceMatches('#^(www\.)+#', '')
-            ->rtrim('.');
+            ->before(':');
+
+        $host = (string) $authority->replaceMatches('#^(www\.)+#', '')->rtrim('.');
 
         if ($host === '' || str_contains($host, '.')) {
             return $host;
         }
 
-        $unwrapped = $this->setValue($value);
+        if ($authority->startsWith('www.')) {
+            return "www.{$host}";
+        }
+
+        $unwrapped = (string) preg_replace('#^(?:https?://'.self::WHITESPACE.'*)+#iu', '', trim($value));
 
         return $unwrapped === $value ? $value : $this->normalize($unwrapped, $customField);
+    }
+
+    private function withoutScheme(string $value): string
+    {
+        return (string) preg_replace('#^https?://#i', '', $value);
     }
 }

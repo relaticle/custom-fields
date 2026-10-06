@@ -39,29 +39,27 @@ final class UniqueCustomFieldValue implements ValidationRule
 
         $fieldType = app(FieldManager::class)->getFieldTypeInstance($this->customField->type);
 
-        $normalizedByOriginal = collect(Arr::wrap($value))
+        $equivalentsByOriginal = collect(Arr::wrap($value))
             ->reject(fn (mixed $v): bool => blank($v) || ! is_scalar($v))
-            ->mapWithKeys(fn (mixed $v): array => [
-                (string) $v => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $v, $this->customField) : (string) $v,
-            ]);
+            ->mapWithKeys(fn (mixed $v): array => [(string) $v => $this->equivalents($fieldType, (string) $v)]);
 
         if ($this->exceptHeldValues && $this->ignoreEntityId !== null) {
             $held = $this->heldValues($fieldType);
-            $normalizedByOriginal = $normalizedByOriginal->reject(fn (string $normalized): bool => in_array($normalized, $held, true));
+            $equivalentsByOriginal = $equivalentsByOriginal->reject(fn (array $equivalents): bool => array_intersect($equivalents, $held) !== []);
         }
 
-        if ($normalizedByOriginal->isEmpty()) {
+        if ($equivalentsByOriginal->isEmpty()) {
             return;
         }
 
-        $takenValues = $this->findTakenValues($normalizedByOriginal->values()->all());
+        $takenValues = $this->findTakenValues($equivalentsByOriginal->flatten()->unique()->values()->all());
 
         if ($takenValues === []) {
             return;
         }
 
-        $collision = $normalizedByOriginal->search(
-            fn (string $normalized): bool => in_array($normalized, $takenValues, true)
+        $collision = $equivalentsByOriginal->search(
+            fn (array $equivalents): bool => array_intersect($equivalents, $takenValues) !== []
         );
 
         if ($collision !== false) {
@@ -69,6 +67,14 @@ final class UniqueCustomFieldValue implements ValidationRule
                 'value' => $collision,
             ]));
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function equivalents(?FieldTypeDefinitionInterface $fieldType, string $value): array
+    {
+        return $fieldType instanceof BaseFieldType ? $fieldType->equivalentValues($value, $this->customField) : [$value];
     }
 
     /**
@@ -125,7 +131,8 @@ final class UniqueCustomFieldValue implements ValidationRule
 
         return collect($values)
             ->filter(fn (mixed $value): bool => is_scalar($value) && filled($value))
-            ->map(fn (mixed $value): string => $fieldType instanceof BaseFieldType ? $fieldType->normalize((string) $value, $this->customField) : (string) $value)
+            ->flatMap(fn (mixed $value): array => $this->equivalents($fieldType, (string) $value))
+            ->unique()
             ->values()
             ->all();
     }

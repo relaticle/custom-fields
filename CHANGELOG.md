@@ -2,6 +2,30 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.13.0 - 2026-10-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.13.0 -->
+### What's Changed
+
+#### Other Changes
+
+* feat: normalize custom field values on every write path by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/244
+* chore(deps): bump undici from 6.28.0 to 6.29.0 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/242
+* chore: remove the v3.12.0 changelog entry by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/245
+* feat(link): keep the scheme of a url link [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/251
+* chore(deps-dev): bump postcss-nesting from 14.0.1 to 14.0.2 in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/247
+* chore(deps): bump @nuxt/ui from 4.11.1 to 4.11.2 in /docs in the npm group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/248
+* chore(deps): bump the npm-security group across 1 directory with 4 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/246
+* fix(link): normalizer follow-ups and 3.12 upgrade notes [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/250
+* fix(custom-fields): guard null-dereferences on deactivated/disabled c… by @kksingh000 in https://github.com/relaticle/custom-fields/pull/249
+* docs: describe how a value is stored, normalized and compared [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/252
+
+### New Contributors
+
+* @kksingh000 made their first contribution in https://github.com/relaticle/custom-fields/pull/249
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.11.0...v3.13.0
+
 ## v3.11.0 - 2026-10-02
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.11.0 -->
@@ -167,6 +191,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
