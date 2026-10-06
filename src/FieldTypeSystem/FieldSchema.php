@@ -655,11 +655,11 @@ class FieldSchema
             acceptsArbitraryValues: $this->acceptsArbitraryValues,
             supportsMultiValue: $this->supportsMultiValue,
             supportsUniqueConstraint: $this->supportsUniqueConstraint,
-            systemOnly: $this->systemOnly,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema,
-            visibilityOperators: $this->visibilityOperators
+            visibilityOperators: $this->visibilityOperators,
+            systemOnly: $this->systemOnly
         );
     }
 }
