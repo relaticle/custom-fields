@@ -162,13 +162,12 @@ trait UsesCustomFields
             $data[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->resolveTenantId($tenant, $customField);
         }
 
-        $customFieldValue = $this->customFieldValues();
+        $customFieldValue = $this->customFieldValues()->firstOrNew($data);
 
         if ($customField->settings?->encrypted) {
-            $customFieldValue->withCasts([$customField->getValueColumn() => 'encrypted']);
+            $customFieldValue->mergeCasts([$customField->getValueColumn() => 'encrypted']);
         }
 
-        $customFieldValue = $customFieldValue->firstOrNew($data);
         $customFieldValue->setValue($value);
         $customFieldValue->save();
     }
