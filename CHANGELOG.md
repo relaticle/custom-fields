@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.14.1 - 2026-10-09
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.14.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: encrypt a custom field value on its first save under Laravel 13.35 [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/258
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.14.0...v3.14.1
+
 ## v3.14.0 - 2026-10-06
 
 **Breaking for anyone who set the internal `link_variant` setting by hand:** a link field no longer reduces a value to its host. See `UPGRADING.md`, From 3.13 to 3.14.
@@ -219,6 +230,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
