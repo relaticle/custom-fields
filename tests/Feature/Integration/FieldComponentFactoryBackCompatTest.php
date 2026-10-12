@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
@@ -24,7 +25,7 @@ use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 // Inline bare-interface implementation — does NOT extend AbstractFormComponent.
 class BareInterfaceFormComponent implements FormComponentInterface
 {
-    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null): Field
+    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
     {
         return TextInput::make($customField->getFieldName());
     }

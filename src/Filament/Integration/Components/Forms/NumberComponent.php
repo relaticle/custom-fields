@@ -14,8 +14,6 @@ final readonly class NumberComponent extends AbstractFormComponent
     {
         return TextInput::make($customField->getFieldName())
             ->numeric()
-            ->placeholder(null)
-            ->minValue($customField->settings->min ?? null)
-            ->maxValue($customField->settings->max ?? null);
+            ->placeholder(null);
     }
 }

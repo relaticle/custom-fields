@@ -12,8 +12,11 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class CustomFieldSettingsData extends Data
+final class CustomFieldSettingsData extends Data
 {
+    /**
+     * @param  array<string, mixed>  $additional
+     */
     public function __construct(
         public bool $visible_in_list = true,
         public ?bool $list_toggleable_hidden = null,

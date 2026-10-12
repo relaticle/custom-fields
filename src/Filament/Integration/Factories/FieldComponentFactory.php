@@ -41,13 +41,6 @@ final class FieldComponentFactory extends AbstractComponentFactory
             $component = $this->createComponent($customField, 'form_component', FormComponentInterface::class);
         }
 
-        // Only AbstractFormComponent consumes the optional $record (server-side relation-attribute
-        // visibility). Third-party FormComponentInterface implementers keep the original 3-arg contract,
-        // so the package stays backward compatible for that public extension point.
-        if ($component instanceof AbstractFormComponent) {
-            return $component->make($customField, $dependentFieldCodes, $allFields, $record);
-        }
-
-        return $component->make($customField, $dependentFieldCodes, $allFields);
+        return $component->make($customField, $dependentFieldCodes, $allFields, $record);
     }
 }

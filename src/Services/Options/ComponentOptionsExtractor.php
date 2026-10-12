@@ -49,6 +49,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from a closure-based form component
+     *
+     * @return array<string|int, string>
      */
     private function extractFromClosure(Closure $closure, ?CustomField $field): array
     {
@@ -69,6 +71,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from a component class
+     *
+     * @return array<string|int, string>
      */
     private function extractFromComponentClass(): array
     {
@@ -79,6 +83,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from an instantiated Filament component
+     *
+     * @return array<string|int, string>
      */
     private function extractFromComponent(Field $component): array
     {
@@ -118,6 +124,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract sample options from a searchable component
+     *
+     * @return array<string|int, string>
      */
     private function extractFromSearchableComponent(Field $component): array
     {

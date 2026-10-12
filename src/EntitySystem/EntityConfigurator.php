@@ -6,26 +6,29 @@ namespace Relaticle\CustomFields\EntitySystem;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Relaticle\CustomFields\Contracts\EntityConfigurationInterface;
 
 /**
  * Fluent builder for configuring the entire entity management system
  * Provides clean, discoverable API for global entity configuration
  */
-final class EntityConfigurator implements EntityConfigurationInterface
+final class EntityConfigurator
 {
     private bool $autoDiscover = true;
 
+    /** @var array<int, string> */
     private array $discoveryPaths;
 
+    /** @var array<int, string> */
     private array $discoveryNamespaces = ['App\\Models'];
 
+    /** @var array<int, string> */
     private array $excludedModels = [];
 
     private bool $cacheEnabled = true;
 
     private int $cacheTtl = 3600;
 
+    /** @var array<int, array<string, mixed>> */
     private array $entityModels = [];
 
     private function __construct()
@@ -54,6 +57,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Set paths to discover entities from
+     *
+     * @param  string|array<int, string>  $paths
      */
     public function discover(string|array $paths): self
     {
@@ -64,6 +69,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Set namespaces to discover entities from
+     *
+     * @param  array<int, string>  $namespaces
      */
     public function namespaces(array $namespaces): self
     {
@@ -74,6 +81,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Only include specific models (disables auto-discovery of others)
+     *
+     * @param  array<int, string|array<string, mixed>>  $models
      */
     public function include(array $models): self
     {
@@ -96,6 +105,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Exclude specific models from discovery and configuration
+     *
+     * @param  array<int, string>  $models
      */
     public function exclude(array $models): self
     {
@@ -117,6 +128,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Configure specific entity models with custom settings
+     *
+     * @param  array<int, array<string, mixed>>  $entityModels
      */
     public function models(array $entityModels): self
     {
@@ -142,6 +155,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
      *
      * Resolves aliases lazily - if alias is null, we call getMorphClass() at runtime
      * when the morph map has been registered via Relation::enforceMorphMap().
+     *
+     * @return array<string, array<string, mixed>>
      */
     private function buildEntitiesArray(): array
     {
@@ -173,6 +188,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Get discovery paths
+     *
+     * @return array<int, string>
      */
     public function getDiscoveryPaths(): array
     {
@@ -181,6 +198,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Get discovery namespaces
+     *
+     * @return array<int, string>
      */
     public function getDiscoveryNamespaces(): array
     {
@@ -189,6 +208,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Get excluded models
+     *
+     * @return array<int, string>
      */
     public function getExcludedModels(): array
     {
@@ -213,6 +234,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Get entities array
+     *
+     * @return array<string, array<string, mixed>>
      */
     public function getEntities(): array
     {
@@ -221,6 +244,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     /**
      * Restore the configurator from var_export
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

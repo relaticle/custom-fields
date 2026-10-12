@@ -8,7 +8,9 @@ use Closure;
 use Relaticle\CustomFields\Enums\ImportDateFormat;
 use Relaticle\CustomFields\Enums\ImportNumberFormat;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldOption;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Services\TenantContextService;
@@ -34,6 +36,16 @@ final class CustomFields
      * The custom field section model that should be used by Custom Fields.
      */
     public static string $sectionModel = CustomFieldSection::class;
+
+    /**
+     * The relationship definition model that should be used by Custom Fields.
+     */
+    public static string $relationshipModel = CustomFieldRelationship::class;
+
+    /**
+     * The relationship link model that should be used by Custom Fields.
+     */
+    public static string $linkModel = CustomFieldLink::class;
 
     /**
      * The display format for date fields (e.g., 'm/d/Y', 'Y-m-d', 'd.m.Y').
@@ -62,7 +74,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field model.
      */
-    public static function newCustomFieldModel(): mixed
+    public static function newCustomFieldModel(): CustomField
     {
         $model = self::customFieldModel();
 
@@ -92,7 +104,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field value model.
      */
-    public static function newValueModel(): mixed
+    public static function newValueModel(): CustomFieldValue
     {
         $model = self::valueModel();
 
@@ -122,7 +134,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field option model.
      */
-    public static function newOptionModel(): mixed
+    public static function newOptionModel(): CustomFieldOption
     {
         $model = self::optionModel();
 
@@ -159,7 +171,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field section model.
      */
-    public static function newSectionModel(): mixed
+    public static function newSectionModel(): CustomFieldSection
     {
         $model = self::sectionModel();
 
@@ -172,6 +184,66 @@ final class CustomFields
     public static function useSectionModel(string $model): static
     {
         self::$sectionModel = $model;
+
+        return new self;
+    }
+
+    /**
+     * Get the name of the relationship definition model used by the application.
+     *
+     * @return class-string<CustomFieldRelationship>
+     */
+    public static function relationshipModel(): string
+    {
+        return self::$relationshipModel;
+    }
+
+    /**
+     * Get a new instance of the relationship definition model.
+     */
+    public static function newRelationshipModel(): CustomFieldRelationship
+    {
+        $model = self::relationshipModel();
+
+        return new $model;
+    }
+
+    /**
+     * Specify the relationship definition model that should be used by Custom Fields.
+     */
+    public static function useRelationshipModel(string $model): static
+    {
+        self::$relationshipModel = $model;
+
+        return new self;
+    }
+
+    /**
+     * Get the name of the relationship link model used by the application.
+     *
+     * @return class-string<CustomFieldLink>
+     */
+    public static function linkModel(): string
+    {
+        return self::$linkModel;
+    }
+
+    /**
+     * Get a new instance of the relationship link model.
+     */
+    public static function newLinkModel(): CustomFieldLink
+    {
+        $model = self::linkModel();
+
+        return new $model;
+    }
+
+    /**
+     * Specify the relationship link model that should be used by Custom Fields.
+     */
+    public static function useLinkModel(string $model): static
+    {
+        self::$linkModel = $model;
 
         return new self;
     }

@@ -7,12 +7,14 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Infolists;
 use Filament\Infolists\Components\Entry;
 use Filament\Infolists\Components\TextEntry as BaseTextEntry;
 use Filament\Infolists\Components\ViewEntry;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeColors;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Services\ValueResolver\LookupMultiValueResolver;
 
 final class MultiChoiceEntry extends AbstractInfolistEntry
@@ -23,7 +25,7 @@ final class MultiChoiceEntry extends AbstractInfolistEntry
         private readonly LookupMultiValueResolver $valueResolver,
     ) {}
 
-    public function make(CustomField $customField): Entry
+    public function make(CustomField $customField, ?Model $record = null): Entry
     {
         if ($customField->typeData->acceptsArbitraryValues) {
             return $this->makeTagsEntry($customField);
@@ -57,12 +59,12 @@ final class MultiChoiceEntry extends AbstractInfolistEntry
     {
         if (! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
             || ! $customField->settings->enable_option_colors
-            || $customField->lookup_type) {
+            || $customField->typeData->requiresRelationship) {
             return [];
         }
 
         return $customField->options
-            ->filter(fn ($option): bool => filled($option->settings->color))
+            ->filter(fn (CustomFieldOption $option): bool => filled($option->settings->color))
             ->pluck('settings.color', 'id')
             ->all();
     }

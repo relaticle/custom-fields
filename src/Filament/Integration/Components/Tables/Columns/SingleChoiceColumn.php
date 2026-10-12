@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\Column as BaseColumn;
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeColors;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -22,7 +23,7 @@ final class SingleChoiceColumn extends AbstractTableColumn
 
     public function __construct(public LookupSingleValueResolver $valueResolver) {}
 
-    public function make(CustomField $customField): BaseColumn
+    public function make(CustomField $customField, ?Model $record = null): BaseColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 

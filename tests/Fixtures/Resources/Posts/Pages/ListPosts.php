@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages;
 
 use Filament\Actions;

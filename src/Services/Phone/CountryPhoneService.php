@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\Phone;
 
+use Illuminate\Support\Str;
+use libphonenumber\PhoneNumber as LibPhoneNumber;
+use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
 use Locale;
 use Propaganistas\LaravelPhone\PhoneNumber;
@@ -130,9 +133,10 @@ final class CountryPhoneService
             }
 
             $parsed = $this->getPhoneUtil()->parse($e164);
-            $nationalNumber = (string) $parsed->getNationalNumber();
+            $nationalNumber = $this->getPhoneUtil()->getNationalSignificantNumber($parsed);
+            $extension = $parsed->getExtension();
 
-            return ['country' => $country, 'number' => $nationalNumber];
+            return ['country' => $country, 'number' => filled($extension) ? "{$nationalNumber} ext. {$extension}" : $nationalNumber];
         } catch (Throwable) {
             return ['country' => $defaultCountry, 'number' => ltrim($e164, '+')];
         }
@@ -148,9 +152,7 @@ final class CountryPhoneService
         }
 
         try {
-            $phone = new PhoneNumber($number, $country);
-
-            return $phone->formatE164();
+            return $this->canonical($this->getPhoneUtil()->parse($number, strtoupper($country)));
         } catch (Throwable) {
             // Fallback: manually prepend country code
             $callingCode = $this->getCallingCode($country);
@@ -176,6 +178,37 @@ final class CountryPhoneService
         } catch (Throwable) {
             return $e164;
         }
+    }
+
+    public function normalize(string $value): string
+    {
+        $trimmed = trim($value);
+
+        try {
+            $parsed = $this->getPhoneUtil()->parse($trimmed);
+        } catch (Throwable) {
+            return $trimmed;
+        }
+
+        return $this->getPhoneUtil()->isPossibleNumber($parsed) ? $this->canonical($parsed) : $trimmed;
+    }
+
+    public function displayText(string $stored): string
+    {
+        return str_contains($stored, ';') ? $this->formatForDisplay($stored) : $stored;
+    }
+
+    public function dialNumber(string $stored): string
+    {
+        return (string) preg_replace('/[^0-9+]/', '', Str::before($stored, ';'));
+    }
+
+    private function canonical(LibPhoneNumber $parsed): string
+    {
+        $e164 = $this->getPhoneUtil()->format($parsed, PhoneNumberFormat::E164);
+        $extension = $parsed->getExtension();
+
+        return filled($extension) ? "{$e164};ext={$extension}" : $e164;
     }
 
     private function getPhoneUtil(): PhoneNumberUtil

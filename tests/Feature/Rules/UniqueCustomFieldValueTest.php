@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Debug\ShouldntReport;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Exceptions\UniqueCustomFieldValueTakenException;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
@@ -194,6 +196,87 @@ describe('Create record — link field uniqueness via Livewire', function (): vo
             ]))
             ->call('create')
             ->assertHasFormErrors(['custom_fields.domains']);
+    });
+});
+
+describe('Soft-deleted records', function (): void {
+    it('allows a domain only a soft-deleted record holds', function (): void {
+        $trashed = Post::factory()->create();
+        storeLinkValueForPost($trashed, $this->linkField, ['example.com']);
+        $trashed->delete();
+
+        livewire(CreatePost::class)
+            ->fillForm(validPostData([
+                'custom_fields' => [
+                    'domains' => ['example.com'],
+                ],
+            ]))
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect();
+    });
+
+    it('allows a text value only a soft-deleted record holds', function (): void {
+        $trashed = Post::factory()->create();
+        storeTextValueForPost($trashed, $this->textField, 'my-slug');
+        $trashed->delete();
+
+        $validator = validator(['slug' => 'my-slug'], ['slug' => [new UniqueCustomFieldValue($this->textField)]]);
+
+        expect($validator->passes())->toBeTrue();
+    });
+
+    it('still blocks a value an active record holds next to a soft-deleted one', function (): void {
+        $trashed = Post::factory()->create();
+        storeTextValueForPost($trashed, $this->textField, 'my-slug');
+        $trashed->delete();
+        storeTextValueForPost(Post::factory()->create(), $this->textField, 'my-slug');
+
+        $validator = validator(['slug' => 'my-slug'], ['slug' => [new UniqueCustomFieldValue($this->textField)]]);
+
+        expect($validator->fails())->toBeTrue();
+    });
+});
+
+describe('Restoring soft-deleted records', function (): void {
+    it('refuses to restore a record whose unique value an active record now holds', function (): void {
+        $trashed = Post::factory()->create();
+        storeTextValueForPost($trashed, $this->textField, 'my-slug');
+        $trashed->delete();
+        storeTextValueForPost(Post::factory()->create(), $this->textField, 'my-slug');
+
+        expect(fn () => $trashed->restore())->toThrow(UniqueCustomFieldValueTakenException::class, 'The value "my-slug" is already assigned to another record.')
+            ->and($trashed->fresh()->trashed())->toBeTrue();
+    });
+
+    it('restores a record when only another trashed record holds its value', function (): void {
+        $trashed = Post::factory()->create();
+        storeTextValueForPost($trashed, $this->textField, 'my-slug');
+        $trashed->delete();
+
+        $otherTrashed = Post::factory()->create();
+        storeTextValueForPost($otherTrashed, $this->textField, 'my-slug');
+        $otherTrashed->delete();
+
+        expect($trashed->restore())->toBeTrue()
+            ->and($trashed->fresh()->trashed())->toBeFalse();
+    });
+
+    it('lists only the values of a multi-value field that an active record took', function (): void {
+        $trashed = Post::factory()->create();
+        storeLinkValueForPost($trashed, $this->linkField, ['kept.com', 'taken.com']);
+        $trashed->delete();
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['taken.com']);
+
+        $taken = $trashed->takenUniqueCustomFieldValues();
+
+        expect($taken)->toHaveCount(1)
+            ->and($taken->first()['customField']->is($this->linkField))->toBeTrue()
+            ->and($taken->first()['value'])->toBe('taken.com');
+    });
+
+    it('does not report a refused restore as an error', function (): void {
+        expect(is_subclass_of(UniqueCustomFieldValueTakenException::class, ShouldntReport::class))->toBeTrue();
     });
 });
 
@@ -521,5 +604,145 @@ describe('Morph alias resolution', function (): void {
         );
 
         expect($errors)->toBeEmpty();
+    });
+});
+
+describe('Invalid entity type handling', function (): void {
+    it('throws a clear exception instead of a fatal error for an unresolvable entity type', function (): void {
+        $section = CustomFieldSection::factory()
+            ->forEntityType(Post::class)
+            ->create(['active' => true]);
+
+        $field = CustomField::factory()->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => 'Bogus\\Missing\\Entity',
+            'code' => 'bogus_code',
+            'name' => 'Bogus Code',
+            'type' => 'text',
+            'settings' => new CustomFieldSettingsData(
+                unique_per_entity_type: true,
+            ),
+        ]);
+
+        $rule = new UniqueCustomFieldValue($field);
+
+        expect(fn () => $rule->validate(
+            'custom_fields.bogus_code',
+            'some-value',
+            function (string $message): void {}
+        ))->toThrow(RuntimeException::class);
+    });
+});
+
+describe('Grandfathered values on save', function (): void {
+    it('lets a record keep a unique value another record already shares', function (): void {
+        $kept = Post::factory()->create();
+        storeLinkValueForPost($kept, $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['acme.com']);
+
+        $validator = validator(['v' => ['acme.com']], ['v' => [new UniqueCustomFieldValue($this->linkField, $kept->getKey(), exceptHeldValues: true)]]);
+
+        expect($validator->passes())->toBeTrue();
+    });
+
+    it('lets a record keep a shared value submitted in another format', function (): void {
+        $kept = Post::factory()->create();
+        storeLinkValueForPost($kept, $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['acme.com']);
+
+        $validator = validator(['v' => ['https://acme.com']], ['v' => [new UniqueCustomFieldValue($this->linkField, $kept->getKey(), exceptHeldValues: true)]]);
+
+        expect($validator->passes())->toBeTrue();
+    });
+
+    it('rejects a value another record stores with its scheme', function (string $submitted): void {
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['https://acme.com/pricing']);
+
+        $validator = validator(['v' => [$submitted]], ['v' => [new UniqueCustomFieldValue($this->linkField)]]);
+
+        expect($validator->passes())->toBeFalse();
+    })->with([
+        'same spelling' => 'https://acme.com/pricing',
+        'no scheme' => 'acme.com/pricing',
+        'other scheme' => 'http://acme.com/pricing',
+        'uppercase host and trailing slash' => 'HTTPS://ACME.com/pricing/',
+    ]);
+
+    it('rejects a value the record did not hold before in any format', function (): void {
+        $taken = Post::factory()->create();
+        $editing = Post::factory()->create();
+        storeLinkValueForPost($taken, $this->linkField, ['acme.com']);
+
+        $validator = validator(['v' => ['https://acme.com']], ['v' => [new UniqueCustomFieldValue($this->linkField, $editing->getKey(), exceptHeldValues: true)]]);
+
+        expect($validator->passes())->toBeFalse();
+    });
+
+    it('rejects a newly added taken value next to a kept shared one', function (): void {
+        $editing = Post::factory()->create();
+        storeLinkValueForPost($editing, $this->linkField, ['shared.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['shared.com', 'taken.com']);
+
+        $validator = validator(['v' => ['shared.com', 'taken.com']], ['v' => [new UniqueCustomFieldValue($this->linkField, $editing->getKey(), exceptHeldValues: true)]]);
+
+        expect($validator->passes())->toBeFalse();
+    });
+
+    it('keeps rejecting a shared value for the record that holds it when no exception is asked for', function (): void {
+        $kept = Post::factory()->create();
+        storeLinkValueForPost($kept, $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['acme.com']);
+
+        $validator = validator(['v' => ['acme.com']], ['v' => [new UniqueCustomFieldValue($this->linkField, $kept->getKey())]]);
+
+        expect($validator->passes())->toBeFalse();
+    });
+
+    it('treats a text value the record holds as its own', function (): void {
+        $kept = Post::factory()->create();
+        storeTextValueForPost($kept, $this->textField, 'my-slug');
+        storeTextValueForPost(Post::factory()->create(), $this->textField, 'my-slug');
+
+        $validator = validator(['v' => 'my-slug'], ['v' => [new UniqueCustomFieldValue($this->textField, $kept->getKey(), exceptHeldValues: true)]]);
+
+        expect($validator->passes())->toBeTrue();
+    });
+
+    it('still blocks restoring a trashed record whose value is taken', function (): void {
+        $trashed = Post::factory()->create();
+        $trashed->saveCustomFieldValue($this->linkField, ['acme.com']);
+        $trashed->delete();
+        Post::factory()->create()->saveCustomFieldValue($this->linkField, ['acme.com']);
+
+        expect($trashed->takenUniqueCustomFieldValues())->not->toBeEmpty();
+    });
+
+    it('saves an edit that leaves a shared unique value untouched', function (): void {
+        $kept = Post::factory()->create();
+        storeLinkValueForPost($kept, $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['acme.com']);
+
+        livewire(EditPost::class, ['record' => $kept->getKey()])
+            ->fillForm(['title' => 'Renamed'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect($kept->fresh()->title)->toBe('Renamed');
+    });
+
+    it('blocks an edit that adds a taken value next to a kept shared one', function (): void {
+        $kept = Post::factory()->create();
+        storeLinkValueForPost($kept, $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['acme.com']);
+        storeLinkValueForPost(Post::factory()->create(), $this->linkField, ['taken.com']);
+
+        livewire(EditPost::class, ['record' => $kept->getKey()])
+            ->fillForm([
+                'custom_fields' => [
+                    'domains' => ['acme.com', 'taken.com'],
+                ],
+            ])
+            ->call('save')
+            ->assertHasFormErrors(['custom_fields.domains']);
     });
 });

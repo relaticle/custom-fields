@@ -18,7 +18,7 @@ Do NOT flag `Filament\Schemas\Components\Component` as incorrect.
 
 - Custom field types live in `src/FieldTypeSystem/Definitions/`
 - Validation capabilities live in `src/Validation/Capabilities/`
-- Each capability implements `Relaticle\CustomFields\Contracts\ValidationCapability`
+- Each capability implements `Relaticle\CustomFields\Contracts\ValidationCapabilityInterface`
 - `DateConstraintValue` is a Spatie Laravel Data class -- use `::from()` for hydration, not manual construction
 
 # Data Patterns

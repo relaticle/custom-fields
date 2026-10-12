@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services;
 
-use Relaticle\CustomFields\Contracts\ValidationCapability;
+use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Rules\CardinalityRule;
 use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
 use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 
@@ -115,7 +117,7 @@ final class ValidationService
         $rules = [];
 
         foreach ($capabilities as $capabilityClass) {
-            /** @var ValidationCapability $capability */
+            /** @var ValidationCapabilityInterface $capability */
             $capability = app($capabilityClass);
             /** @phpstan-ignore nullsafe.neverNull */
             $value = $validationRules?->get($capability->key());
@@ -232,7 +234,13 @@ final class ValidationService
 
         // Handle unique per entity type setting (available for any field type)
         if ($customField->settings->unique_per_entity_type) {
-            $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId);
+            $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId, exceptHeldValues: true);
+        }
+
+        // Cardinality is what a relationship slot may hold, so it reaches every path that
+        // validates a payload: the panel form, imports, and the API.
+        if ($customField->relationshipDefinition() instanceof CustomFieldRelationship) {
+            $rules[] = new CardinalityRule($customField, $ignoreEntityId);
         }
 
         // Currency fields: enforce decimal places from settings

@@ -13,6 +13,8 @@ A powerful Laravel/Filament plugin for adding dynamic custom fields to any Eloqu
 ## Features
 
 - **20+ Field Types** - Text, date, select, file upload, rich editor, and more
+- **Record Links** - Link records to records, one-way or paired, stored in an edge ledger
+- **Workflow States** - Status fields whose options carry a machine-readable category
 - **Conditional Visibility** - Show/hide fields based on other field values
 - **Multi-tenancy** - Complete tenant isolation and context management
 - **Filament Integration** - Forms, tables, infolists, and admin interface

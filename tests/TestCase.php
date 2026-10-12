@@ -23,13 +23,13 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 use Override;
 use Postare\BladeMdi\BladeMdiServiceProvider;
 use Propaganistas\LaravelPhone\PhoneServiceProvider;
-use Relaticle\CustomFields\Contracts\EntityManagerInterface;
 use Relaticle\CustomFields\CustomFieldsServiceProvider;
 use Relaticle\CustomFields\EntitySystem\EntityConfigurator;
 use Relaticle\CustomFields\EntitySystem\EntityManager;
 use Relaticle\CustomFields\EntitySystem\EntityModel;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\EntityFeature;
+use Relaticle\CustomFields\Enums\UiFlavor;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Tests\Database\Factories\TagFactory;
 use Relaticle\CustomFields\Tests\database\factories\UserFactory;
@@ -108,16 +108,14 @@ class TestCase extends BaseTestCase
             __DIR__.'/../resources/views',
         ]);
 
-        // Database configuration
-        config()->set('database.default', 'testing');
-        config()->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
+        $this->configureDatabaseConnection();
 
         // Authentication configuration for testing
         config()->set('auth.providers.users.model', User::class);
+
+        // The flavor is a run dimension, not a per-test one: CI runs the whole suite once per
+        // flavor, so the forked surfaces are exercised in both presentations.
+        config()->set('custom-fields.ui.flavor', env('CUSTOM_FIELDS_UI_FLAVOR', UiFlavor::Polished->value));
 
         // Custom fields configuration
         config()->set('custom-fields.database.table_names.custom_field_sections', 'custom_field_sections');
@@ -125,7 +123,8 @@ class TestCase extends BaseTestCase
         config()->set('custom-fields.database.table_names.custom_field_values', 'custom_field_values');
         config()->set('custom-fields.database.table_names.custom_field_options', 'custom_field_options');
 
-        // Enable all necessary features for testing
+        // Every flag is pinned, enabled or disabled, so the suite never rides the package
+        // defaults an unlisted flag falls back to.
         config()->set('custom-fields.features', FeatureConfigurator::configure()
             ->enable(
                 CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY,
@@ -135,6 +134,22 @@ class TestCase extends BaseTestCase
                 CustomFieldsFeature::UI_TABLE_FILTERS,
                 CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE,
                 CustomFieldsFeature::SYSTEM_SECTIONS,
+                CustomFieldsFeature::SYSTEM_RELATIONSHIPS,
+            )
+            ->disable(
+                CustomFieldsFeature::FIELD_ENCRYPTION,
+                CustomFieldsFeature::FIELD_OPTION_COLORS,
+                CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE,
+                CustomFieldsFeature::FIELD_MULTI_VALUE,
+                CustomFieldsFeature::FIELD_UNIQUE_VALUE,
+                CustomFieldsFeature::FIELD_VALIDATION_RULES,
+                CustomFieldsFeature::FIELD_DESCRIPTION,
+                CustomFieldsFeature::FIELD_DESCRIPTION_POSITION,
+                CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY,
+                CustomFieldsFeature::UI_TOGGLEABLE_COLUMNS_HIDDEN_DEFAULT,
+                CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL,
+                CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL,
+                CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
             )
         );
 
@@ -148,6 +163,48 @@ class TestCase extends BaseTestCase
         config()->set('data.throw_when_max_depth_reached', false);
         config()->set('data.max_transformation_depth');
         config()->set('data.validation_strategy', 'only_requests');
+    }
+
+    /**
+     * Configure the `testing` connection from DB_CONNECTION (default sqlite in-memory).
+     * pgsql/mysql read DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD, set via real
+     * env vars or a phpunit.xml <env> block.
+     */
+    private function configureDatabaseConnection(): void
+    {
+        $driver = env('DB_CONNECTION', 'sqlite');
+
+        config()->set('database.default', 'testing');
+
+        config()->set('database.connections.testing', match ($driver) {
+            'pgsql' => [
+                'driver' => 'pgsql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '5432'),
+                'database' => env('DB_DATABASE', 'custom_fields_test'),
+                'username' => env('DB_USERNAME', 'root'),
+                'password' => env('DB_PASSWORD', ''),
+                'charset' => 'utf8',
+                'prefix' => '',
+                'search_path' => 'public',
+            ],
+            'mysql' => [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '3306'),
+                'database' => env('DB_DATABASE', 'custom_fields_test'),
+                'username' => env('DB_USERNAME', 'root'),
+                'password' => env('DB_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+            ],
+            default => [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+            ],
+        });
     }
 
     protected function defineDatabaseMigrations(): void
@@ -221,6 +278,5 @@ class TestCase extends BaseTestCase
     protected function refreshEntityManager(): void
     {
         $this->app->forgetInstance(EntityManager::class);
-        $this->app->forgetInstance(EntityManagerInterface::class);
     }
 }

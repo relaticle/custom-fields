@@ -50,7 +50,7 @@ it('accepts ISO under every convention so a Y-m-d cell is never re-read', functi
 it('parses every example it advertises', function (ImportDateFormat $format, bool $withTime): void {
     foreach ($format->getExamples($withTime) as $example) {
         expect($format->parse($example, $withTime))
-            ->not->toBeNull("{$format->value} advertises '{$example}' but cannot parse it");
+            ->not->toBeNull(sprintf("%s advertises '%s' but cannot parse it", $format->value, $example));
     }
 })->with([
     'iso date' => [ImportDateFormat::ISO, false],

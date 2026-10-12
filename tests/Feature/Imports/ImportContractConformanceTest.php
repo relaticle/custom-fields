@@ -115,8 +115,11 @@ it('still treats a blank cell as null, for any registered field type', function 
 
     foreach (conformanceFieldTypes() as $type) {
         $state = conformanceCast($type, '');
+        if ($state === null) {
+            continue;
+        }
 
-        if ($state === null || $state === []) {
+        if ($state === []) {
             continue;
         }
 

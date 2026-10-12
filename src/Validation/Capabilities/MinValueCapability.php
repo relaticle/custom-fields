@@ -7,9 +7,9 @@ namespace Relaticle\CustomFields\Validation\Capabilities;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
-use Relaticle\CustomFields\Contracts\ValidationCapability;
+use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 
-final readonly class MinValueCapability implements ValidationCapability
+final readonly class MinValueCapability implements ValidationCapabilityInterface
 {
     public function key(): string
     {

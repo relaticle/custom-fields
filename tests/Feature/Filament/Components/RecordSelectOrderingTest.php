@@ -32,7 +32,7 @@ describe('RecordSelectInputComponent ordering', function (): void {
     });
 
     it('orders by a configured column, most recently updated first', function (): void {
-        config()->set('custom-fields.selects.record_lookup.order_column', 'updated_at');
+        config()->set('custom-fields.selects.record.order_column', 'updated_at');
 
         makeLookupRecord('Oldest', Carbon::parse('2020-01-01'));
         makeLookupRecord('Newest', Carbon::parse('2026-01-01'));
@@ -43,7 +43,7 @@ describe('RecordSelectInputComponent ordering', function (): void {
     });
 
     it('breaks ties on the model key when a configured column repeats', function (): void {
-        config()->set('custom-fields.selects.record_lookup.order_column', 'updated_at');
+        config()->set('custom-fields.selects.record.order_column', 'updated_at');
 
         $sameMoment = Carbon::parse('2024-05-01 09:00:00');
 
@@ -60,7 +60,7 @@ describe('RecordSelectInputComponent ordering', function (): void {
     });
 
     it('falls back to the model key when a configured updated_at model has no timestamps', function (): void {
-        config()->set('custom-fields.selects.record_lookup.order_column', 'updated_at');
+        config()->set('custom-fields.selects.record.order_column', 'updated_at');
 
         registerLookupEntity(TimestamplessTag::class, primaryAttribute: 'name');
 
@@ -73,8 +73,8 @@ describe('RecordSelectInputComponent ordering', function (): void {
     });
 
     it('honours a configured order column and direction', function (): void {
-        config()->set('custom-fields.selects.record_lookup.order_column', 'title');
-        config()->set('custom-fields.selects.record_lookup.order_direction', 'asc');
+        config()->set('custom-fields.selects.record.order_column', 'title');
+        config()->set('custom-fields.selects.record.order_direction', 'asc');
 
         makeLookupRecord('Charlie');
         makeLookupRecord('Alpha');
@@ -85,7 +85,7 @@ describe('RecordSelectInputComponent ordering', function (): void {
     });
 
     it('applies the configured limit', function (): void {
-        config()->set('custom-fields.selects.record_lookup.limit', 2);
+        config()->set('custom-fields.selects.record.limit', 2);
 
         $ids = array_map(
             fn (int $i): string => (string) makeLookupRecord('Record '.$i)->getKey(),

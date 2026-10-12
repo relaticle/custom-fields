@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Factories;
 
+use Closure;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use InvalidArgumentException;
@@ -39,8 +40,10 @@ abstract class AbstractComponentFactory
     ) {}
 
     /**
-     * Create component instance for given field.
-     * Supports both traditional class-based components and modern inline Closure components.
+     * Resolve a class-based component instance for the given field.
+     * Closure-based components are not resolvable here: a Closure carries no class to
+     * instantiate against $expectedInterface, so concrete factories must detect and adapt
+     * them (see FieldComponentFactory + ClosureFormAdapter) before calling this method.
      *
      * @throws BindingResolutionException
      * @throws InvalidArgumentException
@@ -66,7 +69,10 @@ abstract class AbstractComponentFactory
             throw new InvalidArgumentException(sprintf('Field type "%s" does not support %s', $customField->type, $componentKey));
         }
 
-        // Handle traditional component class
+        if ($componentDefinition instanceof Closure) {
+            throw new InvalidArgumentException(sprintf('Component key "%s" for field type "%s" resolved to a Closure; %s only resolves class-based components, the caller must adapt closures first', $componentKey, $customField->type, static::class));
+        }
+
         if (! class_exists($componentDefinition)) {
             throw new InvalidArgumentException(sprintf('Component class not found for %s of type %s', $componentKey, $customField->type));
         }

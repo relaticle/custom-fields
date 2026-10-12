@@ -32,6 +32,21 @@ it('source file has no hardcoded English labels and references expected translat
             'visibility.mode',
             'visibility.logic',
             'visibility.conditions',
+        ],
+    ],
+    'ConditionRow' => [
+        'relativePath' => 'Filament/Management/Forms/Components/Visibility/ConditionRow.php',
+        'forbidden' => [
+            "->label('Condition VisibilityLogic')",
+            "->label('VisibilityOperator')",
+            "->label('Visibility')",
+            "->label('Conditions')",
+            "->label('Source')",
+            "->label('Field')",
+            "->label('Value')",
+            "Fieldset::make('Conditional Visibility')",
+        ],
+        'required' => [
             'visibility.source',
             'visibility.field',
             'visibility.operator',

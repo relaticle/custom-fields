@@ -22,6 +22,9 @@ final readonly class FileUploadComponent extends AbstractFormComponent
         return $this->applySettingsToComponent($component, $defaults);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getSmartDefaults(): array
     {
         return [
