@@ -46,7 +46,7 @@ afterEach(function (): void {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function createField(object $context, string $code, string $type, array $validationRules = []): CustomField
+function createField(object $context, string $code, string $type, array $validationRules = [], array $attributes = []): CustomField
 {
     return CustomField::factory()->create([
         'custom_field_section_id' => $context->section->getKey(),
@@ -55,6 +55,7 @@ function createField(object $context, string $code, string $type, array $validat
         'code' => $code,
         'type' => $type,
         'validation_rules' => $validationRules,
+        ...$attributes,
     ]);
 }
 
@@ -315,15 +316,7 @@ it('accepts tags-input within min and max selections', function (): void {
 it('renders a record field that limits its selections', function (): void {
     registerPostLookupEntity();
 
-    CustomField::factory()->create([
-        'custom_field_section_id' => $this->section->getKey(),
-        'entity_type' => Post::class,
-        'name' => 'Related posts',
-        'code' => 'related_posts',
-        'type' => 'record',
-        'lookup_type' => Post::class,
-        'validation_rules' => ['min_selections' => 1, 'max_selections' => 2],
-    ]);
+    createField($this, 'related_posts', 'record', ['min_selections' => 1, 'max_selections' => 2], ['lookup_type' => Post::class]);
 
     livewire(CreatePost::class)
         ->assertSuccessful()
@@ -333,15 +326,7 @@ it('renders a record field that limits its selections', function (): void {
 it('rejects a record field exceeding max_selections', function (): void {
     registerPostLookupEntity();
 
-    CustomField::factory()->create([
-        'custom_field_section_id' => $this->section->getKey(),
-        'entity_type' => Post::class,
-        'name' => 'Related posts',
-        'code' => 'related_posts',
-        'type' => 'record',
-        'lookup_type' => Post::class,
-        'validation_rules' => ['max_selections' => 1],
-    ]);
+    createField($this, 'related_posts', 'record', ['max_selections' => 1], ['lookup_type' => Post::class]);
 
     $relatedPostIds = Post::factory()->count(2)->create()->modelKeys();
 
