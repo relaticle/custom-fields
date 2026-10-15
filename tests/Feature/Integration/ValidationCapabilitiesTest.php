@@ -330,6 +330,25 @@ it('renders a record field that limits its selections', function (): void {
         ->assertSee('Related posts');
 });
 
+it('rejects a record field exceeding max_selections', function (): void {
+    registerPostLookupEntity();
+
+    CustomField::factory()->create([
+        'custom_field_section_id' => $this->section->getKey(),
+        'entity_type' => Post::class,
+        'name' => 'Related posts',
+        'code' => 'related_posts',
+        'type' => 'record',
+        'lookup_type' => Post::class,
+        'validation_rules' => ['max_selections' => 1],
+    ]);
+
+    $relatedPostIds = Post::factory()->count(2)->create()->modelKeys();
+
+    validationSubmitCreate($this, ['related_posts' => $relatedPostIds])
+        ->assertHasFormErrors(['custom_fields.related_posts']);
+});
+
 // ===========================================================================
 // Required field
 // ===========================================================================
