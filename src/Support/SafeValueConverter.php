@@ -52,6 +52,10 @@ class SafeValueConverter
         }
 
         if (is_array($converted)) {
+            if (collect($converted)->contains(fn (mixed $item): bool => is_array($item))) {
+                return $converted;
+            }
+
             return collect($converted)
                 ->map(fn (mixed $item): mixed => is_string($item) && $item !== '' ? $definition->normalize($item, $customField) : $item)
                 ->reject(fn (mixed $item): bool => $item === '')
