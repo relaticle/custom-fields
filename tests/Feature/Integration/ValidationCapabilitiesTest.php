@@ -287,6 +287,50 @@ it('accepts multi-select at max_selections boundary', function (): void {
 });
 
 // ===========================================================================
+// Selection capabilities: components without minItems/maxItems
+// ===========================================================================
+
+it('rejects tags-input with fewer than min_selections', function (): void {
+    createField($this, 'labels', 'tags-input', ['min_selections' => 2]);
+
+    validationSubmitCreate($this, ['labels' => ['alpha']])
+        ->assertHasFormErrors(['custom_fields.labels']);
+});
+
+it('rejects tags-input exceeding max_selections', function (): void {
+    createField($this, 'labels', 'tags-input', ['max_selections' => 2]);
+
+    validationSubmitCreate($this, ['labels' => ['alpha', 'beta', 'gamma']])
+        ->assertHasFormErrors(['custom_fields.labels']);
+});
+
+it('accepts tags-input within min and max selections', function (): void {
+    createField($this, 'labels', 'tags-input', ['min_selections' => 1, 'max_selections' => 2]);
+
+    validationSubmitCreate($this, ['labels' => ['alpha', 'beta']])
+        ->assertHasNoFormErrors()
+        ->assertRedirect();
+});
+
+it('renders a record field that limits its selections', function (): void {
+    registerPostLookupEntity();
+
+    CustomField::factory()->create([
+        'custom_field_section_id' => $this->section->getKey(),
+        'entity_type' => Post::class,
+        'name' => 'Related posts',
+        'code' => 'related_posts',
+        'type' => 'record',
+        'lookup_type' => Post::class,
+        'validation_rules' => ['min_selections' => 1, 'max_selections' => 2],
+    ]);
+
+    livewire(CreatePost::class)
+        ->assertSuccessful()
+        ->assertSee('Related posts');
+});
+
+// ===========================================================================
 // Required field
 // ===========================================================================
 
