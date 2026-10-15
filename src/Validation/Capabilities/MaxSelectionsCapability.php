@@ -39,7 +39,11 @@ final readonly class MaxSelectionsCapability implements ValidationCapability
             return;
         }
 
-        $component->maxItems((int) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'maxItems')) {
+            return;
+        }
+
+        $component->maxItems((int) $value);
     }
 
     /** @return array<int, string> */
