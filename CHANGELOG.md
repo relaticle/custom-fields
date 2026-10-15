@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.15.0 - 2026-10-15
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.15.0 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump shell-quote from 1.9.0 to 1.12.0 in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/260
+* fix: stop tags-input and record fields crashing forms when selections are limited [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/261
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.14.1...v3.15.0
+
 ## v3.14.1 - 2026-10-09
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.14.1 -->
@@ -230,6 +242,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
