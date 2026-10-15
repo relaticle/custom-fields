@@ -59,6 +59,16 @@ it('collapses values that normalize to the same link', function (): void {
         ->toBe(['https://example.com']);
 });
 
+it('keeps list items that are arrays exactly as given', function (): void {
+    $rows = [
+        'first' => ['briefing_date' => '2026-03-13'],
+        'second' => ['briefing_date' => '2026-03-13'],
+        'third' => ['briefing_date' => '2026-03-26'],
+    ];
+
+    expect(SafeValueConverter::toDbSafe($rows, 'checkbox-list', $this->linkField))->toBe($rows);
+});
+
 it('keeps numeric-looking values that differ as text', function (): void {
     expect(SafeValueConverter::toDbSafe(['007', '7', '1e1', '10'], 'link', $this->linkField))
         ->toBe(['007', '7', '1e1', '10']);
