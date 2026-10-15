@@ -39,7 +39,11 @@ final readonly class MinSelectionsCapability implements ValidationCapability
             return;
         }
 
-        $component->minItems((int) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'minItems')) {
+            return;
+        }
+
+        $component->minItems((int) $value);
     }
 
     /** @return array<int, string> */
