@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.15.1 - 2026-10-15
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.15.1 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump @simple-git/argv-parser from 1.1.1 to removed in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/262
+* fix: store a list that holds arrays as given instead of deduping its rows [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/264
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.15.0...v3.15.1
+
 ## v3.15.0 - 2026-10-15
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.15.0 -->
@@ -242,6 +254,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
