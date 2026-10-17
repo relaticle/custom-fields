@@ -11,8 +11,8 @@
         "@nuxt/scripts": "^1.3.9",
         "@nuxt/ui": "^4.11.2",
         "@unhead/vue": "^3.4.1",
-        "docus": "^5.13.0",
-        "nuxt": "^4.5.2",
+        "docus": "^5.14.0",
+        "nuxt": "^4.6.1",
         "typescript": "^7.0.2"
     },
     "devDependencies": {
