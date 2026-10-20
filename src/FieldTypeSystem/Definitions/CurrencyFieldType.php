@@ -17,6 +17,8 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyCompone
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
 use Relaticle\CustomFields\Imports\UnresolvedValue;
+use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Rules\KeepsStoredDecimals;
 use Relaticle\CustomFields\Support\CurrencyProvider;
 use Relaticle\CustomFields\Validation\Capabilities\MaxValueCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinValueCapability;
@@ -144,6 +146,10 @@ class CurrencyFieldType extends BaseFieldType
                             $code = $get('settings.additional.currency_code') ?? 'USD';
                             $component->state((string) CurrencyProvider::getDecimalDigits($code));
                         })
+                        ->rule(
+                            fn (CustomField $record): KeepsStoredDecimals => new KeepsStoredDecimals($record),
+                            fn (?CustomField $record): bool => $record instanceof CustomField,
+                        )
                         ->required(),
 
                 ]),

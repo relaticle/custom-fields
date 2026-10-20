@@ -571,6 +571,7 @@ return [
         'display' => 'Display',
         'decimal_places' => 'Decimal Places',
         'decimal_places_helper' => 'Auto-detected from currency. Override only if needed.',
+        'decimal_places_below_stored' => '{1} One record holds an amount with more decimal places. Change that amount first, or keep the current setting.|[2,*] :count records hold amounts with more decimal places. Change those amounts first, or keep the current setting.',
         'display_options' => [
             'symbol' => 'Symbol ($1,200.50)',
             'code' => 'Code (USD 1,200.50)',
