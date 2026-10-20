@@ -10,6 +10,10 @@ use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyCompone
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\CurrencyEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\CurrencyColumn;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
+use Relaticle\CustomFields\Tests\Fixtures\Models\User;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
 
 describe('CurrencyColumn', function (): void {
     it('creates a money-formatted column with symbol display type by default', function (): void {
@@ -146,43 +150,26 @@ describe('CurrencyComponent', function (): void {
         expect($component->getDefaultState())->toBeNull();
     });
 
-    it('uses step matching default 2 decimal places', function (): void {
-        $field = CustomField::factory()->ofType('currency')->create();
+    it('renders a step of :dataset on the record form', function (array $attributes, string $step): void {
+        $this->actingAs(User::factory()->create());
 
-        $component = app(CurrencyComponent::class)->create($field);
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true]);
 
-        expect((float) $component->getStep())->toBe(0.01);
-    });
-
-    it('uses step matching configured decimal places from settings', function (): void {
-        $field = CustomField::factory()->ofType('currency')->create([
-            'settings' => ['additional' => ['decimal_places' => 4]],
+        CustomField::factory()->ofType('currency')->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => Post::class,
+            'code' => 'amount',
+            ...$attributes,
         ]);
 
-        $component = app(CurrencyComponent::class)->create($field);
-
-        expect((float) $component->getStep())->toBe(0.0001);
-    });
-
-    it('uses step of 1 for zero decimal places', function (): void {
-        $field = CustomField::factory()->ofType('currency')->create([
-            'settings' => ['additional' => ['decimal_places' => 0]],
-        ]);
-
-        $component = app(CurrencyComponent::class)->create($field);
-
-        expect((int) $component->getStep())->toBe(1);
-    });
-
-    it('falls back to validation_rules for legacy decimal places', function (): void {
-        $field = CustomField::factory()->ofType('currency')->create([
-            'validation_rules' => ['decimal_places' => 4],
-        ]);
-
-        $component = app(CurrencyComponent::class)->create($field);
-
-        expect((float) $component->getStep())->toBe(0.0001);
-    });
+        livewire(CreatePost::class)
+            ->assertSeeHtml("step=\"{$step}\" type=\"number\" wire:model=\"data.custom_fields.amount\"");
+    })->with([
+        'the default 2 decimal places' => [[], '0.01'],
+        'configured decimal places from settings' => [['settings' => ['additional' => ['decimal_places' => 4]]], '0.0001'],
+        'zero decimal places' => [['settings' => ['additional' => ['decimal_places' => 0]]], '1'],
+        'legacy decimal places in validation_rules' => [['validation_rules' => ['decimal_places' => 4]], '0.0001'],
+    ]);
 });
 
 describe('CurrencyFieldType Export Transformer', function (): void {

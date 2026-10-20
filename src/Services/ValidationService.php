@@ -10,6 +10,7 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Rules\FitsDecimalPlaces;
 use Relaticle\CustomFields\Rules\UniqueCustomFieldValue;
 use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 
@@ -235,10 +236,8 @@ final class ValidationService
             $rules[] = new UniqueCustomFieldValue($customField, $ignoreEntityId, exceptHeldValues: true);
         }
 
-        // Currency fields: enforce decimal places from settings
         if ($customField->type === 'currency') {
-            $decimalPlaces = $customField->getDecimalPlaces();
-            $rules[] = $decimalPlaces === 0 ? 'integer' : 'decimal:0,'.$decimalPlaces;
+            $rules[] = new FitsDecimalPlaces($customField, $ignoreEntityId);
         }
 
         if ($this->isRequired($customField) && $customField->typeData->dataType->isBoolean()) {
