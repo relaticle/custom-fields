@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.15.2 - 2026-10-20
+
+<!-- Release notes generated using configuration in .github/release.yml at 8cca6d80e60da131084f9c73197e78e220bffb44 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(currency): check decimal places only on new or changed amounts [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/268
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.15.1...v3.15.2
+
 ## v3.15.1 - 2026-10-15
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.15.1 -->
@@ -254,6 +265,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
