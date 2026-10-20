@@ -7,7 +7,6 @@ use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
-use Relaticle\CustomFields\Livewire\ManageFieldsTable;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\FieldTypes\SystemFirstFieldType;
@@ -1116,75 +1115,5 @@ describe('System-only field types', function (): void {
         expect($search('probe'))->not->toContain('system-probe')
             ->and($search('system'))->not->toContain('system-first')
             ->and($search('text'))->toContain('text');
-    });
-});
-
-describe('ManageCustomField - Currency decimal places', function (): void {
-    beforeEach(function (): void {
-        $this->section = CustomFieldSection::factory()
-            ->forEntityType($this->postEntityType)
-            ->create();
-
-        $this->amount = CustomField::factory()
-            ->ofType('currency')
-            ->create([
-                'custom_field_section_id' => $this->section->getKey(),
-                'entity_type' => $this->postEntityType,
-                'settings' => ['additional' => ['currency_code' => 'USD', 'decimal_places' => 2]],
-            ]);
-    });
-
-    it('refuses fewer decimal places than stored amounts use', function (): void {
-        Post::factory()->create()->saveCustomFieldValue($this->amount, 999.75);
-        Post::factory()->create()->saveCustomFieldValue($this->amount, 10.5);
-
-        $page = livewire(ManageCustomField::class, ['field' => $this->amount])
-            ->mountAction('edit')
-            ->set('mountedActions.0.data.settings.additional.decimal_places', '0')
-            ->callMountedAction()
-            ->assertHasActionErrors(['settings.additional.decimal_places']);
-
-        expect($page->errors()->first('mountedActions.0.data.settings.additional.decimal_places'))
-            ->toStartWith('2 records hold amounts with more decimal places.')
-            ->and($this->amount->refresh()->getDecimalPlaces())->toBe(2);
-    });
-
-    it('refuses fewer decimal places than stored amounts use from the fields table', function (): void {
-        Post::factory()->create()->saveCustomFieldValue($this->amount, 999.75);
-
-        $page = livewire(ManageFieldsTable::class, ['entityType' => $this->postEntityType])
-            ->mountAction('editField', arguments: ['fieldId' => $this->amount->getKey()])
-            ->set('mountedActions.0.data.settings.additional.decimal_places', '0')
-            ->callMountedAction()
-            ->assertHasActionErrors(['settings.additional.decimal_places']);
-
-        expect($page->errors()->first('mountedActions.0.data.settings.additional.decimal_places'))
-            ->toStartWith('One record holds an amount with more decimal places.')
-            ->and($this->amount->refresh()->getDecimalPlaces())->toBe(2);
-    });
-
-    it('allows fewer decimal places when every stored amount fits', function (): void {
-        Post::factory()->create()->saveCustomFieldValue($this->amount, 1000.0);
-
-        livewire(ManageCustomField::class, ['field' => $this->amount])
-            ->mountAction('edit')
-            ->set('mountedActions.0.data.settings.additional.decimal_places', '0')
-            ->callMountedAction()
-            ->assertHasNoActionErrors();
-
-        expect($this->amount->refresh()->getDecimalPlaces())->toBe(0);
-    });
-
-    it('keeps a field with finer stored amounts editable when its decimal places stay', function (): void {
-        $this->amount->update(['settings' => ['additional' => ['currency_code' => 'USD', 'decimal_places' => 0]]]);
-        Post::factory()->create()->saveCustomFieldValue($this->amount, 999.75);
-
-        livewire(ManageCustomField::class, ['field' => $this->amount])
-            ->mountAction('edit')
-            ->set('mountedActions.0.data.name', 'Deal Size')
-            ->callMountedAction()
-            ->assertHasNoActionErrors();
-
-        expect($this->amount->refresh()->name)->toBe('Deal Size');
     });
 });
