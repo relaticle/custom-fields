@@ -1,3 +1,8 @@
+---
+title: "Support"
+description: "Get help with Custom Fields"
+canonical_url: "https://relaticle.github.io/community/support"
+---
 # Support
 
 > Get help with Custom Fields
@@ -8,3 +13,8 @@ Need assistance? Encountered a bug? Have a feature request? We're here to help!
 - **Bug Reports & Feature Requests**: [GitHub Issues](https://github.com/Relaticle/custom-fields/issues)
 
 Feel free to reach out with your queries, and we'll get back to you promptly.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

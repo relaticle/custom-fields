@@ -1,3 +1,8 @@
+---
+title: "Contributing"
+description: "How to contribute to Custom Fields"
+canonical_url: "https://relaticle.github.io/community/contributing"
+---
 # Contributing
 
 > How to contribute to Custom Fields
@@ -246,3 +251,8 @@ Contributors are recognized in:
 - **Issues**: [GitHub Issues](https://github.com/relaticle/custom-fields/issues)
 
 Thank you for helping make Custom Fields better for everyone!
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

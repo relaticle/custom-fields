@@ -1,3 +1,8 @@
+---
+title: "Quickstart"
+description: "Get Custom Fields v3 working in your Filament project in under 5 minutes"
+canonical_url: "https://relaticle.github.io/getting-started/quickstart"
+---
 # Quickstart
 
 > Get Custom Fields v3 working in your Filament project in under 5 minutes
@@ -110,3 +115,8 @@ Your resource now has dynamic custom fields! Users can:
 - Fill out custom fields in forms
 - View and filter by custom fields in tables
 - See custom field values in detail views
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

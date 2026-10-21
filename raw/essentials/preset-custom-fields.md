@@ -1,3 +1,8 @@
+---
+title: "Preset Custom Fields"
+description: "Programmatically define and deploy custom fields using migrations"
+canonical_url: "https://relaticle.github.io/essentials/preset-custom-fields"
+---
 # Preset Custom Fields
 
 > Programmatically define and deploy custom fields using migrations
@@ -365,3 +370,8 @@ php artisan migrate --path=database/custom-fields/2025_08_15_022226_create_gener
 2. **Versioning**: Create separate migrations for creating, updating, and deleting fields to maintain a clear history
 3. **Documentation**: Comment your migrations to explain the purpose of each change
 4. **Data Integrity**: When updating or deleting fields, consider the impact on existing data
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

@@ -1,3 +1,8 @@
+---
+title: "Authorization"
+description: "Control access to the Custom Fields management interface"
+canonical_url: "https://relaticle.github.io/essentials/authorization"
+---
 # Authorization
 
 > Control access to the Custom Fields management interface
@@ -24,3 +29,8 @@ class AdminPanelProvider extends PanelProvider
     }
 }
 ```
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

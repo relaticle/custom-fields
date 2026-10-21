@@ -1,3 +1,8 @@
+---
+title: "Field Types"
+description: "Built-in field types and how to create custom ones"
+canonical_url: "https://relaticle.github.io/essentials/field-types"
+---
 # Field Types
 
 > Built-in field types and how to create custom ones
@@ -840,7 +845,7 @@ public function setValue(string $value): string
 
 `normalize()` runs on every write path, for each item of a multi-value field. Keep it idempotent: normalizing a normalized value must return the same value.
 
-The unique rule rejects a value when another record holds any form that `equivalentValues()` returns. The [data model](/essentials/data-model#how-a-value-is-stored) page lists the stored form of each built-in type.
+The unique rule rejects a value when another record holds any form that `equivalentValues()` returns. The [data model](https://relaticle.github.io/essentials/data-model#how-a-value-is-stored) page lists the stored form of each built-in type.
 
 ### Import Customization
 
@@ -1014,3 +1019,8 @@ If your components don't render correctly:
 4. Check that you're importing all necessary Filament component classes
 
 Your custom field type will now appear in the field type dropdown when creating new custom fields!
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

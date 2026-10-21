@@ -1,3 +1,8 @@
+---
+title: "Import/Export"
+description: "Learn how to import and export custom field data with import/export actions"
+canonical_url: "https://relaticle.github.io/essentials/import-export"
+---
 # Import/Export
 
 > Learn how to import and export custom field data with import/export actions
@@ -67,3 +72,8 @@ class ProductExporter extends Exporter
     }
 }
 ```
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

@@ -1,3 +1,8 @@
+---
+title: "Upgrade Guide"
+description: "Upgrade Custom Fields from v2 to v3"
+canonical_url: "https://relaticle.github.io/getting-started/upgrade-guide"
+---
 # Upgrade Guide
 
 > Upgrade Custom Fields from v2 to v3
@@ -106,7 +111,7 @@ php artisan migrate
 For example, a release may relax the `custom_fields` unique key from
 `(code, entity_type[, tenant])` to `(code, entity_type[, tenant], custom_field_section_id)`
 so a field code can be reused across different sections — the shape `onlySections()` (see
-[Builder Scoping](/essentials/builder-scoping)) relies on. Existing installs need the
+[Builder Scoping](https://relaticle.github.io/essentials/builder-scoping)) relies on. Existing installs need the
 republish-and-migrate step above to pick that change up; it is not applied automatically.
 
 **Before rolling that migration back**, resolve any rows that ended up sharing a code
@@ -268,3 +273,8 @@ If you have custom code referencing `lookup_type` on non-record fields, remove t
 - [ ] Clear all caches
 - [ ] Test phone and email fields display correctly
 - [ ] Test any custom field type implementations
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

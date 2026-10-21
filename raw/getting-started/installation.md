@@ -1,3 +1,8 @@
+---
+title: "Installation"
+description: "Get started with Custom Fields in just a few steps"
+canonical_url: "https://relaticle.github.io/getting-started/installation"
+---
 # Installation
 
 > Get started with Custom Fields in just a few steps
@@ -15,7 +20,7 @@ Get started with Custom Fields in just a few steps.
 
 ### 1. Purchase a License
 
-[View pricing plans](/#pricing) and choose the one that fits your project.
+[View pricing plans](https://relaticle.github.io/#pricing) and choose the one that fits your project.
 
 ### 2. Add Private Repository
 
@@ -95,5 +100,10 @@ php artisan vendor:publish --tag="custom-fields-migrations"
 php artisan migrate
 ```
 
-See the [upgrade guide](/getting-started/upgrade-guide#picking-up-new-migrations) for a
+See the [upgrade guide](https://relaticle.github.io/getting-started/upgrade-guide#picking-up-new-migrations) for a
 concrete example of a release that requires this step.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

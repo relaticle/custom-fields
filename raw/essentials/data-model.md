@@ -1,3 +1,8 @@
+---
+title: "Data Model"
+description: "Understanding the Custom Fields database architecture"
+canonical_url: "https://relaticle.github.io/essentials/data-model"
+---
 # Data Model
 
 > Understanding the Custom Fields database architecture
@@ -426,7 +431,7 @@ The Custom Fields plugin employs a **Hybrid Entity-Attribute-Value (EAV) with Ty
     </td>
     
     <td>
-      Unique per entity type and section (+ tenant, when multi-tenancy is enabled) — not globally unique, so the same code can exist in two different sections. See <a href="/essentials/builder-scoping">
+      Unique per entity type and section (+ tenant, when multi-tenancy is enabled) — not globally unique, so the same code can exist in two different sections. See <a href="https://relaticle.github.io/essentials/builder-scoping">
         Builder Scoping
       </a>
     </td>
@@ -980,7 +985,7 @@ $company->getCustomFieldValue($websiteField);
 
 ### One column per data type
 
-The field type's data type decides the column. The [field types table](/essentials/field-types#built-in-field-types) lists the data type of every built-in type.
+The field type's data type decides the column. The [field types table](https://relaticle.github.io/essentials/field-types#built-in-field-types) lists the data type of every built-in type.
 
 <table>
 <thead>
@@ -1393,3 +1398,8 @@ Consider the performance implications for sparse data (many NULL values) and pla
 ## Multi-Tenancy Support
 
 When enabled, `tenant_id` is included in all unique constraints and automatically filtered through model scopes. This ensures complete data isolation while maintaining query performance through proper indexing.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

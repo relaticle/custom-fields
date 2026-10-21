@@ -1,3 +1,8 @@
+---
+title: "Configuration"
+description: "Configure all aspects of the Custom Fields package"
+canonical_url: "https://relaticle.github.io/essentials/configuration"
+---
 # Configuration
 
 > Configure all aspects of the Custom Fields package
@@ -777,3 +782,8 @@ Use environment variables for flexible configuration:
 'field_type_configuration' => FieldTypeConfigurator::configure()
     ->cache(enabled: env('CUSTOM_FIELDS_CACHE_TYPES', true)),
 ```
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

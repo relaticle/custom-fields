@@ -1,3 +1,8 @@
+---
+title: "Code Distribution"
+description: "Guidelines for distributing Custom Fields code"
+canonical_url: "https://relaticle.github.io/community/code-distribution"
+---
 # Code Distribution
 
 > Guidelines for distributing Custom Fields code
@@ -92,3 +97,8 @@ For questions about code distribution, licensing, or contributing:
 - **Email**: [customfieldsnext@gmail.com](mailto:customfieldsnext@gmail.com)
 - **GitHub Issues**: For technical questions and bug reports
 - **Documentation**: Check our comprehensive docs first
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

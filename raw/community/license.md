@@ -1,3 +1,8 @@
+---
+title: "License"
+description: "Dual-licensed under AGPL-3.0 for open source and commercial licenses for private applications"
+canonical_url: "https://relaticle.github.io/community/license"
+---
 # License
 
 > Dual-licensed under AGPL-3.0 for open source and commercial licenses for private applications
@@ -14,7 +19,7 @@ What you get:
 - **1 year of updates** — access to all new features and bug fixes
 - **Priority support** — via email and Discord
 
-[View pricing plans](/#pricing) to choose the right tier for your project.
+[View pricing plans](https://relaticle.github.io/#pricing) to choose the right tier for your project.
 
 <alert type="info">
 
@@ -36,3 +41,8 @@ Custom Fields is also available under [AGPL-3.0](https://www.gnu.org/licenses/ag
 - **Non-Profits**: 40% off (registered 501(c)(3))
 
 Contact **customfieldsnext@gmail.com** for discount codes or licensing questions.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

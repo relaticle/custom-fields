@@ -1,3 +1,8 @@
+---
+title: "Builder Scoping"
+description: "Scope custom-field resolution to specific sections, and hook into code-uniqueness resolution"
+canonical_url: "https://relaticle.github.io/essentials/builder-scoping"
+---
 # Builder Scoping
 
 > Scope custom-field resolution to specific sections, and hook into code-uniqueness resolution
@@ -89,5 +94,10 @@ instance. Returning another instance, such as `$query->clone()->where(...)`, als
 
 Register the callback once, typically in a service provider's `boot()` method.
 
-See [Extending](/essentials/extending) for `filterFieldsUsing()` / `filterSectionsUsing()`,
+See [Extending](https://relaticle.github.io/essentials/extending) for `filterFieldsUsing()` / `filterSectionsUsing()`,
 which narrow resolution by an arbitrary predicate rather than by section identity.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.

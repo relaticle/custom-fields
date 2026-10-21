@@ -1,3 +1,8 @@
+---
+title: "Extending"
+description: "Filter which fields and sections a builder resolves, and extend the field form's schema"
+canonical_url: "https://relaticle.github.io/essentials/extending"
+---
 # Extending
 
 > Filter which fields and sections a builder resolves, and extend the field form's schema
@@ -216,5 +221,10 @@ associative arrays and replaces everything else, which means a submitted empty l
 submitted null still clears the value it targets, but a key nested inside an associative
 setting can only be removed by code, not by leaving it out of a submission.
 
-See [Builder Scoping](/essentials/builder-scoping) for `onlySections()`, which narrows
+See [Builder Scoping](https://relaticle.github.io/essentials/builder-scoping) for `onlySections()`, which narrows
 resolution a different way, by section identity rather than by an arbitrary predicate.
+
+
+## Sitemap
+
+See the full [sitemap](https://relaticle.github.io/sitemap.md) for all pages.
