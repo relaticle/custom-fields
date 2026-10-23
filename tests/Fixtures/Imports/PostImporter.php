@@ -32,10 +32,14 @@ final class PostImporter extends Importer
         ];
     }
 
+    /**
+     * An upsert on the title, which is what a host importing a spreadsheet twice has: the
+     * second pass updates the rows the first one created.
+     */
     public function resolveRecord(): ?Model
     {
-        $post = new Post;
-        $post->author_id = $this->import->user_id;
+        $post = Post::query()->where('title', $this->data['title'] ?? null)->first() ?? new Post;
+        $post->author_id ??= $this->import->user_id;
 
         return $post;
     }

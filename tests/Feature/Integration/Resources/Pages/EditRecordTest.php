@@ -276,6 +276,31 @@ describe('Custom Fields Integration', function (): void {
             ->and($customFieldValues->get('new_field')?->getValue())->toBe('New Field Value');
     });
 
+    it('clears a multi-choice value when the form leaves it empty', function (): void {
+        $customField = CustomField::factory()
+            ->ofType('multi-select')
+            ->withOptions(['Discovery', 'Closed Won'])
+            ->create([
+                'custom_field_section_id' => $this->section->id,
+                'code' => 'stages',
+                'entity_type' => Post::class,
+            ]);
+
+        $optionId = $customField->refresh()->options->first()->getKey();
+
+        $this->post->saveCustomFieldValue($customField, [$optionId]);
+
+        livewire(EditPost::class, ['record' => $this->post->getKey()])
+            ->set('data.custom_fields.stages', [])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $storedValue = $this->post->refresh()->customFieldValues->firstWhere('custom_field_id', $customField->getKey());
+
+        expect($this->post->getCustomFieldValue($customField))->toBe([])
+            ->and($storedValue?->getAttribute($customField->getValueColumn())?->toArray())->toBe([]);
+    });
+
     it('validates required custom fields during update', function (): void {
         // Arrange
         $requiredCustomField = CustomField::factory()->create([

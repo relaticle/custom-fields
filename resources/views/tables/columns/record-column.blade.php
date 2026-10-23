@@ -5,8 +5,12 @@
     $maxVisible = 1;
     $visibleRecords = array_slice($records, 0, $maxVisible);
     $hiddenCount = max(0, count($records) - $maxVisible);
+    $chipsView = $getChipsView();
 @endphp
 
+@if ($chipsView !== null)
+    @include($chipsView, ['chips' => $records, 'maxVisible' => $maxVisible])
+@else
 <div
     x-data="{
         isOpen() {
@@ -157,3 +161,4 @@
         @endif
     @endif
 </div>
+@endif

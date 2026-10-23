@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Relaticle\CustomFields\Observers;
 
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
-class CustomFieldSectionObserver
+final class CustomFieldSectionObserver
 {
     public function deleted(CustomFieldSection $customFieldSection): void
     {

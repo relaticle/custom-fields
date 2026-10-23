@@ -11,8 +11,10 @@ use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Comments\Pages\ViewComment;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\ViewPost;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\PostResource;
 use Spatie\LaravelData\DataCollection;
@@ -73,141 +75,97 @@ it('can refresh data', function (): void {
 
 describe('Conditional Visibility in Infolists', function (): void {
     beforeEach(function (): void {
-        // Create custom field section for Posts
         $this->section = CustomFieldSection::factory()->create([
-            'name' => 'Post Infolist Fields',
-            'entity_type' => Post::class,
+            'name' => 'Comment Infolist Fields',
+            'entity_type' => Comment::class,
             'active' => true,
             'sort_order' => 1,
         ]);
+
+        $this->statusField = CustomField::factory()->create([
+            'custom_field_section_id' => $this->section->id,
+            'name' => 'Status',
+            'code' => 'status',
+            'type' => 'text',
+            'entity_type' => Comment::class,
+            'settings' => new CustomFieldSettingsData(
+                visible_in_view: true,
+            ),
+        ]);
+
+        $this->conditionalField = function (string $name, string $code, VisibilityMode $mode): CustomField {
+            return CustomField::factory()->create([
+                'custom_field_section_id' => $this->section->id,
+                'name' => $name,
+                'code' => $code,
+                'type' => 'text',
+                'entity_type' => Comment::class,
+                'settings' => new CustomFieldSettingsData(
+                    visible_in_view: true,
+                    visibility: new VisibilityData(
+                        mode: $mode,
+                        logic: VisibilityLogic::ALL,
+                        conditions: new DataCollection(VisibilityConditionData::class, [
+                            new VisibilityConditionData(
+                                field_code: 'status',
+                                operator: VisibilityOperator::EQUALS,
+                                value: 'published'
+                            ),
+                        ])
+                    )
+                ),
+            ]);
+        };
     });
 
     it('shows custom field entries when show_when condition is met', function (): void {
-        // Arrange - Create a base field and a conditional field
-        $baseField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->id,
-            'name' => 'Status',
-            'code' => 'status',
-            'type' => 'text',
-            'entity_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(
-                visible_in_view: true,
-            ),
-        ]);
+        $conditionalField = ($this->conditionalField)('Priority', 'priority', VisibilityMode::SHOW_WHEN);
 
-        $conditionalField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->id,
-            'name' => 'Priority',
-            'code' => 'priority',
-            'type' => 'text',
-            'entity_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(
-                visible_in_view: true,
-                visibility: new VisibilityData(
-                    mode: VisibilityMode::SHOW_WHEN,
-                    logic: VisibilityLogic::ALL,
-                    conditions: new DataCollection(VisibilityConditionData::class, [
-                        new VisibilityConditionData(
-                            field_code: 'status',
-                            operator: VisibilityOperator::EQUALS,
-                            value: 'published'
-                        ),
-                    ])
-                )
-            ),
-        ]);
+        $published = Comment::factory()->create();
+        $published->saveCustomFieldValue($this->statusField, 'published');
+        $published->saveCustomFieldValue($conditionalField, 'high');
 
-        $publishedPost = Post::factory()->create();
-        $publishedPost->saveCustomFieldValue($baseField, 'published');
-        $publishedPost->saveCustomFieldValue($conditionalField, 'high');
+        $draft = Comment::factory()->create();
+        $draft->saveCustomFieldValue($this->statusField, 'draft');
+        $draft->saveCustomFieldValue($conditionalField, 'high');
 
-        $draftPost = Post::factory()->create();
-        $draftPost->saveCustomFieldValue($baseField, 'draft');
-
-        // Act & Assert - Published post should show both fields
-        livewire(ViewPost::class, [
-            'record' => $publishedPost->getKey(),
+        livewire(ViewComment::class, [
+            'record' => $published->getKey(),
         ])
             ->assertSchemaComponentExists('custom_fields.status')
             ->assertSchemaComponentExists('custom_fields.priority')
-            ->assertSchemaStateSet([
-                'custom_fields.status' => 'published',
-                'custom_fields.priority' => 'high',
-            ]);
+            ->assertSee('high');
 
-        // Draft post should only show base field, not conditional field
-        livewire(ViewPost::class, [
-            'record' => $draftPost->getKey(),
+        livewire(ViewComment::class, [
+            'record' => $draft->getKey(),
         ])
             ->assertSchemaComponentExists('custom_fields.status')
-            ->assertSchemaComponentDoesNotExist('custom_fields.priority')
-            ->assertSchemaStateSet([
-                'custom_fields.status' => 'draft',
-            ]);
-    })->todo();
+            ->assertSchemaComponentDoesNotExist('custom_fields.priority');
+    });
 
     it('hides custom field entries when hide_when condition is met', function (): void {
-        // Arrange - Create a base field and a conditional field
-        $baseField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->id,
-            'name' => 'Status',
-            'code' => 'status',
-            'type' => 'text',
-            'entity_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(
-                visible_in_view: true,
-            ),
-        ]);
+        $conditionalField = ($this->conditionalField)('Internal Notes', 'internal_notes', VisibilityMode::HIDE_WHEN);
 
-        $conditionalField = CustomField::factory()->create([
-            'custom_field_section_id' => $this->section->id,
-            'name' => 'Internal Notes',
-            'code' => 'internal_notes',
-            'type' => 'textarea',
-            'entity_type' => Post::class,
-            'settings' => new CustomFieldSettingsData(
-                visible_in_view: true,
-                visibility: new VisibilityData(
-                    mode: VisibilityMode::HIDE_WHEN,
-                    logic: VisibilityLogic::ALL,
-                    conditions: new DataCollection(VisibilityConditionData::class, [
-                        new VisibilityConditionData(
-                            field_code: 'status',
-                            operator: VisibilityOperator::EQUALS,
-                            value: 'published'
-                        ),
-                    ])
-                )
-            ),
-        ]);
+        $published = Comment::factory()->create();
+        $published->saveCustomFieldValue($this->statusField, 'published');
+        $published->saveCustomFieldValue($conditionalField, 'Internal review needed');
 
-        $publishedPost = Post::factory()->create();
-        $publishedPost->saveCustomFieldValue($baseField, 'published');
-        // Don't save internal notes for published post - it should be hidden anyway
+        $draft = Comment::factory()->create();
+        $draft->saveCustomFieldValue($this->statusField, 'draft');
+        $draft->saveCustomFieldValue($conditionalField, 'Internal review needed');
 
-        $draftPost = Post::factory()->create();
-        $draftPost->saveCustomFieldValue($baseField, 'draft');
-        $draftPost->saveCustomFieldValue($conditionalField, 'Internal review needed');
-
-        // Act & Assert - Published post should hide conditional field
-        livewire(ViewPost::class, [
-            'record' => $publishedPost->getKey(),
+        livewire(ViewComment::class, [
+            'record' => $published->getKey(),
         ])
             ->assertSchemaComponentExists('custom_fields.status')
             ->assertSchemaComponentDoesNotExist('custom_fields.internal_notes')
-            ->assertSchemaStateSet([
-                'custom_fields.status' => 'published',
-            ]);
+            ->assertDontSee('Internal review needed');
 
-        // Draft post should show both fields
-        livewire(ViewPost::class, [
-            'record' => $draftPost->getKey(),
+        livewire(ViewComment::class, [
+            'record' => $draft->getKey(),
         ])
             ->assertSchemaComponentExists('custom_fields.status')
             ->assertSchemaComponentExists('custom_fields.internal_notes')
-            ->assertSchemaStateSet([
-                'custom_fields.status' => 'draft',
-                'custom_fields.internal_notes' => 'Internal review needed',
-            ]);
-    })->todo();
+            ->assertSee('Internal review needed');
+    });
 });

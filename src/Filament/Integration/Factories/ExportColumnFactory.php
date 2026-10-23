@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Factories;
 
 use Filament\Actions\Exports\ExportColumn;
-use Relaticle\CustomFields\Contracts\ValueResolvers;
+use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**
@@ -15,7 +15,7 @@ use Relaticle\CustomFields\Models\CustomField;
 final readonly class ExportColumnFactory
 {
     public function __construct(
-        private ValueResolvers $valueResolver
+        private ValueResolverInterface $valueResolver
     ) {}
 
     public function create(CustomField $customField): ExportColumn

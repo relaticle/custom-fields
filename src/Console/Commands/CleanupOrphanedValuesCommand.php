@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\CustomFields;
 
@@ -61,7 +62,7 @@ final class CleanupOrphanedValuesCommand extends Command
 
             $orphanedCount = DB::table($table)
                 ->where('entity_type', $type)
-                ->whereNotExists(function ($query) use ($entityTable): void {
+                ->whereNotExists(function (QueryBuilder $query) use ($entityTable): void {
                     $query->select(DB::raw(1))
                         ->from($entityTable)
                         ->whereColumn($entityTable.'.id', 'custom_field_values.entity_id');
@@ -107,7 +108,7 @@ final class CleanupOrphanedValuesCommand extends Command
 
             $count = DB::table($table)
                 ->where('entity_type', $type)
-                ->whereNotExists(function ($query) use ($entityTable): void {
+                ->whereNotExists(function (QueryBuilder $query) use ($entityTable): void {
                     $query->select(DB::raw(1))
                         ->from($entityTable)
                         ->whereColumn($entityTable.'.id', 'custom_field_values.entity_id');

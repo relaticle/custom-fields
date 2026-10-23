@@ -7,7 +7,8 @@
     $entries = collect($rawEntries)->map(function($entry) {
         if (is_string($entry) && !empty($entry)) {
             // String format - just the phone number
-            return ['display' => $entry, 'tel' => preg_replace('/[^0-9+]/', '', $entry)];
+            $phoneService = resolve(\Relaticle\CustomFields\Services\Phone\CountryPhoneService::class);
+            return ['display' => $phoneService->displayText($entry), 'tel' => $phoneService->dialNumber($entry)];
         } elseif (is_array($entry) && !empty($entry['number'])) {
             // Object format with country and number
             $country = $entry['country'] ?? 'US';

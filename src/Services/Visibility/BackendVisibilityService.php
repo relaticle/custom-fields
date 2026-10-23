@@ -12,8 +12,10 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Services\Options\ComponentOptionsExtractor;
 use Throwable;
+use WeakMap;
 
 /**
  * Backend Visibility Service
@@ -33,10 +35,17 @@ final class BackendVisibilityService
      */
     private static array $fieldCache = [];
 
+    /**
+     * @var WeakMap<Collection<int, CustomFieldValue>, array<string, array<string, mixed>>>
+     */
+    private readonly WeakMap $extractedValues;
+
     public function __construct(
         private readonly CoreVisibilityLogicService $coreLogic,
         private readonly ComponentOptionsExtractor $optionsExtractor,
-    ) {}
+    ) {
+        $this->extractedValues = new WeakMap;
+    }
 
     /**
      * Get cached fields for an entity type (O(1) lookup by code).
@@ -84,6 +93,14 @@ final class BackendVisibilityService
             $record->load('customFieldValues.customField');
         }
 
+        $loadedValues = $record->getRelation('customFieldValues');
+        $signature = $fields->pluck('id')->implode(',');
+        $memoised = $this->extractedValues[$loadedValues] ?? [];
+
+        if (array_key_exists($signature, $memoised)) {
+            return $memoised[$signature];
+        }
+
         $fieldValues = [];
 
         foreach ($fields as $field) {
@@ -93,6 +110,9 @@ final class BackendVisibilityService
                 $field
             );
         }
+
+        $memoised[$signature] = $fieldValues;
+        $this->extractedValues[$loadedValues] = $memoised;
 
         return $fieldValues;
     }
@@ -295,9 +315,10 @@ final class BackendVisibilityService
             return $this->normalizeOptionsForVisibility($options);
         }
 
-        // Priority 2: Handle lookup types (existing functionality)
-        if ($field->lookup_type) {
-            return $this->getLookupOptions($field->lookup_type);
+        $targetEntityType = $field->targetEntityType();
+
+        if ($targetEntityType !== null) {
+            return $this->getLookupOptions($targetEntityType);
         }
 
         // Priority 3: Fallback to database options (existing functionality)

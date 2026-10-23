@@ -6,8 +6,13 @@ use Filament\Actions\Imports\Models\FailedImportRow;
 use Filament\Actions\Imports\Models\Import;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Tests\Fixtures\Imports\PostImporter;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
@@ -274,4 +279,54 @@ it('preserves the failed row so the user can correct and re-upload', function ()
         'title' => 'Smith household',
         'custom_fields_ra_eligible' => 'Q/A',
     ]);
+});
+
+it('accepts an unchanged single-end record when the import updates a record', function (): void {
+    registerPostLookupEntity();
+
+    $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'import_ownership',
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::OneToOne,
+        fromField: new FieldSlotData(name: 'Owner', sectionId: test()->section->getKey()),
+    ));
+
+    $code = $definition->fromField->code;
+    $target = Post::factory()->create(['title' => 'Owned Post']);
+    Post::factory()->create(['title' => 'Smith household', 'custom_fields' => [$code => [$target->getKey()]]]);
+
+    $result = runPostImport([[
+        'title' => 'Smith household',
+        'custom_fields_'.$code => (string) $target->getKey(),
+    ]]);
+
+    expect($result['failures'])->toBe([])
+        ->and($result['imported'])->toBe(1)
+        ->and(CustomFieldLink::query()->active()->count())->toBe(1);
+});
+
+it('still reports a record another record holds on an update import', function (): void {
+    registerPostLookupEntity();
+
+    $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'import_ownership',
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::OneToOne,
+        fromField: new FieldSlotData(name: 'Owner', sectionId: test()->section->getKey()),
+    ));
+
+    $code = $definition->fromField->code;
+    $target = Post::factory()->create(['title' => 'Owned Post']);
+    Post::factory()->create(['title' => 'First Owner', 'custom_fields' => [$code => [$target->getKey()]]]);
+    Post::factory()->create(['title' => 'Smith household']);
+
+    $result = runPostImport([[
+        'title' => 'Smith household',
+        'custom_fields_'.$code => (string) $target->getKey(),
+    ]]);
+
+    expect($result['failures'])->toHaveCount(1)
+        ->and($result['failures'][0])->toContain('is already linked to');
 });

@@ -6,7 +6,6 @@ namespace Relaticle\CustomFields\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use Relaticle\CustomFields\Enums\FieldDataType;
@@ -65,16 +64,16 @@ final class ModelAttributeDiscoveryService
         $excludedByCast = $this->getCastExcludedColumns($model);
 
         $columns = rescue(
-            fn () => Schema::getColumns($model->getTable()),
+            fn () => $model->getConnection()->getSchemaBuilder()->getColumns($model->getTable()),
             []
         );
 
         $attributes = collect($columns)
             ->filter(fn (array $column): bool => $this->shouldIncludeColumn($column, $excludedByCast))
             ->mapWithKeys(fn (array $column): array => [
-                (string) $column['name'] => [
-                    'code' => (string) $column['name'],
-                    'label' => $this->generateLabel((string) $column['name']),
+                $column['name'] => [
+                    'code' => $column['name'],
+                    'label' => $this->generateLabel($column['name']),
                     'data_type' => $this->mapColumnType($column, $model),
                 ],
             ]);
@@ -183,7 +182,7 @@ final class ModelAttributeDiscoveryService
             return false;
         }
 
-        $excludedTypes = ['json', 'binary', 'blob', 'longblob', 'mediumblob'];
+        $excludedTypes = ['json', 'jsonb', 'binary', 'blob', 'longblob', 'mediumblob'];
 
         return ! in_array(strtolower($column['type_name']), $excludedTypes, true);
     }

@@ -49,3 +49,4 @@ node_modules/
 AGENTS.md
 boost.json
 CLAUDE.md
+/composer.lock

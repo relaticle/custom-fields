@@ -38,9 +38,9 @@ enum ImportDateFormat: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::ISO => 'ISO standard',
-            self::EUROPEAN => 'European (day first)',
-            self::AMERICAN => 'American (month first)',
+            self::ISO => __('custom-fields::custom-fields.enums.import_date_format.iso'),
+            self::EUROPEAN => __('custom-fields::custom-fields.enums.import_date_format.european'),
+            self::AMERICAN => __('custom-fields::custom-fields.enums.import_date_format.american'),
         };
     }
 

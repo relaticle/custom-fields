@@ -10,17 +10,22 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Support\Enums\Size;
-use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\View as ViewFactory;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\UiSurface;
+use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
-use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
+use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
+use Relaticle\CustomFields\Support\RelationshipTables;
+use Relaticle\CustomFields\Support\ViewFlavor;
 
 /**
  * Livewire component for managing custom fields in a flat table layout.
@@ -30,9 +35,9 @@ use Relaticle\CustomFields\Models\CustomField;
  */
 final class ManageFieldsTable extends Component implements HasActions, HasForms
 {
-    use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
+    use ManagesCustomFields;
 
     public string $entityType;
 
@@ -52,6 +57,74 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
         return $this->getFieldsQuery()->where('active', false)->get();
     }
 
+    /**
+     * The relationship each paired field in this table belongs to, resolved in a fixed number
+     * of queries (the definitions plus one eager load per slot) rather than once per row. The
+     * partner is read through the relation so it keeps the tenant and activable scopes a
+     * hand-rolled subselect would drop. A pair whose other end is on this same entity carries
+     * the partner id, which is what connects the two rows.
+     *
+     * @return array<int|string, array{definition: string, partner_id: ?string, partner_name: ?string, entity: ?string, symmetric: bool}>
+     */
+    #[Computed]
+    public function relationshipPairs(): array
+    {
+        if (! RelationshipTables::exist()) {
+            return [];
+        }
+
+        $fields = $this->activeFields()
+            ->concat($this->inactiveFields())
+            ->filter(fn (CustomField $field): bool => $field->supportsPairing())
+            ->keyBy(fn (CustomField $field): string => (string) $field->getKey());
+
+        if ($fields->isEmpty()) {
+            return [];
+        }
+
+        $keys = $fields->map(fn (CustomField $field): int|string => $field->getKey())->values()->all();
+
+        $definitions = CustomFields::newRelationshipModel()
+            ->newQuery()
+            ->with(['fromField', 'toField'])
+            ->where(function (Builder $query) use ($keys): void {
+                $query->whereIn('from_field_id', $keys)->orWhereIn('to_field_id', $keys);
+            })
+            ->get();
+
+        $pairs = [];
+
+        foreach ($definitions as $definition) {
+            $ends = [
+                [$definition->from_field_id, $definition->toField, $definition->to_entity_type],
+                [$definition->to_field_id, $definition->fromField, $definition->from_entity_type],
+            ];
+
+            foreach ($ends as [$fieldId, $partner, $entityType]) {
+                if ($fieldId === null || ! $fields->has((string) $fieldId)) {
+                    continue;
+                }
+
+                $partnerIsVisible = ! $definition->is_symmetric
+                    && $partner instanceof CustomField
+                    && $fields->has((string) $partner->getKey());
+
+                $pairs[(string) $fieldId] = [
+                    'definition' => (string) $definition->getKey(),
+                    'partner_id' => $partnerIsVisible ? (string) $partner->getKey() : null,
+                    'partner_name' => $definition->is_symmetric ? null : $partner?->name,
+                    'entity' => Entities::getEntity($entityType)?->getLabelSingular(),
+                    'symmetric' => $definition->is_symmetric,
+                ];
+            }
+        }
+
+        return $pairs;
+    }
+
+    /**
+     * @return Builder<CustomField>
+     */
     private function getFieldsQuery(): Builder
     {
         return CustomFields::newCustomFieldModel()
@@ -72,9 +145,12 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
 
     private function resetFieldsCache(): void
     {
-        unset($this->activeFields, $this->inactiveFields);
+        unset($this->activeFields, $this->inactiveFields, $this->relationshipPairs);
     }
 
+    /**
+     * @param  array<int, int|string>  $order
+     */
     public function updateFieldsOrder(array $order): void
     {
         foreach ($order as $index => $id) {
@@ -100,17 +176,14 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
             ->model(CustomFields::customFieldModel())
             ->record(fn (array $arguments): ?CustomField => $this->findField($arguments['fieldId']))
             ->schema(FieldForm::schema(withOptionsRelationship: true))
-            ->fillForm(fn (CustomField $record): array => $record->toArray())
+            ->fillForm(fn (CustomField $record): array => $this->fieldFormState($record))
             ->action(function (array $data, CustomField $record): void {
-                if (isset($data['settings'])) {
-                    $data['settings'] = array_merge($record->settings->toArray(), $data['settings']);
-                }
-
-                $record->update($data);
+                $this->updateField($record, $data);
                 $this->resetFieldsCache();
             })
-            ->modalWidth(Width::ScreenLarge)
-            ->slideOver();
+            ->modalWidth(FieldFormConfiguration::width())
+            ->extraModalWindowAttributes($this->submitsOnMetaEnter())
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function activateFieldAction(): Action
@@ -185,19 +258,21 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
                 'class' => 'flex justify-center items-center rounded-lg border-gray-300 hover:border-gray-400 border-dashed',
             ])
             ->model(CustomFields::customFieldModel())
-            ->schema(FieldForm::schema(withOptionsRelationship: false))
-            ->fillForm(['entity_type' => $this->entityType])
+            ->schema(FieldForm::schema(withOptionsRelationship: false, entityType: $this->entityType))
             ->mutateDataUsing(fn (array $data): array => $this->mutateFieldData($data, $this->entityType))
             ->action(function (array $data): void {
                 $this->storeField($data);
                 $this->resetFieldsCache();
             })
-            ->modalWidth(Width::ScreenLarge)
-            ->slideOver();
+            ->modalWidth(FieldFormConfiguration::width())
+            ->extraModalWindowAttributes($this->submitsOnMetaEnter())
+            ->slideOver(FieldFormConfiguration::isSlideOver());
     }
 
     public function render(): View
     {
-        return view('custom-fields::livewire.manage-fields-table');
+        return ViewFactory::make(
+            ViewFlavor::view(UiSurface::AttributeTable) ?? 'custom-fields::livewire.manage-fields-table'
+        );
     }
 }

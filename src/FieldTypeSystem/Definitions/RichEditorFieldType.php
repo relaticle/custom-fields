@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use JsonException;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RichEditorComponent;
@@ -11,6 +12,7 @@ use Relaticle\CustomFields\Filament\Integration\Components\Infolists\HtmlEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\RichTextColumn;
 use Relaticle\CustomFields\Validation\Capabilities\MaxLengthCapability;
 use Relaticle\CustomFields\Validation\Capabilities\MinLengthCapability;
+use RuntimeException;
 
 /**
  * ABOUTME: Field type definition for Rich Editor fields
@@ -39,7 +41,11 @@ final class RichEditorFieldType extends BaseFieldType
                 }
 
                 if (is_array($state)) {
-                    return json_encode($state);
+                    try {
+                        return json_encode($state, JSON_THROW_ON_ERROR);
+                    } catch (JsonException $jsonException) {
+                        throw new RuntimeException('Unable to encode rich editor content as JSON: '.$jsonException->getMessage(), $jsonException->getCode(), previous: $jsonException);
+                    }
                 }
 
                 $text = (string) $state;
@@ -49,6 +55,11 @@ final class RichEditorFieldType extends BaseFieldType
                 }
 
                 $lines = preg_split('/\r\n|\r|\n/', $text);
+
+                if ($lines === false) {
+                    throw new RuntimeException('Unable to split rich editor content into lines: '.preg_last_error_msg());
+                }
+
                 $paragraphs = array_map(fn (string $line): string => '<p>'.e($line).'</p>', $lines);
 
                 return implode('', $paragraphs);

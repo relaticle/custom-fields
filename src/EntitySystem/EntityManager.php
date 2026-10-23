@@ -11,11 +11,10 @@ use Closure;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Traits\Macroable;
-use Relaticle\CustomFields\Contracts\EntityManagerInterface;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
-final class EntityManager implements EntityManagerInterface
+final class EntityManager
 {
     use Macroable;
 
@@ -23,14 +22,17 @@ final class EntityManager implements EntityManagerInterface
 
     private const int CACHE_TTL = 3600; // 1 hour
 
+    /** @var array<int, array<mixed>|Closure> */
     private array $entities = [];
 
+    /** @var ?array<string, EntityConfigurationData> */
     private ?array $cachedEntities = null;
 
     private ?EntityDiscovery $discovery = null;
 
     private bool $discoveryEnabled = false;
 
+    /** @var array<int, Closure> */
     private array $resolvingCallbacks = [];
 
     public function __construct(
@@ -39,6 +41,8 @@ final class EntityManager implements EntityManagerInterface
 
     /**
      * Register entities
+     *
+     * @param  array<mixed>|Closure  $entities
      */
     public function register(array|Closure $entities): static
     {
@@ -80,6 +84,8 @@ final class EntityManager implements EntityManagerInterface
 
     /**
      * Enable automatic discovery of entities
+     *
+     * @param  array<int, string>  $paths
      */
     public function enableDiscovery(array $paths = []): static
     {
@@ -144,6 +150,8 @@ final class EntityManager implements EntityManagerInterface
 
     /**
      * Build the entity cache
+     *
+     * @return array<string, EntityConfigurationData>
      */
     private function buildEntityCache(): array
     {
@@ -178,6 +186,9 @@ final class EntityManager implements EntityManagerInterface
 
     /**
      * Resolve entities from various input types
+     *
+     * @param  array<mixed>|Closure  $entities
+     * @return array<int, EntityConfigurationData>
      */
     private function resolveEntities(array|Closure $entities): array
     {

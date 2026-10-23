@@ -9,6 +9,7 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\PhoneEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\PhoneColumn;
+use Relaticle\CustomFields\Services\Phone\CountryPhoneService;
 
 /**
  * ABOUTME: Field type definition for phone number input fields
@@ -35,5 +36,10 @@ class PhoneFieldType extends BaseFieldType
             ->withArbitraryValues()
             ->withoutUserOptions()
             ->defaultItemValidationRules(['phone:AUTO']);
+    }
+
+    public function setValue(string $value): string
+    {
+        return resolve(CountryPhoneService::class)->normalize($value);
     }
 }

@@ -21,6 +21,8 @@ final class ImportDataStorage
     /**
      * WeakMap storage for custom field data during import.
      * Automatically cleans up when model instances are garbage collected.
+     *
+     * @var ?WeakMap<Model, array<string, mixed>>
      */
     private static ?WeakMap $storage = null;
 

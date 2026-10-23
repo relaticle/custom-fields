@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Tests\Fixtures\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Tests\Database\Factories\CommentFactory;
@@ -21,6 +22,11 @@ class Comment extends Model implements HasCustomFields
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);
+    }
+
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     protected static function newFactory()

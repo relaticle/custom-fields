@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Builders\Concerns\ResolvesFields;
 use Relaticle\CustomFields\Filament\Integration\Factories\FieldInfolistsFactory;
 use Relaticle\CustomFields\Filament\Integration\Factories\SectionInfolistsFactory;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
@@ -18,6 +19,8 @@ use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
 final class InfolistBuilder extends BaseBuilder
 {
+    use ResolvesFields;
+
     private bool $hiddenLabels = false;
 
     private bool $visibleWhenFilled = false;
@@ -27,6 +30,7 @@ final class InfolistBuilder extends BaseBuilder
     public function build(): InfolistContainer
     {
         $container = InfolistContainer::make()
+            ->builder($this)
             ->forModel($this->explicitModel ?? null)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
@@ -59,31 +63,39 @@ final class InfolistBuilder extends BaseBuilder
             ->hiddenLabel($this->hiddenLabels)
             ->when($this->visibleWhenFilled, fn (Entry $field): Entry => $field->visible(fn (mixed $state): bool => filled($state)));
 
-        // Check if sections are disabled
-        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
+        $allFields = $this->getAllFields();
 
-        // When sections disabled, get fields directly without section context
-        if ($this->withoutSections || $sectionsDisabled) {
-            return $backendVisibilityService
-                ->getVisibleFields($this->model, $this->getAllFields())
-                ->filter(fn (CustomField $field): bool => $field->typeData->infolistEntry !== null)
-                ->map($createField)
-                ->filter();
+        if ($allFields->isEmpty()) {
+            return collect();
         }
 
-        $getVisibleFields = fn (CustomFieldSection $section) => $backendVisibilityService
-            ->getVisibleFields($this->model, $section->fields)
+        $fieldsByCode = $allFields->keyBy('code');
+        $visible = $allFields->groupBy('custom_field_section_id')
+            ->flatMap(function (Collection $fields) use ($backendVisibilityService, $fieldsByCode): Collection {
+                $contextFields = $fieldsByCode->replace($fields->keyBy('code'))->values();
+
+                return $fields->filter(fn (CustomField $field): bool => $backendVisibilityService->isFieldVisible($this->model, $field, $contextFields));
+            })
+            ->keyBy(fn (CustomField $field): int|string => $field->getKey());
+
+        $renderable = fn (Collection $fields): Collection => $fields
+            ->filter(fn (CustomField $field): bool => $visible->has($field->getKey()))
             ->filter(fn (CustomField $field): bool => $field->typeData->infolistEntry !== null)
             ->map($createField);
+
+        $sectionsDisabled = ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
+
+        if ($this->withoutSections || $sectionsDisabled) {
+            return $renderable($this->getFields())->filter();
+        }
 
         // Section-level conditional visibility is evaluated server-side per record, mirroring
         // SectionComponentFactory on the form. Without this the infolist would render a section
         // whenever it has any visible field, ignoring the section's own visibility condition.
         $sectionConditionalVisibilityEnabled = FeatureManager::isEnabled(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY);
-        $allFields = $this->getAllFields();
 
-        return $this->getFilteredSections()
-            ->map(function (CustomFieldSection $section) use ($sectionInfolistsFactory, $getVisibleFields, $backendVisibilityService, $sectionConditionalVisibilityEnabled, $allFields) {
+        return $this->getSections()
+            ->map(function (CustomFieldSection $section) use ($sectionInfolistsFactory, $renderable, $backendVisibilityService, $sectionConditionalVisibilityEnabled, $allFields) {
                 if (
                     $sectionConditionalVisibilityEnabled
                     && ! $backendVisibilityService->isSectionVisible($this->model, $section, $allFields)
@@ -91,7 +103,7 @@ final class InfolistBuilder extends BaseBuilder
                     return null;
                 }
 
-                $fields = $getVisibleFields($section);
+                $fields = $renderable($section->fields);
 
                 return $fields->isEmpty()
                     ? null

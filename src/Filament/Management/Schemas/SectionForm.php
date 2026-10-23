@@ -23,7 +23,7 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityCompon
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 
-class SectionForm implements FormInterface, SectionFormInterface
+final class SectionForm implements FormInterface, SectionFormInterface
 {
     private static string $entityType;
 

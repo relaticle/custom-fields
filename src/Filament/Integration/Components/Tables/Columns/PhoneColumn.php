@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresSearchable;
@@ -21,7 +22,7 @@ final class PhoneColumn extends AbstractTableColumn
         private readonly CountryPhoneService $phoneService,
     ) {}
 
-    public function make(CustomField $customField): BaseTextColumn
+    public function make(CustomField $customField, ?Model $record = null): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName())
             ->view('custom-fields::tables.columns.phone-column');
@@ -65,8 +66,8 @@ final class PhoneColumn extends AbstractTableColumn
             return [
                 'country' => $parsed['country'],
                 'number' => $parsed['number'],
-                'display' => $entry,
-                'tel' => preg_replace('/[^0-9+]/', '', $entry),
+                'display' => $this->phoneService->displayText($entry),
+                'tel' => $this->phoneService->dialNumber($entry),
             ];
         }
 

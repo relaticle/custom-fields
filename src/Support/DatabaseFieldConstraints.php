@@ -190,6 +190,10 @@ final class DatabaseFieldConstraints
 
     /**
      * Merge a single rule with existing rules.
+     *
+     * @param  array<int, string>  $rules
+     * @param  array<string, mixed>  $dbConstraints
+     * @return array<int, string>
      */
     private static function mergeRule(
         array $rules,
@@ -240,6 +244,10 @@ final class DatabaseFieldConstraints
 
     /**
      * Apply the stricter constraint between user and database rules.
+     *
+     * @param  array<int, string>  $rules
+     * @param  array<string, mixed>  $dbConstraints
+     * @return array<int, string>
      */
     private static function applyStricterConstraint(
         array $rules,

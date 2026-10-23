@@ -9,6 +9,11 @@ updates:
       default-days: 7
     groups:
       github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      github-actions-security:
+        applies-to: security-updates
         patterns:
           - "*"
     labels:
@@ -22,6 +27,11 @@ updates:
       default-days: 7
     groups:
       composer:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      composer-security:
+        applies-to: security-updates
         patterns:
           - "*"
     labels:
@@ -35,6 +45,11 @@ updates:
       default-days: 7
     groups:
       npm:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      npm-security:
+        applies-to: security-updates
         patterns:
           - "*"
     labels:
@@ -48,6 +63,11 @@ updates:
       default-days: 7
     groups:
       npm:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      npm-security:
+        applies-to: security-updates
         patterns:
           - "*"
     labels:

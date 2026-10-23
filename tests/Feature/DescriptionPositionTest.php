@@ -23,8 +23,10 @@ it('returns translatable labels', function (): void {
     expect(DescriptionPosition::ABOVE->getLabel())->toBeString()->not->toBeEmpty();
 });
 
-it('has FIELD_DESCRIPTION_POSITION feature flag disabled by default', function (): void {
-    expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION))->toBeFalse();
+it('ships the FIELD_DESCRIPTION_POSITION feature flag enabled', function (): void {
+    config(['custom-fields.features' => shippedFeatureConfigurator()]);
+
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_DESCRIPTION_POSITION))->toBeTrue();
 });
 
 it('can enable FIELD_DESCRIPTION_POSITION feature flag', function (): void {
