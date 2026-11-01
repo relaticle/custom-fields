@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
@@ -152,3 +154,43 @@ class GuardedTestModel extends Model implements HasCustomFields
 
     protected $guarded = ['id'];
 }
+
+describe('Encrypted Custom Field Values', function (): void {
+    it('encrypts a value at rest on its first save and reads it back', function (): void {
+        $post = Post::factory()->create();
+        $customField = CustomField::factory()->ofType('text')->encrypted()->create([
+            'custom_field_section_id' => CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true])->getKey(),
+            'entity_type' => Post::class,
+        ]);
+
+        $post->saveCustomFieldValue($customField, 'top secret');
+
+        $storedValue = CustomFieldValue::withoutGlobalScopes()
+            ->where('custom_field_id', $customField->getKey())
+            ->toBase()
+            ->value('text_value');
+
+        expect($storedValue)->not->toBe('top secret')
+            ->and(Crypt::decryptString($storedValue))->toBe('top secret')
+            ->and($post->refresh()->getCustomFieldValue($customField))->toBe('top secret');
+    });
+
+    it('keeps a value encrypted at rest when it is updated', function (): void {
+        $post = Post::factory()->create();
+        $customField = CustomField::factory()->ofType('text')->encrypted()->create([
+            'custom_field_section_id' => CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true])->getKey(),
+            'entity_type' => Post::class,
+        ]);
+
+        $post->saveCustomFieldValue($customField, 'top secret');
+        $post->saveCustomFieldValue($customField, 'changed secret');
+
+        $storedValue = CustomFieldValue::withoutGlobalScopes()
+            ->where('custom_field_id', $customField->getKey())
+            ->toBase()
+            ->value('text_value');
+
+        expect(Crypt::decryptString($storedValue))->toBe('changed secret')
+            ->and($post->refresh()->getCustomFieldValue($customField))->toBe('changed secret');
+    });
+});
