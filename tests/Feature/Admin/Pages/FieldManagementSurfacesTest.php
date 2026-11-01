@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Closure;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
 use Livewire\Features\SupportTesting\Testable;
