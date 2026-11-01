@@ -22,7 +22,9 @@ final readonly class CurrencyComponent extends AbstractFormComponent
             ->prefix($prefix)
             ->numeric()
             ->inputMode('decimal')
-            ->step($decimalPlaces > 0 ? 1 / (10 ** $decimalPlaces) : 1)
+            ->step(fn (mixed $state): float|int|string => $this->fitsDecimalPlaces($state, $decimalPlaces)
+                ? ($decimalPlaces > 0 ? 1 / (10 ** $decimalPlaces) : 1)
+                : 'any')
             ->formatStateUsing(function (mixed $state) use ($decimalPlaces): ?string {
                 if ($state === null || $state === '') {
                     return null;
@@ -37,6 +39,15 @@ final readonly class CurrencyComponent extends AbstractFormComponent
 
                 return Str::of($state)->replace(',', '')->toFloat();
             });
+    }
+
+    private function fitsDecimalPlaces(mixed $state, int $decimalPlaces): bool
+    {
+        if (! is_numeric($state)) {
+            return true;
+        }
+
+        return round((float) $state, $decimalPlaces) === (float) $state;
     }
 
     private function getCurrencySymbol(string $currencyCode, string $displayType): string

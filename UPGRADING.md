@@ -30,7 +30,7 @@ There is no 3.12 release. 3.13 follows 3.11.
 
 This covers `saveCustomFieldValue()` and any other code that sets a value through `CustomFieldValue::setValue()`. In 3.11 only the link form field applied `setValue()` before saving.
 
-For list values, an item that normalizes to an empty string is dropped. Items that normalize to the same string collapse into one.
+For list values, an item that normalizes to an empty string is dropped. Items that normalize to the same string collapse into one. A list that holds an array, such as the rows of a repeater-style field, is stored as given.
 
 A scalar value that normalizes to an empty string is stored as `null`.
 

@@ -2,6 +2,80 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.15.2 - 2026-10-20
+
+<!-- Release notes generated using configuration in .github/release.yml at 8cca6d80e60da131084f9c73197e78e220bffb44 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(currency): check decimal places only on new or changed amounts [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/268
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.15.1...v3.15.2
+
+## v3.15.1 - 2026-10-15
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.15.1 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump @simple-git/argv-parser from 1.1.1 to removed in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/262
+* fix: store a list that holds arrays as given instead of deduping its rows [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/264
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.15.0...v3.15.1
+
+## v3.15.0 - 2026-10-15
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.15.0 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump shell-quote from 1.9.0 to 1.12.0 in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/260
+* fix: stop tags-input and record fields crashing forms when selections are limited [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/261
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.14.1...v3.15.0
+
+## v3.14.1 - 2026-10-09
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.14.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: encrypt a custom field value on its first save under Laravel 13.35 [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/258
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.14.0...v3.14.1
+
+## v3.14.0 - 2026-10-06
+
+**Breaking for anyone who set the internal `link_variant` setting by hand:** a link field no longer reduces a value to its host. See `UPGRADING.md`, From 3.13 to 3.14.
+
+`FieldSchema::systemOnly()` keeps a field type out of the type picker.
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): update composer and npm dependencies [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/254
+* chore: restore full type coverage and rebuild the stylesheet [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/255
+* feat: system-only field types and remove link_variant [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/256
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.13.1...v3.14.0
+
+## v3.13.1 - 2026-10-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.13.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(link): unwrap stacked schemes split by whitespace in one pass [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/253
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.13.0...v3.13.1
+
 ## v3.13.0 - 2026-10-05
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.13.0 -->
@@ -191,6 +265,12 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
+
+
+
+
+
 
 
 
