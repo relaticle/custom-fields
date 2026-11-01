@@ -14,6 +14,7 @@ enum CustomFieldsFeature: string
     case FIELD_CONDITIONAL_VISIBILITY = 'field_conditional_visibility';
     case FIELD_ENCRYPTION = 'field_encryption';
     case FIELD_OPTION_COLORS = 'field_option_colors';
+    case FIELD_OPTION_PASTE = 'field_option_paste';
     case FIELD_CODE_AUTO_GENERATE = 'field_code_auto_generate';
     case FIELD_MULTI_VALUE = 'field_multi_value';
     case FIELD_UNIQUE_VALUE = 'field_unique_value';
@@ -41,13 +42,14 @@ enum CustomFieldsFeature: string
 
     /**
      * The package default a host inherits for a flag its published config does not list.
-     * A flag is off by default only when turning it on changes stored, validated, or
-     * displayed data; every other flag is on.
+     * A flag is off by default when turning it on changes stored, validated, or displayed
+     * data, or when it adds an editor control a host has to opt into; every other flag is on.
      */
     public function isEnabledByDefault(): bool
     {
         return match ($this) {
             self::FIELD_CODE_AUTO_GENERATE,
+            self::FIELD_OPTION_PASTE,
             self::FIELD_MULTI_VALUE,
             self::FIELD_UNIQUE_VALUE,
             self::MODEL_ATTRIBUTE_CONDITIONS,

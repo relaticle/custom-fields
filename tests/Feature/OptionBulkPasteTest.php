@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Models\CustomField;
@@ -77,6 +78,30 @@ function pasteOptionsInto(CustomField $field, string $names): array
 }
 
 describe('the options editor', function (): void {
+    beforeEach(function (): void {
+        config('custom-fields.features')->enable(CustomFieldsFeature::FIELD_OPTION_PASTE);
+    });
+
+    it('leaves the paste action out while the feature is off', function (): void {
+        config('custom-fields.features')->disable(CustomFieldsFeature::FIELD_OPTION_PASTE);
+
+        $field = CustomField::factory()->ofType('select')->withOptions(['Discovery'])->create();
+
+        view()->share('errors', new ViewErrorBag);
+
+        $component = livewire(ManageCustomField::class, ['field' => $field])
+            ->mountAction('edit')
+            ->instance();
+
+        /** @var Repeater $repeater */
+        $repeater = $component->{$component->getMountedActionSchemaName()}
+            ->getFlatComponents(withHidden: true)['options'];
+
+        expect((string) $repeater->toHtml())
+            ->not->toContain('Paste a list')
+            ->toContain('Add Option');
+    });
+
     it('appends the pasted names as keyed rows', function (): void {
         $field = CustomField::factory()->ofType('select')->withOptions(['Discovery'])->create();
 
@@ -178,6 +203,10 @@ describe('the options editor', function (): void {
 });
 
 describe('the create form', function (): void {
+    beforeEach(function (): void {
+        config('custom-fields.features')->enable(CustomFieldsFeature::FIELD_OPTION_PASTE);
+    });
+
     it('stores the pasted rows on a field that does not exist yet, in the order they landed', function (): void {
         pasteIntoNewStageField("Discovery\nNegotiation\nClosed Won");
 

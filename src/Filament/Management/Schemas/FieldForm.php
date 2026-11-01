@@ -263,6 +263,7 @@ final class FieldForm implements FormInterface
             ->label(__('custom-fields::custom-fields.field.form.options.paste'))
             ->icon(Heroicon::OutlinedClipboardDocumentList)
             ->link()
+            ->visible(fn (): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_PASTE))
             ->modalHeading(__('custom-fields::custom-fields.field.form.options.paste_modal_heading'))
             ->modalSubmitActionLabel(__('custom-fields::custom-fields.field.form.options.paste_submit'))
             ->modalWidth(Width::Large)

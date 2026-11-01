@@ -140,6 +140,7 @@ class TestCase extends BaseTestCase
                 CustomFieldsFeature::FIELD_ENCRYPTION,
                 CustomFieldsFeature::FIELD_OPTION_COLORS,
                 CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE,
+                CustomFieldsFeature::FIELD_OPTION_PASTE,
                 CustomFieldsFeature::FIELD_MULTI_VALUE,
                 CustomFieldsFeature::FIELD_UNIQUE_VALUE,
                 CustomFieldsFeature::FIELD_VALIDATION_RULES,

@@ -82,6 +82,8 @@ return [
             // Would take the code away from whoever creates the field, and codes are the
             // identifier host code and imports address a field by.
             CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE,
+            // Adds a "Paste a list" action to the options editor, an editor control a host opts into.
+            CustomFieldsFeature::FIELD_OPTION_PASTE,
             // Turns a field's storage into a list of values; that is a data-shape decision.
             CustomFieldsFeature::FIELD_MULTI_VALUE,
             // Adds a uniqueness rule over values that already exist.

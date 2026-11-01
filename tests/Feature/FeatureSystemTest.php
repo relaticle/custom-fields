@@ -106,6 +106,7 @@ it('ships the feature defaults reviewed for 4.0', function (): void {
         CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY->value => true,
         CustomFieldsFeature::FIELD_ENCRYPTION->value => true,
         CustomFieldsFeature::FIELD_OPTION_COLORS->value => true,
+        CustomFieldsFeature::FIELD_OPTION_PASTE->value => false,
         CustomFieldsFeature::FIELD_CODE_AUTO_GENERATE->value => false,
         CustomFieldsFeature::FIELD_MULTI_VALUE->value => false,
         CustomFieldsFeature::FIELD_UNIQUE_VALUE->value => false,
