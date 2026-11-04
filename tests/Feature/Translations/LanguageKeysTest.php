@@ -110,4 +110,4 @@ it('has no duplicate top-level keys in any language file (PHP silently drops ear
         basename(dirname($path)).'/'.basename($path),
         implode(', ', array_keys($duplicates)),
     ));
-})->with(fn () => glob(__DIR__.'/../../../resources/lang/*/*.php'));
+})->with(fn (): array|false => glob(__DIR__.'/../../../resources/lang/*/*.php'));
