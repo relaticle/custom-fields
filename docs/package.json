@@ -17,7 +17,7 @@
     },
     "devDependencies": {
         "nuxt-fathom": "^0.0.3",
-        "zod": "^4.6.5",
+        "zod": "^4.6.6",
         "zod-to-json-schema": "^3.25.1"
     },
     "overrides": {
