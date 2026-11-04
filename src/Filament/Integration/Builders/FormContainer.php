@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
+use Filament\Forms\Components\Field;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
+use Relaticle\CustomFields\Models\CustomField;
 
 final class FormContainer extends Grid
 {
@@ -24,6 +28,11 @@ final class FormContainer extends Grid
     private array $onlySections = [];
 
     private ?bool $withoutSections = null;
+
+    /** @var array<string, CustomField> */
+    private array $renderedFields = [];
+
+    private ?Model $renderedRecord = null;
 
     public static function make(array|int|null $columns = 12): static
     {
@@ -84,6 +93,47 @@ final class FormContainer extends Grid
     }
 
     /**
+     * @param  array<string, mixed>  $state
+     */
+    public function dehydrateState(array &$state, bool $isDehydrated = true): void
+    {
+        parent::dehydrateState($state, $isDehydrated);
+
+        if (! $isDehydrated || ! $this->isDehydrated()) {
+            return;
+        }
+
+        $record = $this->renderedRecord;
+
+        if (! $record instanceof HasCustomFields) {
+            return;
+        }
+
+        $hiddenFields = collect($this->getChildSchemas(withHidden: true))
+            ->flatMap(fn (Schema $schema): array => $schema->getFlatFields(withHidden: true))
+            ->filter(fn (Field $field): bool => isset($this->renderedFields[$field->getName()]) && $this->isHiddenWithin($field));
+
+        // Filament drops a hidden field from the submitted data, and the record would store null for it.
+        // The user never saw it, so it keeps what is stored, whatever the browser sent.
+        $hiddenFields->each(function (Field $field) use ($record, &$state): void {
+            data_set($state, $field->getStatePath(), $record->getCustomFieldValue($this->renderedFields[$field->getName()]));
+        });
+    }
+
+    private function isHiddenWithin(Component $component): bool
+    {
+        while ($component instanceof Component && $component !== $this) {
+            if ($component->isHidden()) {
+                return true;
+            }
+
+            $component = $component->getContainer()->getParentComponent();
+        }
+
+        return false;
+    }
+
+    /**
      * @return array<int, Component>
      */
     private function generateSchema(): array
@@ -99,15 +149,21 @@ final class FormContainer extends Grid
         $withoutSections = $this->withoutSections
             ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
-        $builder = app(FormBuilder::class);
-
-        return $builder
+        $builder = app(FormBuilder::class)
             ->forModel($model)
             ->withoutSections($withoutSections)
             ->only($this->only)
             ->except($this->except)
-            ->onlySections($this->onlySections)
-            ->values()
-            ->toArray();
+            ->onlySections($this->onlySections);
+
+        $components = $builder->values()->toArray();
+
+        $this->renderedRecord = $model instanceof Model && $model->exists ? $model : null;
+
+        $this->renderedFields = $builder->fields()
+            ->keyBy(fn (CustomField $customField): string => $customField->getFieldName())
+            ->all();
+
+        return $components;
     }
 }

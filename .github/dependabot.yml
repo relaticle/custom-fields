@@ -26,6 +26,10 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      rector:
+        applies-to: version-updates
+        patterns:
+          - "rector/rector"
       composer:
         applies-to: version-updates
         patterns:

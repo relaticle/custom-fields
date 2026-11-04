@@ -74,6 +74,14 @@ final class FormBuilder extends BaseBuilder
     }
 
     /**
+     * @return Collection<int, CustomField>
+     */
+    public function fields(): Collection
+    {
+        return $this->getAllFields();
+    }
+
+    /**
      * @return Collection<int, covariant Component>
      */
     public function values(): Collection
