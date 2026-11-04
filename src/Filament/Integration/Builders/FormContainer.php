@@ -28,6 +28,8 @@ final class FormContainer extends Grid
     /** @var array<string, CustomField> */
     private array $renderedFields = [];
 
+    private ?Model $renderedRecord = null;
+
     public static function make(array|int|null $columns = 12): static
     {
         $container = new self($columns);
@@ -91,9 +93,9 @@ final class FormContainer extends Grid
             return;
         }
 
-        $record = $this->explicitModel instanceof Model ? $this->explicitModel : $this->getRecord();
+        $record = $this->renderedRecord;
 
-        if (! $record instanceof HasCustomFields || ! $record->exists) {
+        if (! $record instanceof HasCustomFields) {
             return;
         }
 
@@ -142,6 +144,8 @@ final class FormContainer extends Grid
             ->onlySections($this->onlySections);
 
         $components = $builder->values()->toArray();
+
+        $this->renderedRecord = $model instanceof Model && $model->exists ? $model : null;
 
         $this->renderedFields = $builder->fields()
             ->keyBy(fn (CustomField $customField): string => $customField->getFieldName())
