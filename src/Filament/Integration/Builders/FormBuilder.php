@@ -67,6 +67,14 @@ class FormBuilder extends BaseBuilder
         return array_unique($dependentCodes);
     }
 
+    /**
+     * @return Collection<int, CustomField>
+     */
+    public function fields(): Collection
+    {
+        return $this->getAllFields();
+    }
+
     public function values(): Collection
     {
         $fieldComponentFactory = app(FieldComponentFactory::class);
