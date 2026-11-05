@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
@@ -192,5 +194,74 @@ describe('Encrypted Custom Field Values', function (): void {
 
         expect(Crypt::decryptString($storedValue))->toBe('changed secret')
             ->and($post->refresh()->getCustomFieldValue($customField))->toBe('changed secret');
+    });
+});
+
+describe('Updated Timestamp', function (): void {
+    beforeEach(function (): void {
+        $this->field = CustomField::factory()->ofType('text')->create([
+            'custom_field_section_id' => CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true])->getKey(),
+            'entity_type' => Post::class,
+        ]);
+
+        $this->travelTo('2026-01-01 09:00:00');
+        $this->post = Post::factory()->create();
+    });
+
+    it('moves updated_at when a save changes only a custom field value', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+
+        $this->post->update(['custom_fields' => [$this->field->code => 'changed']]);
+
+        expect($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-02 09:00:00');
+    });
+
+    it('moves updated_at when saveCustomFields changes a value outside a model save', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+
+        $this->post->saveCustomFields([$this->field->code => 'changed']);
+
+        expect($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-02 09:00:00');
+    });
+
+    it('keeps updated_at when a save rewrites the same custom field values', function (): void {
+        $this->post->update(['custom_fields' => [$this->field->code => 'same']]);
+        $this->travelTo('2026-01-02 09:00:00');
+
+        $this->post->update(['custom_fields' => [$this->field->code => 'same']]);
+
+        expect($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-01 09:00:00');
+    });
+
+    it('keeps updated_at when a save only creates empty rows for fields it does not name', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+
+        $this->post->update(['custom_fields' => []]);
+
+        expect($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-01 09:00:00');
+    });
+
+    it('writes the record once when a save changes a column and a custom field together', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+        $updates = 0;
+        DB::listen(function (QueryExecuted $query) use (&$updates): void {
+            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+        });
+
+        $this->post->update(['title' => 'Renamed', 'custom_fields' => [$this->field->code => 'changed']]);
+
+        expect($updates)->toBe(1)
+            ->and($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-02 09:00:00');
+    });
+
+    it('does not update a record it has just created with custom field values', function (): void {
+        $updates = 0;
+        DB::listen(function (QueryExecuted $query) use (&$updates): void {
+            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+        });
+
+        Post::factory()->create(['custom_fields' => [$this->field->code => 'first']]);
+
+        expect($updates)->toBe(0);
     });
 });
