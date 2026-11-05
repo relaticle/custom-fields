@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.16.2 - 2026-11-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.16.2 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump the npm-security group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/282
+* fix: stamp updated_at without re-saving the record [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/285
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.1...v3.16.2
+
 ## v3.16.1 - 2026-11-05
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.16.1 -->
@@ -279,6 +291,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
