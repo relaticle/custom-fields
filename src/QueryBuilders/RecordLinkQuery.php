@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
+use Relaticle\CustomFields\Data\LinkEnd;
+use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 
 /**
@@ -28,15 +30,16 @@ final readonly class RecordLinkQuery
      * @param  array<int, mixed>  $targetIds
      * @return Builder<TModel>
      */
-    public function whereLinkedTo(Builder $query, CustomFieldRelationship $definition, string $direction, array $targetIds): Builder
+    public function whereLinkedTo(Builder $query, CustomField $field, array $targetIds): Builder
     {
+        $definition = $field->relationshipDefinitionOrFail();
         $host = $query->getModel();
 
-        return $query->where(function (Builder $outer) use ($definition, $direction, $host, $targetIds): void {
-            foreach ($this->ends($direction) as $end) {
+        return $query->where(function (Builder $outer) use ($definition, $field, $host, $targetIds): void {
+            foreach ($definition->readEnds($field) as $end) {
                 $outer->orWhereExists(function (QueryBuilder $sub) use ($definition, $host, $end, $targetIds): void {
                     $this->edge($sub, $definition, $host, $end)
-                        ->whereIn($this->column($this->opposite($end).'_entity_id'), $targetIds);
+                        ->whereIn($this->column($end->side->opposite()->idColumn()), $targetIds);
                 });
             }
         });
@@ -49,9 +52,10 @@ final readonly class RecordLinkQuery
      * @param  array<int, string>  $searchAttributes
      * @return Builder<TModel>
      */
-    public function whereLinkedMatching(Builder $query, CustomFieldRelationship $definition, string $direction, array $searchAttributes, string $search): Builder
+    public function whereLinkedMatching(Builder $query, CustomField $field, array $searchAttributes, string $search): Builder
     {
-        $target = $this->targetModel($definition, $direction);
+        $definition = $field->relationshipDefinitionOrFail();
+        $target = $this->targetModel($definition->farEnd($field));
 
         if (! $target instanceof Model || $searchAttributes === []) {
             return $query;
@@ -66,11 +70,11 @@ final readonly class RecordLinkQuery
             ->select($target->qualifyColumn($target->getKeyName()))
             ->getQuery();
 
-        return $query->where(function (Builder $outer) use ($definition, $direction, $host, $matches): void {
-            foreach ($this->ends($direction) as $end) {
+        return $query->where(function (Builder $outer) use ($definition, $field, $host, $matches): void {
+            foreach ($definition->readEnds($field) as $end) {
                 $outer->orWhereExists(function (QueryBuilder $sub) use ($definition, $host, $end, $matches): void {
                     $this->edge($sub, $definition, $host, $end)
-                        ->whereIn($this->column($this->opposite($end).'_entity_id'), $matches);
+                        ->whereIn($this->column($end->side->opposite()->idColumn()), $matches);
                 });
             }
         });
@@ -86,9 +90,11 @@ final readonly class RecordLinkQuery
      * @param  Builder<TModel>  $query
      * @return Builder<TModel>
      */
-    public function orderByLinkedAttribute(Builder $query, CustomFieldRelationship $definition, string $direction, string $attribute, string $sortDirection): Builder
+    public function orderByLinkedAttribute(Builder $query, CustomField $field, string $attribute, string $sortDirection): Builder
     {
-        $target = $this->targetModel($definition, $direction);
+        $definition = $field->relationshipDefinitionOrFail();
+        $ends = $definition->readEnds($field);
+        $target = $this->targetModel($definition->farEnd($field));
 
         if (! $target instanceof Model) {
             return $query;
@@ -98,10 +104,10 @@ final readonly class RecordLinkQuery
         $alias = 'custom_field_link_target';
 
         $linkedId = DB::table($this->table())
-            ->select(new Expression($this->linkedIdExpression($query, $direction, $host)))
+            ->select(new Expression($this->linkedIdExpression($query, $ends, $host)))
             ->where($this->column('relationship_id'), $definition->getKey())
             ->whereNull($this->column('active_until'))
-            ->where(fn (QueryBuilder $nested): QueryBuilder => $this->matchHost($nested, $direction, $host))
+            ->where(fn (QueryBuilder $nested): QueryBuilder => $this->matchHost($nested, $ends, $host))
             ->orderBy($this->column('sort_order'))
             ->limit(1);
 
@@ -126,36 +132,40 @@ final readonly class RecordLinkQuery
         return strtolower($direction) === 'desc' ? 'desc' : 'asc';
     }
 
-    private function matchHost(QueryBuilder $nested, string $direction, Model $host): QueryBuilder
+    /**
+     * @param  list<LinkEnd>  $ends
+     */
+    private function matchHost(QueryBuilder $nested, array $ends, Model $host): QueryBuilder
     {
-        foreach ($this->ends($direction) as $end) {
+        foreach ($ends as $end) {
             $nested->orWhere(fn (QueryBuilder $side): QueryBuilder => $side
-                ->where($this->column($end.'_entity_type'), $host->getMorphClass())
-                ->whereColumn($this->column($end.'_entity_id'), $host->qualifyColumn($host->getKeyName())));
+                ->where($this->column($end->typeColumn()), $host->getMorphClass())
+                ->whereColumn($this->column($end->idColumn()), $host->qualifyColumn($host->getKeyName())));
         }
 
         return $nested;
     }
 
-    private function edge(QueryBuilder $sub, CustomFieldRelationship $definition, Model $host, string $end): QueryBuilder
+    private function edge(QueryBuilder $sub, CustomFieldRelationship $definition, Model $host, LinkEnd $end): QueryBuilder
     {
         return $sub->select(new Expression('1'))
             ->from($this->table())
             ->where($this->column('relationship_id'), $definition->getKey())
             ->whereNull($this->column('active_until'))
-            ->where($this->column($end.'_entity_type'), $host->getMorphClass())
-            ->whereColumn($this->column($end.'_entity_id'), $host->qualifyColumn($host->getKeyName()));
+            ->where($this->column($end->typeColumn()), $host->getMorphClass())
+            ->whereColumn($this->column($end->idColumn()), $host->qualifyColumn($host->getKeyName()));
     }
 
     /**
      * @param  Builder<covariant Model>  $query
+     * @param  list<LinkEnd>  $ends
      */
-    private function linkedIdExpression(Builder $query, string $direction, Model $host): string
+    private function linkedIdExpression(Builder $query, array $ends, Model $host): string
     {
         $grammar = $query->getQuery()->getGrammar();
 
-        if ($direction !== CustomFieldRelationship::DIRECTION_BOTH) {
-            return $grammar->wrap($this->column($this->opposite($direction).'_entity_id'));
+        if (count($ends) === 1) {
+            return $grammar->wrap($this->column($ends[0]->side->opposite()->idColumn()));
         }
 
         return sprintf(
@@ -167,38 +177,15 @@ final readonly class RecordLinkQuery
         );
     }
 
-    private function targetModel(CustomFieldRelationship $definition, string $direction): ?Model
+    private function targetModel(LinkEnd $target): ?Model
     {
-        $entityType = $direction === CustomFieldRelationship::DIRECTION_TO
-            ? $definition->from_entity_type
-            : $definition->to_entity_type;
-
-        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
+        $entityClass = Relation::getMorphedModel($target->entityType) ?? $target->entityType;
 
         if (! class_exists($entityClass) || ! is_subclass_of($entityClass, Model::class)) {
             return null;
         }
 
         return new $entityClass;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function ends(string $direction): array
-    {
-        return match ($direction) {
-            CustomFieldRelationship::DIRECTION_FROM => [CustomFieldRelationship::DIRECTION_FROM],
-            CustomFieldRelationship::DIRECTION_TO => [CustomFieldRelationship::DIRECTION_TO],
-            default => [CustomFieldRelationship::DIRECTION_FROM, CustomFieldRelationship::DIRECTION_TO],
-        };
-    }
-
-    private function opposite(string $end): string
-    {
-        return $end === CustomFieldRelationship::DIRECTION_FROM
-            ? CustomFieldRelationship::DIRECTION_TO
-            : CustomFieldRelationship::DIRECTION_FROM;
     }
 
     private function column(string $column): string

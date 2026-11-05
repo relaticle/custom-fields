@@ -33,7 +33,7 @@ final class RecordEntry extends AbstractInfolistEntry
                 ->hidden();
         }
 
-        $entity = Entities::getEntity($definition->targetEntityTypeFor($customField));
+        $entity = Entities::getEntity($definition->farEnd($customField)->entityType);
         $isMultiSelect = $customField->allowsMultipleRecords();
 
         return ViewEntry::make($customField->getFieldName())

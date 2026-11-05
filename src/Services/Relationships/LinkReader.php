@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\LinkEnd;
+use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 
@@ -19,14 +21,14 @@ final readonly class LinkReader
      *
      * @return array<int, int|string>
      */
-    public function orderedIdsFor(Model $record, CustomFieldRelationship $definition, string $direction): array
+    public function orderedIdsFor(Model $record, CustomField $field): array
     {
         $ids = array_map(
-            fn (CustomFieldLink $link): int|string => $this->otherEndId($link, $record, $direction),
-            $this->orderedLinksFor($record, $definition, $direction),
+            fn (CustomFieldLink $link): int|string => $this->otherEndId($link, $record),
+            $this->orderedLinksFor($record, $field),
         );
 
-        return $this->castToTargetKeys($ids, $this->targetEntityType($definition, $direction));
+        return $this->castToTargetKeys($ids, $field->relationshipDefinitionOrFail()->farEnd($field)->entityType);
     }
 
     /**
@@ -35,49 +37,62 @@ final readonly class LinkReader
      *
      * @return array<int, CustomFieldLink>
      */
-    public function orderedLinksFor(Model $record, CustomFieldRelationship $definition, string $direction): array
+    public function orderedLinksFor(Model $record, CustomField $field): array
     {
-        return $this->links($record, $definition, $direction)
+        $definition = $field->relationshipDefinitionOrFail();
+
+        return $this->links($record, $definition, $definition->readEnds($field))
             ->sortBy(static fn (CustomFieldLink $link): int => $link->sort_order ?? 0)
             ->values()
             ->all();
     }
 
     /**
+     * The record on the far end of an edge, from the point of view of the one that holds it.
+     */
+    public function otherEndId(CustomFieldLink $link, Model $record): int|string
+    {
+        $recordIsFromEnd = $link->from_entity_type === $record->getMorphClass()
+            && (string) $link->from_entity_id === (string) $record->getKey();
+
+        return $recordIsFromEnd ? $link->to_entity_id : $link->from_entity_id;
+    }
+
+    /**
+     * @param  list<LinkEnd>  $ends
      * @return Collection<int, CustomFieldLink>
      */
-    private function links(Model $record, CustomFieldRelationship $definition, string $direction): Collection
+    private function links(Model $record, CustomFieldRelationship $definition, array $ends): Collection
     {
-        $loaded = $this->loadedLinks($record, $direction);
+        $loaded = $this->loadedLinks($record, $ends);
 
         if ($loaded instanceof Collection) {
             return $loaded->filter(fn (CustomFieldLink $link): bool => $link->active_until === null
                 && (string) $link->relationship_id === (string) $definition->getKey())->values();
         }
 
-        return $this->query($record, $definition, $direction)->get()->toBase();
+        return $this->query($record, $definition, $ends)->get()->toBase();
     }
 
     /**
      * A table page loads both relations once, so a per-row read must never fall back to SQL.
      *
+     * @param  list<LinkEnd>  $ends
      * @return ?Collection<int, CustomFieldLink>
      */
-    private function loadedLinks(Model $record, string $direction): ?Collection
+    private function loadedLinks(Model $record, array $ends): ?Collection
     {
-        $relations = $this->relationNames($direction);
-
-        foreach ($relations as $relation) {
-            if (! $record->relationLoaded($relation)) {
+        foreach ($ends as $end) {
+            if (! $record->relationLoaded($end->side->linksRelation())) {
                 return null;
             }
         }
 
         $links = new Collection;
 
-        foreach ($relations as $relation) {
+        foreach ($ends as $end) {
             /** @var iterable<CustomFieldLink> $related */
-            $related = $record->getRelation($relation);
+            $related = $record->getRelation($end->side->linksRelation());
 
             foreach ($related as $link) {
                 // A symmetric edge whose ends are the same record sits in both relations,
@@ -90,21 +105,10 @@ final readonly class LinkReader
     }
 
     /**
-     * @return array<int, string>
-     */
-    private function relationNames(string $direction): array
-    {
-        return match ($direction) {
-            CustomFieldRelationship::DIRECTION_FROM => ['outgoingLinks'],
-            CustomFieldRelationship::DIRECTION_TO => ['incomingLinks'],
-            default => ['outgoingLinks', 'incomingLinks'],
-        };
-    }
-
-    /**
+     * @param  list<LinkEnd>  $ends
      * @return Builder<CustomFieldLink>
      */
-    private function query(Model $record, CustomFieldRelationship $definition, string $direction): Builder
+    private function query(Model $record, CustomFieldRelationship $definition, array $ends): Builder
     {
         $query = CustomFields::newLinkModel()
             ->newQuery()
@@ -112,51 +116,13 @@ final readonly class LinkReader
             ->whereNull('active_until')
             ->orderBy('sort_order');
 
-        return $query->where(function (Builder $nested) use ($record, $direction): void {
-            foreach ($this->ends($direction) as $end) {
+        return $query->where(function (Builder $nested) use ($record, $ends): void {
+            foreach ($ends as $end) {
                 $nested->orWhere(fn (Builder $side): Builder => $side
-                    ->where($end.'_entity_type', $record->getMorphClass())
-                    ->where($end.'_entity_id', $record->getKey()));
+                    ->where($end->typeColumn(), $record->getMorphClass())
+                    ->where($end->idColumn(), $record->getKey()));
             }
         });
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function ends(string $direction): array
-    {
-        return match ($direction) {
-            CustomFieldRelationship::DIRECTION_FROM => [CustomFieldRelationship::DIRECTION_FROM],
-            CustomFieldRelationship::DIRECTION_TO => [CustomFieldRelationship::DIRECTION_TO],
-            default => [CustomFieldRelationship::DIRECTION_FROM, CustomFieldRelationship::DIRECTION_TO],
-        };
-    }
-
-    /**
-     * The record on the far end of an edge, from the point of view of the one that holds it.
-     */
-    public function otherEndId(CustomFieldLink $link, Model $record, string $direction): int|string
-    {
-        if ($direction === CustomFieldRelationship::DIRECTION_FROM) {
-            return $link->to_entity_id;
-        }
-
-        if ($direction === CustomFieldRelationship::DIRECTION_TO) {
-            return $link->from_entity_id;
-        }
-
-        $recordIsFromEnd = $link->from_entity_type === $record->getMorphClass()
-            && (string) $link->from_entity_id === (string) $record->getKey();
-
-        return $recordIsFromEnd ? $link->to_entity_id : $link->from_entity_id;
-    }
-
-    private function targetEntityType(CustomFieldRelationship $definition, string $direction): string
-    {
-        return $direction === CustomFieldRelationship::DIRECTION_TO
-            ? $definition->from_entity_type
-            : $definition->to_entity_type;
     }
 
     /**

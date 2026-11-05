@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Services\Relationships;
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -31,20 +32,20 @@ final readonly class DeleteRelationshipDefinition
 
             $definition->delete();
 
-            foreach ($slots as [$field, $direction]) {
+            foreach ($slots as [$field, $side]) {
                 if ($deleteFields) {
                     $field->delete();
 
                     continue;
                 }
 
-                $this->keepAsOneWay($definition, $field, $direction);
+                $this->keepAsOneWay($definition, $field, $side);
             }
         });
     }
 
     /**
-     * @return array<int, array{0: CustomField, 1: string}>
+     * @return array<int, array{0: CustomField, 1: LinkSide}>
      */
     private function slots(CustomFieldRelationship $definition): array
     {
@@ -57,23 +58,24 @@ final readonly class DeleteRelationshipDefinition
 
         $slots = [];
 
-        foreach ([CustomFieldRelationship::DIRECTION_FROM => $definition->from_field_id, CustomFieldRelationship::DIRECTION_TO => $definition->to_field_id] as $direction => $fieldId) {
+        foreach (LinkSide::cases() as $side) {
+            $fieldId = $definition->end($side)->fieldId;
             $field = $fields->get((string) $fieldId);
 
             if (! $field instanceof CustomField) {
                 continue;
             }
 
-            $slots[(string) $fieldId] ??= [$field, $direction];
+            $slots[(string) $fieldId] ??= [$field, $side];
         }
 
         return array_values($slots);
     }
 
-    private function keepAsOneWay(CustomFieldRelationship $definition, CustomField $field, string $direction): void
+    private function keepAsOneWay(CustomFieldRelationship $definition, CustomField $field, LinkSide $side): void
     {
-        $holdsFromSlot = $definition->is_symmetric || $direction === CustomFieldRelationship::DIRECTION_FROM;
-        $holdsToSlot = $definition->is_symmetric || $direction === CustomFieldRelationship::DIRECTION_TO;
+        $holdsFromSlot = $definition->is_symmetric || $side === LinkSide::From;
+        $holdsToSlot = $definition->is_symmetric || $side === LinkSide::To;
 
         $attributes = [
             'code' => CodeGenerator::generateUniqueRelationshipCode($field->code),

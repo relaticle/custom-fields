@@ -43,14 +43,13 @@ final class RecordFilter extends AbstractTableFilter
             return $filter->hidden();
         }
 
-        $filter = $this->configureLookup($filter, $definition->targetEntityTypeFor($customField));
+        $filter = $this->configureLookup($filter, $definition->farEnd($customField)->entityType);
 
         $filter->query(fn (array $data, Builder $query): Builder => empty($data['values'])
             ? $query
             : $this->constrainThrough($query, $through, fn (Builder $query): Builder => app(RecordLinkQuery::class)->whereLinkedTo(
                 $query,
-                $definition,
-                $definition->readDirectionFor($customField),
+                $customField,
                 $data['values'],
             )));
 

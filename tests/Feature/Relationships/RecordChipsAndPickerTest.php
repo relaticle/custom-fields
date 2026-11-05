@@ -11,6 +11,7 @@ use Relaticle\CustomFields\EntitySystem\EntityManager;
 use Relaticle\CustomFields\EntitySystem\EntityModel;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\EntityFeature;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\UiSurface;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
@@ -551,7 +552,7 @@ describe('the one-to-one steal', function (): void {
 
         $conflict = app(CardinalityGuard::class)->violations(
             $definition,
-            CustomFieldRelationship::DIRECTION_FROM,
+            $definition->end(LinkSide::From),
             Post::factory()->create()->getKey(),
             [$target->getKey()],
         );
@@ -595,9 +596,9 @@ describe('the one-to-one steal', function (): void {
 
         // Confirming the first candidate is not an answer about the second: the guard is asked
         // per candidate, and still refuses the one nobody confirmed.
-        expect($guard->violations($definition, CustomFieldRelationship::DIRECTION_FROM, $taker->getKey(), [$first->getKey()], confirmed: [(string) $first->getKey()]))
+        expect($guard->violations($definition, $definition->end(LinkSide::From), $taker->getKey(), [$first->getKey()], confirmed: [(string) $first->getKey()]))
             ->toBeEmpty()
-            ->and($guard->violations($definition, CustomFieldRelationship::DIRECTION_FROM, $taker->getKey(), [$second->getKey()]))
+            ->and($guard->violations($definition, $definition->end(LinkSide::From), $taker->getKey(), [$second->getKey()]))
             ->toHaveCount(1);
     });
 
@@ -657,9 +658,9 @@ describe('the one-to-one steal', function (): void {
 
         $reader = app(LinkReader::class);
 
-        expect($reader->orderedIdsFor($second->fresh(), $definition, CustomFieldRelationship::DIRECTION_FROM))
+        expect($reader->orderedIdsFor($second->fresh(), $definition->fromField))
             ->toBe([$target->getKey()])
-            ->and($reader->orderedIdsFor($first->fresh(), $definition, CustomFieldRelationship::DIRECTION_FROM))
+            ->and($reader->orderedIdsFor($first->fresh(), $definition->fromField))
             ->toBe([])
             ->and(CustomFieldLink::query()->whereNotNull('active_until')->count())->toBe(1);
     });

@@ -9,6 +9,7 @@ use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
+use Relaticle\CustomFields\Services\Relationships\LinkReader;
 use Relaticle\CustomFields\Services\ValueResolver\LookupCache;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 
@@ -57,6 +58,20 @@ it('reads ordered ids from both sides of one edge set', function (): void {
         ->toBe([$b->getKey(), $a->getKey()])
         ->and($a->refresh()->getCustomFieldValue($definition->toField))
         ->toBe([$post->getKey()]);
+});
+
+it('reads the from-end records through the to-end field of a paired definition', function (): void {
+    $definition = readPathRelated();
+    $post = Post::factory()->create();
+    [$a, $b, $c] = Post::factory()->count(3)->create();
+
+    $post->update(['custom_fields' => [$definition->fromField->code => [$b->getKey(), $a->getKey()]]]);
+    $a->update(['custom_fields' => [$definition->fromField->code => [$c->getKey()]]]);
+
+    expect(app(LinkReader::class)->orderedIdsFor($a->fresh(), $definition->toField))
+        ->toBe([$post->getKey()])
+        ->and(app(LinkReader::class)->orderedIdsFor($a->fresh(), $definition->fromField))
+        ->toBe([$c->getKey()]);
 });
 
 it('returns an empty array for an unlinked record field', function (): void {

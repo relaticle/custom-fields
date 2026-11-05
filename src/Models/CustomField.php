@@ -227,7 +227,7 @@ class CustomField extends Model
      */
     public function targetEntityType(): ?string
     {
-        return $this->relationshipDefinition()?->targetEntityTypeFor($this);
+        return $this->relationshipDefinition()?->farEnd($this)->entityType;
     }
 
     /**
@@ -242,9 +242,7 @@ class CustomField extends Model
             return $this->settings->allow_multiple;
         }
 
-        return $definition->directionFor($this) === CustomFieldRelationship::DIRECTION_TO
-            ? ! $definition->cardinality->toSideIsSingle()
-            : ! $definition->cardinality->fromSideIsSingle();
+        return ! $definition->cardinality->isSingleOn($definition->nearEnd($this)->side);
     }
 
     /**

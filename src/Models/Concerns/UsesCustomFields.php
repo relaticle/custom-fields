@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Crypt;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\RecordLinkPayload;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Exceptions\UniqueCustomFieldValueTakenException;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
-use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
@@ -230,14 +230,12 @@ trait UsesCustomFields
      */
     protected function deleteCustomFieldLinks(): void
     {
-        $ends = [CustomFieldRelationship::DIRECTION_FROM, CustomFieldRelationship::DIRECTION_TO];
-
-        foreach ($ends as $end) {
+        foreach (LinkSide::cases() as $side) {
             CustomFields::newLinkModel()
                 ->newQuery()
                 ->withoutGlobalScope(TenantScope::class)
-                ->where($end.'_entity_type', $this->getMorphClass())
-                ->where($end.'_entity_id', $this->getKey())
+                ->where($side->typeColumn(), $this->getMorphClass())
+                ->where($side->idColumn(), $this->getKey())
                 ->delete();
         }
     }
@@ -269,9 +267,7 @@ trait UsesCustomFields
     public function getCustomFieldValue(CustomField $customField): mixed
     {
         if ($this->writesLinksFor($customField)) {
-            $definition = $customField->relationshipDefinitionOrFail();
-
-            return app(LinkReader::class)->orderedIdsFor($this, $definition, $definition->readDirectionFor($customField));
+            return app(LinkReader::class)->orderedIdsFor($this, $customField);
         }
 
         $fieldValue = $this->customFieldValues

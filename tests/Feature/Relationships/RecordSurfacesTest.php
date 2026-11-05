@@ -206,7 +206,7 @@ describe('a record field on a single side', function (): void {
             ->call('save')
             ->assertHasNoFormErrors();
 
-        expect(app(LinkReader::class)->orderedIdsFor($second->fresh(), $definition, CustomFieldRelationship::DIRECTION_FROM))
+        expect(app(LinkReader::class)->orderedIdsFor($second->fresh(), $definition->fromField))
             ->toBe([$target->getKey()]);
     });
 });
@@ -238,7 +238,7 @@ describe('a confirmation in a payload of several records', function (): void {
             ->call('save')
             ->assertHasNoFormErrors();
 
-        expect(app(LinkReader::class)->orderedIdsFor($host->fresh(), $definition, CustomFieldRelationship::DIRECTION_FROM))
+        expect(app(LinkReader::class)->orderedIdsFor($host->fresh(), $definition->fromField))
             ->toBe([$taken->getKey(), $free->getKey(), $confirmed->getKey()]);
     });
 

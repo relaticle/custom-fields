@@ -8,6 +8,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Events\RelationshipLinkClosed;
 use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
@@ -73,18 +74,16 @@ final readonly class UpdateRelationshipDefinition
     /**
      * The ends that go from holding many edges to holding one.
      *
-     * @return array<int, string>
+     * @return list<LinkSide>
      */
     private function narrowedEnds(RelationshipCardinality $from, RelationshipCardinality $to): array
     {
         $ends = [];
 
-        if (! $from->fromSideIsSingle() && $to->fromSideIsSingle()) {
-            $ends[] = CustomFieldRelationship::DIRECTION_FROM;
-        }
-
-        if (! $from->toSideIsSingle() && $to->toSideIsSingle()) {
-            $ends[] = CustomFieldRelationship::DIRECTION_TO;
+        foreach (LinkSide::cases() as $side) {
+            if (! $from->isSingleOn($side) && $to->isSingleOn($side)) {
+                $ends[] = $side;
+            }
         }
 
         return $ends;
@@ -94,7 +93,7 @@ final readonly class UpdateRelationshipDefinition
      * The first edge a record holds on a narrowed end is the one it keeps, in the order the
      * lists were written. The rest are closed, never deleted, so the history keeps them.
      *
-     * @param  array<int, string>  $ends
+     * @param  list<LinkSide>  $ends
      * @return array<int, RelationshipLinkClosed>
      */
     private function closeSurplus(CustomFieldRelationship $definition, array $ends, CarbonInterface $now): array
@@ -130,9 +129,9 @@ final readonly class UpdateRelationshipDefinition
     /**
      * A directional edge holds its ends apart, so a self relation counts a record once per
      * end: the record something reports to is not the record reporting to it. Only a
-     * symmetric edge, canonicalized by value, is counted by value (CardinalityGuard::ends()).
+     * symmetric edge, canonicalized by value, is counted by value (CardinalityGuard::targetAndHolder()).
      *
-     * @param  array<int, string>  $ends
+     * @param  list<LinkSide>  $ends
      * @return array<int, string>
      */
     private function holders(CustomFieldRelationship $definition, CustomFieldLink $link, array $ends): array
@@ -141,8 +140,8 @@ final readonly class UpdateRelationshipDefinition
 
         foreach ($ends as $end) {
             $holders[] = $definition->is_symmetric
-                ? sprintf('%s:%s', $link->{$end.'_entity_type'}, $link->{$end.'_entity_id'})
-                : sprintf('%s:%s:%s', $end, $link->{$end.'_entity_type'}, $link->{$end.'_entity_id'});
+                ? sprintf('%s:%s', $link->{$end->typeColumn()}, $link->{$end->idColumn()})
+                : sprintf('%s:%s:%s', $end->value, $link->{$end->typeColumn()}, $link->{$end->idColumn()});
         }
 
         return $holders;

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -33,8 +34,8 @@ it('persists a definition and reads direction per field', function (): void {
     ]);
 
     expect($definition->cardinality)->toBe(RelationshipCardinality::ManyToOne)
-        ->and($definition->directionFor($from))->toBe('from')
-        ->and($definition->directionFor($to))->toBe('to')
+        ->and($definition->nearEnd($from)->side)->toBe(LinkSide::From)
+        ->and($definition->nearEnd($to)->side)->toBe(LinkSide::To)
         ->and($definition->isHeadless())->toBeFalse()
         ->and($definition->fromField)->toBeSameModel($from)
         ->and($definition->toField)->toBeSameModel($to)
@@ -51,11 +52,11 @@ it('supports headless definitions with no fields', function (): void {
         ->and($definition->is_symmetric)->toBeFalse();
 });
 
-it('rejects directionFor on an unrelated field', function (): void {
+it('rejects nearEnd on an unrelated field', function (): void {
     $definition = CustomFieldRelationship::factory()->create();
     $stranger = CustomField::factory()->create(['type' => 'record']);
 
-    $definition->directionFor($stranger);
+    $definition->nearEnd($stranger);
 })->throws(InvalidArgumentException::class);
 
 it('matches no definition for a field that has never been saved', function (): void {
@@ -74,10 +75,10 @@ it('matches no definition for a field that has never been saved', function (): v
     expect($field->relationshipDefinition()?->id)->toBe($definition->id);
 });
 
-it('rejects directionFor on a field that has never been saved', function (): void {
+it('rejects nearEnd on a field that has never been saved', function (): void {
     $definition = CustomFieldRelationship::factory()->create(['from_field_id' => null, 'to_field_id' => null]);
 
-    $definition->directionFor(CustomField::factory()->make(['type' => 'record']));
+    $definition->nearEnd(CustomField::factory()->make(['type' => 'record']));
 })->throws(InvalidArgumentException::class);
 
 it('resolves the definition model through the swap registry', function (): void {

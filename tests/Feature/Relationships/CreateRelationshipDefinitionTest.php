@@ -8,6 +8,7 @@ use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Models\CustomField;
@@ -81,7 +82,7 @@ it('points both slots at one field for a symmetric definition', function (): voi
     ));
 
     expect($definition->from_field_id)->toBe($definition->to_field_id)
-        ->and($definition->directionFor($definition->fromField))->toBe(CustomFieldRelationship::DIRECTION_FROM)
+        ->and($definition->nearEnd($definition->fromField)->side)->toBe(LinkSide::From)
         ->and(CustomField::query()->count())->toBe(1);
 });
 

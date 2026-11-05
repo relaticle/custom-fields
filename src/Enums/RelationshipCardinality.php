@@ -25,6 +25,14 @@ enum RelationshipCardinality: string implements HasLabel
         return in_array($this, [self::OneToOne, self::OneToMany], true);
     }
 
+    public function isSingleOn(LinkSide $side): bool
+    {
+        return match ($side) {
+            LinkSide::From => $this->fromSideIsSingle(),
+            LinkSide::To => $this->toSideIsSingle(),
+        };
+    }
+
     /**
      * The same relationship read from the other end: one_to_many holds as many records from
      * the to side as many_to_one holds from the from side. The two even ones are their own

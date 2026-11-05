@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\LinkEnd;
 use Relaticle\CustomFields\Database\Factories\CustomFieldRelationshipFactory;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Observers\CustomFieldRelationshipObserver;
@@ -35,12 +37,6 @@ class CustomFieldRelationship extends Model
 {
     /** @use HasFactory<CustomFieldRelationshipFactory> */
     use HasFactory;
-
-    public const string DIRECTION_FROM = 'from';
-
-    public const string DIRECTION_TO = 'to';
-
-    public const string DIRECTION_BOTH = 'both';
 
     protected $guarded = [];
 
@@ -85,10 +81,18 @@ class CustomFieldRelationship extends Model
         return $this->belongsTo(CustomFields::customFieldModel(), 'to_field_id');
     }
 
+    public function end(LinkSide $side): LinkEnd
+    {
+        return match ($side) {
+            LinkSide::From => new LinkEnd($side, $this->from_entity_type, $this->from_field_id),
+            LinkSide::To => new LinkEnd($side, $this->to_entity_type, $this->to_field_id),
+        };
+    }
+
     /**
-     * @return self::DIRECTION_FROM|self::DIRECTION_TO
+     * The end the given slot sits on.
      */
-    public function directionFor(CustomField $field): string
+    public function nearEnd(CustomField $field): LinkEnd
     {
         $key = $field->getKey();
 
@@ -96,11 +100,11 @@ class CustomFieldRelationship extends Model
         // of every one-way definition.
         if ($key !== null) {
             if ($key === $this->from_field_id) {
-                return self::DIRECTION_FROM;
+                return $this->end(LinkSide::From);
             }
 
             if ($key === $this->to_field_id) {
-                return self::DIRECTION_TO;
+                return $this->end(LinkSide::To);
             }
         }
 
@@ -108,13 +112,34 @@ class CustomFieldRelationship extends Model
     }
 
     /**
-     * The entity the given slot points at: the end it does not sit on.
+     * The end the given slot points at.
      */
-    public function targetEntityTypeFor(CustomField $field): string
+    public function farEnd(CustomField $field): LinkEnd
     {
-        return $this->directionFor($field) === self::DIRECTION_TO
-            ? $this->from_entity_type
-            : $this->to_entity_type;
+        return $this->end($this->nearEnd($field)->side->opposite());
+    }
+
+    /**
+     * Writes always name one end: a symmetric edge is stored from the canonical side, so
+     * both of its slots write as the from end.
+     */
+    public function writeEnd(CustomField $field): LinkEnd
+    {
+        return $this->is_symmetric
+            ? $this->end(LinkSide::From)
+            : $this->nearEnd($field);
+    }
+
+    /**
+     * A symmetric definition renders one field that reads both ends of its edges.
+     *
+     * @return list<LinkEnd>
+     */
+    public function readEnds(CustomField $field): array
+    {
+        return $this->is_symmetric
+            ? [$this->end(LinkSide::From), $this->end(LinkSide::To)]
+            : [$this->nearEnd($field)];
     }
 
     /**
@@ -124,34 +149,9 @@ class CustomFieldRelationship extends Model
      */
     public function orientCardinality(CustomField $field, RelationshipCardinality $cardinality): RelationshipCardinality
     {
-        return $this->directionFor($field) === self::DIRECTION_TO
+        return $this->nearEnd($field)->side === LinkSide::To
             ? $cardinality->inverse()
             : $cardinality;
-    }
-
-    /**
-     * A symmetric definition renders one field that reads both ends of its edges.
-     *
-     * @return self::DIRECTION_FROM|self::DIRECTION_TO|self::DIRECTION_BOTH
-     */
-    public function readDirectionFor(CustomField $field): string
-    {
-        return $this->is_symmetric
-            ? self::DIRECTION_BOTH
-            : $this->directionFor($field);
-    }
-
-    /**
-     * Writes always name one end: a symmetric edge is stored from the canonical side, so
-     * both of its slots write as the from end.
-     *
-     * @return self::DIRECTION_FROM|self::DIRECTION_TO
-     */
-    public function writeDirectionFor(CustomField $field): string
-    {
-        return $this->is_symmetric
-            ? self::DIRECTION_FROM
-            : $this->directionFor($field);
     }
 
     public function isHeadless(): bool

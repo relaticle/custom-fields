@@ -98,13 +98,9 @@ final class RelationshipPickerComponent extends RecordSelectInputComponent
             return false;
         }
 
-        $write = $definition->writeDirectionFor($customField);
-
         return app(CardinalityGuard::class)->endHoldsOne(
             $definition,
-            $write === CustomFieldRelationship::DIRECTION_FROM
-                ? CustomFieldRelationship::DIRECTION_TO
-                : CustomFieldRelationship::DIRECTION_FROM,
+            $definition->writeEnd($customField)->side->opposite(),
         );
     }
 
@@ -125,7 +121,7 @@ final class RelationshipPickerComponent extends RecordSelectInputComponent
 
         $violations = app(CardinalityGuard::class)->violations(
             $definition,
-            $definition->writeDirectionFor($customField),
+            $definition->writeEnd($customField),
             $this->getRecord()?->getKey(),
             [$recordId],
         );

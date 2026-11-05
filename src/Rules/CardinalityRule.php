@@ -34,7 +34,7 @@ final class CardinalityRule implements ValidationRule
 
         $violations = app(CardinalityGuard::class)->violations(
             $definition,
-            $definition->writeDirectionFor($this->customField),
+            $definition->writeEnd($this->customField),
             $this->recordId,
             $payload->ids,
             $payload->confirmed,

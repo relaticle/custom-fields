@@ -52,19 +52,18 @@ final class RecordColumn extends AbstractTableColumn
      */
     private function configureSorting(RecordColumnView $column, CustomField $customField, CustomFieldRelationship $definition): void
     {
-        $attribute = $this->primaryAttribute($definition->targetEntityTypeFor($customField));
+        $attribute = $this->primaryAttribute($definition->farEnd($customField)->entityType);
 
         $column->sortable(
             condition: $attribute !== null,
-            query: function (Builder $query, string $direction) use ($customField, $definition, $attribute): Builder {
+            query: function (Builder $query, string $direction) use ($customField, $attribute): Builder {
                 if ($attribute === null) {
                     return $query;
                 }
 
                 return app(RecordLinkQuery::class)->orderByLinkedAttribute(
                     $query,
-                    $definition,
-                    $definition->readDirectionFor($customField),
+                    $customField,
                     $attribute,
                     $direction,
                 );
@@ -78,9 +77,8 @@ final class RecordColumn extends AbstractTableColumn
             condition: $customField->settings->searchable,
             query: fn (Builder $query, string $search): Builder => app(RecordLinkQuery::class)->whereLinkedMatching(
                 $query,
-                $definition,
-                $definition->readDirectionFor($customField),
-                $this->searchAttributes($definition->targetEntityTypeFor($customField)),
+                $customField,
+                $this->searchAttributes($definition->farEnd($customField)->entityType),
                 $search,
             ),
         );

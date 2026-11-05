@@ -36,6 +36,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\OptionCategory;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\UiSurface;
@@ -472,7 +473,7 @@ final class FieldForm implements FormInterface
 
         $partner = match (true) {
             $definition->is_symmetric => null,
-            $definition->directionFor($field) === CustomFieldRelationship::DIRECTION_FROM => $definition->toField,
+            $definition->nearEnd($field)->side === LinkSide::From => $definition->toField,
             default => $definition->fromField,
         };
 

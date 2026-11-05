@@ -14,7 +14,9 @@ use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\LinkActorResolverInterface;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\LinkEnd;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Events\RelationshipLinkClosed;
 use Relaticle\CustomFields\Events\RelationshipLinkCreated;
@@ -31,6 +33,7 @@ final readonly class LinkWriter
     public function __construct(
         private LinkActorResolverInterface $actorResolver,
         private CardinalityGuard $cardinality,
+        private LinkReader $reader,
     ) {}
 
     /**
@@ -92,20 +95,20 @@ final readonly class LinkWriter
     {
         $definition = $this->lock($definition);
 
-        $direction = $definition->writeDirectionFor($field);
+        $end = $definition->writeEnd($field);
 
-        $this->assertRecordSitsOnEnd($record, $definition, $direction);
+        $this->assertRecordSitsOnEnd($record, $definition, $end);
 
         $targets = $this->normalize($targetIds);
-        $current = $this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $direction)->get();
+        $current = $this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side)->get();
 
         // An edge the payload keeps is never touched (spec 2.1), so only the ids being added
         // are held to reachability: a target soft-deleted after it was linked would otherwise
         // make its own record unsaveable.
-        $added = array_values(array_diff($targets, $current->map(fn (CustomFieldLink $link): string => $this->otherEndId($link, $record))->all()));
+        $added = array_values(array_diff($targets, $current->map(fn (CustomFieldLink $link): string => (string) $this->reader->otherEndId($link, $record))->all()));
 
-        $this->assertTargetsExist($definition, $field, $direction, $added);
-        $this->assertCardinality($definition, $field, $direction, $record, $targets, $confirmed);
+        $this->assertTargetsExist($definition, $field, $end, $added);
+        $this->assertCardinality($definition, $field, $end, $record, $targets, $confirmed);
 
         $now = now();
         $actor = $this->actorResolver->resolve();
@@ -113,14 +116,14 @@ final readonly class LinkWriter
         $events = [];
 
         foreach ($current as $link) {
-            if (! in_array($this->otherEndId($link, $record), $targets, true)) {
+            if (! in_array((string) $this->reader->otherEndId($link, $record), $targets, true)) {
                 $events[] = $this->close($link, $now);
             }
         }
 
         foreach ($targets as $index => $targetId) {
             $kept = $current->first(fn (CustomFieldLink $link): bool => $link->active_until === null
-                && $this->otherEndId($link, $record) === $targetId);
+                && (string) $this->reader->otherEndId($link, $record) === $targetId);
 
             if ($kept instanceof CustomFieldLink) {
                 $this->reorder($kept, $index);
@@ -130,8 +133,8 @@ final readonly class LinkWriter
 
             $events = [
                 ...$events,
-                ...$this->closeDisplaced($definition, $record, $direction, $targetId, $now),
-                new RelationshipLinkCreated($this->insert($definition, $record, $direction, $targetId, $index, $now, $actor, $source)),
+                ...$this->closeDisplaced($definition, $record, $end, $targetId, $now),
+                new RelationshipLinkCreated($this->insert($definition, $record, $end, $targetId, $index, $now, $actor, $source)),
             ];
         }
 
@@ -182,9 +185,9 @@ final readonly class LinkWriter
      *
      * @throws ValidationException
      */
-    private function assertCardinality(CustomFieldRelationship $definition, CustomField $field, string $direction, Model $record, array $targets, array $confirmed): void
+    private function assertCardinality(CustomFieldRelationship $definition, CustomField $field, LinkEnd $end, Model $record, array $targets, array $confirmed): void
     {
-        $violations = $this->cardinality->violations($definition, $direction, $record->getKey(), $targets, $confirmed);
+        $violations = $this->cardinality->violations($definition, $end, $record->getKey(), $targets, $confirmed);
 
         if ($violations === []) {
             return;
@@ -193,20 +196,16 @@ final readonly class LinkWriter
         throw ValidationException::withMessages([$field->getFieldName() => $violations]);
     }
 
-    private function assertRecordSitsOnEnd(Model $record, CustomFieldRelationship $definition, string $direction): void
+    private function assertRecordSitsOnEnd(Model $record, CustomFieldRelationship $definition, LinkEnd $end): void
     {
-        $expected = $direction === CustomFieldRelationship::DIRECTION_FROM
-            ? $definition->from_entity_type
-            : $definition->to_entity_type;
-
-        if ($record->getMorphClass() === $expected) {
+        if ($record->getMorphClass() === $end->entityType) {
             return;
         }
 
         throw new InvalidArgumentException(sprintf(
             'Record [%s] does not sit on the [%s] end of relationship [%s].',
             $record->getMorphClass(),
-            $direction,
+            $end->side->value,
             $definition->code,
         ));
     }
@@ -229,13 +228,13 @@ final readonly class LinkWriter
      *
      * @param  array<int, string>  $targets
      */
-    private function assertTargetsExist(CustomFieldRelationship $definition, CustomField $field, string $direction, array $targets): void
+    private function assertTargetsExist(CustomFieldRelationship $definition, CustomField $field, LinkEnd $end, array $targets): void
     {
         if ($targets === []) {
             return;
         }
 
-        $entityType = $this->targetEntityType($definition, $direction);
+        $entityType = $definition->end($end->side->opposite())->entityType;
         $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
 
         if (! class_exists($entityClass) || ! is_subclass_of($entityClass, Model::class)) {
@@ -266,7 +265,7 @@ final readonly class LinkWriter
     /**
      * @return Builder<CustomFieldLink>
      */
-    private function activeLinksFor(CustomFieldRelationship $definition, string $entityType, string $entityId, string $direction): Builder
+    private function activeLinksFor(CustomFieldRelationship $definition, string $entityType, string $entityId, LinkSide $side): Builder
     {
         $query = CustomFields::newLinkModel()
             ->newQuery()
@@ -275,35 +274,18 @@ final readonly class LinkWriter
             ->orderBy('sort_order');
 
         if (! $definition->is_symmetric) {
-            return $this->matchEnd($query, $entityType, $entityId, $direction);
+            return $query
+                ->where($side->typeColumn(), $entityType)
+                ->where($side->idColumn(), $entityId);
         }
 
         return $query->where(function (Builder $nested) use ($entityType, $entityId): void {
-            $nested
-                ->where(fn (Builder $end): Builder => $this->matchEnd($end, $entityType, $entityId, CustomFieldRelationship::DIRECTION_FROM))
-                ->orWhere(fn (Builder $end): Builder => $this->matchEnd($end, $entityType, $entityId, CustomFieldRelationship::DIRECTION_TO));
+            foreach (LinkSide::cases() as $candidate) {
+                $nested->orWhere(fn (Builder $end): Builder => $end
+                    ->where($candidate->typeColumn(), $entityType)
+                    ->where($candidate->idColumn(), $entityId));
+            }
         });
-    }
-
-    /**
-     * @param  Builder<CustomFieldLink>  $query
-     * @return Builder<CustomFieldLink>
-     */
-    private function matchEnd(Builder $query, string $entityType, string $entityId, string $direction): Builder
-    {
-        return $query
-            ->where($direction.'_entity_type', $entityType)
-            ->where($direction.'_entity_id', $entityId);
-    }
-
-    private function otherEndId(CustomFieldLink $link, Model $record): string
-    {
-        $recordIsFromEnd = $link->from_entity_type === $record->getMorphClass()
-            && (string) $link->from_entity_id === (string) $record->getKey();
-
-        return $recordIsFromEnd
-            ? (string) $link->to_entity_id
-            : (string) $link->from_entity_id;
     }
 
     /**
@@ -312,10 +294,10 @@ final readonly class LinkWriter
      *
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, CarbonInterface $now): array
+    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, CarbonInterface $now): array
     {
         $cardinality = $definition->cardinality;
-        $targetType = $this->targetEntityType($definition, $direction);
+        $far = $definition->end($end->side->opposite());
 
         if ($definition->is_symmetric) {
             if (! $cardinality->fromSideIsSingle()) {
@@ -323,29 +305,21 @@ final readonly class LinkWriter
             }
 
             return [
-                ...$this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $direction), $now),
-                ...$this->closeAll($this->activeLinksFor($definition, $targetType, $targetId, $direction), $now),
+                ...$this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now),
+                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $end->side), $now),
             ];
         }
 
-        $recordEndIsSingle = $direction === CustomFieldRelationship::DIRECTION_FROM
-            ? $cardinality->fromSideIsSingle()
-            : $cardinality->toSideIsSingle();
-
-        $targetEndIsSingle = $direction === CustomFieldRelationship::DIRECTION_FROM
-            ? $cardinality->toSideIsSingle()
-            : $cardinality->fromSideIsSingle();
-
         $events = [];
 
-        if ($recordEndIsSingle) {
-            $events = $this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $direction), $now);
+        if ($cardinality->isSingleOn($end->side)) {
+            $events = $this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now);
         }
 
-        if ($targetEndIsSingle) {
+        if ($cardinality->isSingleOn($far->side)) {
             return [
                 ...$events,
-                ...$this->closeAll($this->activeLinksFor($definition, $targetType, $targetId, $this->opposite($direction)), $now),
+                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $far->side), $now),
             ];
         }
 
@@ -384,9 +358,9 @@ final readonly class LinkWriter
         $link->save();
     }
 
-    private function insert(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId, int $index, CarbonInterface $now, ?Model $actor, string $source): CustomFieldLink
+    private function insert(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, int $index, CarbonInterface $now, ?Model $actor, string $source): CustomFieldLink
     {
-        [$fromId, $toId] = $this->ends($definition, $record, $direction, $targetId);
+        [$fromId, $toId] = $this->storedIds($definition, $record, $end, $targetId);
 
         $attributes = [
             'relationship_id' => $definition->getKey(),
@@ -412,7 +386,7 @@ final readonly class LinkWriter
     /**
      * @return array{0: string, 1: string}
      */
-    private function ends(CustomFieldRelationship $definition, Model $record, string $direction, string $targetId): array
+    private function storedIds(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId): array
     {
         $recordId = (string) $record->getKey();
 
@@ -423,22 +397,8 @@ final readonly class LinkWriter
                 : [$targetId, $recordId];
         }
 
-        return $direction === CustomFieldRelationship::DIRECTION_FROM
+        return $end->side === LinkSide::From
             ? [$recordId, $targetId]
             : [$targetId, $recordId];
-    }
-
-    private function targetEntityType(CustomFieldRelationship $definition, string $direction): string
-    {
-        return $direction === CustomFieldRelationship::DIRECTION_FROM
-            ? $definition->to_entity_type
-            : $definition->from_entity_type;
-    }
-
-    private function opposite(string $direction): string
-    {
-        return $direction === CustomFieldRelationship::DIRECTION_FROM
-            ? CustomFieldRelationship::DIRECTION_TO
-            : CustomFieldRelationship::DIRECTION_FROM;
     }
 }

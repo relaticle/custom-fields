@@ -77,11 +77,10 @@ final readonly class RecordChips
             return [];
         }
 
-        $direction = $definition->readDirectionFor($customField);
         $provenance = [];
 
-        foreach ($this->linkReader->orderedLinksFor($subject, $definition, $direction) as $link) {
-            $id = (string) $this->linkReader->otherEndId($link, $subject, $direction);
+        foreach ($this->linkReader->orderedLinksFor($subject, $customField) as $link) {
+            $id = (string) $this->linkReader->otherEndId($link, $subject);
             $sentence = $this->sentence($link);
 
             if ($sentence !== null) {

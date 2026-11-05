@@ -42,7 +42,7 @@ final readonly class CreateRelationshipDefinition
                 : null;
 
             // A symmetric relationship renders one field that reads both ends, so both slots
-            // point at it and directionFor() answers 'from' for either direction.
+            // point at it and nearEnd() answers the from end for either slot.
             $attributes = [
                 'code' => $data->code,
                 'from_entity_type' => $data->fromEntityType,
