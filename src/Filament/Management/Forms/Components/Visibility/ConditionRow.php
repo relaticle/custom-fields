@@ -12,6 +12,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -146,7 +147,7 @@ final readonly class ConditionRow
         }
 
         $fieldData = $this->options->getFieldTypeData($get);
-        if ($fieldData === null) {
+        if (! $fieldData instanceof FieldTypeData) {
             return false;
         }
 
@@ -177,7 +178,7 @@ final readonly class ConditionRow
         }
 
         $fieldData = $this->options->getFieldTypeData($get);
-        if ($fieldData === null) {
+        if (! $fieldData instanceof FieldTypeData) {
             return false;
         }
 
@@ -213,7 +214,7 @@ final readonly class ConditionRow
 
         $fieldData = $this->options->getFieldTypeData($get);
 
-        return $fieldData && $fieldData->dataType === FieldDataType::BOOLEAN;
+        return $fieldData instanceof FieldTypeData && $fieldData->dataType === FieldDataType::BOOLEAN;
     }
 
     private function shouldShowTextInput(Get $get): bool
@@ -231,7 +232,7 @@ final readonly class ConditionRow
         }
 
         $fieldData = $this->options->getFieldTypeData($get);
-        if ($fieldData === null) {
+        if (! $fieldData instanceof FieldTypeData) {
             return true;
         }
 
@@ -254,7 +255,7 @@ final readonly class ConditionRow
         }
 
         $fieldData = $this->options->getFieldTypeData($get);
-        if ($fieldData === null) {
+        if (! $fieldData instanceof FieldTypeData) {
             return 'Enter comparison value';
         }
 
