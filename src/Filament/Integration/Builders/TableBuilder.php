@@ -71,11 +71,11 @@ final class TableBuilder extends BaseBuilder
                     return $column->renderFor($isVisible);
                 }
 
-                if (! method_exists($column, 'formatStateUsing')) {
+                if (! method_exists($column, 'formatStateUsing') || ! property_exists($column, 'formatStateUsing')) {
                     return $column;
                 }
 
-                $existingFormatter = (fn (): ?Closure => $this->formatStateUsing)->call($column); // @phpstan-ignore property.notFound
+                $existingFormatter = (fn (): ?Closure => $this->formatStateUsing)->call($column);
 
                 $column->formatStateUsing(function (mixed $state, mixed $record) use ($isVisible, $existingFormatter, $column): mixed {
                     if (! $isVisible($record)) {
@@ -150,7 +150,7 @@ final class TableBuilder extends BaseBuilder
 
         // The column type already knows how to search its own field; the path only decides
         // which record is asked, so its query is re-run against the related model.
-        $existingSearch = (fn (): ?Closure => $this->searchQuery)->call($column); // @phpstan-ignore property.notFound
+        $existingSearch = (fn (): ?Closure => $this->searchQuery)->call($column);
 
         $column->searchable(
             condition: true,

@@ -124,7 +124,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                 ),
             )
             ->rules(fn (Get $get, Field $component): array => $this->isVisibleForValidation($customField, $allFields, $get)
-                ? $this->getFieldValidationRules($customField, $component->getRecord()?->getKey())
+                ? $this->getFieldValidationRules($customField, ($componentRecord = $component->getRecord()) instanceof Model ? $componentRecord->getKey() : null)
                 : [])
             ->columnSpan(
                 FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
@@ -164,7 +164,6 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
 
         foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
             $capability = app($capabilityClass);
-            /** @phpstan-ignore nullsafe.neverNull */
             $value = $validationRules?->get($capability->key());
 
             if ($value !== null) {

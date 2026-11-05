@@ -37,7 +37,11 @@ final readonly class MinValueCapability implements ValidationCapabilityInterface
             return;
         }
 
-        $component->minValue((float) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'minValue')) {
+            return;
+        }
+
+        $component->minValue((float) $value);
     }
 
     /** @return array<int, string> */

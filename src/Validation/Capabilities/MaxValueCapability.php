@@ -37,7 +37,11 @@ final readonly class MaxValueCapability implements ValidationCapabilityInterface
             return;
         }
 
-        $component->maxValue((float) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'maxValue')) {
+            return;
+        }
+
+        $component->maxValue((float) $value);
     }
 
     /** @return array<int, string> */

@@ -12,6 +12,7 @@ use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Concerns\HasExtraAlpineAttributes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Livewire\Attributes\Renderless;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
@@ -257,7 +258,7 @@ trait SelectsRecords
     private function applyLookupOrder(Builder $query, Model $model): Builder
     {
         $column = config('custom-fields.selects.record.order_column');
-        $direction = (string) config('custom-fields.selects.record.order_direction', 'desc');
+        $direction = $this->lookupDirection();
         $key = $model->getQualifiedKeyName();
 
         if (! is_string($column) || $column === '') {
@@ -271,6 +272,20 @@ trait SelectsRecords
         return $query
             ->orderBy($query->qualifyColumn($column), $direction)
             ->orderBy($key, $direction);
+    }
+
+    /**
+     * @return 'asc'|'desc'
+     */
+    private function lookupDirection(): string
+    {
+        $direction = config('custom-fields.selects.record.order_direction', 'desc');
+
+        return match (is_string($direction) ? strtolower($direction) : $direction) {
+            'asc' => 'asc',
+            'desc' => 'desc',
+            default => throw new InvalidArgumentException('The custom-fields.selects.record.order_direction config must be "asc" or "desc".'),
+        };
     }
 
     private function lookupLimit(): int
@@ -310,7 +325,7 @@ trait SelectsRecords
     /**
      * Get records by their IDs.
      *
-     * @param  array<string>  $ids
+     * @param  array<int, string>  $ids
      * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     public function getRecordsByIds(array $ids): array
@@ -327,8 +342,10 @@ trait SelectsRecords
 
         ['query' => $query, 'keyName' => $keyName, 'titleAttribute' => $titleAttribute, 'avatarConfig' => $avatarConfig] = $prepared;
 
+        $position = array_flip(array_map(strval(...), array_values($ids)));
+
         $records = $query->whereIn($keyName, $ids)->get()
-            ->sortBy(fn (Model $record): int|false => array_search($record->getKey(), $ids, true));
+            ->sortBy(fn (Model $record): int => $position[(string) $record->getKey()] ?? PHP_INT_MAX);
 
         return $this->formatRecordsForJs($records, $keyName, $titleAttribute, $avatarConfig, $this->provenance());
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Support;
 
 use Filament\Models\Contracts\HasName;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
@@ -187,7 +188,11 @@ final readonly class RecordChips
         }
 
         if ($actor instanceof HasName) {
-            return $actor->getFilamentName();
+            $name = $actor->getFilamentName();
+
+            return $name instanceof Htmlable
+                ? html_entity_decode(strip_tags($name->toHtml()), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                : $name;
         }
 
         $name = $actor->getAttribute('name');

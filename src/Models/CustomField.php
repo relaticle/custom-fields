@@ -355,7 +355,7 @@ class CustomField extends Model
         $additional = $this->settings->additional ?? [];
 
         // Legacy fallback: decimal_places may live in validation_rules
-        if (! isset($additional['decimal_places']) && $this->validation_rules?->has('decimal_places')) { // @phpstan-ignore nullsafe.neverNull
+        if (! isset($additional['decimal_places']) && $this->validation_rules?->has('decimal_places')) {
             $additional['decimal_places'] = $this->validation_rules->get('decimal_places');
         }
 

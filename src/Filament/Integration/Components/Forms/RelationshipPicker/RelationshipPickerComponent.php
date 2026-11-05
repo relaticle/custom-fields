@@ -86,9 +86,13 @@ final class RelationshipPickerComponent extends Field implements HasNestedRecurs
     {
         $entity = $this->getEntityConfiguration();
 
-        return $entity instanceof EntityConfigurationData
-            ? __('custom-fields::custom-fields.record.create_new', ['entity' => $entity->getLabelSingular()])
-            : null;
+        if (! $entity instanceof EntityConfigurationData) {
+            return null;
+        }
+
+        $label = __('custom-fields::custom-fields.record.create_new', ['entity' => $entity->getLabelSingular()]);
+
+        return is_string($label) ? $label : null;
     }
 
     /**
@@ -128,7 +132,7 @@ final class RelationshipPickerComponent extends Field implements HasNestedRecurs
         $violations = app(CardinalityGuard::class)->violations(
             $definition,
             $definition->writeEnd($customField),
-            $this->getRecord()?->getKey(),
+            ($record = $this->getRecord()) instanceof Model ? $record->getKey() : null,
             [$recordId],
         );
 

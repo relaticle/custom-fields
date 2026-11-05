@@ -112,7 +112,7 @@ final class UniqueCustomFieldValue implements ValidationRule
     }
 
     /**
-     * @return list<string>
+     * @return array<int, string>
      */
     private function heldValues(?FieldTypeDefinitionInterface $fieldType): array
     {
@@ -142,16 +142,7 @@ final class UniqueCustomFieldValue implements ValidationRule
      */
     private function fieldValuesQuery(): Builder
     {
-        $entityType = $this->customField->entity_type;
-        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
-
-        if (! class_exists($entityClass) || ! is_subclass_of($entityClass, Model::class)) {
-            throw new RuntimeException(sprintf(
-                'Custom field "%s" references an unresolvable entity type "%s".',
-                $this->customField->code,
-                $entityType,
-            ));
-        }
+        $entityClass = $this->entityClass();
 
         $query = CustomFields::newValueModel()->newQuery()
             ->where('custom_field_id', $this->customField->getKey())
@@ -170,24 +161,41 @@ final class UniqueCustomFieldValue implements ValidationRule
      */
     private function baseQuery(): Builder
     {
-        $entityType = $this->customField->entity_type;
-        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
-
         $query = $this->fieldValuesQuery();
+        $entityClass = $this->entityClass();
 
         if ($this->ignoreEntityId !== null) {
             $query->where('entity_id', '!=', $this->ignoreEntityId);
         }
 
-        // Only the trashed rows are excluded: a host app's other entity scopes must never hide a taken value.
-        if (in_array(SoftDeletes::class, class_uses_recursive($entityClass), true)) {
-            $entity = new $entityClass;
+        $entity = new $entityClass;
 
+        // Only the trashed rows are excluded: a host app's other entity scopes must never hide a taken value.
+        if (in_array(SoftDeletes::class, class_uses_recursive($entity), true) && method_exists($entity, 'getQualifiedDeletedAtColumn')) {
             $query->whereNotIn('entity_id', $entity->newQueryWithoutScopes()
                 ->select($entity->getKeyName())
                 ->whereNotNull($entity->getQualifiedDeletedAtColumn()));
         }
 
         return $query;
+    }
+
+    /**
+     * @return class-string<Model>
+     */
+    private function entityClass(): string
+    {
+        $entityType = $this->customField->entity_type;
+        $entityClass = Relation::getMorphedModel($entityType) ?? $entityType;
+
+        if (! class_exists($entityClass) || ! is_subclass_of($entityClass, Model::class)) {
+            throw new RuntimeException(sprintf(
+                'Custom field "%s" references an unresolvable entity type "%s".',
+                $this->customField->code,
+                $entityType,
+            ));
+        }
+
+        return $entityClass;
     }
 }

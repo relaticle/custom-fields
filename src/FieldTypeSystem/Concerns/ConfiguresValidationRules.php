@@ -60,7 +60,7 @@ trait ConfiguresValidationRules
     {
         $this->validationCapabilities = [
             ...$this->validationCapabilities,
-            ...$capabilityClasses,
+            ...array_values($capabilityClasses),
         ];
 
         return $this;

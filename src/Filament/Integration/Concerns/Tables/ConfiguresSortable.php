@@ -36,7 +36,7 @@ trait ConfiguresSortable
                         ->whereColumn('custom_field_values.entity_id', sprintf('%s.%s', $table, $key))
                         ->limit(1)
                         ->getQuery(),
-                    $direction
+                    $direction === 'desc' ? 'desc' : 'asc'
                 );
             }
         );

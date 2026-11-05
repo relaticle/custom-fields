@@ -39,7 +39,11 @@ final readonly class MinLengthCapability implements ValidationCapabilityInterfac
             return;
         }
 
-        $component->minLength((int) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'minLength')) {
+            return;
+        }
+
+        $component->minLength((int) $value);
     }
 
     /** @return array<int, string> */

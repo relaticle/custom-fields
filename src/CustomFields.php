@@ -23,31 +23,43 @@ final class CustomFields
 {
     /**
      * The custom field model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomField>
      */
     public static string $customFieldModel = CustomField::class;
 
     /**
      * The custom field value model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldValue>
      */
     public static string $valueModel = CustomFieldValue::class;
 
     /**
      * The custom field option model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldOption>
      */
     public static string $optionModel = CustomFieldOption::class;
 
     /**
      * The custom field section model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldSection>
      */
     public static string $sectionModel = CustomFieldSection::class;
 
     /**
      * The relationship definition model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldRelationship>
      */
     public static string $relationshipModel = CustomFieldRelationship::class;
 
     /**
      * The relationship link model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldLink>
      */
     public static string $linkModel = CustomFieldLink::class;
 
@@ -67,7 +79,7 @@ final class CustomFields
 
     private static ?WriteContext $writeContext = null;
 
-    /** @var (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null */
+    /** @var (Closure(string, string, int|string|null): ((Closure(Builder<covariant Model>): Builder<Model>)|null))|null */
     private static ?Closure $codeUniquenessScope = null;
 
     /**
@@ -92,6 +104,8 @@ final class CustomFields
 
     /**
      * Specify the custom field model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomField>  $model
      */
     public static function useCustomFieldModel(string $model): static
     {
@@ -122,6 +136,8 @@ final class CustomFields
 
     /**
      * Specify the custom field value model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldValue>  $model
      */
     public static function useValueModel(string $model): static
     {
@@ -159,6 +175,8 @@ final class CustomFields
 
     /**
      * Specify the custom field option model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldOption>  $model
      */
     public static function useOptionModel(string $model): static
     {
@@ -189,6 +207,8 @@ final class CustomFields
 
     /**
      * Specify the custom field section model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldSection>  $model
      */
     public static function useSectionModel(string $model): static
     {
@@ -219,6 +239,8 @@ final class CustomFields
 
     /**
      * Specify the relationship definition model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldRelationship>  $model
      */
     public static function useRelationshipModel(string $model): static
     {
@@ -249,6 +271,8 @@ final class CustomFields
 
     /**
      * Specify the relationship link model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldLink>  $model
      */
     public static function useLinkModel(string $model): static
     {
@@ -370,7 +394,7 @@ final class CustomFields
     }
 
     /**
-     * @return (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null
+     * @return (Closure(string, string, int|string|null): ((Closure(Builder<covariant Model>): Builder<Model>)|null))|null
      */
     public static function codeUniquenessScope(): ?Closure
     {

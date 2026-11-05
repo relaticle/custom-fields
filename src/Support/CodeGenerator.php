@@ -109,8 +109,7 @@ final class CodeGenerator
             ? CustomFields::newCustomFieldModel()
             : CustomFields::newSectionModel();
 
-        $query = $model->newQuery()
-            ->withDeactivated()
+        $query = $model::withDeactivated()
             ->where('code', $code)
             ->where('entity_type', $entityType);
 

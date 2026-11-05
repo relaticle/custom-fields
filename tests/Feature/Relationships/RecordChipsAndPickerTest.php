@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use Filament\Models\Contracts\HasName;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
@@ -169,6 +173,31 @@ describe('record chips', function (): void {
         expect($withActor)->toHaveCount(1)
             ->and($withActor[0])->toContain(auth()->user()->name)
             ->and($withActor[0])->toStartWith('Linked by ');
+    });
+
+    it('names an actor whose Filament name is markup as plain text', function (): void {
+        registerChipEntity();
+        $definition = relatedPostsField();
+
+        $target = Post::factory()->create(['title' => 'Aurora Labs']);
+        $host = Post::factory()->create([
+            'title' => 'Holder',
+            'custom_fields' => [$definition->fromField->code => [$target->getKey()]],
+        ]);
+
+        $host->load('outgoingLinks.createdBy');
+        $host->outgoingLinks->each(fn (CustomFieldLink $link): CustomFieldLink => $link->setRelation('createdBy', new class extends Model implements HasName
+        {
+            public function getFilamentName(): Htmlable
+            {
+                return new HtmlString('<strong>Ada</strong> &amp; Co');
+            }
+        }));
+
+        $provenance = array_values(app(RecordChips::class)->provenance($host, $definition->fromField));
+
+        expect($provenance)->toHaveCount(1)
+            ->and($provenance[0])->toStartWith('Linked by Ada & Co, ');
     });
 
     it('says a record is not linked rather than leaving the chip row blank', function (): void {

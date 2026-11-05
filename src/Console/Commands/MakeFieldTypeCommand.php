@@ -67,7 +67,7 @@ final class MakeFieldTypeCommand extends GeneratorCommand
 
         // Rebuild the path with proper filename
         $directory = implode('/', $pathParts);
-        $fullPath = $this->laravel['path'];
+        $fullPath = $this->laravel->path();
 
         if ($directory !== '' && $directory !== '0') {
             $fullPath .= '/'.$directory;
@@ -158,11 +158,7 @@ final class MakeFieldTypeCommand extends GeneratorCommand
             'multi_choice' => 'Multi Choice - Multiple selections, checkboxes, tags',
         ];
 
-        $selected = function_exists('Laravel\Prompts\select')
-            ? select('What data type should this field use?', $options, 'string')
-            : $this->choice('What data type should this field use?', $options, 'string');
-
-        return FieldDataType::from($selected);
+        return FieldDataType::from(select('What data type should this field use?', $options, 'string'));
     }
 
     /**

@@ -32,8 +32,11 @@ final class CustomFieldsActivableScope extends ActivableScope
         // Only check section activation when sections are enabled
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS)) {
             $builder->whereHas('section', function (Builder $query): void {
-                /** @phpstan-ignore-next-line */
-                $query->active();
+                $section = $query->getModel();
+
+                if (method_exists($section, 'getQualifiedActiveColumn')) {
+                    $query->where($section->getQualifiedActiveColumn(), true);
+                }
             });
         }
     }

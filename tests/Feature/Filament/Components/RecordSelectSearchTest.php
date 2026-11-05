@@ -29,6 +29,16 @@ describe('RecordSelectInputComponent search', function (): void {
         expect(array_column(recordSelectSearch('Ac'), 'label'))->toBe(['Acme Industries']);
     });
 
+    it('keeps the selected order when the ids come back as strings', function (): void {
+        $first = Post::factory()->create(['title' => 'Acme Industries']);
+        $second = Post::factory()->create(['title' => 'Zenith Corp']);
+
+        $ids = [(string) $second->getKey(), (string) $first->getKey()];
+
+        expect(array_column(recordSelectFor(Post::class)->getRecordsByIds($ids), 'label'))
+            ->toBe(['Zenith Corp', 'Acme Industries']);
+    });
+
     it('returns nothing for a short search when there are no records', function (): void {
         expect(recordSelectSearch('A'))->toBeEmpty();
     });

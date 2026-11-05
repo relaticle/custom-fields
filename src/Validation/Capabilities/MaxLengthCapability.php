@@ -39,7 +39,11 @@ final readonly class MaxLengthCapability implements ValidationCapabilityInterfac
             return;
         }
 
-        $component->maxLength((int) $value); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'maxLength')) {
+            return;
+        }
+
+        $component->maxLength((int) $value);
     }
 
     /** @return array<int, string> */

@@ -139,7 +139,8 @@ final class FormContainer extends Grid
     private function generateSchema(): array
     {
         // Inline priority: explicit ?? record ?? model class
-        $model = $this->explicitModel ?? $this->getRecord() ?? $this->getModel();
+        $record = $this->getRecord();
+        $model = $this->explicitModel ?? ($record instanceof Model ? $record : null) ?? $this->getModel();
 
         if ($model === null) {
             return []; // Graceful fallback

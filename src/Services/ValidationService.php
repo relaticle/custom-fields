@@ -97,7 +97,6 @@ final class ValidationService
      */
     public function isRequired(CustomField $customField): bool
     {
-        /** @phpstan-ignore nullsafe.neverNull (AsCollection returns null for null DB values) */
         return (bool) ($customField->validation_rules?->get('required', false));
     }
 
@@ -122,7 +121,6 @@ final class ValidationService
         foreach ($capabilities as $capabilityClass) {
             /** @var ValidationCapabilityInterface $capability */
             $capability = app($capabilityClass);
-            /** @phpstan-ignore nullsafe.neverNull */
             $value = $validationRules?->get($capability->key());
 
             if ($value !== null) {

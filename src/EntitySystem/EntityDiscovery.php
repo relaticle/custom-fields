@@ -188,6 +188,8 @@ final class EntityDiscovery
 
     /**
      * Check if a model should be discovered
+     *
+     * @phpstan-assert-if-true class-string<Model> $modelClass
      */
     private function shouldDiscoverModel(string $modelClass): bool
     {
@@ -220,6 +222,8 @@ final class EntityDiscovery
 
     /**
      * Create entity configuration from a model class
+     *
+     * @param  class-string<Model>  $modelClass
      */
     private function createEntityFromModel(string $modelClass): EntityConfigurationData
     {
@@ -275,6 +279,8 @@ final class EntityDiscovery
 
     /**
      * Get model primary attribute
+     *
+     * @param  class-string<Model>  $modelClass
      */
     private function getModelPrimaryAttribute(string $modelClass): string
     {
@@ -302,6 +308,7 @@ final class EntityDiscovery
     /**
      * Get model search attributes
      *
+     * @param  class-string<Model>  $modelClass
      * @return array<int, string>
      */
     private function getModelSearchAttributes(string $modelClass): array

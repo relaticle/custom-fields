@@ -41,8 +41,12 @@ final readonly class DecimalPlacesCapability implements ValidationCapabilityInte
             return;
         }
 
+        if (! method_exists($component, 'step')) {
+            return;
+        }
+
         $decimalPlaces = max(0, min(4, (int) $value));
-        $component->step($this->resolveStep($decimalPlaces)); // @phpstan-ignore method.notFound
+        $component->step($this->resolveStep($decimalPlaces));
     }
 
     /** @return array<int, string> */

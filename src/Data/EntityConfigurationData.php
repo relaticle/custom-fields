@@ -23,7 +23,9 @@ use Spatie\LaravelData\Data;
 final class EntityConfigurationData extends Data
 {
     /**
+     * @param  class-string<Model>  $modelClass
      * @param  array<int, string>  $searchAttributes
+     * @param  ?class-string  $resourceClass
      * @param  ?Collection<int, EntityFeature>  $features
      * @param  array<string, mixed>  $metadata
      * @param  array<string, string>  $conditionRelations
@@ -44,12 +46,20 @@ final class EntityConfigurationData extends Data
         public array $conditionRelations = [],
         public ?AvatarConfiguration $avatarConfiguration = null,
     ) {
-        $this->features ??= collect([
-            EntityFeature::CUSTOM_FIELDS,
-            EntityFeature::LOOKUP_SOURCE,
-        ]);
+        $this->features ??= collect($this->defaultFeatures());
 
         $this->validateConfiguration();
+    }
+
+    /**
+     * @return list<EntityFeature>
+     */
+    private function defaultFeatures(): array
+    {
+        return [
+            EntityFeature::CUSTOM_FIELDS,
+            EntityFeature::LOOKUP_SOURCE,
+        ];
     }
 
     /**
@@ -94,6 +104,9 @@ final class EntityConfigurationData extends Data
 
     // Interface implementation methods
 
+    /**
+     * @return class-string<Model>
+     */
     public function getModelClass(): string
     {
         return $this->modelClass;
@@ -123,7 +136,7 @@ final class EntityConfigurationData extends Data
                 return $icon->getIconForSize(IconSize::Medium);
             }
 
-            if ($icon instanceof BackedEnum) {
+            if ($icon instanceof BackedEnum && is_string($icon->value)) {
                 return $icon->value;
             }
 
@@ -163,7 +176,7 @@ final class EntityConfigurationData extends Data
             return $icon->getIconForSize(IconSize::Medium);
         }
 
-        if ($icon instanceof BackedEnum) {
+        if ($icon instanceof BackedEnum && is_string($icon->value)) {
             return $icon->value;
         }
 
@@ -183,6 +196,9 @@ final class EntityConfigurationData extends Data
         return $this->searchAttributes;
     }
 
+    /**
+     * @return ?class-string
+     */
     public function getResourceClass(): ?string
     {
         return $this->resourceClass;
@@ -280,6 +296,10 @@ final class EntityConfigurationData extends Data
             throw new InvalidArgumentException(sprintf('Model class %s does not exist', $modelClass));
         }
 
+        if (! is_subclass_of($modelClass, Model::class)) {
+            throw new InvalidArgumentException(sprintf('Model class %s must extend ', $modelClass).Model::class);
+        }
+
         $model = new $modelClass;
 
         /** @var array<int, EntityFeature> $features */
@@ -288,8 +308,8 @@ final class EntityConfigurationData extends Data
             $features[] = EntityFeature::CUSTOM_FIELDS;
         }
 
-        $globalSearchAttributes = method_exists($resource, 'getGloballySearchableAttributes')
-            ? $resource::getGloballySearchableAttributes()
+        $globalSearchAttributes = method_exists($resourceClass, 'getGloballySearchableAttributes')
+            ? $resourceClass::getGloballySearchableAttributes()
             : [];
 
         return new self(
@@ -298,16 +318,16 @@ final class EntityConfigurationData extends Data
             labelSingular: $resource::getModelLabel(),
             labelPlural: $resource::getBreadcrumb() ?? $resource::getPluralModelLabel() ?? $resource::getModelLabel().'s',
             icon: $resource::getNavigationIcon() ?? 'heroicon-o-document',
-            primaryAttribute: method_exists($resource, 'getRecordTitleAttribute')
-                ? ($resource::getRecordTitleAttribute() ?? $model->getKeyName())
+            primaryAttribute: method_exists($resourceClass, 'getRecordTitleAttribute')
+                ? ($resourceClass::getRecordTitleAttribute() ?? $model->getKeyName())
                 : $model->getKeyName(),
             searchAttributes: $globalSearchAttributes,
             resourceClass: $resourceClass,
             features: collect($features),
             priority: $resource::getNavigationSort() ?? 999,
             metadata: [
-                'navigation_group' => method_exists($resource, 'getNavigationGroup')
-                    ? $resource::getNavigationGroup()
+                'navigation_group' => method_exists($resourceClass, 'getNavigationGroup')
+                    ? $resourceClass::getNavigationGroup()
                     : null,
             ],
         );

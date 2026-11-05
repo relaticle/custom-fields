@@ -87,7 +87,7 @@ final class RecordFilter extends AbstractTableFilter
             })
             ->getOptionLabelUsing(function (mixed $value) use ($entityInstance, $recordTitleAttribute, $avatarConfig): ?string {
                 $record = $entityInstance::query()->find($value);
-                if ($record === null) {
+                if (! $record instanceof Model) {
                     return null;
                 }
 

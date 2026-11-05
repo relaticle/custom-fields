@@ -41,7 +41,6 @@ trait Activable
             return false;
         }
 
-        /** @phpstan-ignore-next-line */
         $this->{$this->getActiveColumn()} = true;
 
         $result = $this->save();
@@ -60,7 +59,6 @@ trait Activable
             return false;
         }
 
-        /** @phpstan-ignore-next-line */
         $this->{$this->getActiveColumn()} = false;
 
         $result = $this->save();
@@ -76,7 +74,6 @@ trait Activable
      */
     public function isActive(): bool
     {
-        /** @phpstan-ignore-next-line */
         return (bool) $this->{$this->getActiveColumn()};
     }
 

@@ -29,6 +29,11 @@ final readonly class LookupAttributeResolver
     public function resolve(string $lookupType): array
     {
         $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
+
+        if (! is_subclass_of($lookupModelPath, Model::class)) {
+            throw new RuntimeException(sprintf('The lookup type `%s` does not resolve to an Eloquent model.', $lookupType));
+        }
+
         $lookupInstance = app($lookupModelPath);
 
         $resourcePath = $this->resources->resourceFor($lookupModelPath);

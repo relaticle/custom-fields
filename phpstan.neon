@@ -2,12 +2,9 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 6
+    level: 7
     treatPhpDocTypesAsCertain: false
-    # nullsafe.neverNull inference differs between larastan versions (e.g. 3.9 vs 3.10), so some
-    # defensive `@phpstan-ignore nullsafe.neverNull` annotations are "unmatched" on newer larastan
-    # under prefer-stable CI. Tolerate unmatched ignores so analysis stays green across versions.
-    reportUnmatchedIgnoredErrors: false
+    reportUnmatchedIgnoredErrors: true
     paths:
         - src
         - tests
@@ -16,20 +13,19 @@ parameters:
     ignoreErrors:
         # Ignore unused trait warnings for library traits meant to be consumed by package users
         - identifier: trait.unused
-        # Filament type stubs declare view() as expecting view-string|null (CI-only, version-dependent)
+        # Laravel types raw SQL as literal-string; these compose grammar-wrapped columns and toSql() subqueries
         -
+            message: '#expects (TValue of float\|int\|)?literal-string, (non-falsy-)?string given#'
             identifier: argument.type
-            path: src/Filament/Integration/Components/Infolists/*
-            reportUnmatched: false
+            paths:
+                - src/QueryBuilders/RecordLinkQuery.php
+                - src/Support/ThroughRelationResolver.php
+        # PHPStan bug: a nullable closure whose own parameter is nullable is not accepted as itself
         -
-            identifier: argument.type
-            path: src/Filament/Integration/Components/Tables/Columns/*
-            reportUnmatched: false
-        # Laravel 13 made the Scope interface generic; Laravel 12 has the template on apply() only,
-        # so @implements Scope<Model> is required on one CI leg and rejected on the other
-        -
-            identifier: generics.notGeneric
-            path: src/Models/Scopes/*
-            reportUnmatched: false
+            message: '#^Method .+ should return \(Closure\(.+\|null.*\)\|null but returns#'
+            identifier: return.type
+            paths:
+                - src/CustomFields.php
+                - src/CustomFieldsPlugin.php
     parallel:
     		maximumNumberOfProcesses: 3

@@ -9,6 +9,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\CustomFieldsPlugin;
+use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -146,7 +147,7 @@ final class ConditionOptions
 
         $fieldData = $this->getFieldTypeData($get);
 
-        return $fieldData
+        return $fieldData instanceof FieldTypeData
             ? $fieldData->getCompatibleOperatorOptions()
             : collect(VisibilityOperator::options())
                 ->except([VisibilityOperator::IS_IN->value, VisibilityOperator::IS_NOT_IN->value])
@@ -213,7 +214,7 @@ final class ConditionOptions
         return $related::query()->pluck($labelColumn, $related->getKeyName())->all();
     }
 
-    public function getFieldTypeData(Get $get): ?object
+    public function getFieldTypeData(Get $get): ?FieldTypeData
     {
         $fieldCode = $get('field_code');
         if (blank($fieldCode)) {
@@ -226,7 +227,7 @@ final class ConditionOptions
         }
 
         return rescue(
-            fn () => CustomFieldsType::getFieldType($field->type)
+            fn (): ?FieldTypeData => CustomFieldsType::getFieldType($field->type)
         );
     }
 

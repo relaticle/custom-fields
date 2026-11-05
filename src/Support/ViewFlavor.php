@@ -42,6 +42,9 @@ final class ViewFlavor
 
     // Null is the native flavor: the caller renders the view it shipped with, so a flavor
     // decides what a surface looks like and never what it does.
+    /**
+     * @return view-string|null
+     */
     public static function view(UiSurface $surface): ?string
     {
         return match (self::flavor($surface)) {

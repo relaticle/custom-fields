@@ -85,7 +85,9 @@ final class TypeField extends Select
     {
         $key = 'custom-fields::custom-fields.field_type_descriptions.'.str_replace('-', '_', $data->key);
 
-        return Lang::has($key) ? __($key) : null;
+        $description = Lang::has($key) ? __($key) : null;
+
+        return is_string($description) ? $description : null;
     }
 
     /**

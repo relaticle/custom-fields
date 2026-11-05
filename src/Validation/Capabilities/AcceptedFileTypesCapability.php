@@ -39,7 +39,11 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
             return;
         }
 
-        $component->acceptedFileTypes($types); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'acceptedFileTypes')) {
+            return;
+        }
+
+        $component->acceptedFileTypes($types);
     }
 
     /** @return array<int, string> */

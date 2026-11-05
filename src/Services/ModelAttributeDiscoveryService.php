@@ -128,6 +128,9 @@ final class ModelAttributeDiscoveryService
         return null;
     }
 
+    /**
+     * @param  class-string<Model>  $class
+     */
     private function instantiateModel(string $class): ?Model
     {
         try {

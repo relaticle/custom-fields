@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+use Filament\Clusters\Cluster;
+
 /**
  * @internal
  */
 final class Utils
 {
+    /**
+     * @return ?class-string<Cluster>
+     */
     public static function getResourceCluster(): ?string
     {
         return config('custom-fields.management.cluster');

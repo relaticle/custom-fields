@@ -14,6 +14,8 @@ final readonly class PanelModelResourceResolver implements ModelResourceResolver
 {
     public function resourceFor(string $modelClass): ?string
     {
-        return Filament::getModelResource($modelClass);
+        $resource = Filament::getModelResource($modelClass);
+
+        return $resource !== null && class_exists($resource) ? $resource : null;
     }
 }
