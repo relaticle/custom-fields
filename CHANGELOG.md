@@ -2,6 +2,31 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v4.0.0-beta.1 - 2026-11-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v4.0.0-beta.1 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(ci): carry the 3.x dependency cleanup into 4.0 by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/222
+* feat: system-only field types and remove link_variant [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/257
+* fix: encrypt a custom field value on its first save under Laravel 13.35 [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/259
+* fix: stop tags-input and record fields crashing forms when selections are limited [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/263
+* chore(deps-dev): bump the npm group with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/265
+* chore(deps): bump the github-actions group with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/266
+* chore(deps): bump the npm group in /docs with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/267
+* chore(deps): bump vite from 8.3.2 to 8.3.4 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/269
+* chore(deps): bump launch-editor from 2.14.1 to 2.14.2 in /docs in the npm-security group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/270
+* chore(deps-dev): bump the npm group with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/271
+* chore(deps): bump the npm-security group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/274
+* chore(deps): bump zizmorcore/zizmor-action from 0.6.4 to 0.7.1 in the github-actions group by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/272
+* chore(deps): bump the npm group across 1 directory with 4 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/275
+* fix(forms): keep the stored value of a field hidden on the server [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/279
+* chore: pin rector so a new release cannot fail every pull request [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/280
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.15.2...v4.0.0-beta.1
+
 ## v3.9.0 - 2026-08-28
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
@@ -57,6 +82,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 ```
