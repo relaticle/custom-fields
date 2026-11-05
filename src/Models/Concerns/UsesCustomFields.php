@@ -68,6 +68,11 @@ trait UsesCustomFields
      */
     protected static array $tempCustomFields = [];
 
+    /**
+     * @var array<int, true>
+     */
+    protected static array $changedCustomFieldValues = [];
+
     protected static function bootUsesCustomFields(): void
     {
         static::saving(function (Model $model): void {
@@ -140,8 +145,10 @@ trait UsesCustomFields
         $objectId = spl_object_id($this);
 
         if (isset(self::$tempCustomFields[$objectId]) && method_exists($this, 'saveCustomFields')) {
-            $this->saveCustomFields(self::$tempCustomFields[$objectId]);
+            $customFields = self::$tempCustomFields[$objectId];
             unset(self::$tempCustomFields[$objectId]);
+
+            $this->saveCustomFields($customFields);
         }
     }
 
@@ -207,6 +214,10 @@ trait UsesCustomFields
 
         $customFieldValue->setValue($value);
         $customFieldValue->save();
+
+        if ($customFieldValue->wasChanged() || ($customFieldValue->wasRecentlyCreated && filled($value))) {
+            self::$changedCustomFieldValues[spl_object_id($this)] = true;
+        }
     }
 
     /**
@@ -236,9 +247,31 @@ trait UsesCustomFields
      */
     public function saveCustomFields(array $customFields, ?Model $tenant = null): void
     {
+        $objectId = spl_object_id($this);
+        unset(self::$changedCustomFieldValues[$objectId]);
+
         $this->customFields()->each(function (CustomField $customField) use ($customFields, $tenant): void {
             $value = $customFields[$customField->code] ?? null;
             $this->saveCustomFieldValue($customField, $value, $tenant);
         });
+
+        if (isset(self::$changedCustomFieldValues[$objectId])) {
+            unset(self::$changedCustomFieldValues[$objectId]);
+            $this->touchForChangedCustomFields();
+        }
+    }
+
+    protected function touchForChangedCustomFields(): void
+    {
+        if (! $this->exists || ! $this->usesTimestamps() || $this->getUpdatedAtColumn() === null) {
+            return;
+        }
+
+        // A create or a column update in this same save already stamped the record.
+        if (($this->getAttributes()[$this->getUpdatedAtColumn()] ?? null) === $this->fromDateTime($this->freshTimestamp())) {
+            return;
+        }
+
+        $this->touch();
     }
 }
