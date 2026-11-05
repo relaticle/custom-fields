@@ -115,7 +115,7 @@ final readonly class UpdateRelationshipDefinition
 
             if (array_intersect($holders, $taken) !== []) {
                 $link->close($now);
-                $events[] = new RelationshipLinkClosed($link);
+                $events[] = new RelationshipLinkClosed($link, $definition, null, CustomFields::writeContext());
 
                 continue;
             }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
@@ -101,7 +102,7 @@ it('turns a record field into a definition and its ids into links, then drops th
         ->and($definition->from_field_id)->toEqual($field->getKey())
         ->and($definition->to_field_id)->toBeNull()
         ->and($definition->cardinality)->toBe(RelationshipCardinality::ManyToMany)
-        ->and(CustomFieldLink::query()->pluck('source')->unique()->all())->toBe(['migration'])
+        ->and(CustomFieldLink::query()->get()->pluck('source')->unique()->all())->toBe([WriteSource::Migration])
         ->and(CustomFieldValue::query()->where('custom_field_id', $field->getKey())->count())->toBe(0)
         ->and($holder->fresh()->getCustomFieldValue($field->fresh()))->toBe([$second->getKey(), $first->getKey()]);
 })->skip(mysqlCommitsDdl(...), 'MySQL commits DDL implicitly, so the column change would outlive the test transaction.');

@@ -6,6 +6,7 @@ namespace Relaticle\CustomFields\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 
@@ -37,7 +38,7 @@ final class CustomFieldLinkFactory extends Factory
             'sort_order' => 0,
             'active_from' => Carbon::now(),
             'active_until' => null,
-            'source' => CustomFieldLink::SOURCE_USER,
+            'source' => WriteSource::User,
         ];
     }
 }

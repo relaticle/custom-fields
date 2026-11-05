@@ -6,10 +6,10 @@ namespace Relaticle\CustomFields\Filament\Integration\Support;
 
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Lang;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Data\AvatarConfiguration;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -167,15 +167,9 @@ final readonly class RecordChips
         ]);
     }
 
-    /**
-     * A host writes its own source strings onto the ledger, so an unknown one reads as itself
-     * rather than as the lang key that has no translation.
-     */
-    private function sourceLabel(string $source): string
+    private function sourceLabel(WriteSource $source): string
     {
-        $key = 'custom-fields::custom-fields.relationships.sources.'.$source;
-
-        return Lang::has($key) ? __($key) : $source;
+        return __('custom-fields::custom-fields.relationships.sources.'.$source->value);
     }
 
     private function actorName(CustomFieldLink $link): ?string

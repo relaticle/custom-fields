@@ -12,9 +12,9 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
-use Relaticle\CustomFields\Contracts\LinkActorResolverInterface;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\LinkEnd;
+use Relaticle\CustomFields\Data\WriteContext;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
@@ -31,26 +31,26 @@ use RuntimeException;
 final readonly class LinkWriter
 {
     public function __construct(
-        private LinkActorResolverInterface $actorResolver,
         private CardinalityGuard $cardinality,
         private LinkReader $reader,
     ) {}
 
     /**
-     * Apply the ordered payload of one record field as the record's active edges.
+     * Apply the ordered payload of one record field as the record's active edges, stamped
+     * with the current CustomFields::writeContext().
      *
      * @param  array<int, int|string>  $targetIds
      * @param  array<int, string>  $confirmed  Ids the caller agreed to take from their holder.
      *
      * @throws ValidationException
      */
-    public function apply(Model $record, CustomField $field, array $targetIds, string $source = CustomFieldLink::SOURCE_USER, array $confirmed = []): void
+    public function apply(Model $record, CustomField $field, array $targetIds, array $confirmed = []): void
     {
         $definition = $field->relationshipDefinitionOrFail();
 
         try {
-            DB::transaction(function () use ($record, $definition, $field, $targetIds, $source, $confirmed): void {
-                $events = $this->diff($record, $definition, $field, $targetIds, $source, $confirmed);
+            DB::transaction(function () use ($record, $definition, $field, $targetIds, $confirmed): void {
+                $events = $this->diff($record, $definition, $field, $targetIds, $confirmed);
 
                 // A rolled back write never happened, so its listeners must never hear about it.
                 DB::afterCommit(static function () use ($events): void {
@@ -91,9 +91,10 @@ final readonly class LinkWriter
      * @param  array<int, string>  $confirmed
      * @return array<int, RelationshipLinkClosed|RelationshipLinkCreated>
      */
-    private function diff(Model $record, CustomFieldRelationship $definition, CustomField $field, array $targetIds, string $source, array $confirmed): array
+    private function diff(Model $record, CustomFieldRelationship $definition, CustomField $field, array $targetIds, array $confirmed): array
     {
-        $definition = $this->lock($definition);
+        $definition = $this->lock($definition)->load(['fromField', 'toField']);
+        $context = CustomFields::writeContext();
 
         $end = $definition->writeEnd($field);
 
@@ -111,13 +112,11 @@ final readonly class LinkWriter
         $this->assertCardinality($definition, $field, $end, $record, $targets, $confirmed);
 
         $now = now();
-        $actor = $this->actorResolver->resolve();
-
         $events = [];
 
         foreach ($current as $link) {
             if (! in_array((string) $this->reader->otherEndId($link, $record), $targets, true)) {
-                $events[] = $this->close($link, $now);
+                $events[] = $this->close($link, $now, $definition, $record, $context);
             }
         }
 
@@ -133,8 +132,8 @@ final readonly class LinkWriter
 
             $events = [
                 ...$events,
-                ...$this->closeDisplaced($definition, $record, $end, $targetId, $now),
-                new RelationshipLinkCreated($this->insert($definition, $record, $end, $targetId, $index, $now, $actor, $source)),
+                ...$this->closeDisplaced($definition, $record, $end, $targetId, $now, $context),
+                new RelationshipLinkCreated($this->insert($definition, $record, $end, $targetId, $index, $now, $context), $definition, $record, $context),
             ];
         }
 
@@ -294,7 +293,7 @@ final readonly class LinkWriter
      *
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, CarbonInterface $now): array
+    private function closeDisplaced(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, CarbonInterface $now, WriteContext $context): array
     {
         $cardinality = $definition->cardinality;
         $far = $definition->end($end->side->opposite());
@@ -305,21 +304,21 @@ final readonly class LinkWriter
             }
 
             return [
-                ...$this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now),
-                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $end->side), $now),
+                ...$this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now, $definition, $record, $context),
+                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $end->side), $now, $definition, $record, $context),
             ];
         }
 
         $events = [];
 
         if ($cardinality->isSingleOn($end->side)) {
-            $events = $this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now);
+            $events = $this->closeAll($this->activeLinksFor($definition, $record->getMorphClass(), (string) $record->getKey(), $end->side), $now, $definition, $record, $context);
         }
 
         if ($cardinality->isSingleOn($far->side)) {
             return [
                 ...$events,
-                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $far->side), $now),
+                ...$this->closeAll($this->activeLinksFor($definition, $far->entityType, $targetId, $far->side), $now, $definition, $record, $context),
             ];
         }
 
@@ -330,22 +329,22 @@ final readonly class LinkWriter
      * @param  Builder<CustomFieldLink>  $query
      * @return array<int, RelationshipLinkClosed>
      */
-    private function closeAll(Builder $query, CarbonInterface $now): array
+    private function closeAll(Builder $query, CarbonInterface $now, CustomFieldRelationship $definition, Model $record, WriteContext $context): array
     {
         $events = [];
 
         foreach ($query->get() as $link) {
-            $events[] = $this->close($link, $now);
+            $events[] = $this->close($link, $now, $definition, $record, $context);
         }
 
         return $events;
     }
 
-    private function close(CustomFieldLink $link, CarbonInterface $now): RelationshipLinkClosed
+    private function close(CustomFieldLink $link, CarbonInterface $now, CustomFieldRelationship $definition, Model $record, WriteContext $context): RelationshipLinkClosed
     {
         $link->close($now);
 
-        return new RelationshipLinkClosed($link);
+        return new RelationshipLinkClosed($link, $definition, $record, $context);
     }
 
     private function reorder(CustomFieldLink $link, int $index): void
@@ -358,7 +357,7 @@ final readonly class LinkWriter
         $link->save();
     }
 
-    private function insert(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, int $index, CarbonInterface $now, ?Model $actor, string $source): CustomFieldLink
+    private function insert(CustomFieldRelationship $definition, Model $record, LinkEnd $end, string $targetId, int $index, CarbonInterface $now, WriteContext $context): CustomFieldLink
     {
         [$fromId, $toId] = $this->storedIds($definition, $record, $end, $targetId);
 
@@ -370,9 +369,10 @@ final readonly class LinkWriter
             'to_entity_id' => $toId,
             'sort_order' => $index,
             'active_from' => $now,
-            'created_by_type' => $actor?->getMorphClass(),
-            'created_by_id' => $actor?->getKey(),
-            'source' => $source,
+            'created_by_type' => $context->actor?->getMorphClass(),
+            'created_by_id' => $context->actor?->getKey(),
+            'source' => $context->source,
+            'confidence' => $context->confidence,
         ];
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {

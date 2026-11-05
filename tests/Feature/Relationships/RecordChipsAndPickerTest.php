@@ -171,25 +171,6 @@ describe('record chips', function (): void {
             ->and($withActor[0])->toStartWith('Linked by ');
     });
 
-    it('reads a host source the package has no words for as itself', function (): void {
-        registerChipEntity();
-        $definition = relatedPostsField();
-
-        $target = Post::factory()->create(['title' => 'Aurora Labs']);
-        $host = Post::factory()->create([
-            'custom_fields' => [$definition->fromField->code => [$target->getKey()]],
-        ]);
-
-        CustomFieldLink::query()->update(['source' => 'webhook', 'created_by_type' => null, 'created_by_id' => null]);
-        $host->load('outgoingLinks.createdBy');
-
-        $provenance = array_values(app(RecordChips::class)->provenance($host, $definition->fromField));
-
-        expect($provenance)->toHaveCount(1)
-            ->and($provenance[0])->toContain('webhook')
-            ->and($provenance[0])->not->toContain('custom-fields::');
-    });
-
     it('says a record is not linked rather than leaving the chip row blank', function (): void {
         registerChipEntity();
         relatedPostsField();

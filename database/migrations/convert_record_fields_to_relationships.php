@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Support\KeyType;
 
 /*
@@ -134,7 +134,7 @@ return new class extends Migration
                 'to_entity_id' => $to['id'],
                 'sort_order' => $position++,
                 'active_from' => now(),
-                'source' => CustomFieldLink::SOURCE_MIGRATION,
+                'source' => WriteSource::Migration->value,
             ], $field));
 
             $linked[] = $id;

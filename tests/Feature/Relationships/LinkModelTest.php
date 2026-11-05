@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
@@ -21,7 +22,7 @@ it('persists an active edge and closes it without deleting', function (): void {
     ]);
 
     expect(CustomFieldLink::query()->active()->count())->toBe(1)
-        ->and($link->source)->toBe(CustomFieldLink::SOURCE_USER)
+        ->and($link->source)->toBe(WriteSource::User)
         ->and($link->relationship)->toBeSameModel($definition);
 
     $link->close(now());

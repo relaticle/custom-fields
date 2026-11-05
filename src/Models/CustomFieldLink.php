@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Database\Factories\CustomFieldLinkFactory;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 
 /**
@@ -27,7 +28,7 @@ use Relaticle\CustomFields\Models\Scopes\TenantScope;
  * @property ?CarbonInterface $active_until
  * @property ?string $created_by_type
  * @property int|string|null $created_by_id
- * @property string $source
+ * @property WriteSource $source
  * @property ?float $confidence
  * @property CustomFieldRelationship $relationship
  */
@@ -41,14 +42,6 @@ class CustomFieldLink extends Model
      * The partial unique index the writer translates into a friendly conflict error.
      */
     public const string ACTIVE_EDGE_INDEX = 'cf_links_active_edge_unique';
-
-    public const string SOURCE_USER = 'user';
-
-    public const string SOURCE_IMPORT = 'import';
-
-    public const string SOURCE_MIGRATION = 'migration';
-
-    public const string SOURCE_AI = 'ai_inferred';
 
     public $timestamps = false;
 
@@ -79,6 +72,7 @@ class CustomFieldLink extends Model
             'active_from' => 'datetime',
             'active_until' => 'datetime',
             'confidence' => 'float',
+            'source' => WriteSource::class,
         ];
     }
 

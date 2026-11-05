@@ -17,7 +17,6 @@ use Relaticle\CustomFields\Console\Commands\CleanupOrphanedValuesCommand;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
 use Relaticle\CustomFields\Console\Commands\UpgradeCommand;
-use Relaticle\CustomFields\Contracts\LinkActorResolverInterface;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -33,7 +32,6 @@ use Relaticle\CustomFields\Providers\FieldTypeServiceProvider;
 use Relaticle\CustomFields\Providers\ImportsServiceProvider;
 use Relaticle\CustomFields\Providers\ValidationServiceProvider;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
-use Relaticle\CustomFields\Services\Relationships\AuthenticatedActorResolver;
 use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Services\ValueResolver\LookupCache;
@@ -60,7 +58,6 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(CustomFieldsMigrator::class);
         $this->app->singleton(ValueResolverInterface::class, ValueResolver::class);
-        $this->app->singleton(LinkActorResolverInterface::class, AuthenticatedActorResolver::class);
         $this->app->scoped(LookupCache::class);
         $this->app->scoped(MissingRelationshipDefinitions::class);
 

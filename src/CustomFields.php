@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Data\WriteContext;
 use Relaticle\CustomFields\Enums\ImportDateFormat;
 use Relaticle\CustomFields\Enums\ImportNumberFormat;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldOption;
@@ -60,6 +63,8 @@ final class CustomFields
      * When null, each component uses its own default format.
      */
     public static ?string $dateTimeDisplayFormat = null;
+
+    private static ?WriteContext $writeContext = null;
 
     /**
      * Get the name of the custom field model used by the application.
@@ -339,5 +344,37 @@ final class CustomFields
     public static function resolveTenantUsing(Closure $callback): void
     {
         TenantContextService::setTenantResolver($callback);
+    }
+
+    /**
+     * Stamp every write made inside the callback with where it came from.
+     *
+     * @template TReturn
+     *
+     * @param  Closure(): TReturn  $callback
+     * @return TReturn
+     */
+    public static function writing(WriteSource $source, Closure $callback, ?Model $actor = null, ?float $confidence = null): mixed
+    {
+        $previous = self::$writeContext;
+        self::$writeContext = new WriteContext($source, $actor ?? self::authenticatedActor(), $confidence);
+
+        try {
+            return $callback();
+        } finally {
+            self::$writeContext = $previous;
+        }
+    }
+
+    public static function writeContext(): WriteContext
+    {
+        return self::$writeContext ?? new WriteContext(WriteSource::User, self::authenticatedActor());
+    }
+
+    private static function authenticatedActor(): ?Model
+    {
+        $user = auth()->user();
+
+        return $user instanceof Model ? $user : null;
     }
 }

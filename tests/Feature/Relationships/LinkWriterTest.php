@@ -8,9 +8,11 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Events\RelationshipLinkClosed;
 use Relaticle\CustomFields\Events\RelationshipLinkCreated;
 use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
@@ -199,21 +201,52 @@ it('touches nothing when the payload matches the stored links', function (): voi
     expect(CustomFieldLink::query()->count())->toBe(1);
 });
 
-it('stamps the actor and the source on the edge', function (): void {
+it('stamps the source, actor and confidence of the write scope on the edge and its event', function (): void {
+    Event::fake([RelationshipLinkCreated::class]);
     $definition = makeAuthorship();
-    $actor = User::factory()->create();
-    $this->actingAs($actor);
+    $this->actingAs(User::factory()->create());
+    $agent = User::factory()->create();
     $post = Post::factory()->create();
     $user = User::factory()->create();
 
-    app(LinkWriter::class)->apply($post, $definition->fromField, [$user->getKey()], CustomFieldLink::SOURCE_IMPORT);
+    CustomFields::writing(
+        WriteSource::Ai,
+        fn () => app(LinkWriter::class)->apply($post, $definition->fromField, [$user->getKey()]),
+        actor: $agent,
+        confidence: 0.8,
+    );
 
     $link = CustomFieldLink::query()->sole();
 
-    expect($link->created_by_id)->toEqual($actor->getKey())
-        ->and($link->created_by_type)->toBe($actor->getMorphClass())
-        ->and($link->source)->toBe(CustomFieldLink::SOURCE_IMPORT)
-        ->and($link->active_from)->not->toBeNull();
+    expect($link->created_by_id)->toEqual($agent->getKey())
+        ->and($link->created_by_type)->toBe($agent->getMorphClass())
+        ->and($link->source)->toBe(WriteSource::Ai)
+        ->and($link->confidence)->toBe(0.8);
+
+    Event::assertDispatched(RelationshipLinkCreated::class, fn (RelationshipLinkCreated $event): bool => $event->link->is($link)
+        && $event->record?->is($post) === true
+        && $event->definition->relationLoaded('toField')
+        && $event->context->actor?->is($agent) === true
+        && $event->context->source === WriteSource::Ai);
+});
+
+it('writes as the signed-in user again once the write scope ends, even when it threw', function (): void {
+    $definition = makeAuthorship();
+    $signedIn = User::factory()->create();
+    $this->actingAs($signedIn);
+    $post = Post::factory()->create();
+    $user = User::factory()->create();
+
+    expect(fn (): mixed => CustomFields::writing(WriteSource::Import, fn (): never => throw new RuntimeException('failed import'), actor: User::factory()->create()))
+        ->toThrow(RuntimeException::class);
+
+    app(LinkWriter::class)->apply($post, $definition->fromField, [$user->getKey()]);
+
+    $link = CustomFieldLink::query()->sole();
+
+    expect($link->source)->toBe(WriteSource::User)
+        ->and($link->created_by_id)->toEqual($signedIn->getKey())
+        ->and($link->confidence)->toBeNull();
 });
 
 it('rejects a target that does not exist', function (): void {
