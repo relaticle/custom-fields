@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\Repeater;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldData;
@@ -18,6 +19,7 @@ use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Rules\RequiresCompletedOption;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Spatie\LaravelData\Exceptions\CannotCastEnum;
@@ -114,7 +116,11 @@ it('returns the options of one category in sort order', function (): void {
         ->and($field->optionsInCategory(OptionCategory::Cancelled)->pluck('name')->all())
         ->toBe(['Closed Lost'])
         ->and($field->optionsInCategory(OptionCategory::Started))->toBeEmpty()
-        ->and($field->optionsInCategory(OptionCategory::Unstarted))->toBeEmpty();
+        ->and($field->optionsInCategory(OptionCategory::Unstarted))->toBeEmpty()
+        ->and($field->optionsInCategory(OptionCategory::Completed, OptionCategory::Cancelled)->pluck('name')->all())
+        ->toBe(['Closed Won', 'Won Back', 'Closed Lost'])
+        ->and($field->load('options')->optionsInCategory(OptionCategory::Cancelled, OptionCategory::Completed)->pluck('name')->all())
+        ->toBe(['Closed Won', 'Won Back', 'Closed Lost']);
 });
 
 it("keeps another field's options out of the category result", function (): void {
@@ -140,7 +146,8 @@ it('filters options by category through the query builder', function (): void {
 
     expect($completed->pluck('name')->all())->toEqualCanonicalizing(['Closed Won', 'Won Back'])
         ->and(CustomFields::newOptionModel()->query()->whereCategory(OptionCategory::Cancelled)->count())->toBe(1)
-        ->and(CustomFields::newOptionModel()->query()->whereCategory(OptionCategory::Unstarted)->count())->toBe(0);
+        ->and(CustomFields::newOptionModel()->query()->whereCategory(OptionCategory::Unstarted)->count())->toBe(0)
+        ->and(CustomFields::newOptionModel()->query()->whereCategory(OptionCategory::Completed, OptionCategory::Cancelled)->count())->toBe(3);
 });
 
 function configureOptionFeatures(bool $colors = false): void
@@ -255,6 +262,11 @@ it('clears a category back to none in the field editor', function (): void {
     $option = $field->options()->create([
         'name' => 'Closed Won',
         'sort_order' => 1,
+        'settings' => ['category' => 'completed'],
+    ]);
+    $field->options()->create([
+        'name' => 'Won Back',
+        'sort_order' => 2,
         'settings' => ['category' => 'completed'],
     ]);
 
@@ -420,19 +432,19 @@ it('applies categories when the migrator updates an existing field', function ()
             type: StatusFieldType::KEY,
             section: new CustomFieldSectionData(name: 'Pipeline', code: 'pipeline'),
         ),
-    )->options(['Discovery', 'Closed Won'])->create();
+    )->options(['Discovery', ['name' => 'Closed Won', 'category' => OptionCategory::Completed]])->create();
 
     app(CustomFieldsMigrator::class)
         ->find(User::class, 'stage')
         ->options([
-            'Discovery',
+            ['name' => 'Discovery', 'category' => OptionCategory::Started],
             ['name' => 'Closed Won', 'category' => OptionCategory::Completed],
         ])
         ->update(['name' => 'Stage']);
 
     $field = CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->firstOrFail();
 
-    expect($field->options->pluck('settings.category')->all())->toBe([null, OptionCategory::Completed]);
+    expect($field->options->pluck('settings.category')->all())->toBe([OptionCategory::Started, OptionCategory::Completed]);
 });
 
 it('keeps the options, their ids and a stored value when a select becomes a status field', function (): void {
@@ -502,3 +514,170 @@ it('still refuses to turn a system-defined select into a text field', function (
 
     expect($field->fresh()->type)->toBe('select');
 });
+
+it('refuses to create a status field without a completed option in the field editor', function (): void {
+    $section = CustomFieldSection::factory()->forEntityType(User::class)->create();
+
+    livewire(ManageCustomFieldSection::class, [
+        'section' => $section,
+        'entityType' => User::class,
+    ])
+        ->callAction('createField', [
+            'name' => 'Stage',
+            'code' => 'stage',
+            'type' => StatusFieldType::KEY,
+            'entity_type' => User::class,
+            'options' => [
+                ['name' => 'Discovery', 'settings' => ['category' => 'started']],
+                ['name' => 'Closed Lost', 'settings' => ['category' => 'cancelled']],
+            ],
+        ])
+        ->assertHasActionErrors(['options' => 'A status field needs at least one option in the Completed category.']);
+
+    expect(CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->exists())->toBeFalse();
+});
+
+it('creates a select field whose options carry no category in the field editor', function (): void {
+    $section = CustomFieldSection::factory()->forEntityType(User::class)->create();
+
+    livewire(ManageCustomFieldSection::class, [
+        'section' => $section,
+        'entityType' => User::class,
+    ])
+        ->callAction('createField', [
+            'name' => 'Source',
+            'code' => 'source',
+            'type' => 'select',
+            'entity_type' => User::class,
+            'options' => [['name' => 'Referral']],
+        ])
+        ->assertHasNoActionErrors();
+
+    expect(CustomField::query()->withoutGlobalScopes()->where('code', 'source')->exists())->toBeTrue();
+});
+
+it('refuses to edit away the last completed option of a status field', function (string $edit): void {
+    $field = statusFieldForCategories();
+    $field->options()->createMany([
+        ['name' => 'Discovery', 'sort_order' => 1, 'settings' => ['category' => 'started']],
+        ['name' => 'Closed Won', 'sort_order' => 2, 'settings' => ['category' => 'completed']],
+    ]);
+
+    $page = livewire(ManageCustomField::class, ['field' => $field])
+        ->mountAction('edit')
+        ->assertActionMounted('edit');
+
+    $component = $page->instance();
+    $items = $component->{$component->getMountedActionSchemaName()}->getRawState()['options'];
+    $closedWonKey = array_key_last($items);
+
+    $edit === 'recategorise'
+        ? $page->set('mountedActions.0.data.options.'.$closedWonKey.'.settings.category', 'cancelled')
+        : $page->set('mountedActions.0.data.options', array_diff_key($items, [$closedWonKey => true]));
+
+    $page->callMountedAction()
+        ->assertHasActionErrors(['options' => 'A status field needs at least one option in the Completed category.']);
+
+    expect($field->optionsInCategory(OptionCategory::Completed)->pluck('name')->all())->toBe(['Closed Won']);
+})->with(['recategorise', 'delete']);
+
+it('refuses to create a status field without a completed option through the migrator', function (array $options): void {
+    $migrator = app(CustomFieldsMigrator::class)->new(
+        model: User::class,
+        fieldData: new CustomFieldData(
+            name: 'Stage',
+            code: 'stage',
+            type: StatusFieldType::KEY,
+        ),
+    );
+
+    if ($options !== []) {
+        $migrator->options($options);
+    }
+
+    expect(fn (): CustomField => $migrator->create())
+        ->toThrow(InvalidArgumentException::class, 'Field [stage]: A status field needs at least one option in the Completed category.');
+
+    expect(CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->exists())->toBeFalse();
+})->with([
+    'no options' => [[]],
+    'names only' => [['Discovery', 'Done']],
+    'no completed category' => [[['name' => 'Discovery', 'category' => 'started'], ['name' => 'Closed Lost', 'category' => OptionCategory::Cancelled]]],
+]);
+
+it('refuses a migrator update that leaves a status field without a completed option', function (): void {
+    app(CustomFieldsMigrator::class)->new(
+        model: User::class,
+        fieldData: new CustomFieldData(
+            name: 'Stage',
+            code: 'stage',
+            type: StatusFieldType::KEY,
+            section: new CustomFieldSectionData(name: 'Pipeline', code: 'pipeline'),
+        ),
+    )->options(['Discovery', ['name' => 'Closed Won', 'category' => OptionCategory::Completed]])->create();
+
+    $migrator = app(CustomFieldsMigrator::class)
+        ->find(User::class, 'stage')
+        ->options(['Discovery', ['name' => 'Closed Won', 'category' => OptionCategory::Started]]);
+
+    expect(fn () => $migrator->update(['name' => 'Stage']))
+        ->toThrow(InvalidArgumentException::class, 'A status field needs at least one option in the Completed category.');
+
+    $field = CustomField::query()->withoutGlobalScopes()->where('code', 'stage')->firstOrFail();
+
+    expect($field->optionsInCategory(OptionCategory::Completed)->pluck('name')->all())->toBe(['Closed Won']);
+});
+
+it('passes a status option list only when one option is completed', function (array $options, bool $passes): void {
+    $validator = Validator::make(
+        ['options' => $options],
+        ['options' => [new RequiresCompletedOption(StatusFieldType::KEY)]],
+    );
+
+    expect($validator->passes())->toBe($passes);
+
+    if (! $passes) {
+        expect($validator->errors()->first('options'))
+            ->toBe('A status field needs at least one option in the Completed category.');
+    }
+})->with([
+    'one completed among several' => [[
+        ['name' => 'Discovery', 'settings' => ['category' => 'started']],
+        ['name' => 'Closed Won', 'category' => OptionCategory::Completed],
+        'Backlog',
+    ], true],
+    'only active categories' => [[
+        ['name' => 'Discovery', 'category' => 'unstarted'],
+        ['name' => 'Proposal', 'settings' => ['category' => OptionCategory::Started]],
+        ['name' => 'Closed Lost', 'category' => 'cancelled'],
+    ], false],
+    'names only' => [['Done', 'Completed'], false],
+    'empty list' => [[], false],
+]);
+
+it('reads the category of stored option models', function (string $category, bool $passes): void {
+    $field = statusFieldForCategories();
+    $field->options()->createMany([
+        ['name' => 'Discovery', 'sort_order' => 1],
+        ['name' => 'Closed', 'sort_order' => 2, 'settings' => ['category' => $category]],
+    ]);
+
+    $validator = Validator::make(
+        ['options' => $field->options()->get()->all()],
+        ['options' => [new RequiresCompletedOption(StatusFieldType::KEY)]],
+    );
+
+    expect($validator->passes())->toBe($passes);
+})->with([
+    'completed' => ['completed', true],
+    'cancelled' => ['cancelled', false],
+]);
+
+it('leaves every type other than status to its own rules', function (string $type): void {
+    $validator = Validator::make(
+        ['options' => []],
+        ['options' => [new RequiresCompletedOption($type)]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+})->with(['select', 'multi-select', 'tags-input']);

@@ -113,10 +113,6 @@ final readonly class LookupPreloader
             $links = $record->getRelation($relation);
 
             foreach ($links as $link) {
-                if ($link->active_until !== null) {
-                    continue;
-                }
-
                 $ends[$link->{$end.'_entity_type'}][] = $link->{$end.'_entity_id'};
             }
         }

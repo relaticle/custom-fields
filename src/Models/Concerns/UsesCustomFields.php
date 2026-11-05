@@ -205,17 +205,41 @@ trait UsesCustomFields
     }
 
     /**
+     * The active edges this record is the from end of.
+     *
      * @return MorphMany<CustomFieldLink>
      */
     public function outgoingLinks(): MorphMany
+    {
+        return $this->outgoingLinkHistory()->whereNull('active_until');
+    }
+
+    /**
+     * The active edges this record is the to end of.
+     *
+     * @return MorphMany<CustomFieldLink>
+     */
+    public function incomingLinks(): MorphMany
+    {
+        return $this->incomingLinkHistory()->whereNull('active_until');
+    }
+
+    /**
+     * Every edge this record was ever the from end of, closed ones included.
+     *
+     * @return MorphMany<CustomFieldLink>
+     */
+    public function outgoingLinkHistory(): MorphMany
     {
         return $this->morphMany(CustomFields::linkModel(), 'from_entity');
     }
 
     /**
+     * Every edge this record was ever the to end of, closed ones included.
+     *
      * @return MorphMany<CustomFieldLink>
      */
-    public function incomingLinks(): MorphMany
+    public function incomingLinkHistory(): MorphMany
     {
         return $this->morphMany(CustomFields::linkModel(), 'to_entity');
     }
@@ -240,23 +264,10 @@ trait UsesCustomFields
         }
     }
 
-    /**
-     * The ledger keeps closed edges forever, so only the active ones are worth carrying
-     * into a page render.
-     */
-    public function scopeWithActiveCustomFieldLinks(Builder $query): Builder
-    {
-        return $query->with([
-            'outgoingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
-            'incomingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
-        ]);
-    }
-
     public function scopeWithCustomFieldValues(Builder $query): Builder
     {
         return $query
-            ->withActiveCustomFieldLinks()
-            ->with('customFieldValues.customField.options')
+            ->with(['outgoingLinks', 'incomingLinks', 'customFieldValues.customField.options'])
             ->afterQuery(function ($records): void {
                 if ($records instanceof EloquentCollection) {
                     app(LookupPreloader::class)->preload($records);

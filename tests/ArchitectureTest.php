@@ -536,6 +536,7 @@ function publicApi(): array
         'FieldTypeSystem\\Definitions\\',
         'Validation\\Capabilities\\',
         'Rules\\UniqueCustomFieldValue',
+        'Rules\\RequiresCompletedOption',
         'Support\\SafeValueConverter',
         'Filament\\Integration\\Base\\',
         'Filament\\Integration\\Contracts\\',

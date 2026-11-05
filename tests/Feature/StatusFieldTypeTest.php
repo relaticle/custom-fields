@@ -32,7 +32,7 @@ function stageFieldOfType(string $type): CustomField
             'entity_type' => Post::class,
             'options' => [
                 ['name' => 'Discovery'],
-                ['name' => 'Closed Won'],
+                ['name' => 'Closed Won', 'settings' => ['category' => 'completed']],
             ],
         ])
         ->assertHasNoActionErrors();

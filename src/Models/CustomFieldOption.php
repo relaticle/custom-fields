@@ -135,8 +135,11 @@ class CustomFieldOption extends Model
      * @param  Builder<self>  $query
      * @return Builder<self>
      */
-    public function scopeWhereCategory(Builder $query, OptionCategory $category): Builder
+    public function scopeWhereCategory(Builder $query, OptionCategory ...$categories): Builder
     {
-        return $query->where('settings->category', $category->value);
+        return $query->whereIn('settings->category', array_map(
+            static fn (OptionCategory $category): string => $category->value,
+            $categories,
+        ));
     }
 }

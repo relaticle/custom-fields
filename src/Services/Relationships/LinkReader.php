@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\LinkEnd;
+use Relaticle\CustomFields\Data\ReachedRecord;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -59,6 +61,97 @@ final readonly class LinkReader
     }
 
     /**
+     * The records within $depth active links of $record, following edges both ways, nearest
+     * first and then by entity type and id. Each record appears once, at the hop that first
+     * reached it, and the start record never does. Nothing is loaded: the caller authorises
+     * and loads what it keeps.
+     *
+     * @return list<ReachedRecord>
+     */
+    public function reachable(Model $record, int $depth, int $limit): array
+    {
+        $visited = [$this->visitKey($record->getMorphClass(), $record->getKey()) => true];
+        $frontier = [$record->getMorphClass() => [$record->getKey()]];
+        $reached = [];
+
+        for ($hop = 1; $hop <= $depth && $frontier !== [] && count($reached) < $limit; $hop++) {
+            $found = array_slice($this->nextHop($frontier, $visited, $hop), 0, $limit - count($reached));
+            $frontier = [];
+
+            foreach ($found as $next) {
+                $visited[$this->visitKey($next->entityType, $next->entityId)] = true;
+                $frontier[$next->entityType][] = $next->entityId;
+                $reached[] = $next;
+            }
+        }
+
+        return $reached;
+    }
+
+    /**
+     * @param  array<string, list<int|string>>  $frontier
+     * @param  array<string, true>  $visited
+     * @return list<ReachedRecord>
+     */
+    private function nextHop(array $frontier, array $visited, int $hop): array
+    {
+        $found = [];
+
+        foreach (LinkSide::cases() as $side) {
+            $far = $side->opposite();
+
+            foreach ($this->hopQuery($frontier, $side)->get() as $link) {
+                $entityType = (string) $link->getAttribute($far->typeColumn());
+                $entityId = $this->castToTargetKeys([$link->getAttribute($far->idColumn())], $entityType)[0];
+                $key = $this->visitKey($entityType, $entityId);
+
+                if (! isset($visited[$key])) {
+                    $found[$key] ??= new ReachedRecord($entityType, $entityId, $hop, $link->relationship_id, $far);
+                }
+            }
+        }
+
+        usort($found, static fn (ReachedRecord $a, ReachedRecord $b): int => strcmp($a->entityType, $b->entityType)
+            ?: strnatcmp((string) $a->entityId, (string) $b->entityId));
+
+        return $found;
+    }
+
+    /**
+     * One query per side and hop. The relationship_id subquery is what lets the planner use
+     * the cf_links_from_idx and cf_links_to_idx indexes, which lead with it.
+     *
+     * @param  array<string, list<int|string>>  $frontier
+     * @return Builder<CustomFieldLink>
+     */
+    private function hopQuery(array $frontier, LinkSide $side): Builder
+    {
+        $far = $side->opposite();
+        $definitions = CustomFields::newRelationshipModel();
+        $links = CustomFields::newLinkModel();
+
+        return $links->newQuery()
+            ->select([$links->getKeyName(), 'relationship_id', $far->typeColumn(), $far->idColumn()])
+            ->whereIn('relationship_id', $definitions->newQuery()
+                ->whereIn($side->typeColumn(), array_keys($frontier))
+                ->select($definitions->getKeyName()))
+            ->whereNull('active_until')
+            ->where(function (Builder $nested) use ($frontier, $side): void {
+                foreach ($frontier as $entityType => $ids) {
+                    $nested->orWhere(fn (Builder $end): Builder => $end
+                        ->where($side->typeColumn(), $entityType)
+                        ->whereIn($side->idColumn(), $ids));
+                }
+            })
+            ->orderBy($links->getKeyName());
+    }
+
+    private function visitKey(string $entityType, int|string $entityId): string
+    {
+        return $entityType.'|'.$entityId;
+    }
+
+    /**
      * @param  list<LinkEnd>  $ends
      * @return Collection<int, CustomFieldLink>
      */
@@ -67,8 +160,7 @@ final readonly class LinkReader
         $loaded = $this->loadedLinks($record, $ends);
 
         if ($loaded instanceof Collection) {
-            return $loaded->filter(fn (CustomFieldLink $link): bool => $link->active_until === null
-                && (string) $link->relationship_id === (string) $definition->getKey())->values();
+            return $loaded->filter(fn (CustomFieldLink $link): bool => (string) $link->relationship_id === (string) $definition->getKey())->values();
         }
 
         return $this->query($record, $definition, $ends)->get()->toBase();

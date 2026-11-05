@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
@@ -86,4 +87,50 @@ it('resolves the definition model through the swap registry', function (): void 
         ->and(CustomFields::newRelationshipModel())->toBeInstanceOf(CustomFieldRelationship::class)
         ->and(CustomFields::newRelationshipModel()->getTable())
         ->toBe(config('custom-fields.database.table_names.custom_field_relationships'));
+});
+
+it('answers relationshipDefinition for an eager-loaded list of link fields in a constant number of queries', function (): void {
+    $section = CustomFieldSection::factory()->create();
+    CustomField::factory()->create(['type' => 'text', 'entity_type' => 'post', 'custom_field_section_id' => $section->id]);
+
+    $definitionsFor = function (int $count) use ($section): array {
+        $definitions = [];
+
+        foreach (range(1, $count) as $index) {
+            $field = CustomField::factory()->create(['type' => 'record', 'entity_type' => 'post', 'custom_field_section_id' => $section->id]);
+            $slot = $index % 2 === 0 ? 'to_field_id' : 'from_field_id';
+            $definitions[$field->id] = CustomFieldRelationship::factory()->create(['from_field_id' => null, 'to_field_id' => null, $slot => $field->id])->id;
+        }
+
+        return $definitions;
+    };
+
+    $readAll = function (): array {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $read = CustomField::query()
+            ->linkFields()
+            ->withRelationshipDefinition()
+            ->get()
+            ->mapWithKeys(fn (CustomField $field): array => [$field->id => $field->relationshipDefinition()?->id])
+            ->all();
+
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return [$read, $queries];
+    };
+
+    $expected = $definitionsFor(2);
+    [$read, $queriesForTwo] = $readAll();
+
+    expect($read)->toEqual($expected);
+
+    $expected += $definitionsFor(6);
+    [$read, $queriesForEight] = $readAll();
+
+    expect($read)->toEqual($expected)
+        ->and($queriesForEight)->toBe($queriesForTwo)
+        ->and($queriesForTwo)->toBe(3);
 });

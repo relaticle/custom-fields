@@ -5,8 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\ReachedRecord;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\Relationships\LinkReader;
@@ -25,6 +28,27 @@ function readPathRelated(RelationshipCardinality $cardinality = RelationshipCard
         fromField: new FieldSlotData(name: 'Related Posts', sectionId: $section->getKey()),
         toField: new FieldSlotData(name: 'Related From', sectionId: $section->getKey()),
     ));
+}
+
+function readPathLink(CustomFieldRelationship $definition, Post $from, Post $to, bool $closed = false): CustomFieldLink
+{
+    return CustomFieldLink::factory()->create([
+        'relationship_id' => $definition->getKey(),
+        'from_entity_type' => $from->getMorphClass(),
+        'from_entity_id' => $from->getKey(),
+        'to_entity_type' => $to->getMorphClass(),
+        'to_entity_id' => $to->getKey(),
+        'active_until' => $closed ? now() : null,
+    ]);
+}
+
+/**
+ * @param  list<ReachedRecord>  $reached
+ * @return array<int|string, int>
+ */
+function reachedDepths(array $reached): array
+{
+    return collect($reached)->mapWithKeys(fn (ReachedRecord $record): array => [$record->entityId => $record->depth])->all();
 }
 
 function linkQueryCount(callable $work): int
@@ -176,4 +200,87 @@ it('resolves linked titles for a loaded page without a query per record', functi
         DB::disableQueryLog();
         DB::flushQueryLog();
     }
+});
+
+it('relates only active links and keeps closed ones in the link history', function (): void {
+    $definition = readPathRelated();
+    [$host, $kept, $dropped] = Post::factory()->count(3)->create();
+
+    $host->update(['custom_fields' => [$definition->fromField->code => [$kept->getKey(), $dropped->getKey()]]]);
+    $host->update(['custom_fields' => [$definition->fromField->code => [$kept->getKey()]]]);
+
+    expect($host->outgoingLinks()->pluck('to_entity_id')->map(intval(...))->all())->toBe([$kept->getKey()])
+        ->and($host->outgoingLinkHistory()->count())->toBe(2)
+        ->and($dropped->incomingLinks()->count())->toBe(0)
+        ->and($dropped->incomingLinkHistory()->count())->toBe(1)
+        ->and(Post::query()->whereKey($host->getKey())->withCustomFieldValues()->first()->outgoingLinks)->toHaveCount(1);
+});
+
+it('walks a chain no further than the depth asked for', function (): void {
+    $definition = readPathRelated();
+    [$a, $b, $c, $d] = Post::factory()->count(4)->create();
+
+    readPathLink($definition, $a, $b);
+    readPathLink($definition, $b, $c);
+    readPathLink($definition, $d, $c);
+
+    $reached = app(LinkReader::class)->reachable($a, depth: 2, limit: 50);
+
+    expect(reachedDepths($reached))->toBe([$b->getKey() => 1, $c->getKey() => 2])
+        ->and($reached[0]->entityType)->toBe($b->getMorphClass())
+        ->and($reached[0]->relationshipId)->toEqual($definition->getKey())
+        ->and($reached[0]->side)->toBe(LinkSide::To);
+});
+
+it('follows links in both directions', function (): void {
+    $definition = readPathRelated();
+    [$a, $b, $c] = Post::factory()->count(3)->create();
+
+    readPathLink($definition, $b, $a);
+    readPathLink($definition, $c, $b);
+
+    $reached = app(LinkReader::class)->reachable($a, depth: 3, limit: 50);
+
+    expect(reachedDepths($reached))->toBe([$b->getKey() => 1, $c->getKey() => 2])
+        ->and($reached[0]->side)->toBe(LinkSide::From);
+});
+
+it('terminates on a cycle, returns each record once and never the start record', function (): void {
+    $definition = readPathRelated();
+    [$a, $b, $c] = Post::factory()->count(3)->create();
+
+    readPathLink($definition, $a, $b);
+    readPathLink($definition, $b, $c);
+    readPathLink($definition, $c, $a);
+    readPathLink($definition, $b, $a);
+
+    $reached = app(LinkReader::class)->reachable($a, depth: 10, limit: 50);
+
+    expect(reachedDepths($reached))->toBe([$b->getKey() => 1, $c->getKey() => 1])
+        ->and($reached)->toHaveCount(2);
+});
+
+it('stops once the limit is reached, nearest records first', function (): void {
+    $definition = readPathRelated();
+    [$a, $b, $c, $d, $e] = Post::factory()->count(5)->create();
+
+    readPathLink($definition, $a, $b);
+    readPathLink($definition, $a, $c);
+    readPathLink($definition, $b, $d);
+    readPathLink($definition, $d, $e);
+
+    $reached = app(LinkReader::class)->reachable($a, depth: 5, limit: 3);
+
+    expect(reachedDepths($reached))->toBe([$b->getKey() => 1, $c->getKey() => 1, $d->getKey() => 2]);
+});
+
+it('does not follow a closed link', function (): void {
+    $definition = readPathRelated();
+    [$a, $b, $c, $d] = Post::factory()->count(4)->create();
+
+    readPathLink($definition, $a, $b);
+    readPathLink($definition, $a, $c, closed: true);
+    readPathLink($definition, $d, $a, closed: true);
+
+    expect(reachedDepths(app(LinkReader::class)->reachable($a, depth: 3, limit: 50)))->toBe([$b->getKey() => 1]);
 });

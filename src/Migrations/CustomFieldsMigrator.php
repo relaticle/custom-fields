@@ -25,6 +25,7 @@ use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
+use Relaticle\CustomFields\Rules\RequiresCompletedOption;
 use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\CodeGenerator;
@@ -137,6 +138,8 @@ final class CustomFieldsMigrator
             );
         }
 
+        $this->assertKeepsACompletedOption($this->customFieldData->options ?? []);
+
         try {
             DB::beginTransaction();
 
@@ -232,6 +235,7 @@ final class CustomFieldsMigrator
                 ($this->customFieldData->options !== null &&
                     $this->customFieldData->options !== [])
             ) {
+                $this->assertKeepsACompletedOption($this->customFieldData->options);
                 $this->customField->options()->delete();
                 $this->createOptions(
                     $this->customField,
@@ -401,6 +405,20 @@ final class CustomFieldsMigrator
                 sprintf('Option [%s] carries a category, but the options of [%s] are not workflow states.', $option['name'], $code)
             );
         }
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $options
+     */
+    private function assertKeepsACompletedOption(array $options): void
+    {
+        (new RequiresCompletedOption($this->customFieldData->type))->validate(
+            'options',
+            $options,
+            function (string $message): never {
+                throw new InvalidArgumentException(sprintf('Field [%s]: %s', $this->customFieldData->code, $message));
+            },
+        );
     }
 
     private function isCustomFieldTypeOptionable(): bool

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Override;
@@ -50,6 +51,8 @@ use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
  * @property FieldTypeData $typeData
  * @property CustomFieldWidth $width
  * @property-read ?CustomFieldSection $section
+ * @property-read ?CustomFieldRelationship $fromEndDefinition
+ * @property-read ?CustomFieldRelationship $toEndDefinition
  *
  * @method static CustomFieldQueryBuilder<static> query()
  * @method static CustomFieldQueryBuilder<static> where($column, $operator = null, $value = null, $boolean = 'and')
@@ -61,6 +64,8 @@ use Relaticle\CustomFields\QueryBuilders\CustomFieldQueryBuilder;
  * @method static CustomFieldQueryBuilder<static> forMorphEntity(string $entity)
  * @method static CustomFieldQueryBuilder<static> forType(string $type)
  * @method static CustomFieldQueryBuilder<static> withDeactivated(bool $withDeactivated = true)
+ * @method static CustomFieldQueryBuilder<static> linkFields()
+ * @method static CustomFieldQueryBuilder<static> withRelationshipDefinition()
  */
 #[ScopedBy([TenantScope::class, SortOrderScope::class])]
 #[ObservedBy(CustomFieldObserver::class)]
@@ -164,15 +169,35 @@ class CustomField extends Model
     /**
      * @return EloquentCollection<int, CustomFieldOption>
      */
-    public function optionsInCategory(OptionCategory $category): EloquentCollection
+    public function optionsInCategory(OptionCategory ...$categories): EloquentCollection
     {
         if ($this->relationLoaded('options')) {
             return $this->options
-                ->filter(fn (CustomFieldOption $option): bool => $option->settings->category === $category)
+                ->filter(fn (CustomFieldOption $option): bool => in_array($option->settings->category, $categories, true))
                 ->values();
         }
 
-        return $this->options()->whereCategory($category)->get();
+        return $this->options()->whereCategory(...$categories)->get();
+    }
+
+    /**
+     * The definition whose from end this field renders.
+     *
+     * @return HasOne<CustomFieldRelationship, $this>
+     */
+    public function fromEndDefinition(): HasOne
+    {
+        return $this->hasOne(CustomFields::relationshipModel(), 'from_field_id');
+    }
+
+    /**
+     * The definition whose to end this field renders.
+     *
+     * @return HasOne<CustomFieldRelationship, $this>
+     */
+    public function toEndDefinition(): HasOne
+    {
+        return $this->hasOne(CustomFields::relationshipModel(), 'to_field_id');
     }
 
     /**
@@ -192,6 +217,10 @@ class CustomField extends Model
         // field in turn, so the rest never pay for a definition lookup.
         if ($this->typeData?->supports(FieldCapability::RequiresRelationship) !== true) {
             return null;
+        }
+
+        if ($this->relationLoaded('fromEndDefinition') && $this->relationLoaded('toEndDefinition')) {
+            return $this->fromEndDefinition ?? $this->toEndDefinition;
         }
 
         return once(fn (): ?CustomFieldRelationship => CustomFields::newRelationshipModel()

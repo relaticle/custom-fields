@@ -83,6 +83,28 @@ class CustomFieldQueryBuilder extends Builder
         return $this->where('active', true);
     }
 
+    /**
+     * Fields that are a slot of some relationship definition, on either end.
+     *
+     * @return CustomFieldQueryBuilder<TModelClass>
+     */
+    public function linkFields(): self
+    {
+        return $this->where(function (Builder $query): void {
+            $query->has('fromEndDefinition')->orHas('toEndDefinition');
+        });
+    }
+
+    /**
+     * Loads what relationshipDefinition() reads, so a list of fields answers it with no query per field.
+     *
+     * @return CustomFieldQueryBuilder<TModelClass>
+     */
+    public function withRelationshipDefinition(): self
+    {
+        return $this->with(['fromEndDefinition', 'toEndDefinition']);
+    }
+
     /** @return CustomFieldQueryBuilder<TModelClass> */
     public function withDeactivated(bool $withDeactivated = true): self
     {

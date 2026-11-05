@@ -52,6 +52,7 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityCompon
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Rules\RequiresCompletedOption;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\OptionNameParser;
@@ -671,6 +672,9 @@ final class FieldForm
             ])
             ->columns(12)
             ->columnSpanFull()
+            ->rules([
+                fn (Get $get): RequiresCompletedOption => new RequiresCompletedOption((string) $get('type')),
+            ])
             ->requiredUnless('type', function (callable $get) {
                 $fieldType = $get('type');
                 if (! $fieldType) {

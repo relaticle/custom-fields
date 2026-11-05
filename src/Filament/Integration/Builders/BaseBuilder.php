@@ -188,6 +188,7 @@ abstract class BaseBuilder
                     ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
                     ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
                     ->with('options')
+                    ->withRelationshipDefinition()
                     ->orderBy('sort_order');
             }])
             ->get();
@@ -227,6 +228,7 @@ abstract class BaseBuilder
             ->when($this->only !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereIn('code', $this->only))
             ->when($this->except !== [], fn (CustomFieldQueryBuilder $q): CustomFieldQueryBuilder => $q->whereNotIn('code', $this->except))
             ->with('options')
+            ->withRelationshipDefinition()
             ->orderBy('sort_order')
             ->get()
             ->filter(fn (CustomField $field): bool => $field->typeData !== null)
