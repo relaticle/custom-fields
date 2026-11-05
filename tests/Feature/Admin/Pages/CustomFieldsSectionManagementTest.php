@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Forms\Components\Toggle;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
@@ -373,15 +374,11 @@ describe('ManageCustomFieldSection - condition value persistence', function (): 
     });
 });
 
-describe('SectionForm - extendSchemaUsing', function (): void {
-    afterEach(function (): void {
-        SectionForm::flushSchemaExtensions();
-    });
-
+describe('CustomFieldsPlugin - sectionSchema', function (): void {
     it('passes the section entity type to the extension callback', function (): void {
         $captured = null;
 
-        SectionForm::extendSchemaUsing(function (array $schema, string $entityType) use (&$captured): array {
+        CustomFieldsPlugin::get()->sectionSchema(function (array $schema, string $entityType) use (&$captured): array {
             $captured = $entityType;
 
             return $schema;
@@ -392,8 +389,8 @@ describe('SectionForm - extendSchemaUsing', function (): void {
         expect($captured)->toBe($this->userEntityType);
     });
 
-    it('persists a field added via extendSchemaUsing into the settings extra bag on create', function (): void {
-        SectionForm::extendSchemaUsing(fn (array $schema): array => [
+    it('persists a field added via sectionSchema into the settings extra bag on create', function (): void {
+        CustomFieldsPlugin::get()->sectionSchema(fn (array $schema): array => [
             ...$schema,
             Toggle::make('settings.extra.render_as_tab')->label('Render as own tab'),
         ]);
@@ -423,7 +420,7 @@ describe('SectionForm - extendSchemaUsing', function (): void {
                 'settings' => ['extra' => ['render_as_tab' => true]],
             ]);
 
-        SectionForm::extendSchemaUsing(fn (array $schema): array => [
+        CustomFieldsPlugin::get()->sectionSchema(fn (array $schema): array => [
             ...$schema,
             Toggle::make('settings.extra.render_as_tab')->label('Render as own tab'),
         ]);

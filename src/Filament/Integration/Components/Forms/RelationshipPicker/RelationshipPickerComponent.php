@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Components\Forms\RelationshipPicker;
 
+use Filament\Forms\Components\Contracts\HasNestedRecursiveValidationRules as HasNestedRecursiveValidationRulesContract;
+use Filament\Forms\Components\Field;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Renderless;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\UiSurface;
-use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectInput\RecordSelectInputComponent;
+use Relaticle\CustomFields\Filament\Integration\Concerns\Forms\SelectsRecords;
 use Relaticle\CustomFields\Filament\Integration\Support\RecordChips;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -21,13 +23,17 @@ use Relaticle\CustomFields\Support\ViewFlavor;
  * user can unlink, an inline confirmation before a record is taken from its holder, a page to
  * create the record it could not find, and where each existing link came from.
  */
-final class RelationshipPickerComponent extends RecordSelectInputComponent
+final class RelationshipPickerComponent extends Field implements HasNestedRecursiveValidationRulesContract
 {
+    use SelectsRecords;
+
     protected string $view = 'custom-fields::forms.relationship-picker';
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->setUpRecordSelect();
 
         $polishedView = ViewFlavor::view(UiSurface::RecordPicker);
 
@@ -42,7 +48,7 @@ final class RelationshipPickerComponent extends RecordSelectInputComponent
      *
      * @return array<string, string>
      */
-    protected function provenance(): array
+    private function provenance(): array
     {
         $customField = $this->getCustomField();
 

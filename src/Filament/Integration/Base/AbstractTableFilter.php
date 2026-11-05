@@ -29,6 +29,8 @@ abstract class AbstractTableFilter implements TableFilterInterface
      * Run a constraint written against the model that owns the field. Without a through path
      * that is the row model itself, so both cases share one query shape.
      *
+     * @internal
+     *
      * @param  Builder<Model>  $query
      * @param  Closure(Builder<Model>): Builder<Model>  $constraint
      * @return Builder<Model>
@@ -42,6 +44,9 @@ abstract class AbstractTableFilter implements TableFilterInterface
         return app(ThroughRelationResolver::class)->constrain($query, $through, $constraint);
     }
 
+    /**
+     * @internal
+     */
     protected function hasColorOptionsEnabled(CustomField $customField): bool
     {
         return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)

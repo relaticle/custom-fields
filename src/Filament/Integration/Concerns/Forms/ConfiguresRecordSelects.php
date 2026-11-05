@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Concerns\Forms;
 
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectInput\RecordSelectInputComponent;
+use Relaticle\CustomFields\Filament\Integration\Components\Forms\RelationshipPicker\RelationshipPickerComponent;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions;
@@ -18,12 +19,12 @@ trait ConfiguresRecordSelects
     private const int MAX_MULTIPLE_RECORDS = 100;
 
     /**
-     * @template TComponent of RecordSelectInputComponent
+     * @template TComponent of RecordSelectInputComponent|RelationshipPickerComponent
      *
      * @param  TComponent  $component
      * @return TComponent
      */
-    protected function configureRecordSelect(RecordSelectInputComponent $component, CustomField $customField): RecordSelectInputComponent
+    protected function configureRecordSelect(RecordSelectInputComponent|RelationshipPickerComponent $component, CustomField $customField): RecordSelectInputComponent|RelationshipPickerComponent
     {
         $definition = $customField->relationshipDefinition();
         $allowMultiple = $customField->allowsMultipleRecords();

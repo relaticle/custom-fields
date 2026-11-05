@@ -19,8 +19,6 @@ use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\DateTi
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\IconColumn;
 use Relaticle\CustomFields\Filament\Integration\Factories\AbstractComponentFactory;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
-use Relaticle\CustomFields\Filament\Management\Schemas\FormInterface;
-use Relaticle\CustomFields\Filament\Management\Schemas\SectionFormInterface;
 use Relaticle\CustomFields\Migrations\CustomFieldsMigration;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
@@ -282,7 +280,6 @@ arch('Classes are final outside the documented extension points')
         BaseBuilder::class,
         'Relaticle\CustomFields\Filament\Integration\Components\Forms\MultiValueInput',
         'Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneInput',
-        'Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectInput',
         DateTimeColumn::class,
         IconColumn::class,
         'Relaticle\CustomFields\Filament\Integration\Builders\Concerns',
@@ -291,8 +288,6 @@ arch('Classes are final outside the documented extension points')
         'Relaticle\CustomFields\Filament\Integration\Factories\Concerns',
         CustomFieldsMigration::class,
         CustomFieldsManagementPage::class,
-        FormInterface::class,
-        SectionFormInterface::class,
         'Relaticle\CustomFields\Jobs\Concerns',
         'Relaticle\CustomFields\Livewire\Concerns',
         'Relaticle\CustomFields\Models\Concerns',

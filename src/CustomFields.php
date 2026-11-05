@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Data\WriteContext;
 use Relaticle\CustomFields\Enums\ImportDateFormat;
@@ -65,6 +66,9 @@ final class CustomFields
     public static ?string $dateTimeDisplayFormat = null;
 
     private static ?WriteContext $writeContext = null;
+
+    /** @var (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null */
+    private static ?Closure $codeUniquenessScope = null;
 
     /**
      * Get the name of the custom field model used by the application.
@@ -344,6 +348,33 @@ final class CustomFields
     public static function resolveTenantUsing(Closure $callback): void
     {
         TenantContextService::setTenantResolver($callback);
+    }
+
+    /**
+     * Narrow the generated-code uniqueness check to a subset of rows.
+     *
+     * The callback receives the entity type, either 'field' or 'section', and the section
+     * the code is being generated within (null when there is none). It returns a query
+     * scope closure, or null to leave the check global.
+     *
+     * Example:
+     * ```
+     * CustomFields::scopeCodeUniquenessUsing(fn (string $entityType, string $type, int|string|null $sectionId) => null);
+     * ```
+     *
+     * @param  Closure(string $entityType, string $type, int|string|null $sectionId): ((Closure(Builder<covariant Model>): Builder<Model>)|null)  $scope
+     */
+    public static function scopeCodeUniquenessUsing(Closure $scope): void
+    {
+        self::$codeUniquenessScope = $scope;
+    }
+
+    /**
+     * @return (Closure(string, string, int|string|null): (Closure(Builder<covariant Model>): Builder<Model>)|null)|null
+     */
+    public static function codeUniquenessScope(): ?Closure
+    {
+        return self::$codeUniquenessScope;
     }
 
     /**

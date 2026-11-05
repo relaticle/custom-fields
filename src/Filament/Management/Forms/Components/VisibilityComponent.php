@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
 
-use Closure;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Component;
@@ -25,19 +24,6 @@ final class VisibilityComponent extends Component
     public function __construct()
     {
         $this->columnSpanFull();
-    }
-
-    /**
-     * Register a resolver that constrains the conditional-visibility "depends on" field
-     * picker. The resolver receives the entity type and the section the conditioned
-     * field/section belongs to, and returns a query constraint closure, or null for no
-     * scope. Register once (e.g. from a service provider).
-     *
-     * @param  ?Closure(string $entityType, ?CustomFieldSection $section): ?Closure  $resolver
-     */
-    public static function resolveAvailableFieldsScopeUsing(?Closure $resolver): void
-    {
-        ConditionOptions::resolveAvailableFieldsScopeUsing($resolver);
     }
 
     public static function make(?CustomFieldSection $scopeSection = null): static

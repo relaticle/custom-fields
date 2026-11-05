@@ -35,17 +35,9 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
     use ManagesCustomFields;
     use ManagesFields;
 
-    /** @var ?Closure(CustomFieldSection): ?Closure */
-    private static ?Closure $uniqueRuleModifierResolver = null;
-
     public string $entityType;
 
     public CustomFieldSection $section;
-
-    public static function resolveUniqueRuleModifierUsing(?Closure $callback): void
-    {
-        self::$uniqueRuleModifierResolver = $callback;
-    }
 
     /**
      * @param  array<int, int|string>  $fields
@@ -118,8 +110,10 @@ final class ManageCustomFieldSection extends Component implements HasActions, Ha
         $sectionForm = SectionForm::entityType($this->entityType)
             ->scopeVisibilityToSection($this->section);
 
-        if (self::$uniqueRuleModifierResolver instanceof Closure) {
-            $modifier = (self::$uniqueRuleModifierResolver)($this->section);
+        $uniqueSectionRule = CustomFieldsPlugin::current()?->getUniqueSectionRule();
+
+        if ($uniqueSectionRule instanceof Closure) {
+            $modifier = $uniqueSectionRule($this->section);
 
             if ($modifier) {
                 $sectionForm->modifyUniqueRuleUsing($modifier);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Component;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
@@ -12,10 +13,6 @@ use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 
 mutates(FieldForm::class);
-
-afterEach(function (): void {
-    FieldForm::flushSchemaExtensions();
-});
 
 function panelsCheckboxList(): CheckboxList
 {
@@ -39,23 +36,19 @@ function generalTabStatePaths(): array
     );
 }
 
-it('builds the same general tab whether or not an extension was registered and then flushed', function (): void {
+it('appends an extension to the general tab and leaves the rest of it unchanged', function (): void {
     $baseline = generalTabStatePaths();
 
-    FieldForm::extendSchemaUsing(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
+    CustomFieldsPlugin::get()->fieldSchema(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
 
     expect(generalTabStatePaths())->toBe([...$baseline, 'settings.additional.hidden_in_panels']);
-
-    FieldForm::flushSchemaExtensions();
-
-    expect(generalTabStatePaths())->toBe($baseline);
 });
 
 it('passes the section to the extension and appends its components', function (): void {
     $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['code' => 'main']);
     $seen = null;
 
-    FieldForm::extendSchemaUsing(function (array $schema, ?CustomFieldSection $s) use (&$seen): array {
+    CustomFieldsPlugin::get()->fieldSchema(function (array $schema, ?CustomFieldSection $s) use (&$seen): array {
         $seen = $s;
 
         return [...$schema, panelsCheckboxList()];
@@ -69,7 +62,7 @@ it('passes the section to the extension and appends its components', function ()
 it('receives a null section when the form is built without one', function (): void {
     $seen = 'unset';
 
-    FieldForm::extendSchemaUsing(function (array $schema, ?CustomFieldSection $s) use (&$seen): array {
+    CustomFieldsPlugin::get()->fieldSchema(function (array $schema, ?CustomFieldSection $s) use (&$seen): array {
         $seen = $s;
 
         return $schema;
@@ -83,7 +76,7 @@ it('receives a null section when the form is built without one', function (): vo
 it('persists an extension component into settings.additional on create', function (): void {
     $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['code' => 'main']);
 
-    FieldForm::extendSchemaUsing(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
+    CustomFieldsPlugin::get()->fieldSchema(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
 
     livewire(ManageCustomFieldSection::class, ['section' => $section, 'entityType' => Post::class])
         ->callAction('createField', [
@@ -109,7 +102,7 @@ it('persists an extension component into settings.additional on edit', function 
         'type' => 'text',
     ]);
 
-    FieldForm::extendSchemaUsing(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
+    CustomFieldsPlugin::get()->fieldSchema(fn (array $schema, ?CustomFieldSection $s): array => [...$schema, panelsCheckboxList()]);
 
     livewire(ManageCustomField::class, ['field' => $field])
         ->callAction('edit', data: [

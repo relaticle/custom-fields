@@ -8,6 +8,7 @@ use Closure;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -22,9 +23,6 @@ use Relaticle\CustomFields\Support\RelationConditionConfig;
 
 final class ConditionOptions
 {
-    /** @var ?Closure(string, ?CustomFieldSection): ?Closure */
-    private static ?Closure $availableFieldsScopeResolver = null;
-
     /**
      * @param  ?CustomFieldSection  $scopeSection  The section the conditioned field/section belongs
      *                                             to. When a consumer registers a scope resolver,
@@ -37,19 +35,6 @@ final class ConditionOptions
         private ?string $sectionEntityType = null,
         private ?CustomFieldSection $scopeSection = null,
     ) {}
-
-    /**
-     * Register a resolver that constrains the conditional-visibility "depends on" field
-     * picker. The resolver receives the entity type and the section the conditioned
-     * field/section belongs to, and returns a query constraint closure, or null for no
-     * scope. Register once (e.g. from a service provider).
-     *
-     * @param  ?Closure(string $entityType, ?CustomFieldSection $section): ?Closure  $resolver
-     */
-    public static function resolveAvailableFieldsScopeUsing(?Closure $resolver): void
-    {
-        self::$availableFieldsScopeResolver = $resolver;
-    }
 
     /**
      * @return array<string, string>
@@ -117,7 +102,7 @@ final class ConditionOptions
 
         $currentFieldCode = $this->forSection ? null : $get('../../../../code');
         $scopeSection = $this->scopeSection;
-        $scopeResolver = self::$availableFieldsScopeResolver;
+        $scopeResolver = CustomFieldsPlugin::current()?->getVisibilityFields();
 
         return rescue(function () use ($entityType, $currentFieldCode, $scopeSection, $scopeResolver) {
             $query = CustomFields::customFieldModel()::query()

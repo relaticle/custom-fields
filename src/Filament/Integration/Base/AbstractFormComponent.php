@@ -26,11 +26,9 @@ use Spatie\LaravelData\DataCollection;
 /**
  * Abstract base class for form field components.
  *
- * Eliminates duplication across 18+ component classes by providing
- * common structure and delegating to FieldConfigurator for shared logic.
- *
- * Each concrete component only needs to implement createField() to specify
- * the Filament component type and its basic configuration.
+ * make() applies everything shared (name, label, description, hydration, dehydration,
+ * validation, width, visibility). A subclass implements create() and may override
+ * transformHydratedValue(); every other member is internal and may change in a minor release.
  */
 abstract readonly class AbstractFormComponent implements FormComponentInterface
 {
@@ -53,9 +51,9 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     ];
 
     public function __construct(
-        protected ValidationService $validationService,
-        protected CoreVisibilityLogicService $coreVisibilityLogic,
-        protected FrontendVisibilityService $frontendVisibilityService
+        private ValidationService $validationService,
+        private CoreVisibilityLogicService $coreVisibilityLogic,
+        private FrontendVisibilityService $frontendVisibilityService
     ) {}
 
     /**
@@ -64,7 +62,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * @param  array<string>  $dependentFieldCodes
      * @param  Collection<int, CustomField>|null  $allFields
      */
-    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
+    final public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
     {
         $field = $this->create($customField);
         $allFields ??= collect();
@@ -76,7 +74,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * @param  Collection<int, CustomField>  $allFields
      * @param  array<int, string>  $dependentFieldCodes
      */
-    protected function configure(
+    private function configure(
         Field $field,
         CustomField $customField,
         Collection $allFields,
@@ -377,13 +375,15 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      *
      * @return array<int, mixed>
      */
-    protected function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
+    private function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
         return $this->validationService->getValueValidationRules($customField, $ignoreEntityId);
     }
 
     /**
      * Apply settings dynamically to any Filament component
+     *
+     * @internal
      *
      * @param  array<string, mixed>  $settings
      */
@@ -412,6 +412,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     /**
      * Get options from custom field's configured options.
      *
+     * @internal
+     *
      * @return array<int|string, string>
      */
     protected function getCustomFieldOptions(CustomField $customField): array
@@ -425,6 +427,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * Filtering for static options happens client-side, so this is a readability
      * choice rather than a performance one. A threshold of 0 always shows the box,
      * which is the pre-3.8 behavior.
+     *
+     * @internal
      *
      * @param  array<int|string, string>  $options
      */

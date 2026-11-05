@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
@@ -55,76 +56,20 @@ use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\OptionNameParser;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
-final class FieldForm implements FormInterface
+final class FieldForm
 {
-    /** @var ?Closure(?CustomFieldSection): ?Closure */
-    private static ?Closure $uniqueNameRuleModifierResolver = null;
-
-    /** @var ?Closure(?CustomFieldSection): ?Closure */
-    private static ?Closure $uniqueCodeRuleModifierResolver = null;
-
-    /** @var array<int, Closure(array<int, Component>, ?CustomFieldSection): array<int, Component>> */
-    private static array $schemaExtensions = [];
-
-    /**
-     * Register a resolver that scopes the field-name uniqueness rule beyond the default
-     * entity-type (+ tenant) scope. The resolver receives the section the field belongs to
-     * (the create target, or the edited field's section) and returns a rule modifier, or
-     * null for no extra scope. Lets a consumer allow the same field name across separate
-     * parent forms while still preventing duplicates within one form. Register once.
-     *
-     * @param  ?Closure(?CustomFieldSection $section): ?Closure  $resolver
-     */
-    public static function resolveUniqueRuleModifierUsing(?Closure $resolver): void
-    {
-        self::$uniqueNameRuleModifierResolver = $resolver;
-    }
-
-    /**
-     * Register a resolver that scopes the field-code uniqueness rule beyond the default
-     * entity-type (+ tenant) scope. Same contract as resolveUniqueRuleModifierUsing(), kept
-     * as a separate hook because code and name typically need different scoping: name is a
-     * cosmetic label a consumer may want unique per parent form only, while code is a
-     * stable identity other systems (e.g. reporting) key off of, so its scope is usually
-     * "everything except a defined set of related forms" rather than "this one form".
-     * Register once.
-     *
-     * @param  ?Closure(?CustomFieldSection $section): ?Closure  $resolver
-     */
-    public static function resolveUniqueCodeRuleModifierUsing(?Closure $resolver): void
-    {
-        self::$uniqueCodeRuleModifierResolver = $resolver;
-    }
-
-    /**
-     * @param  Closure(array<int, Component>, ?CustomFieldSection): array<int, Component>  $callback
-     */
-    public static function extendSchemaUsing(Closure $callback): void
-    {
-        self::$schemaExtensions[] = $callback;
-    }
-
-    public static function flushSchemaExtensions(): void
-    {
-        self::$schemaExtensions = [];
-    }
-
     private static function resolveUniqueNameRuleModifier(?CustomFieldSection $section): ?Closure
     {
-        if (self::$uniqueNameRuleModifierResolver instanceof Closure) {
-            return (self::$uniqueNameRuleModifierResolver)($section);
-        }
+        $modifier = CustomFieldsPlugin::current()?->getUniqueFieldNameRule();
 
-        return null;
+        return $modifier instanceof Closure ? $modifier($section) : null;
     }
 
     private static function resolveUniqueCodeRuleModifier(?CustomFieldSection $section): ?Closure
     {
-        if (self::$uniqueCodeRuleModifierResolver instanceof Closure) {
-            return (self::$uniqueCodeRuleModifierResolver)($section);
-        }
+        $modifier = CustomFieldsPlugin::current()?->getUniqueFieldCodeRule();
 
-        return null;
+        return $modifier instanceof Closure ? $modifier($section) : null;
     }
 
     /**
@@ -880,7 +825,7 @@ final class FieldForm implements FormInterface
 
         $generalSchema[] = self::advancedDisclosure($uniqueCodeRuleModifier);
 
-        foreach (self::$schemaExtensions as $extension) {
+        foreach (CustomFieldsPlugin::current()?->getFieldSchemaExtensions() ?? [] as $extension) {
             $generalSchema = $extension($generalSchema, $section);
         }
 

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Toggle;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
-use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
-use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Livewire\ManageFieldsTable;
@@ -17,11 +16,6 @@ use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Support\SettingsMerger;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
-
-afterEach(function (): void {
-    FieldForm::flushSchemaExtensions();
-    SectionForm::flushSchemaExtensions();
-});
 
 mutates(SettingsMerger::class, ManageCustomField::class, ManageCustomFieldSection::class, ManageFieldsTable::class);
 
@@ -87,7 +81,7 @@ describe('section edit', function (): void {
             'settings' => ['extra' => ['render_as_tab' => true, 'hidden_in_panels' => ['portal']]],
         ]);
 
-        SectionForm::extendSchemaUsing(fn (array $schema): array => [
+        CustomFieldsPlugin::get()->sectionSchema(fn (array $schema): array => [
             ...$schema,
             Toggle::make('settings.extra.render_as_tab'),
         ]);
@@ -115,7 +109,7 @@ describe('field edit', function (): void {
             ]],
         ]);
 
-        FieldForm::extendSchemaUsing(fn (array $schema): array => [
+        CustomFieldsPlugin::get()->fieldSchema(fn (array $schema): array => [
             ...$schema,
             CheckboxList::make('settings.additional.hidden_in_panels')
                 ->options(['portal' => 'Portal', 'admin' => 'Admin']),
