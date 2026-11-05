@@ -254,6 +254,30 @@ describe('Updated Timestamp', function (): void {
             ->and($this->post->refresh()->updated_at->toDateTimeString())->toBe('2026-01-02 09:00:00');
     });
 
+    it('writes the record once when the clock ticks between a column change and its custom fields', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+        CustomFieldValue::saving(fn () => $this->travel(1)->seconds());
+        $updates = 0;
+        DB::listen(function (QueryExecuted $query) use (&$updates): void {
+            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+        });
+
+        $this->post->update(['title' => 'Renamed', 'custom_fields' => [$this->field->code => 'changed']]);
+
+        expect($updates)->toBe(1);
+    });
+
+    it('stamps only updated_at when saveCustomFields runs on a record with unsaved changes', function (): void {
+        $this->travelTo('2026-01-02 09:00:00');
+        $this->post->title = 'Unsaved title';
+
+        $this->post->saveCustomFields([$this->field->code => 'changed']);
+
+        $stored = Post::query()->findOrFail($this->post->getKey());
+        expect($stored->title)->not->toBe('Unsaved title')
+            ->and($stored->updated_at->toDateTimeString())->toBe('2026-01-02 09:00:00');
+    });
+
     it('does not update a record it has just created with custom field values', function (): void {
         $updates = 0;
         DB::listen(function (QueryExecuted $query) use (&$updates): void {

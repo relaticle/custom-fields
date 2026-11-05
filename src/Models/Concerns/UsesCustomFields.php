@@ -73,6 +73,11 @@ trait UsesCustomFields
      */
     protected static array $changedCustomFieldValues = [];
 
+    /**
+     * @var array<int, true>
+     */
+    protected static array $customFieldsSavedWithRecordWrite = [];
+
     protected static function bootUsesCustomFields(): void
     {
         static::saving(function (Model $model): void {
@@ -132,8 +137,13 @@ trait UsesCustomFields
     protected function handleCustomFields(): void
     {
         if (isset($this->custom_fields) && is_array($this->custom_fields)) {
-            self::$tempCustomFields[spl_object_id($this)] = $this->custom_fields;
+            $objectId = spl_object_id($this);
+            self::$tempCustomFields[$objectId] = $this->custom_fields;
             unset($this->custom_fields);
+
+            if (! $this->exists || $this->isDirty()) {
+                self::$customFieldsSavedWithRecordWrite[$objectId] = true;
+            }
         }
     }
 
@@ -148,7 +158,11 @@ trait UsesCustomFields
             $customFields = self::$tempCustomFields[$objectId];
             unset(self::$tempCustomFields[$objectId]);
 
-            $this->saveCustomFields($customFields);
+            try {
+                $this->saveCustomFields($customFields);
+            } finally {
+                unset(self::$customFieldsSavedWithRecordWrite[$objectId]);
+            }
         }
     }
 
@@ -255,23 +269,33 @@ trait UsesCustomFields
             $this->saveCustomFieldValue($customField, $value, $tenant);
         });
 
-        if (isset(self::$changedCustomFieldValues[$objectId])) {
-            unset(self::$changedCustomFieldValues[$objectId]);
-            $this->touchForChangedCustomFields();
+        if (! isset(self::$changedCustomFieldValues[$objectId])) {
+            return;
         }
+
+        unset(self::$changedCustomFieldValues[$objectId]);
+
+        if (isset(self::$customFieldsSavedWithRecordWrite[$objectId])) {
+            return;
+        }
+
+        $this->stampUpdatedAtForCustomFields();
     }
 
-    protected function touchForChangedCustomFields(): void
+    protected function stampUpdatedAtForCustomFields(): void
     {
-        if (! $this->exists || ! $this->usesTimestamps() || $this->getUpdatedAtColumn() === null) {
+        $column = $this->getUpdatedAtColumn();
+
+        if (! $this->exists || ! $this->usesTimestamps() || $column === null) {
             return;
         }
 
-        // A create or a column update in this same save already stamped the record.
-        if (($this->getAttributes()[$this->getUpdatedAtColumn()] ?? null) === $this->fromDateTime($this->freshTimestamp())) {
-            return;
-        }
+        $timestamp = $this->freshTimestamp();
 
-        $this->touch();
+        // A query, not touch(): touch() saves every dirty attribute, and inside the saved hook the record is still dirty.
+        $this->setKeysForSaveQuery($this->newModelQuery())->toBase()->update([$column => $this->fromDateTime($timestamp)]);
+
+        $this->setAttribute($column, $timestamp);
+        $this->syncOriginalAttribute($column);
     }
 }
