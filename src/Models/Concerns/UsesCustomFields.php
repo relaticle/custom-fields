@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Models\Concerns;
 
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -331,10 +330,10 @@ trait UsesCustomFields
             return $tenant->getKey();
         }
 
-        // Second priority: Current Filament tenant
-        $filamentTenant = Filament::getTenant();
-        if ($filamentTenant !== null) {
-            return $filamentTenant->getKey();
+        // Second priority: the current tenant (custom resolver, Context, then panel tenant)
+        $currentTenantId = TenantContextService::getCurrentTenantId();
+        if ($currentTenantId !== null) {
+            return $currentTenantId;
         }
 
         // Fallback: Use the tenant from the custom field

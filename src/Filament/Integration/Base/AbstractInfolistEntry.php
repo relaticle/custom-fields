@@ -6,7 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Infolists\Components\Entry;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Contracts\InfolistComponentInterface;
+use Relaticle\CustomFields\Filament\Integration\Contracts\InfolistComponentInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**

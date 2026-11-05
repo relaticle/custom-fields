@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Services;
 
 use Closure;
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Context;
 
 final class TenantContextService
@@ -18,6 +17,13 @@ final class TenantContextService
      * @var Closure(): (int|string|null)|null
      */
     private static ?Closure $tenantResolver = null;
+
+    /**
+     * Lower-priority resolver an integration layer supplies, consulted after the Context.
+     *
+     * @var Closure(): (int|string|null)|null
+     */
+    private static ?Closure $fallbackTenantResolver = null;
 
     /**
      * Set the tenant ID in the context.
@@ -43,6 +49,16 @@ final class TenantContextService
     }
 
     /**
+     * Register the resolver consulted when neither the custom resolver nor the Context names a tenant.
+     *
+     * @param  Closure(): (int|string|null)  $callback
+     */
+    public static function setFallbackTenantResolver(Closure $callback): void
+    {
+        self::$fallbackTenantResolver = $callback;
+    }
+
+    /**
      * Clear the custom tenant resolver.
      */
     public static function clearTenantResolver(): void
@@ -51,13 +67,13 @@ final class TenantContextService
     }
 
     /**
-     * Get the current tenant ID from custom resolver, context, or Filament.
+     * Get the current tenant ID from the custom resolver, the Context, or the fallback resolver.
      * This works in both web requests and queue jobs.
      *
      * Resolution order:
      * 1. Custom resolver (if registered)
      * 2. Laravel Context (works in queues)
-     * 3. Filament tenant (works in web requests)
+     * 3. Fallback resolver (the Filament panel tenant, registered by the service provider)
      * 4. null (no tenant)
      */
     public static function getCurrentTenantId(): null|int|string
@@ -73,22 +89,10 @@ final class TenantContextService
             return $contextTenantId;
         }
 
-        // Third priority: Filament tenant (works in web requests)
-        $filamentTenant = Filament::getTenant();
-
-        return $filamentTenant?->getKey();
-    }
-
-    /**
-     * Set tenant context from Filament tenant.
-     * This is useful for ensuring context is set from web requests.
-     */
-    public static function setFromFilamentTenant(): void
-    {
-        $tenant = Filament::getTenant();
-        if ($tenant !== null) {
-            self::setTenantId($tenant->getKey());
-        }
+        // Third priority: fallback resolver (Filament tenant in web requests)
+        return self::$fallbackTenantResolver instanceof Closure
+            ? (self::$fallbackTenantResolver)()
+            : null;
     }
 
     /**

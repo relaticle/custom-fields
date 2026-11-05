@@ -12,7 +12,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 use Relaticle\CustomFields\Data\DateConstraintValue;
-use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
+use Relaticle\CustomFields\Validation\DateConstraintField;
 use Relaticle\CustomFields\Validation\Rules\DateConstraintRule;
 
 abstract readonly class AbstractDateCapability implements ValidationCapabilityInterface

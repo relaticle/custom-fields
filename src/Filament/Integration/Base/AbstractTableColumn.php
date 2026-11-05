@@ -6,7 +6,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Tables\Columns\Column as BaseColumn;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Contracts\TableColumnInterface;
+use Relaticle\CustomFields\Filament\Integration\Contracts\TableColumnInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**

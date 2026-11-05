@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Exceptions\MissingRecordTitleAttributeException;
 use RuntimeException;
 
@@ -19,6 +19,8 @@ use RuntimeException;
  */
 final readonly class LookupAttributeResolver
 {
+    public function __construct(private ModelResourceResolverInterface $resources) {}
+
     /**
      * @return array{0: Model, 1: string}
      */
@@ -27,7 +29,7 @@ final readonly class LookupAttributeResolver
         $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
         $lookupInstance = app($lookupModelPath);
 
-        $resourcePath = Filament::getModelResource($lookupModelPath);
+        $resourcePath = $this->resources->resourceFor($lookupModelPath);
 
         if ($resourcePath === null) {
             throw new RuntimeException(sprintf(

@@ -18,10 +18,10 @@ use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelTenant;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
 use Relaticle\CustomFields\Http\Middleware\SetTenantContextMiddleware;
 use Relaticle\CustomFields\Models\CustomFieldSection;
-use Relaticle\CustomFields\Services\TenantContextService;
 
 class CustomFieldsPlugin implements Plugin
 {
@@ -84,7 +84,7 @@ class CustomFieldsPlugin implements Plugin
             Action::configureUsing(
                 fn (Action $action): Action => $action->before(
                     function (Action $action): Action {
-                        TenantContextService::setFromFilamentTenant();
+                        PanelTenant::rememberInContext();
 
                         return $action;
                     }

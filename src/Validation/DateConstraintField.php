@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Management\Forms\Components;
+namespace Relaticle\CustomFields\Validation;
 
 use Closure;
 use Filament\Forms\Components\DatePicker;
@@ -19,7 +19,6 @@ use Relaticle\CustomFields\Enums\DateAnchor;
 use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
 use Relaticle\CustomFields\Models\CustomField;
-use Relaticle\CustomFields\Validation\DateFieldReferenceValidator;
 
 final class DateConstraintField
 {

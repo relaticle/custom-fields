@@ -14,7 +14,6 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -23,6 +22,7 @@ use Relaticle\CustomFields\Services\Relationships\UpdateRelationshipDefinition;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\CodeGenerator;
 use Relaticle\CustomFields\Support\SettingsMerger;
+use Relaticle\CustomFields\Validation\DateConstraintField;
 
 trait ManagesCustomFields
 {

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Filament\Facades\Filament;
+use Filament\Panel;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Support\Contracts\HasLabel;
@@ -11,12 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
-use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\Filament\Integration\Builders\BaseBuilder;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\DateTimeColumn;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\IconColumn;
+use Relaticle\CustomFields\Filament\Integration\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Filament\Integration\Factories\AbstractComponentFactory;
 use Relaticle\CustomFields\Filament\Management\Pages\CustomFieldsManagementPage;
 use Relaticle\CustomFields\Migrations\CustomFieldsMigration;
@@ -211,6 +213,42 @@ arch('No vendor dependencies in core models')
     ->not->toUse(['GuzzleHttp', 'Symfony\\Component\\HttpClient'])
     ->ignoring(['Illuminate', 'Carbon', 'Spatie']);
 
+$panelRuntime = [
+    Filament::class,
+    'Filament\Resources',
+    Panel::class,
+    'Livewire',
+    'Relaticle\CustomFields\Filament',
+    'Relaticle\CustomFields\Livewire',
+];
+
+$formComponents = [
+    'Filament\Forms',
+    'Filament\Schemas',
+    'Filament\Tables',
+    'Filament\Infolists',
+    'Filament\Actions',
+];
+
+$domainLayers = [
+    'Models' => [...$panelRuntime, ...$formComponents],
+    'Services' => $panelRuntime,
+    'Data' => [...$panelRuntime, ...$formComponents],
+    'QueryBuilders' => [...$panelRuntime, ...$formComponents],
+    'Rules' => [...$panelRuntime, ...$formComponents],
+    'Events' => [...$panelRuntime, ...$formComponents],
+    'Validation' => $panelRuntime,
+    'Enums' => [...$panelRuntime, ...$formComponents],
+    'Support' => [...$panelRuntime, ...$formComponents],
+    'Contracts' => $panelRuntime,
+];
+
+foreach ($domainLayers as $layer => $forbidden) {
+    arch(sprintf('the %s layer stays out of the Filament panel runtime and Livewire', $layer))
+        ->expect('Relaticle\CustomFields\\'.$layer)
+        ->not->toUse($forbidden);
+}
+
 arch('Strict types are declared')
     ->expect('Relaticle\CustomFields')
     ->toUseStrictTypes();
@@ -284,6 +322,7 @@ arch('Classes are final outside the documented extension points')
         IconColumn::class,
         'Relaticle\CustomFields\Filament\Integration\Builders\Concerns',
         'Relaticle\CustomFields\Filament\Integration\Concerns',
+        'Relaticle\CustomFields\Filament\Integration\Contracts',
         AbstractComponentFactory::class,
         'Relaticle\CustomFields\Filament\Integration\Factories\Concerns',
         CustomFieldsMigration::class,

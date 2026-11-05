@@ -17,9 +17,12 @@ use Relaticle\CustomFields\Console\Commands\CleanupOrphanedValuesCommand;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
 use Relaticle\CustomFields\Console\Commands\UpgradeCommand;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelModelResourceResolver;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelTenant;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldWidth;
@@ -62,6 +65,10 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         $this->app->scoped(MissingRelationshipDefinitions::class);
 
         $this->app->singleton(TenantContextService::class);
+        $this->app->singleton(ModelResourceResolverInterface::class, PanelModelResourceResolver::class);
+
+        // Registered here rather than in the plugin so a panel without the plugin keeps its tenant.
+        TenantContextService::setFallbackTenantResolver(PanelTenant::id(...));
         $this->app->singleton(BackendVisibilityService::class);
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {

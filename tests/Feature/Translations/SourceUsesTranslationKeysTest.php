@@ -54,7 +54,7 @@ it('source file has no hardcoded English labels and references expected translat
         ],
     ],
     'DateConstraintField' => [
-        'relativePath' => 'Filament/Management/Forms/Components/DateConstraintField.php',
+        'relativePath' => 'Validation/DateConstraintField.php',
         'forbidden' => [
             "->label('Constraint')",
             "->label('Offset value')",

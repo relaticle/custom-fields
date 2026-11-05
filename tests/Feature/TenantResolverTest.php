@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Context;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Services\TenantContextService;
@@ -16,6 +17,7 @@ afterEach(function (): void {
     // Always clean up after tests
     TenantContextService::clearTenantResolver();
     Context::flush();
+    Filament::setTenant(null);
 });
 
 describe('Custom Tenant Resolver', function (): void {
@@ -47,6 +49,30 @@ describe('Custom Tenant Resolver', function (): void {
         TenantContextService::setTenantId($tenantId);
 
         expect(TenantContextService::getCurrentTenantId())->toBe($tenantId);
+    });
+
+    it('falls back to the panel tenant when neither a custom resolver nor the Context names one', function (): void {
+        $tenant = User::factory()->create();
+
+        Filament::setTenant($tenant, isQuiet: true);
+
+        expect(TenantContextService::getCurrentTenantId())->toBe($tenant->getKey());
+    });
+
+    it('custom resolver takes priority over the panel tenant', function (): void {
+        Filament::setTenant(User::factory()->create(), isQuiet: true);
+
+        CustomFields::resolveTenantUsing(fn (): int => 321);
+
+        expect(TenantContextService::getCurrentTenantId())->toBe(321);
+    });
+
+    it('Laravel Context takes priority over the panel tenant', function (): void {
+        Filament::setTenant(User::factory()->create(), isQuiet: true);
+
+        TenantContextService::setTenantId(654);
+
+        expect(TenantContextService::getCurrentTenantId())->toBe(654);
     });
 
     it('returns null when no tenant context is available', function (): void {

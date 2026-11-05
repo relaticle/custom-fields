@@ -9,9 +9,9 @@ use Filament\Forms\Components\Field;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ClosureFormAdapter;
+use Relaticle\CustomFields\Filament\Integration\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**

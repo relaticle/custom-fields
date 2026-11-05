@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\QueryBuilders;
 
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Data\LinkEnd;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -21,7 +21,10 @@ use Relaticle\CustomFields\Models\CustomFieldRelationship;
  */
 final readonly class RecordLinkQuery
 {
-    public function __construct(private EntitySearchQuery $entitySearch) {}
+    public function __construct(
+        private EntitySearchQuery $entitySearch,
+        private ModelResourceResolverInterface $resources,
+    ) {}
 
     /**
      * @template TModel of Model
@@ -66,7 +69,7 @@ final readonly class RecordLinkQuery
         // The matching-ids subquery is uncorrelated, so it needs no alias even when the
         // host and the target are the same table.
         $matches = $this->entitySearch
-            ->apply($target->newQuery(), $search, $searchAttributes, Filament::getModelResource($target::class))
+            ->apply($target->newQuery(), $search, $searchAttributes, $this->resources->resourceFor($target::class))
             ->select($target->qualifyColumn($target->getKeyName()))
             ->getQuery();
 

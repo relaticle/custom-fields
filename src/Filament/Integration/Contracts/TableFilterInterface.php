@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Contracts;
+namespace Relaticle\CustomFields\Filament\Integration\Contracts;
 
 use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Database\Eloquent\Model;

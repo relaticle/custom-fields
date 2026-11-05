@@ -9,14 +9,13 @@ namespace Relaticle\CustomFields\Data;
 
 use BackedEnum;
 use Exception;
-use Filament\Facades\Filament;
-use Filament\Resources\Resource;
 use Filament\Support\Contracts\ScalableIcon;
 use Filament\Support\Enums\IconSize;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Spatie\LaravelData\Data;
@@ -149,42 +148,26 @@ final class EntityConfigurationData extends Data
     private function resolveIconFromFilamentResource(): ?string
     {
         try {
-            $resources = Filament::getResources();
+            $resourceClass = app(ModelResourceResolverInterface::class)->resourceFor($this->modelClass);
+
+            if ($resourceClass === null) {
+                return null;
+            }
+
+            $icon = $resourceClass::getNavigationIcon();
         } catch (Exception) {
             return null;
         }
 
-        foreach ($resources as $resourceClass) {
-            try {
-                if (! class_exists($resourceClass)) {
-                    continue;
-                }
-
-                if (! is_subclass_of($resourceClass, Resource::class)) {
-                    continue;
-                }
-
-                if ($resourceClass::getModel() !== $this->modelClass) {
-                    continue;
-                }
-
-                $icon = $resourceClass::getNavigationIcon();
-
-                if ($icon instanceof ScalableIcon) {
-                    return $icon->getIconForSize(IconSize::Medium);
-                }
-
-                if ($icon instanceof BackedEnum) {
-                    return $icon->value;
-                }
-
-                return is_string($icon) ? $icon : null;
-            } catch (Exception) {
-                continue;
-            }
+        if ($icon instanceof ScalableIcon) {
+            return $icon->getIconForSize(IconSize::Medium);
         }
 
-        return null;
+        if ($icon instanceof BackedEnum) {
+            return $icon->value;
+        }
+
+        return is_string($icon) ? $icon : null;
     }
 
     public function getPrimaryAttribute(): string

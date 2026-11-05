@@ -8,9 +8,9 @@ use Closure;
 use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Relaticle\CustomFields\Contracts\TableFilterInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Contracts\TableFilterInterface;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\ThroughRelationResolver;
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
-use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
+use Relaticle\CustomFields\Filament\Integration\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Filament\Integration\Factories\AbstractComponentFactory;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;

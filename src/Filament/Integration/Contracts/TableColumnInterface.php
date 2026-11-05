@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Contracts;
+namespace Relaticle\CustomFields\Filament\Integration\Contracts;
 
 use Filament\Tables\Columns\Column;
 use Illuminate\Database\Eloquent\Model;
