@@ -2,7 +2,7 @@ name: Deploy Docs
 
 on:
   push:
-    branches: ["3.x", "2.x", "1.x"]
+    branches: ["4.x", "3.x", "2.x", "1.x"]
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
@@ -14,10 +14,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version branch to deploy (e.g., 3.x, 2.x, 1.x)'
+        description: 'Version branch to deploy (e.g., 4.x, 3.x, 2.x)'
         required: true
         type: choice
         options:
+          - '4.x'
           - '3.x'
           - '2.x'
           - '1.x'
@@ -53,10 +54,15 @@ jobs:
           BRANCH: ${{ steps.version.outputs.branch }}
         run: |
           case $BRANCH in
-            3.x)
+            4.x)
               echo "dest_folder=." >> $GITHUB_OUTPUT
               echo "base_url=/custom-fields/" >> $GITHUB_OUTPUT
               echo "is_latest=true" >> $GITHUB_OUTPUT
+              ;;
+            3.x)
+              echo "dest_folder=v3" >> $GITHUB_OUTPUT
+              echo "base_url=/custom-fields/v3/" >> $GITHUB_OUTPUT
+              echo "is_latest=false" >> $GITHUB_OUTPUT
               ;;
             2.x)
               echo "dest_folder=v2" >> $GITHUB_OUTPUT
@@ -116,7 +122,7 @@ jobs:
             echo "Deploying latest version to root..."
             cd gh-pages
             # List of items to preserve
-            PRESERVE="v1 v2 versions.json .nojekyll README.md .git"
+            PRESERVE="v1 v2 v3 versions.json .nojekyll README.md .git"
             # Remove everything except preserved items
             for item in *; do
               if [ -e "$item" ]; then

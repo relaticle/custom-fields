@@ -325,7 +325,7 @@ trait SelectsRecords
     /**
      * Get records by their IDs.
      *
-     * @param  array<int, string>  $ids
+     * @param  array<int, int|string>  $ids
      * @return array<string, array{id: string, label: string, avatar: ?string, avatarShape: string, provenance: ?string}>
      */
     public function getRecordsByIds(array $ids): array

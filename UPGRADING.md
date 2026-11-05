@@ -1,6 +1,6 @@
 # Upgrading
 
-The v2 to v3 steps live in the [upgrade guide](docs/content/1.getting-started/3.upgrade-guide.md). This file lists what changes between minor releases of v3.
+Upgrading from 3.x to 4.0, or from v2 to v3, is covered in the [upgrade guide](docs/content/1.getting-started/3.upgrade-guide.md). This file lists what changes between minor releases of v3.
 
 ## From 3.13 to 3.14
 

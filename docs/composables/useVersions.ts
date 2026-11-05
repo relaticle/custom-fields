@@ -12,7 +12,7 @@ const isLoading = ref(false)
 
 export function useVersions() {
     const config = useRuntimeConfig()
-    const currentVersion = config.public.docsVersion || '3.x'
+    const currentVersion = config.public.docsVersion || '4.x'
 
     async function loadVersions() {
         if (isLoaded.value || isLoading.value) return
