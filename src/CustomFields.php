@@ -18,6 +18,7 @@ use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 
 final class CustomFields
 {
@@ -424,6 +425,15 @@ final class CustomFields
     public static function writeContext(): WriteContext
     {
         return self::$writeContext ?? new WriteContext(WriteSource::User, self::authenticatedActor());
+    }
+
+    /**
+     * Forget the cached field definitions, for one entity type or all of them.
+     * Call it after writing fields without model events, such as a bulk insert().
+     */
+    public static function flushFieldCache(?string $entityType = null): void
+    {
+        BackendVisibilityService::clearCache($entityType);
     }
 
     private static function authenticatedActor(): ?Model

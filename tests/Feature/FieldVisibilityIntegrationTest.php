@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
@@ -348,4 +349,28 @@ describe('VisibilityOperator equality mirrors the client expression', function (
     it('never matches a scalar field against a collection condition', function (): void {
         expect(VisibilityOperator::EQUALS->evaluate('a', ['a', 'b']))->toBeFalse();
     });
+});
+
+it('sees a field written without model events only after the field cache is flushed', function (): void {
+    $backendService = app(BackendVisibilityService::class);
+
+    expect($backendService->getFieldMetadata('silent_field', Post::class))->toBeNull();
+
+    $section = CustomFieldSection::factory()->create([
+        'entity_type' => Post::class,
+        'active' => true,
+    ]);
+
+    CustomField::withoutEvents(fn (): CustomField => CustomField::factory()->create([
+        'custom_field_section_id' => $section->id,
+        'code' => 'silent_field',
+        'type' => 'text',
+        'entity_type' => Post::class,
+    ]));
+
+    expect($backendService->getFieldMetadata('silent_field', Post::class))->toBeNull();
+
+    CustomFields::flushFieldCache(Post::class);
+
+    expect($backendService->getFieldMetadata('silent_field', Post::class))->not->toBeNull();
 });

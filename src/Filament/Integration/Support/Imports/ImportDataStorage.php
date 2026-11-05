@@ -15,8 +15,6 @@ use WeakMap;
  *
  * This class solves the problem of Filament trying to set custom_fields_* as model attributes,
  * which causes SQL errors. WeakMap ensures automatic cleanup when models are garbage collected.
- *
- * @internal
  */
 final class ImportDataStorage
 {
@@ -44,6 +42,8 @@ final class ImportDataStorage
      * @param  Model  $record  The record being imported
      * @param  string  $fieldCode  The custom field code
      * @param  mixed  $value  The value to store
+     *
+     * @internal
      */
     public static function set(Model $record, string $fieldCode, mixed $value): void
     {
@@ -73,6 +73,8 @@ final class ImportDataStorage
      *
      * @param  Model  $record  The record being imported
      * @return array<string, mixed> The custom field data
+     *
+     * @internal
      */
     public static function get(Model $record): array
     {
@@ -99,6 +101,8 @@ final class ImportDataStorage
      * Check if a record has stored data.
      *
      * @param  Model  $record  The record to check
+     *
+     * @internal
      */
     public static function has(Model $record): bool
     {
@@ -108,6 +112,8 @@ final class ImportDataStorage
     /**
      * Clear all stored data.
      * Use with caution - mainly for testing.
+     *
+     * @internal
      */
     public static function clearAll(): void
     {

@@ -18,8 +18,6 @@ use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 
 /**
  * Service for handling field validation rules and constraints.
- *
- * @internal
  */
 final class ValidationService
 {
@@ -50,6 +48,8 @@ final class ValidationService
      * Without it a mapped-but-empty value reaches the validator as null and every
      * type rule (date, numeric, boolean, file, regex) rejects it, while a required
      * field is never enforced at all.
+     *
+     * @internal
      */
     public function getPresenceRule(CustomField $customField): string
     {
@@ -67,6 +67,8 @@ final class ValidationService
      * @param  CustomField  $customField  The custom field to get validation rules for
      * @param  string|int|null  $ignoreEntityId  Entity ID to ignore for unique checks (when updating)
      * @return array<int, mixed> Combined array of validation rules
+     *
+     * @internal
      */
     public function getValueValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
@@ -138,6 +140,8 @@ final class ValidationService
      * @param  string  $fieldType  The field type
      * @param  bool  $isEncrypted  Whether the field is encrypted
      * @return array<int, string> Array of validation rules
+     *
+     * @internal
      */
     public function getDatabaseValidationRules(string $fieldType, bool $isEncrypted = false): array
     {

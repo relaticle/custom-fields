@@ -8,9 +8,6 @@ use Illuminate\Support\Str;
 use NumberFormatter;
 use ResourceBundle;
 
-/**
- * @internal
- */
 final class CurrencyProvider
 {
     /**
@@ -55,6 +52,8 @@ final class CurrencyProvider
 
     /**
      * Get the standard number of decimal places for a currency code.
+     *
+     * @internal
      */
     public static function getDecimalDigits(string $code): int
     {

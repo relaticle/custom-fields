@@ -13,8 +13,6 @@ use Relaticle\CustomFields\Services\TenantContextService;
 
 /**
  * Helper class for generating unique codes for custom fields and sections.
- *
- * @internal
  */
 final class CodeGenerator
 {
@@ -44,6 +42,8 @@ final class CodeGenerator
 
     /**
      * Generate a unique code for a section within an entity type.
+     *
+     * @internal
      */
     public static function generateUniqueSectionCode(string $name, string $entityType, ?int $ignoreId = null): string
     {
