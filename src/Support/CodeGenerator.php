@@ -13,6 +13,8 @@ use Relaticle\CustomFields\Services\TenantContextService;
 
 /**
  * Helper class for generating unique codes for custom fields and sections.
+ *
+ * @internal
  */
 final class CodeGenerator
 {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Support;
 
+/**
+ * @internal
+ */
 final class Utils
 {
     public static function getResourceCluster(): ?string

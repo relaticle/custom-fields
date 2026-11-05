@@ -19,6 +19,8 @@ use Filament\Support\View\Components\BadgeComponent;
  *
  * This ensures that badges, filters, and other components display the same
  * color for the same option, using Filament's color system.
+ *
+ * @internal
  */
 final class ColorResolver
 {

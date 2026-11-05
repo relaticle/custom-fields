@@ -12,6 +12,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing sortable configuration for table columns.
  * ABOUTME: Extracts common sortable query logic used across multiple column types.
+ *
+ * @internal
  */
 trait ConfiguresSortable
 {

@@ -27,6 +27,8 @@ use RuntimeException;
  *
  * @template TComponent
  * @template TResult
+ *
+ * @internal
  */
 abstract class AbstractComponentFactory
 {

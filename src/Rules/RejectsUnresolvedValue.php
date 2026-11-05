@@ -8,6 +8,9 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Relaticle\CustomFields\Imports\UnresolvedValue;
 
+/**
+ * @internal
+ */
 final class RejectsUnresolvedValue implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void

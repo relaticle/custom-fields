@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Concerns;
 
+/**
+ * @internal
+ */
 trait ConfiguresIdentity
 {
     private string $key = '';

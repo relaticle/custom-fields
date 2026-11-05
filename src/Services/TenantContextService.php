@@ -42,6 +42,8 @@ final class TenantContextService
      * Register a custom tenant resolver.
      *
      * @param  Closure(): (int|string|null)  $callback
+     *
+     * @internal
      */
     public static function setTenantResolver(Closure $callback): void
     {
@@ -52,6 +54,8 @@ final class TenantContextService
      * Register the resolver consulted when neither the custom resolver nor the Context names a tenant.
      *
      * @param  Closure(): (int|string|null)  $callback
+     *
+     * @internal
      */
     public static function setFallbackTenantResolver(Closure $callback): void
     {
@@ -60,6 +64,8 @@ final class TenantContextService
 
     /**
      * Clear the custom tenant resolver.
+     *
+     * @internal
      */
     public static function clearTenantResolver(): void
     {
@@ -113,6 +119,8 @@ final class TenantContextService
 
     /**
      * Check if tenant context is available.
+     *
+     * @internal
      */
     public static function hasTenantContext(): bool
     {

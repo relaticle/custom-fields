@@ -14,6 +14,9 @@ use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
+/**
+ * @internal
+ */
 final class TypeField extends Select
 {
     /**

@@ -13,6 +13,8 @@ use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions
 /**
  * What both link types configure the same way: where the input looks, how many records it
  * takes, and what it does when the field points nowhere.
+ *
+ * @internal
  */
 trait ConfiguresRecordSelects
 {

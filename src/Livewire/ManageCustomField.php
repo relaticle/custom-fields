@@ -22,6 +22,9 @@ use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\FieldFormConfiguration;
 
+/**
+ * @internal
+ */
 final class ManageCustomField extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;

@@ -16,6 +16,8 @@ use Relaticle\CustomFields\Models\CustomFieldRelationship;
 /**
  * The friendly half of cardinality enforcement (spec 2.1): what a payload would break, in
  * the same words on every path, before the ledger is touched.
+ *
+ * @internal
  */
 final readonly class CardinalityGuard
 {

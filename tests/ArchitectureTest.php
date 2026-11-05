@@ -339,6 +339,65 @@ arch('Classes are final outside the documented extension points')
         AbstractDateCapability::class,
     ]);
 
+test('every source class is either public API or tagged @internal', function (): void {
+    $srcPath = realpath(__DIR__.'/../src');
+    $matched = [];
+    $violations = [];
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($srcPath, FilesystemIterator::SKIP_DOTS),
+    );
+
+    foreach ($iterator as $file) {
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $relative = str_replace('/', '\\', substr($file->getPathname(), strlen($srcPath) + 1, -4));
+        $class = 'Relaticle\\CustomFields\\'.$relative;
+
+        if (! class_exists($class) && ! interface_exists($class) && ! trait_exists($class) && ! enum_exists($class)) {
+            $violations[] = $class.' could not be loaded';
+
+            continue;
+        }
+
+        $entries = array_filter(
+            publicApi(),
+            fn (string $entry): bool => str_ends_with($entry, '\\') ? str_starts_with($relative, $entry) : $relative === $entry,
+        );
+        $matched = [...$matched, ...$entries];
+        $internal = preg_match('/@internal\b/', (string) (new ReflectionClass($class))->getDocComment()) === 1;
+
+        if ($entries === [] && ! $internal) {
+            $violations[] = $class.' is neither in the public API list nor tagged @internal';
+        }
+
+        if ($entries !== [] && $internal) {
+            $violations[] = $class.' is in the public API list and tagged @internal';
+        }
+    }
+
+    foreach (array_diff(publicApi(), $matched) as $entry) {
+        $violations[] = 'Public API entry '.$entry.' matches no class';
+    }
+
+    expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
+});
+
+test('the extending page documents every public API entry', function (): void {
+    $page = (string) file_get_contents(__DIR__.'/../docs/content/2.essentials/8.extending.md');
+
+    expect(preg_match('/^## Public API$(.*?)^## /ms', $page, $section))->toBe(1);
+
+    $undocumented = array_values(array_filter(
+        publicApi(),
+        fn (string $entry): bool => ! str_contains($section[1], '`'.$entry.'`'),
+    ));
+
+    expect($undocumented)->toBeEmpty('Missing from the Public API section: '.implode(', ', $undocumented));
+});
+
 arch('All test classes follow naming conventions')
     ->expect('Relaticle\CustomFields\Tests')
     ->toHaveSuffix('Test')
@@ -444,6 +503,63 @@ test('every source file declares exactly one type, named after the file', functi
 
     expect($violations)->toBeEmpty(implode(PHP_EOL, $violations));
 });
+
+/**
+ * @return array<int, string>
+ */
+function publicApi(): array
+{
+    return [
+        'CustomFields',
+        'CustomFieldsPlugin',
+        'CustomFieldsServiceProvider',
+        'Facades\\',
+        'Filament\\Integration\\CustomFieldsManager',
+        'FieldTypeSystem\\FieldManager',
+        'EntitySystem\\EntityManager',
+        'Concerns\\InteractsWithCustomFields',
+        'Models\\',
+        'QueryBuilders\\CustomFieldQueryBuilder',
+        'Data\\',
+        'Enums\\',
+        'Events\\',
+        'Exceptions\\',
+        'Contracts\\',
+        'FeatureSystem\\',
+        'EntitySystem\\EntityConfigurator',
+        'EntitySystem\\EntityCollection',
+        'EntitySystem\\EntityModel',
+        'FieldTypeSystem\\FieldTypeConfigurator',
+        'Collections\\FieldTypeCollection',
+        'FieldTypeSystem\\BaseFieldType',
+        'FieldTypeSystem\\FieldSchema',
+        'FieldTypeSystem\\Definitions\\',
+        'Validation\\Capabilities\\',
+        'Rules\\UniqueCustomFieldValue',
+        'Support\\SafeValueConverter',
+        'Filament\\Integration\\Base\\',
+        'Filament\\Integration\\Contracts\\',
+        'Filament\\Integration\\Components\\',
+        'Filament\\Integration\\Builders\\BaseBuilder',
+        'Filament\\Integration\\Builders\\FormBuilder',
+        'Filament\\Integration\\Builders\\FormContainer',
+        'Filament\\Integration\\Builders\\InfolistBuilder',
+        'Filament\\Integration\\Builders\\InfolistContainer',
+        'Filament\\Integration\\Builders\\TableBuilder',
+        'Filament\\Integration\\Builders\\ExporterBuilder',
+        'Filament\\Integration\\Builders\\ImporterBuilder',
+        'Filament\\Management\\Pages\\CustomFieldsManagementPage',
+        'Services\\Relationships\\CreateRelationshipDefinition',
+        'Services\\Relationships\\UpdateRelationshipDefinition',
+        'Services\\Relationships\\DeleteRelationshipDefinition',
+        'Services\\Relationships\\LinkReader',
+        'Services\\Relationships\\LinkWriter',
+        'QueryBuilders\\RecordLinkQuery',
+        'Services\\TenantContextService',
+        'Migrations\\',
+        'Support\\KeyType',
+    ];
+}
 
 /**
  * @return array<int, string>

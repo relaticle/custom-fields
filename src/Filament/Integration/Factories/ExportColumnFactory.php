@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Factory for creating Filament export columns from custom fields.
  * ABOUTME: Handles value resolution and formatting for CSV/Excel exports.
+ *
+ * @internal
  */
 final readonly class ExportColumnFactory
 {

@@ -17,6 +17,9 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
 
+/**
+ * @internal
+ */
 final readonly class ConditionRow
 {
     public function __construct(private ConditionOptions $options) {}

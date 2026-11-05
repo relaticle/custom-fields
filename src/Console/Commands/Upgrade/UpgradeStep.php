@@ -6,6 +6,9 @@ namespace Relaticle\CustomFields\Console\Commands\Upgrade;
 
 use Illuminate\Console\Command;
 
+/**
+ * @internal
+ */
 interface UpgradeStep
 {
     /**

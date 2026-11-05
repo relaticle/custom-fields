@@ -12,6 +12,8 @@ use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * Shared logic for managing custom fields in Livewire components.
+ *
+ * @internal
  */
 trait ManagesFields
 {

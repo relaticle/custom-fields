@@ -7,6 +7,9 @@ namespace Relaticle\CustomFields\Filament\Integration\Support;
 use Filament\Facades\Filament;
 use Relaticle\CustomFields\Services\TenantContextService;
 
+/**
+ * @internal
+ */
 final class PanelTenant
 {
     public static function id(): int|string|null

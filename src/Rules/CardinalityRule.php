@@ -14,6 +14,8 @@ use Relaticle\CustomFields\Services\Relationships\CardinalityGuard;
 /**
  * Reports what the link writer would refuse, before a form is submitted or an import row
  * is written.
+ *
+ * @internal
  */
 final class CardinalityRule implements ValidationRule
 {

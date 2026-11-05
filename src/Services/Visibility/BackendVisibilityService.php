@@ -25,6 +25,8 @@ use WeakMap;
  * determine field visibility.
  *
  * This service provides PHP-based evaluation of visibility conditions.
+ *
+ * @internal
  */
 final class BackendVisibilityService
 {

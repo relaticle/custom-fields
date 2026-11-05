@@ -14,6 +14,8 @@ use Relaticle\CustomFields\Enums\FieldFormPresentation;
  * A feature flag says what the package can do; this says what the form offers. A
  * setting left out keeps working: the value already stored survives an edit, and a
  * new field takes the default its host expects.
+ *
+ * @internal
  */
 final class FieldFormConfiguration
 {

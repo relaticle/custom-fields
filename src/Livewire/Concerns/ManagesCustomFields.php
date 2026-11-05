@@ -24,6 +24,9 @@ use Relaticle\CustomFields\Support\CodeGenerator;
 use Relaticle\CustomFields\Support\SettingsMerger;
 use Relaticle\CustomFields\Validation\DateConstraintField;
 
+/**
+ * @internal
+ */
 trait ManagesCustomFields
 {
     /**

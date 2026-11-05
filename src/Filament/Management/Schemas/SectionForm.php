@@ -24,6 +24,9 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityCompon
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 
+/**
+ * @internal
+ */
 final class SectionForm
 {
     private static string $entityType;

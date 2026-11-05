@@ -11,6 +11,9 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\CustomFields;
 
+/**
+ * @internal
+ */
 final class CleanupOrphanedValuesCommand extends Command
 {
     /** @var string */

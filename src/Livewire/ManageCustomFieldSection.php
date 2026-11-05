@@ -28,6 +28,9 @@ use Relaticle\CustomFields\Models\Scopes\SortOrderScope;
 use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\SettingsMerger;
 
+/**
+ * @internal
+ */
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;

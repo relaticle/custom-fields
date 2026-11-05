@@ -6,6 +6,9 @@ namespace Relaticle\CustomFields\Services\Visibility;
 
 use Illuminate\Support\Collection;
 
+/**
+ * @internal
+ */
 final readonly class JsValueFormatter
 {
     /**

@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 use Relaticle\CustomFields\Enums\FieldDataType;
 
+/**
+ * @internal
+ */
 trait ConfiguresValidationRules
 {
     /** @var array<int, string> */

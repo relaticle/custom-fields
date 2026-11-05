@@ -10,6 +10,9 @@ use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ValidateSchemaStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 
+/**
+ * @internal
+ */
 final class UpgradeCommand extends Command
 {
     /** @var string */

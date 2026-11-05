@@ -6,6 +6,8 @@ namespace Relaticle\CustomFields\Support;
 
 /**
  * Reads a pasted list of choice-option names, one per line.
+ *
+ * @internal
  */
 final class OptionNameParser
 {

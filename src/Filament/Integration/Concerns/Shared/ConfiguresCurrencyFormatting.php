@@ -8,6 +8,9 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Columns\TextColumn;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 trait ConfiguresCurrencyFormatting
 {
     protected function applyCurrencyFormatting(TextColumn|TextEntry $component, CustomField $customField): void

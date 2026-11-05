@@ -8,6 +8,9 @@ use Closure;
 use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 
+/**
+ * @internal
+ */
 trait ConfiguresComponents
 {
     private string|Closure|null $formComponent = null;

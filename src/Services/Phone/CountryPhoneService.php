@@ -14,6 +14,8 @@ use Throwable;
 
 /**
  * Service for providing country and phone code data.
+ *
+ * @internal
  */
 final class CountryPhoneService
 {

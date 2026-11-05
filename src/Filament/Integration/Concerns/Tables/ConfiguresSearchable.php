@@ -12,6 +12,8 @@ use Relaticle\CustomFields\QueryBuilders\ColumnSearchableQuery;
 /**
  * ABOUTME: Trait providing searchable configuration for table columns.
  * ABOUTME: Standardizes search query patterns across different column types.
+ *
+ * @internal
  */
 trait ConfiguresSearchable
 {

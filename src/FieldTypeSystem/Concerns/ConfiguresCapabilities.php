@@ -6,6 +6,9 @@ namespace Relaticle\CustomFields\FieldTypeSystem\Concerns;
 
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 
+/**
+ * @internal
+ */
 trait ConfiguresCapabilities
 {
     private bool $searchable = true;

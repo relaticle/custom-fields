@@ -24,6 +24,8 @@ use Spatie\LaravelData\DataCollection;
  * CRITICAL: This is the single source of truth for ALL visibility logic.
  * Any changes to visibility rules MUST be made here to ensure consistency
  * between frontend and backend implementations.
+ *
+ * @internal
  */
 final readonly class CoreVisibilityLogicService
 {

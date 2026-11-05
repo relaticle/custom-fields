@@ -8,6 +8,9 @@ use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 final readonly class LookupSingleValueResolver implements ValueResolverInterface
 {
     public function __construct(private LookupResolver $lookupResolver) {}

@@ -27,6 +27,8 @@ use Throwable;
 /**
  * Unified configurator for import columns based on custom field types.
  * Simplifies the previous multi-class approach into a single, data-driven configurator.
+ *
+ * @internal
  */
 final class ImportColumnConfigurator
 {

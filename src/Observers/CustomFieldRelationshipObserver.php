@@ -7,6 +7,9 @@ namespace Relaticle\CustomFields\Observers;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class CustomFieldRelationshipObserver
 {
     /**

@@ -21,6 +21,9 @@ use Relaticle\CustomFields\Services\RelationConditionResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Support\RelationConditionConfig;
 
+/**
+ * @internal
+ */
 final class ConditionOptions
 {
     /**

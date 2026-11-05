@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Validator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 
+/**
+ * @internal
+ */
 final readonly class FitsDecimalPlaces implements ValidationRule
 {
     public function __construct(

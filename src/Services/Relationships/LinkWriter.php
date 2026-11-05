@@ -30,6 +30,9 @@ use RuntimeException;
 
 final readonly class LinkWriter
 {
+    /**
+     * @internal
+     */
     public function __construct(
         private CardinalityGuard $cardinality,
         private LinkReader $reader,

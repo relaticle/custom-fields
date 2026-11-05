@@ -18,6 +18,8 @@ use Relaticle\CustomFields\Support\DatabaseFieldConstraints;
 
 /**
  * Service for handling field validation rules and constraints.
+ *
+ * @internal
  */
 final class ValidationService
 {

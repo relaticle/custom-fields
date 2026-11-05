@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use Relaticle\CustomFields\Enums\UiFlavor;
 use Relaticle\CustomFields\Enums\UiSurface;
 
+/**
+ * @internal
+ */
 final class ViewFlavor
 {
     public static function flavor(UiSurface $surface): UiFlavor

@@ -18,6 +18,8 @@ use Relaticle\CustomFields\Models\CustomFieldValue;
  *
  * Called by scopeWithCustomFieldValues's afterQuery hook so tables and
  * infolists get batched lookup resolution for free.
+ *
+ * @internal
  */
 final readonly class LookupPreloader
 {

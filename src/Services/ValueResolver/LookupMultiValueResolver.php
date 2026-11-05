@@ -9,6 +9,9 @@ use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Throwable;
 
+/**
+ * @internal
+ */
 final readonly class LookupMultiValueResolver implements ValueResolverInterface
 {
     public function __construct(private LookupResolver $lookupResolver) {}

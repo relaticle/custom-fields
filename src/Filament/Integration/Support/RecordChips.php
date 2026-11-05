@@ -19,6 +19,8 @@ use Relaticle\CustomFields\Services\Relationships\LinkReader;
  * One linked record as the chip every record-side surface draws: a name, an avatar, a page to
  * open, and where the link came from. Built once so the table, the infolist and the picker
  * cannot describe the same link differently.
+ *
+ * @internal
  */
 final readonly class RecordChips
 {

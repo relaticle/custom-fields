@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing width/column span configuration for components.
  * ABOUTME: Standardizes how components handle width settings across forms and infolists.
+ *
+ * @internal
  */
 trait ConfiguresWidth
 {

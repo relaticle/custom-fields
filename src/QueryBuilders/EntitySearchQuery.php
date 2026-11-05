@@ -17,6 +17,8 @@ use function Filament\Support\generate_search_term_expression;
  * Search a lookup entity by the attributes its own configuration declares, following
  * Filament's global search rules for term splitting and case so a record lookup answers
  * the same as the resource it points at.
+ *
+ * @internal
  */
 final readonly class EntitySearchQuery
 {

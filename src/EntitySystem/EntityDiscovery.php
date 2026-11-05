@@ -19,6 +19,9 @@ use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * @internal
+ */
 final class EntityDiscovery
 {
     /** @var array<int, EntityConfigurationData> */

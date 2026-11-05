@@ -15,6 +15,9 @@ use Relaticle\CustomFields\Services\Relationships\DeleteRelationshipDefinition;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class CustomFieldObserver
 {
     /**

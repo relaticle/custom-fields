@@ -17,6 +17,8 @@ use Relaticle\CustomFields\Support\ViewFlavor;
 /**
  * The polished presentation of the record configuration: the same child components the stock
  * fieldset holds, laid out as two entity cards with the cardinality between them.
+ *
+ * @internal
  */
 final class RelationshipConfigurator extends Component
 {

@@ -31,6 +31,8 @@ use Relaticle\CustomFields\Support\ViewFlavor;
  *
  * Shows ALL fields for the entity type with search, reordering, and inline editing.
  * Used when sections are disabled (SYSTEM_SECTIONS = false).
+ *
+ * @internal
  */
 final class ManageFieldsTable extends Component implements HasActions, HasForms
 {

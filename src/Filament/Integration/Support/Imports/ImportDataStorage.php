@@ -15,6 +15,8 @@ use WeakMap;
  *
  * This class solves the problem of Filament trying to set custom_fields_* as model attributes,
  * which causes SQL errors. WeakMap ensures automatic cleanup when models are garbage collected.
+ *
+ * @internal
  */
 final class ImportDataStorage
 {

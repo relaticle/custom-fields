@@ -24,6 +24,8 @@ use Spatie\LaravelData\DataCollection;
  *
  * CRITICAL: This service translates the core logic into JavaScript expressions
  * that produce identical results to the backend PHP evaluation.
+ *
+ * @internal
  */
 final readonly class FrontendVisibilityService
 {

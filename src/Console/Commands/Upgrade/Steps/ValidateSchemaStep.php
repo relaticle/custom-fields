@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 
+/**
+ * @internal
+ */
 final class ValidateSchemaStep implements UpgradeStep
 {
     /** @var array<string, list<string>> */

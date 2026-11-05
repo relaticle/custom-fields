@@ -20,6 +20,9 @@ use Relaticle\CustomFields\Enums\DateOffsetDirection;
 use Relaticle\CustomFields\Enums\DateUnit;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 final class DateConstraintField
 {
     private const array PRESETS_WITH_OFFSET = ['today_offset', 'custom_field', 'record_created'];

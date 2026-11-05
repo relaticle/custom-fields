@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 /**
  * ABOUTME: Artisan command to generate custom fields migration files
  * ABOUTME: Creates migration stubs in database/custom-fields directory for preset custom fields
+ *
+ * @internal
  */
 final class MakeCustomFieldsMigrationCommand extends GeneratorCommand
 {

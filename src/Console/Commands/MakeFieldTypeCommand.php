@@ -10,6 +10,9 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 
 use function Laravel\Prompts\select;
 
+/**
+ * @internal
+ */
 final class MakeFieldTypeCommand extends GeneratorCommand
 {
     /**

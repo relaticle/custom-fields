@@ -11,6 +11,9 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Support\PanelTenant;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @internal
+ */
 final class SetTenantContextMiddleware
 {
     /**

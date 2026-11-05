@@ -21,6 +21,9 @@ use Relaticle\CustomFields\Models\CustomFieldRelationship;
  */
 final readonly class RecordLinkQuery
 {
+    /**
+     * @internal
+     */
     public function __construct(
         private EntitySearchQuery $entitySearch,
         private ModelResourceResolverInterface $resources,

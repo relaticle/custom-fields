@@ -18,6 +18,8 @@ use Relaticle\CustomFields\Models\CustomField;
  *
  * This service analyzes form components to discover their configured options,
  * whether they're static arrays or dynamic search results.
+ *
+ * @internal
  */
 final class ComponentOptionsExtractor
 {

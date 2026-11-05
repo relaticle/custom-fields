@@ -56,6 +56,9 @@ use Relaticle\CustomFields\Support\FieldFormConfiguration;
 use Relaticle\CustomFields\Support\OptionNameParser;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
+/**
+ * @internal
+ */
 final class FieldForm
 {
     private static function resolveUniqueNameRuleModifier(?CustomFieldSection $section): ?Closure

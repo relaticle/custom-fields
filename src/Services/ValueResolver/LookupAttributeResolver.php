@@ -16,6 +16,8 @@ use RuntimeException;
  *
  * Centralized here so LookupResolver and LookupPreloader share exactly one
  * source of truth — previously each class had its own copy of this logic.
+ *
+ * @internal
  */
 final readonly class LookupAttributeResolver
 {

@@ -7,6 +7,9 @@ namespace Relaticle\CustomFields\Filament\Integration\Support;
 use Filament\Facades\Filament;
 use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 
+/**
+ * @internal
+ */
 final readonly class PanelModelResourceResolver implements ModelResourceResolverInterface
 {
     public function resourceFor(string $modelClass): ?string

@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\View as ViewFactory;
 use Livewire\Component;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
 
+/**
+ * @internal
+ */
 final class ManageCustomFieldWidth extends Component
 {
     public CustomFieldWidth $selectedWidth = CustomFieldWidth::_100;

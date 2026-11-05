@@ -15,6 +15,8 @@ use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
 /**
  * ABOUTME: Trait providing visibility configuration for form fields.
  * ABOUTME: Handles conditional visibility logic and live state updates.
+ *
+ * @internal
  */
 trait ConfiguresVisibility
 {

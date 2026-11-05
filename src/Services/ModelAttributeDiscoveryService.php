@@ -18,6 +18,8 @@ use Throwable;
  *
  * Static cache persists across requests in Octane. Reset via clearCache()
  * in service provider's terminating() callback.
+ *
+ * @internal
  */
 final class ModelAttributeDiscoveryService
 {

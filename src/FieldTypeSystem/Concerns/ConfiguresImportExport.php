@@ -6,6 +6,9 @@ namespace Relaticle\CustomFields\FieldTypeSystem\Concerns;
 
 use Closure;
 
+/**
+ * @internal
+ */
 trait ConfiguresImportExport
 {
     private ?string $importExample = null;

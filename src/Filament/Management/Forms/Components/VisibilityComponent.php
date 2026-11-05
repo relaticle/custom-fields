@@ -15,6 +15,9 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\Visibility\Condi
 use Relaticle\CustomFields\Filament\Management\Forms\Components\Visibility\ConditionRow;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
+/**
+ * @internal
+ */
 final class VisibilityComponent extends Component
 {
     protected string $view = 'filament-schemas::components.grid';

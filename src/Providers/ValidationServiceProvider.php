@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\ServiceProvider;
 use Relaticle\CustomFields\Services\ValidationService;
 
+/**
+ * @internal
+ */
 final class ValidationServiceProvider extends ServiceProvider
 {
     public function register(): void

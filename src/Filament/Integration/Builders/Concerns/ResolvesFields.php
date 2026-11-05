@@ -11,6 +11,9 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
+/**
+ * @internal
+ */
 trait ResolvesFields
 {
     /** @var array<Closure(Collection<int, CustomField>, $this): Collection<int, CustomField>> */

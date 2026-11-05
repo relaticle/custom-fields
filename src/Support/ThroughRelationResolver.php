@@ -20,6 +20,8 @@ use Relaticle\CustomFields\Models\CustomField;
  * Decide whether a row model can reach custom fields through one of its relations.
  * Every table surface asks here, so the state, sort, search and filter paths cannot
  * disagree about what a through path supports.
+ *
+ * @internal
  */
 final readonly class ThroughRelationResolver
 {

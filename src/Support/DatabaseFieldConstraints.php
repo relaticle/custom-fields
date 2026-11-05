@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * ABOUTME: Handles database field constraints and converts them to validation rules
  * ABOUTME: Ensures user input respects database column limitations across different database drivers
+ *
+ * @internal
  */
 final class DatabaseFieldConstraints
 {

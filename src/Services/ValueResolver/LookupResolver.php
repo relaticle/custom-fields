@@ -9,6 +9,9 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Throwable;
 
+/**
+ * @internal
+ */
 final readonly class LookupResolver
 {
     public function __construct(

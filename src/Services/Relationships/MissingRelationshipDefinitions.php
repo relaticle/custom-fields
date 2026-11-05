@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Models\CustomField;
  * A record field that cannot resolve its definition renders nothing rather than taking the
  * page down with it, so the log is the only place the problem shows. Once per field per
  * request: a table asks its columns for every row.
+ *
+ * @internal
  */
 final class MissingRelationshipDefinitions
 {

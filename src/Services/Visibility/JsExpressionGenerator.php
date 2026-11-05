@@ -14,6 +14,8 @@ use Relaticle\CustomFields\Models\CustomField;
  * CRITICAL: every branch must produce the same verdict as the matching backend
  * evaluation in VisibilityOperator, or a field shows on the server and hides on
  * the client.
+ *
+ * @internal
  */
 final readonly class JsExpressionGenerator
 {

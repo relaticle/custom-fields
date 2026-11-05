@@ -11,6 +11,9 @@ use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Filament\Integration\Factories\Concerns\AppliesSectionWidth;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
+/**
+ * @internal
+ */
 final class SectionInfolistsFactory
 {
     use AppliesSectionWidth;
