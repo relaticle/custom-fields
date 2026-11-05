@@ -178,6 +178,7 @@ return [
     'validation' => [
         'duplicate_value' => 'Duplicate Value',
         'value_already_exists' => 'This value already exists in the list.',
+        'status_requires_completed_option' => 'A status field needs at least one option in the :category category.',
         'messages' => [
             'phone' => 'The :attribute must be a valid phone number.',
         ],
