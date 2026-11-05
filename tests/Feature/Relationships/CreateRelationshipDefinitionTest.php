@@ -8,9 +8,8 @@ use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
-use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigrator;
+use Relaticle\CustomFields\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -190,19 +189,6 @@ it('keeps the definition and its edges when one slot field is deleted', function
         ->and(CustomFieldLink::query()->count())->toBe(1);
 });
 
-it('still unpairs a deleted slot field while the relationships feature is off', function (): void {
-    $definition = authorship();
-    CustomFieldLink::factory()->create(['relationship_id' => $definition->getKey()]);
-
-    config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-    $definition->toField->delete();
-
-    expect($definition->refresh()->to_field_id)->toBeNull()
-        ->and($definition->from_field_id)->not->toBeNull()
-        ->and(CustomFieldLink::query()->count())->toBe(1);
-});
-
 it('removes a one-way definition and its edges when its only field is deleted', function (): void {
     $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
         code: 'referrer',
@@ -372,7 +358,7 @@ describe('preset migrations', function (): void {
                 type: 'record',
                 section: new CustomFieldSectionData(name: 'Sales', code: 'sales'),
             ),
-        )->lookupType(User::class)->create();
+        )->target(User::class)->create();
 
         $definition = CustomFieldRelationship::query()->sole();
 
@@ -383,23 +369,7 @@ describe('preset migrations', function (): void {
             ->and($definition->to_field_id)->toBeNull();
     });
 
-    it('reads allow_multiple once, to pick the cardinality', function (): void {
-        app(CustomFieldsMigrator::class)->new(
-            model: Post::class,
-            fieldData: new CustomFieldData(
-                name: 'Reviewers',
-                code: 'reviewers',
-                type: 'record',
-                section: new CustomFieldSectionData(name: 'Sales', code: 'sales'),
-                settings: new CustomFieldSettingsData(allow_multiple: true),
-            ),
-        )->lookupType(User::class)->create();
-
-        expect(CustomFieldRelationship::query()->sole()->cardinality)
-            ->toBe(RelationshipCardinality::ManyToMany);
-    });
-
-    it('takes an explicit cardinality over the settings flag', function (): void {
+    it('takes its cardinality from the target, never the settings flag', function (): void {
         app(CustomFieldsMigrator::class)->new(
             model: Post::class,
             fieldData: new CustomFieldData(
@@ -409,25 +379,9 @@ describe('preset migrations', function (): void {
                 section: new CustomFieldSectionData(name: 'Sales', code: 'sales'),
                 settings: new CustomFieldSettingsData(allow_multiple: true),
             ),
-        )->lookupType(User::class, RelationshipCardinality::OneToOne)->create();
+        )->target(User::class)->create();
 
         expect(CustomFieldRelationship::query()->sole()->cardinality)
-            ->toBe(RelationshipCardinality::OneToOne);
+            ->toBe(RelationshipCardinality::ManyToOne);
     });
-
-    it('refuses to move the ends of a field it already created', function (): void {
-        app(CustomFieldsMigrator::class)->new(
-            model: Post::class,
-            fieldData: new CustomFieldData(
-                name: 'Sales Representative',
-                code: 'sales_rep',
-                type: 'record',
-                section: new CustomFieldSectionData(name: 'Sales', code: 'sales'),
-            ),
-        )->lookupType(User::class)->create();
-
-        app(CustomFieldsMigrator::class)
-            ->find(Post::class, 'sales_rep')
-            ->update(['lookup_type' => (new Post)->getMorphClass()]);
-    })->throws(InvalidArgumentException::class);
 });

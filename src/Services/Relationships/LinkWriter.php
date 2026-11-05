@@ -43,11 +43,7 @@ final readonly class LinkWriter
      */
     public function apply(Model $record, CustomField $field, array $targetIds, string $source = CustomFieldLink::SOURCE_USER, array $confirmed = []): void
     {
-        $definition = $field->relationshipDefinition();
-
-        if (! $definition instanceof CustomFieldRelationship) {
-            throw new InvalidArgumentException(sprintf('Record field [%s] has no relationship definition.', $field->code));
-        }
+        $definition = $field->relationshipDefinitionOrFail();
 
         try {
             DB::transaction(function () use ($record, $definition, $field, $targetIds, $source, $confirmed): void {

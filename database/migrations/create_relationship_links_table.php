@@ -15,10 +15,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_RELATIONSHIPS)) {
-            return;
-        }
-
         $links = config('custom-fields.database.table_names.custom_field_links');
 
         Schema::create($links, function (Blueprint $table): void {

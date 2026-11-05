@@ -13,6 +13,7 @@ use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Events\RelationshipLinkClosed;
 use Relaticle\CustomFields\Events\RelationshipLinkCreated;
+use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -246,7 +247,7 @@ it('refuses a record field with no definition', function (): void {
     ]);
 
     app(LinkWriter::class)->apply(Post::factory()->create(), $field, []);
-})->throws(InvalidArgumentException::class);
+})->throws(RelationshipDefinitionDoesNotExistException::class);
 
 it('refuses a record from the wrong end of the definition', function (): void {
     $definition = makeAuthorship();

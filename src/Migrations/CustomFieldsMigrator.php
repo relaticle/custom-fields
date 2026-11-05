@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Migrations;
+namespace Relaticle\CustomFields\Migrations;
 
 use Exception;
 use Illuminate\Support\Arr;
@@ -35,7 +35,7 @@ final class CustomFieldsMigrator
 
     private ?string $targetEntityType = null;
 
-    private ?RelationshipCardinality $cardinality = null;
+    private RelationshipCardinality $cardinality = RelationshipCardinality::ManyToOne;
 
     private CustomFieldData $customFieldData;
 
@@ -100,14 +100,13 @@ final class CustomFieldsMigrator
 
     /**
      * Point a record field at another entity. The field becomes the single slot of a one-way
-     * relationship definition, created with the field. Without a cardinality, allow_multiple
-     * on the field data picks it, exactly as the 4.0 upgrade step does.
+     * relationship definition, created with the field.
      *
      * @param  class-string  $model
      *
      * @throws FieldTypeNotOptionableException
      */
-    public function lookupType(string $model, ?RelationshipCardinality $cardinality = null): CustomFieldsMigrator
+    public function target(string $model, RelationshipCardinality $cardinality = RelationshipCardinality::ManyToOne): CustomFieldsMigrator
     {
         if (! $this->isCustomFieldTypeOptionable()) {
             throw new FieldTypeNotOptionableException;
@@ -211,10 +210,6 @@ final class CustomFieldsMigrator
             );
         }
 
-        if (array_key_exists('lookup_type', $data)) {
-            throw new InvalidArgumentException('The ends of a relationship are locked after it is created.');
-        }
-
         try {
             DB::beginTransaction();
 
@@ -310,7 +305,7 @@ final class CustomFieldsMigrator
             code: CodeGenerator::generateUniqueRelationshipCode($customField->code),
             fromEntityType: (string) $customField->entity_type,
             toEntityType: (string) $this->targetEntityType,
-            cardinality: $this->cardinality ?? $this->cardinalityFromSettings(),
+            cardinality: $this->cardinality,
             fromField: new FieldSlotData(name: $customField->name, fieldId: $customField->getKey()),
         );
 
@@ -319,13 +314,6 @@ final class CustomFieldsMigrator
         $this->tenantId === null
             ? $define()
             : TenantContextService::withTenant($this->tenantId, $define);
-    }
-
-    private function cardinalityFromSettings(): RelationshipCardinality
-    {
-        return $this->customFieldData->settings?->allow_multiple === true
-            ? RelationshipCardinality::ManyToMany
-            : RelationshipCardinality::ManyToOne;
     }
 
     /**

@@ -24,7 +24,6 @@ use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\FieldFormConfiguration;
-use Relaticle\CustomFields\Support\RelationshipTables;
 use Relaticle\CustomFields\Support\ViewFlavor;
 
 /**
@@ -69,10 +68,6 @@ final class ManageFieldsTable extends Component implements HasActions, HasForms
     #[Computed]
     public function relationshipPairs(): array
     {
-        if (! RelationshipTables::exist()) {
-            return [];
-        }
-
         $fields = $this->activeFields()
             ->concat($this->inactiveFields())
             ->filter(fn (CustomField $field): bool => $field->supportsPairing())

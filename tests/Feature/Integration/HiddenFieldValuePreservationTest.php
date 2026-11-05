@@ -6,8 +6,11 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Livewire\Component;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\ConditionSource;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -17,6 +20,7 @@ use Relaticle\CustomFields\FieldTypeSystem\FieldTypeConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Tag;
@@ -317,7 +321,6 @@ it('writes back the exact stored value of a hidden field of every type', functio
         'name' => 'Hidden '.$type,
         'code' => 'hidden_'.str_replace('-', '_', $type),
         'type' => $type,
-        'lookup_type' => $type === 'record' ? Post::class : null,
         'settings' => ['visibility' => hfvTaggedVisibility($this->tag)],
     ]);
 
@@ -362,8 +365,29 @@ it('writes back the exact stored value of a hidden field of every type', functio
     'toggle-buttons' => ['toggle-buttons', fn (CustomField $field): int => $field->options->first()->getKey()],
     'tags-input' => ['tags-input', fn (): array => ['alpha', 'beta']],
     'file-upload' => ['file-upload', fn (): string => 'uploads/report.pdf'],
-    'record' => ['record', fn (CustomField $field, Post $post): array => [Post::factory()->create()->getKey()]],
 ]);
+
+it('keeps the links of a hidden record field', function (): void {
+    registerPostLookupEntity();
+
+    $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'hidden_related',
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::ManyToMany,
+        fromField: new FieldSlotData(name: 'Hidden related', sectionId: $this->section->getKey()),
+    ));
+    $field = $definition->fromField;
+    $field->update(['settings' => ['visibility' => hfvTaggedVisibility($this->tag)]]);
+
+    $target = Post::factory()->create();
+    $post = Post::factory()->create();
+    $post->saveCustomFieldValue($field, [$target->getKey()]);
+
+    hfvSave($post, [$field->code => []])->assertHasNoFormErrors();
+
+    expect($post->fresh()->getCustomFieldValue($field->fresh()))->toBe([$target->getKey()]);
+});
 
 it('keeps the stored value of the hidden field itself when another section shares its code', function (): void {
     $olderSection = CustomFieldSection::factory()->create(['name' => 'Version 1', 'entity_type' => Post::class, 'active' => true]);

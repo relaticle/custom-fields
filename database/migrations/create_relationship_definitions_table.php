@@ -14,10 +14,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_RELATIONSHIPS)) {
-            return;
-        }
-
         Schema::create(config('custom-fields.database.table_names.custom_field_relationships'), function (Blueprint $table): void {
             $uniqueColumns = ['code'];
 

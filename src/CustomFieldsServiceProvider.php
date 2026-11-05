@@ -21,11 +21,11 @@ use Relaticle\CustomFields\Contracts\LinkActorResolverInterface;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldWidth;
 use Relaticle\CustomFields\Livewire\ManageFieldsTable;
+use Relaticle\CustomFields\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Providers\EntityServiceProvider;
@@ -218,7 +218,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
             'relax_custom_fields_unique_key',
             'create_relationship_definitions_table',
             'create_relationship_links_table',
-            'drop_custom_fields_lookup_type',
+            'convert_record_fields_to_relationships',
         ];
     }
 }

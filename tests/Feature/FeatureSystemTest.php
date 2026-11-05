@@ -56,19 +56,18 @@ it('can toggle UI_FIELD_WIDTH_CONTROL feature', function (): void {
 it('falls back to the package default for a flag the host did not list', function (): void {
     config(['custom-fields.features' => FeatureConfigurator::configure()]);
 
-    expect(FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_RELATIONSHIPS))->toBeTrue()
-        ->and(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS))->toBeTrue()
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS))->toBeTrue()
         ->and(FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY))->toBeFalse()
         ->and(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE))->toBeFalse();
 
     config(['custom-fields.features' => FeatureConfigurator::configure()
-        ->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS)
+        ->disable(CustomFieldsFeature::FIELD_OPTION_COLORS)
         ->enable(CustomFieldsFeature::FIELD_MULTI_VALUE),
     ]);
 
-    expect(FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_RELATIONSHIPS))->toBeFalse()
+    expect(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS))->toBeFalse()
         ->and(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE))->toBeTrue()
-        ->and(FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS))->toBeTrue();
+        ->and(FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS))->toBeTrue();
 });
 
 it('keeps the package defaults and the shipped config in step', function (): void {
@@ -124,6 +123,5 @@ it('ships the feature defaults reviewed for 4.0', function (): void {
         CustomFieldsFeature::SYSTEM_MANAGEMENT_INTERFACE->value => true,
         CustomFieldsFeature::SYSTEM_MULTI_TENANCY->value => false,
         CustomFieldsFeature::SYSTEM_SECTIONS->value => true,
-        CustomFieldsFeature::SYSTEM_RELATIONSHIPS->value => true,
     ]);
 });

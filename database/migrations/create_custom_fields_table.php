@@ -78,7 +78,6 @@ return new class extends Migration
             $table->string('code');
             $table->string('name');
             $table->string('type');
-            $table->string('lookup_type')->nullable();
             $table->string('entity_type');
             $table->unsignedBigInteger('sort_order')->nullable();
             $table->json('validation_rules')->nullable();

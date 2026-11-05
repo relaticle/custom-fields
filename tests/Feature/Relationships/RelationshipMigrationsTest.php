@@ -32,22 +32,8 @@ it('points the partial index at the prefixed table', function () use ($linksMigr
     'The MySQL family has no partial index, so there is nothing to prefix.',
 );
 
-it('creates neither table when relationships are disabled', function () use ($definitionsMigration, $linksMigration): void {
-    config()->set('custom-fields.features', FeatureConfigurator::configure()
-        ->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS));
-    config()->set('custom-fields.database.table_names.custom_field_relationships', 'probe_relationships');
-    config()->set('custom-fields.database.table_names.custom_field_links', 'probe_links');
-
-    $definitionsMigration()->up();
-    $linksMigration()->up();
-
-    expect(Schema::hasTable('probe_relationships'))->toBeFalse()
-        ->and(Schema::hasTable('probe_links'))->toBeFalse();
-});
-
 it('scopes the definition code to the tenant when multi-tenancy is enabled', function () use ($definitionsMigration): void {
     config()->set('custom-fields.features', FeatureConfigurator::configure()->enable(
-        CustomFieldsFeature::SYSTEM_RELATIONSHIPS,
         CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
     ));
     config()->set('custom-fields.database.table_names.custom_field_relationships', 'probe_relationships');
@@ -63,7 +49,6 @@ it('scopes the definition code to the tenant when multi-tenancy is enabled', fun
 
 it('stamps the links table with a tenant key when multi-tenancy is enabled', function () use ($linksMigration): void {
     config()->set('custom-fields.features', FeatureConfigurator::configure()->enable(
-        CustomFieldsFeature::SYSTEM_RELATIONSHIPS,
         CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
     ));
     config()->set('custom-fields.database.table_names.custom_field_links', 'probe_links');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -59,19 +58,6 @@ it('sweeps both ends and the history when a record is force deleted', function (
 
     expect(CustomFieldLink::query()->count())->toBe(1)
         ->and(CustomFieldLink::query()->sole()->from_entity_id)->toEqual($unrelated->getKey());
-});
-
-it('sweeps the edges of a force-deleted record even while the relationships feature is off', function (): void {
-    $definition = deletionCommentary();
-    $post = Post::factory()->create();
-
-    $comment = Comment::factory()->create(['custom_fields' => [$definition->fromField->code => [$post->getKey()]]]);
-
-    config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-    $comment->forceDelete();
-
-    expect(CustomFieldLink::query()->count())->toBe(0);
 });
 
 it('sweeps the edges of a record whose model deletes outright', function (): void {

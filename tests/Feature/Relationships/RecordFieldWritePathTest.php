@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
+use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
@@ -100,21 +100,7 @@ it('leaves the edges alone when the payload omits the record field', function ()
     expect(activeTargetIds())->toBe([$user->getKey()]);
 });
 
-it('writes links for a record field with a definition even while the relationships feature is off', function (): void {
-    $definition = writePathAuthorship();
-    $code = $definition->fromField->code;
-    $user = User::factory()->create();
-
-    config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-    $post = Post::factory()->create(['custom_fields' => [$code => [$user->getKey()]]]);
-
-    expect(activeTargetIds())->toBe([$user->getKey()])
-        ->and(CustomFieldValue::query()->where('custom_field_id', $definition->from_field_id)->count())->toBe(0)
-        ->and($post->refresh()->getCustomFieldValue($definition->fromField))->toBe([$user->getKey()]);
-});
-
-it('keeps an undefined record field on the value row while the relationships feature is off', function (): void {
+it('refuses to write a record field that has no definition', function (): void {
     $field = CustomField::factory()->create([
         'code' => 'write_path_unbound',
         'type' => 'record',
@@ -123,12 +109,9 @@ it('keeps an undefined record field on the value row while the relationships fea
     ]);
     $user = User::factory()->create();
 
-    config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-    Post::factory()->create(['custom_fields' => [$field->code => [$user->getKey()]]]);
-
-    expect(CustomFieldLink::query()->count())->toBe(0)
-        ->and(CustomFieldValue::query()->where('custom_field_id', $field->getKey())->count())->toBe(1);
+    expect(fn () => Post::factory()->create(['custom_fields' => [$field->code => [$user->getKey()]]]))
+        ->toThrow(RelationshipDefinitionDoesNotExistException::class)
+        ->and(CustomFieldValue::query()->where('custom_field_id', $field->getKey())->count())->toBe(0);
 });
 
 it('stamps the definition tenant on links written through the trait', function (): void {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Relaticle\CustomFields\Filament\Integration\Migrations;
+namespace Relaticle\CustomFields\Migrations;
 
 use Illuminate\Database\Migrations\Migration;
 

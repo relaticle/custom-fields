@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 use Override;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
@@ -194,21 +193,12 @@ class CustomField extends Model
             return null;
         }
 
-        return once(function () use ($key): ?CustomFieldRelationship {
-            // The feature flag gates the two migrations and the lookup_type drop, not what a
-            // field can read or write: a host that turns it off after migrating still has
-            // definitions to find, and one that never migrated has no table to look in.
-            if (! Schema::hasTable((string) config('custom-fields.database.table_names.custom_field_relationships'))) {
-                return null;
-            }
-
-            return CustomFields::newRelationshipModel()
-                ->newQuery()
-                ->where(fn (Builder $query): Builder => $query
-                    ->where('from_field_id', $key)
-                    ->orWhere('to_field_id', $key))
-                ->first();
-        });
+        return once(fn (): ?CustomFieldRelationship => CustomFields::newRelationshipModel()
+            ->newQuery()
+            ->where(fn (Builder $query): Builder => $query
+                ->where('from_field_id', $key)
+                ->orWhere('to_field_id', $key))
+            ->first());
     }
 
     /**

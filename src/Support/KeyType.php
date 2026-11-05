@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Support;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Database\Schema\ForeignIdColumnDefinition;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -36,6 +37,18 @@ final class KeyType
             self::BIGINT => $table->foreignId($column),
             self::ULID => $table->foreignUlid($column),
             self::UUID => $table->foreignUuid($column),
+        };
+    }
+
+    /**
+     * The key a query-builder insert must supply itself; null leaves it to the database.
+     */
+    public static function newKey(): ?string
+    {
+        return match (self::current()) {
+            self::BIGINT => null,
+            self::ULID => (string) Str::ulid(),
+            self::UUID => (string) Str::uuid(),
         };
     }
 

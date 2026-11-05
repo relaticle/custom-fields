@@ -13,7 +13,6 @@ use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Services\Relationships\DeleteRelationshipDefinition;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
-use Relaticle\CustomFields\Support\RelationshipTables;
 use RuntimeException;
 
 final class CustomFieldObserver
@@ -83,10 +82,6 @@ final class CustomFieldObserver
      */
     private function unpairRelationshipSlots(CustomField $customField): void
     {
-        if (! RelationshipTables::exist()) {
-            return;
-        }
-
         DB::transaction(function () use ($customField): void {
             $definitions = CustomFields::newRelationshipModel()
                 ->newQuery()

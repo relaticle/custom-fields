@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\DB;
 use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
@@ -127,19 +126,6 @@ it('batch loads links so reading a page of records costs one query per side', fu
 
     expect($small)->toBe(2)
         ->and($large)->toBe($small);
-});
-
-it('still eager loads links for a batch read while the relationships feature is off', function (): void {
-    $definition = readPathRelated();
-    $target = Post::factory()->create();
-    $host = Post::factory()->create(['custom_fields' => [$definition->fromField->code => [$target->getKey()]]]);
-
-    config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-    $loaded = Post::query()->whereKey($host->getKey())->withCustomFieldValues()->sole();
-
-    expect($loaded->relationLoaded('outgoingLinks'))->toBeTrue()
-        ->and($loaded->getCustomFieldValue($definition->fromField))->toBe([$target->getKey()]);
 });
 
 it('resolves linked titles for a loaded page without a query per record', function (): void {

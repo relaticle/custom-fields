@@ -28,7 +28,6 @@ use Relaticle\CustomFields\Services\Relationships\LinkReader;
 use Relaticle\CustomFields\Services\Relationships\LinkWriter;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Services\ValueResolver\LookupPreloader;
-use Relaticle\CustomFields\Support\RelationshipTables;
 
 /**
  * @see HasCustomFields
@@ -231,10 +230,6 @@ trait UsesCustomFields
      */
     protected function deleteCustomFieldLinks(): void
     {
-        if (! RelationshipTables::exist()) {
-            return;
-        }
-
         $ends = [CustomFieldRelationship::DIRECTION_FROM, CustomFieldRelationship::DIRECTION_TO];
 
         foreach ($ends as $end) {
@@ -253,10 +248,6 @@ trait UsesCustomFields
      */
     public function scopeWithActiveCustomFieldLinks(Builder $query): Builder
     {
-        if (! RelationshipTables::exist()) {
-            return $query;
-        }
-
         return $query->with([
             'outgoingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
             'incomingLinks' => fn (MorphMany $links): MorphMany => $links->whereNull('active_until'),
@@ -277,9 +268,9 @@ trait UsesCustomFields
 
     public function getCustomFieldValue(CustomField $customField): mixed
     {
-        $definition = $customField->relationshipDefinition();
+        if ($this->writesLinksFor($customField)) {
+            $definition = $customField->relationshipDefinitionOrFail();
 
-        if ($definition instanceof CustomFieldRelationship) {
             return app(LinkReader::class)->orderedIdsFor($this, $definition, $definition->readDirectionFor($customField));
         }
 
@@ -327,13 +318,11 @@ trait UsesCustomFields
     }
 
     /**
-     * A definition is the write fork, exactly as it already is for reads: no definition can
-     * exist without the tables it lives in, so a host that never enabled the feature keeps
-     * writing value rows either way.
+     * A field whose type points at records keeps its ids as links, never a value row.
      */
     protected function writesLinksFor(CustomField $customField): bool
     {
-        return $customField->relationshipDefinition() instanceof CustomFieldRelationship;
+        return $customField->typeData?->requiresRelationship === true;
     }
 
     /**

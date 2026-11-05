@@ -10,7 +10,6 @@ use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Data\VisibilityConditionData;
 use Relaticle\CustomFields\Data\VisibilityData;
-use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
@@ -476,26 +475,6 @@ describe('Record Fields Without a Definition', function (): void {
             'entity_type' => Post::class,
             'active' => true,
         ]);
-    });
-
-    it('lists records through a defined field while the relationships feature is off', function (): void {
-        $definition = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
-            code: 'related_post',
-            fromEntityType: (new Post)->getMorphClass(),
-            toEntityType: (new Post)->getMorphClass(),
-            cardinality: RelationshipCardinality::ManyToMany,
-            fromField: new FieldSlotData(name: 'Related Post', sectionId: $this->section->getKey()),
-        ));
-
-        $target = Post::factory()->create(['title' => 'Linked Target']);
-        $holder = Post::factory()->create(['custom_fields' => [$definition->fromField->code => [$target->getKey()]]]);
-
-        config('custom-fields.features')->disable(CustomFieldsFeature::SYSTEM_RELATIONSHIPS);
-
-        livewire(ListPosts::class)
-            ->assertSuccessful()
-            ->assertCanSeeTableRecords([$holder])
-            ->assertSee('Linked Target');
     });
 
     it('lists records with the column skipped when a record field has no definition', function (): void {

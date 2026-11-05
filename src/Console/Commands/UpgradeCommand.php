@@ -6,8 +6,6 @@ namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\Command;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ClearCachesStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateRecordLinksStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\PurgeMigratedRecordValuesStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ValidateSchemaStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
@@ -18,21 +16,14 @@ final class UpgradeCommand extends Command
     protected $signature = 'custom-fields:upgrade
                             {--dry-run : Show what would be migrated without making changes}
                             {--force : Run without confirmation prompts}
-                            {--purge : Also delete the record values the links step has migrated}
-                            {--skip= : Skip specific steps (comma-separated: validate-schema,migrate-record-links,purge-record-values,clear-caches)}';
+                            {--skip= : Skip specific steps (comma-separated: validate-schema,clear-caches)}';
 
     /** @var string */
     protected $description = 'Run the registered custom-fields upgrade steps';
 
-    public const string STEP_MIGRATE_RECORD_LINKS = 'migrate-record-links';
-
-    public const string STEP_PURGE_RECORD_VALUES = 'purge-record-values';
-
     /** @var array<string, class-string<UpgradeStep>> */
     private const STEPS = [
         'validate-schema' => ValidateSchemaStep::class,
-        self::STEP_MIGRATE_RECORD_LINKS => MigrateRecordLinksStep::class,
-        self::STEP_PURGE_RECORD_VALUES => PurgeMigratedRecordValuesStep::class,
         'clear-caches' => ClearCachesStep::class,
     ];
 
@@ -78,16 +69,8 @@ final class UpgradeCommand extends Command
         $this->newLine();
     }
 
-    /**
-     * Whether a step runs in this invocation. The purge is opt-in: it deletes the store the
-     * migration was copied from, so nothing but --purge may start it.
-     */
-    public function willRun(string $step): bool
+    private function willRun(string $step): bool
     {
-        if ($step === self::STEP_PURGE_RECORD_VALUES && ! $this->option('purge')) {
-            return false;
-        }
-
         return ! in_array($step, $this->getSkippedSteps(), true);
     }
 
@@ -138,9 +121,6 @@ final class UpgradeCommand extends Command
             $this->displayStepResult($result);
             $this->newLine();
 
-            // Every later step reads what an earlier one wrote, and the purge deletes the
-            // store the migration copies from, so a failure ends the run rather than
-            // handing the next step a state it was told not to trust.
             if (! $result->success) {
                 $this->line(sprintf('<error>Stopping: %s failed.</error>', $key));
                 $this->newLine();

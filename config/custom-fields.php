@@ -74,9 +74,6 @@ return [
             // Sections stay full width too, with one exception: a preset migration that
             // passed a width stored it even while this was off, and it now applies.
             CustomFieldsFeature::UI_SECTION_WIDTH_CONTROL,
-            // New at 4.0: while off, the relationship migrations and the upgrade steps
-            // never run; a record field with a definition still reads, writes, and deletes its links.
-            CustomFieldsFeature::SYSTEM_RELATIONSHIPS,
         )
         ->disable(
             // Would take the code away from whoever creates the field, and codes are the
