@@ -2,6 +2,20 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.16.1 - 2026-11-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.16.1 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump the npm-security group across 1 directory with 7 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/281
+* chore(deps): bump the github-actions group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/277
+* chore(deps-dev): bump postcss from 8.5.30 to 8.5.32 in the npm group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/276
+* fix: touch the record when a save changes only custom field values [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/284
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.0...v3.16.1
+
 ## v3.15.2 - 2026-10-20
 
 <!-- Release notes generated using configuration in .github/release.yml at 8cca6d80e60da131084f9c73197e78e220bffb44 -->
@@ -265,6 +279,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
