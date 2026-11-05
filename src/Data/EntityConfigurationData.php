@@ -9,20 +9,27 @@ namespace Relaticle\CustomFields\Data;
 
 use BackedEnum;
 use Exception;
-use Filament\Facades\Filament;
-use Filament\Resources\Resource;
 use Filament\Support\Contracts\ScalableIcon;
 use Filament\Support\Enums\IconSize;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Spatie\LaravelData\Data;
 
 final class EntityConfigurationData extends Data
 {
+    /**
+     * @param  class-string<Model>  $modelClass
+     * @param  array<int, string>  $searchAttributes
+     * @param  ?class-string  $resourceClass
+     * @param  ?Collection<int, EntityFeature>  $features
+     * @param  array<string, mixed>  $metadata
+     * @param  array<string, string>  $conditionRelations
+     */
     public function __construct(
         public string $modelClass,
         public string $alias,
@@ -39,12 +46,20 @@ final class EntityConfigurationData extends Data
         public array $conditionRelations = [],
         public ?AvatarConfiguration $avatarConfiguration = null,
     ) {
-        $this->features ??= collect([
-            EntityFeature::CUSTOM_FIELDS,
-            EntityFeature::LOOKUP_SOURCE,
-        ]);
+        $this->features ??= collect($this->defaultFeatures());
 
         $this->validateConfiguration();
+    }
+
+    /**
+     * @return list<EntityFeature>
+     */
+    private function defaultFeatures(): array
+    {
+        return [
+            EntityFeature::CUSTOM_FIELDS,
+            EntityFeature::LOOKUP_SOURCE,
+        ];
     }
 
     /**
@@ -89,6 +104,9 @@ final class EntityConfigurationData extends Data
 
     // Interface implementation methods
 
+    /**
+     * @return class-string<Model>
+     */
     public function getModelClass(): string
     {
         return $this->modelClass;
@@ -118,7 +136,7 @@ final class EntityConfigurationData extends Data
                 return $icon->getIconForSize(IconSize::Medium);
             }
 
-            if ($icon instanceof BackedEnum) {
+            if ($icon instanceof BackedEnum && is_string($icon->value)) {
                 return $icon->value;
             }
 
@@ -143,42 +161,26 @@ final class EntityConfigurationData extends Data
     private function resolveIconFromFilamentResource(): ?string
     {
         try {
-            $resources = Filament::getResources();
+            $resourceClass = app(ModelResourceResolverInterface::class)->resourceFor($this->modelClass);
+
+            if ($resourceClass === null) {
+                return null;
+            }
+
+            $icon = $resourceClass::getNavigationIcon();
         } catch (Exception) {
             return null;
         }
 
-        foreach ($resources as $resourceClass) {
-            try {
-                if (! class_exists($resourceClass)) {
-                    continue;
-                }
-
-                if (! is_subclass_of($resourceClass, Resource::class)) {
-                    continue;
-                }
-
-                if ($resourceClass::getModel() !== $this->modelClass) {
-                    continue;
-                }
-
-                $icon = $resourceClass::getNavigationIcon();
-
-                if ($icon instanceof ScalableIcon) {
-                    return $icon->getIconForSize(IconSize::Medium);
-                }
-
-                if ($icon instanceof BackedEnum) {
-                    return $icon->value;
-                }
-
-                return is_string($icon) ? $icon : null;
-            } catch (Exception) {
-                continue;
-            }
+        if ($icon instanceof ScalableIcon) {
+            return $icon->getIconForSize(IconSize::Medium);
         }
 
-        return null;
+        if ($icon instanceof BackedEnum && is_string($icon->value)) {
+            return $icon->value;
+        }
+
+        return is_string($icon) ? $icon : null;
     }
 
     public function getPrimaryAttribute(): string
@@ -186,11 +188,17 @@ final class EntityConfigurationData extends Data
         return $this->primaryAttribute;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getSearchAttributes(): array
     {
         return $this->searchAttributes;
     }
 
+    /**
+     * @return ?class-string
+     */
     public function getResourceClass(): ?string
     {
         return $this->resourceClass;
@@ -201,11 +209,17 @@ final class EntityConfigurationData extends Data
         return $this->recordPage;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getScopes(): array
     {
         return [];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getRelationships(): array
     {
         return $this->conditionRelations;
@@ -220,6 +234,9 @@ final class EntityConfigurationData extends Data
         return $this->conditionRelations;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getFeatures(): array
     {
         return $this->features?->map(fn (EntityFeature $f) => $f->value)->toArray() ?? [];
@@ -230,6 +247,9 @@ final class EntityConfigurationData extends Data
         return $this->priority;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getMetadata(): array
     {
         return $this->metadata;
@@ -252,6 +272,8 @@ final class EntityConfigurationData extends Data
 
     /**
      * Get a query builder for this entity
+     *
+     * @return Builder<Model>
      */
     public function newQuery(): Builder
     {
@@ -274,15 +296,20 @@ final class EntityConfigurationData extends Data
             throw new InvalidArgumentException(sprintf('Model class %s does not exist', $modelClass));
         }
 
+        if (! is_subclass_of($modelClass, Model::class)) {
+            throw new InvalidArgumentException(sprintf('Model class %s must extend ', $modelClass).Model::class);
+        }
+
         $model = new $modelClass;
 
+        /** @var array<int, EntityFeature> $features */
         $features = [EntityFeature::LOOKUP_SOURCE];
         if (in_array(HasCustomFields::class, class_implements($modelClass), true)) {
             $features[] = EntityFeature::CUSTOM_FIELDS;
         }
 
-        $globalSearchAttributes = method_exists($resource, 'getGloballySearchableAttributes')
-            ? $resource::getGloballySearchableAttributes()
+        $globalSearchAttributes = method_exists($resourceClass, 'getGloballySearchableAttributes')
+            ? $resourceClass::getGloballySearchableAttributes()
             : [];
 
         return new self(
@@ -291,16 +318,16 @@ final class EntityConfigurationData extends Data
             labelSingular: $resource::getModelLabel(),
             labelPlural: $resource::getBreadcrumb() ?? $resource::getPluralModelLabel() ?? $resource::getModelLabel().'s',
             icon: $resource::getNavigationIcon() ?? 'heroicon-o-document',
-            primaryAttribute: method_exists($resource, 'getRecordTitleAttribute')
-                ? ($resource::getRecordTitleAttribute() ?? $model->getKeyName())
+            primaryAttribute: method_exists($resourceClass, 'getRecordTitleAttribute')
+                ? ($resourceClass::getRecordTitleAttribute() ?? $model->getKeyName())
                 : $model->getKeyName(),
             searchAttributes: $globalSearchAttributes,
             resourceClass: $resourceClass,
             features: collect($features),
             priority: $resource::getNavigationSort() ?? 999,
             metadata: [
-                'navigation_group' => method_exists($resource, 'getNavigationGroup')
-                    ? $resource::getNavigationGroup()
+                'navigation_group' => method_exists($resourceClass, 'getNavigationGroup')
+                    ? $resourceClass::getNavigationGroup()
                     : null,
             ],
         );
@@ -309,6 +336,8 @@ final class EntityConfigurationData extends Data
     /**
      * Recreate object from var_export() for Laravel config:cache
      * Uses direct constructor instead of ::from() to avoid Laravel Data config dependency
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

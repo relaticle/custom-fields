@@ -7,7 +7,7 @@ namespace Relaticle\CustomFields\Services\Options;
 use Closure;
 use Exception;
 use Filament\Forms\Components\Field;
-use ReflectionObject;
+use Filament\Forms\Components\Select;
 use Relaticle\CustomFields\Contracts\FieldTypeDefinitionInterface;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
@@ -18,6 +18,8 @@ use Relaticle\CustomFields\Models\CustomField;
  *
  * This service analyzes form components to discover their configured options,
  * whether they're static arrays or dynamic search results.
+ *
+ * @internal
  */
 final class ComponentOptionsExtractor
 {
@@ -49,6 +51,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from a closure-based form component
+     *
+     * @return array<string|int, string>
      */
     private function extractFromClosure(Closure $closure, ?CustomField $field): array
     {
@@ -69,6 +73,8 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from a component class
+     *
+     * @return array<string|int, string>
      */
     private function extractFromComponentClass(): array
     {
@@ -79,77 +85,26 @@ final class ComponentOptionsExtractor
 
     /**
      * Extract options from an instantiated Filament component
+     *
+     * @return array<string|int, string>
      */
     private function extractFromComponent(Field $component): array
     {
         try {
-            // Method 1: Try getOptions() method (standard Filament pattern)
             if (method_exists($component, 'getOptions')) {
                 $options = $component->getOptions();
-                if (is_array($options) && $options !== []) {
-                    return $options;
-                }
-            }
-
-            // Method 2: Try to access options property via reflection
-            $reflection = new ReflectionObject($component);
-
-            if ($reflection->hasProperty('options')) {
-                $optionsProperty = $reflection->getProperty('options');
-                $optionsProperty->setAccessible(true);
-                $options = $optionsProperty->getValue($component);
 
                 if (is_array($options) && $options !== []) {
                     return $options;
                 }
             }
 
-            // Method 3: For searchable components, get sample data
-            if (method_exists($component, 'getSearchResultsUsing')) {
-                return $this->extractFromSearchableComponent($component);
+            if ($component instanceof Select) {
+                return array_slice($component->getSearchResults(''), 0, 20, true);
             }
 
             return [];
-
-        } catch (Exception $exception) {
-            return [];
-        }
-    }
-
-    /**
-     * Extract sample options from a searchable component
-     */
-    private function extractFromSearchableComponent(Field $component): array
-    {
-        try {
-            // Try to extract the search callback and run it with empty string
-            $reflection = new ReflectionObject($component);
-
-            // Look for getSearchResultsUsing property
-            if ($reflection->hasProperty('getSearchResultsUsing')) {
-                $property = $reflection->getProperty('getSearchResultsUsing');
-                $property->setAccessible(true);
-                $searchCallback = $property->getValue($component);
-
-                if ($searchCallback instanceof Closure) {
-                    // Call the search callback with empty search to get sample data
-                    try {
-                        $results = $searchCallback('');
-
-                        if (is_array($results)) {
-                            // Limit to reasonable number for UI
-                            return array_slice($results, 0, 20, true);
-                        }
-                    } catch (Exception $e) {
-                        // If search callback fails, return empty array
-                        return [];
-                    }
-                }
-            }
-
-            return [];
-
-        } catch (Exception $exception) {
+        } catch (Exception) {
             return [];
         }
     }

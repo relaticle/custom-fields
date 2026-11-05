@@ -10,6 +10,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing label configuration for table columns.
  * ABOUTME: Ensures consistent label handling across all column types.
+ *
+ * @internal
  */
 trait ConfiguresColumnLabel
 {

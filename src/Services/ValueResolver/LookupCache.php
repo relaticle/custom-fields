@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
 /**
- * Request-scoped cache of resolved lookup titles keyed by (lookup_type, id).
+ * Request-scoped cache of resolved lookup titles keyed by (target entity type, id).
  *
  * Populated either lazily by LookupResolver on demand, or eagerly by the
  * scopeWithCustomFieldValues afterQuery hook. Either way, downstream column
  * and infolist renders hit the cache instead of firing one query per row.
+ *
+ * @internal
  */
 final class LookupCache
 {

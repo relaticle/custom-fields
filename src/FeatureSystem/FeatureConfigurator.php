@@ -11,6 +11,7 @@ use Relaticle\CustomFields\Enums\CustomFieldsFeature;
  */
 final class FeatureConfigurator
 {
+    /** @var array<string, bool> */
     private array $features = [];
 
     private function __construct()
@@ -51,15 +52,20 @@ final class FeatureConfigurator
     }
 
     /**
-     * Check if a feature is enabled
+     * Check if a feature is enabled.
+     *
+     * A flag this configurator does not list falls back to the package default, so a config
+     * published before the flag existed inherits it instead of silently running it off.
      */
     public function isEnabled(CustomFieldsFeature $feature): bool
     {
-        return $this->features[$feature->value] ?? false;
+        return $this->features[$feature->value] ?? $feature->isEnabledByDefault();
     }
 
     /**
      * Restore the configurator from var_export
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

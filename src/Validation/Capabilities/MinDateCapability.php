@@ -31,6 +31,10 @@ final readonly class MinDateCapability extends AbstractDateCapability
 
     protected function applyConstraint(Field $component, DateConstraintValue $constraint): void
     {
-        $component->minDate(self::resolveDate($constraint)); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'minDate')) {
+            return;
+        }
+
+        $component->minDate(self::resolveDate($constraint));
     }
 }

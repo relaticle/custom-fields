@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\DateConstraintValue;
 
+/**
+ * @internal
+ */
 final readonly class DateConstraintRule implements ValidationRule
 {
     /**

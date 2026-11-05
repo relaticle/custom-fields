@@ -25,7 +25,7 @@ trait InteractsWithCustomFields
 
         return $table
             ->modifyQueryUsing(function (Builder $query): void {
-                $query->with('customFieldValues.customField');
+                $query->with(['customFieldValues.customField', 'outgoingLinks', 'incomingLinks']);
             })
             ->deferFilters(false)
             ->pushColumns($columns)

@@ -10,7 +10,10 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 
 use function Laravel\Prompts\select;
 
-class MakeFieldTypeCommand extends GeneratorCommand
+/**
+ * @internal
+ */
+final class MakeFieldTypeCommand extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
@@ -64,7 +67,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
 
         // Rebuild the path with proper filename
         $directory = implode('/', $pathParts);
-        $fullPath = $this->laravel['path'];
+        $fullPath = $this->laravel->path();
 
         if ($directory !== '' && $directory !== '0') {
             $fullPath .= '/'.$directory;
@@ -95,7 +98,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
             '{{ dataType }}' => $dataType->value,
             '{{ formComponentImport }}' => $this->getFormComponentImport($dataType),
             '{{ formComponent }}' => $this->getFormComponent($dataType),
-            '{{ withoutUserOptions }}' => $this->shouldUseWithoutUserOptions($dataType) ? "\n            ->withoutUserOptions()" : '',
+            '{{ capabilities }}' => $this->getCapabilities($dataType),
             '{{ choiceFieldComment }}' => $this->getChoiceFieldComment($dataType),
         ];
 
@@ -105,7 +108,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the class name from the full name.
      */
-    protected function getClassName(string $name): string
+    private function getClassName(string $name): string
     {
         $className = class_basename($name);
 
@@ -120,7 +123,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the field type name (without "FieldType" suffix).
      */
-    protected function getFieldTypeName(string $name): string
+    private function getFieldTypeName(string $name): string
     {
         $className = class_basename($name);
 
@@ -130,7 +133,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the data type for the field type.
      */
-    protected function getDataType(): FieldDataType
+    private function getDataType(): FieldDataType
     {
         $typeOption = $this->option('type');
 
@@ -155,17 +158,13 @@ class MakeFieldTypeCommand extends GeneratorCommand
             'multi_choice' => 'Multi Choice - Multiple selections, checkboxes, tags',
         ];
 
-        $selected = function_exists('Laravel\Prompts\select')
-            ? select('What data type should this field use?', $options, 'string')
-            : $this->choice('What data type should this field use?', $options, 'string');
-
-        return FieldDataType::from($selected);
+        return FieldDataType::from(select('What data type should this field use?', $options, 'string'));
     }
 
     /**
      * Get the appropriate configurator method for the given data type.
      */
-    protected function getConfiguratorForDataType(FieldDataType $dataType): string
+    private function getConfiguratorForDataType(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'text()',
@@ -184,7 +183,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the appropriate form component import for the given data type.
      */
-    protected function getFormComponentImport(FieldDataType $dataType): string
+    private function getFormComponentImport(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'use Filament\Forms\Components\TextInput;',
@@ -203,7 +202,7 @@ class MakeFieldTypeCommand extends GeneratorCommand
     /**
      * Get the appropriate form component code for the given data type.
      */
-    protected function getFormComponent(FieldDataType $dataType): string
+    private function getFormComponent(FieldDataType $dataType): string
     {
         return match ($dataType) {
             FieldDataType::STRING => 'return TextInput::make($customField->getFieldName())
@@ -249,21 +248,27 @@ class MakeFieldTypeCommand extends GeneratorCommand
     }
 
     /**
-     * Check if the field type should use withoutUserOptions().
+     * Get the capabilities the generated field type declares.
      */
-    protected function shouldUseWithoutUserOptions(FieldDataType $dataType): bool
+    private function getCapabilities(FieldDataType $dataType): string
     {
-        return $dataType === FieldDataType::SINGLE_CHOICE;
+        $capabilities = ['FieldCapability::Searchable', 'FieldCapability::Sortable'];
+
+        if ($dataType === FieldDataType::SINGLE_CHOICE) {
+            $capabilities[] = 'FieldCapability::WithoutUserOptions';
+        }
+
+        return implode(', ', $capabilities);
     }
 
     /**
      * Get comment for choice field types explaining the behavior.
      */
-    protected function getChoiceFieldComment(FieldDataType $dataType): string
+    private function getChoiceFieldComment(FieldDataType $dataType): string
     {
         return match ($dataType) {
-            FieldDataType::SINGLE_CHOICE => '// withoutUserOptions() showcases built-in options - can be used with both single and multi choice',
-            FieldDataType::MULTI_CHOICE => '// No withoutUserOptions() showcases user-defined options - withoutUserOptions() can be used here too',
+            FieldDataType::SINGLE_CHOICE => '// FieldCapability::WithoutUserOptions showcases built-in options - can be used with both single and multi choice',
+            FieldDataType::MULTI_CHOICE => '// No FieldCapability::WithoutUserOptions showcases user-defined options - it can be used here too',
             default => '',
         };
     }

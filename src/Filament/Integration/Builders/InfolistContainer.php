@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Relaticle\CustomFields\Filament\Integration\Builders;
 
 use Filament\Forms\Components\Field;
@@ -10,10 +12,14 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 
 final class InfolistContainer extends Grid
 {
+    private ?InfolistBuilder $builder = null;
+
     private Model|string|null $explicitModel = null;
 
+    /** @var array<int, string> */
     private array $except = [];
 
+    /** @var array<int, string> */
     private array $only = [];
 
     /** @var array<int, int> */
@@ -39,6 +45,13 @@ final class InfolistContainer extends Grid
         return $container;
     }
 
+    public function builder(InfolistBuilder $builder): static
+    {
+        $this->builder = clone $builder;
+
+        return $this;
+    }
+
     public function forModel(Model|string|null $model): static
     {
         $this->explicitModel = $model;
@@ -46,6 +59,9 @@ final class InfolistContainer extends Grid
         return $this;
     }
 
+    /**
+     * @param  array<int, string>  $fieldCodes
+     */
     public function except(array $fieldCodes): static
     {
         $this->except = $fieldCodes;
@@ -53,6 +69,9 @@ final class InfolistContainer extends Grid
         return $this;
     }
 
+    /**
+     * @param  array<int, string>  $fieldCodes
+     */
     public function only(array $fieldCodes): static
     {
         $this->only = $fieldCodes;
@@ -97,7 +116,8 @@ final class InfolistContainer extends Grid
     private function generateSchema(): array
     {
         // Inline priority: explicit ?? record ?? model class
-        $model = $this->explicitModel ?? $this->getRecord() ?? $this->getModel();
+        $record = $this->getRecord();
+        $model = $this->explicitModel ?? ($record instanceof Model ? $record : null) ?? $this->getModel();
 
         if ($model === null) {
             return []; // Graceful fallback
@@ -107,15 +127,15 @@ final class InfolistContainer extends Grid
         $withoutSections = $this->withoutSections
             ?? ! FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_SECTIONS);
 
-        $builder = app(InfolistBuilder::class)
-            ->forModel($model)
+        $builder = $this->builder instanceof InfolistBuilder ? clone $this->builder : app(InfolistBuilder::class);
+
+        return $builder->forModel($model)
             ->only($this->only)
             ->except($this->except)
             ->onlySections($this->onlySections)
             ->hiddenLabels($this->hiddenLabels)
             ->visibleWhenFilled($this->visibleWhenFilled)
-            ->withoutSections($withoutSections);
-
-        return $builder->values()->toArray();
+            ->withoutSections($withoutSections)
+            ->values()->toArray();
     }
 }

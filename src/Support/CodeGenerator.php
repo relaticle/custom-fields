@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Support;
 
 use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -14,32 +13,17 @@ use Relaticle\CustomFields\Services\TenantContextService;
 
 /**
  * Helper class for generating unique codes for custom fields and sections.
+ *
+ * @internal
  */
 final class CodeGenerator
 {
-    /** @var (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null */
-    private static ?Closure $uniquenessScopeResolver = null;
-
     /**
      * Generate a slug-style code from a name.
      */
     public static function generateFromName(string $name): string
     {
         return Str::of($name)->slug('_')->toString();
-    }
-
-    /**
-     * Narrow the uniqueness check to a subset of rows.
-     *
-     * The callback receives the entity type, either 'field' or 'section', and the section
-     * the code is being generated within (null when there is none). It returns a query
-     * scope closure, or null to leave the check global.
-     *
-     * @param  (Closure(string, string, int|string|null): (Closure(Builder): Builder)|null)|null  $callback
-     */
-    public static function resolveUniquenessScopeUsing(?Closure $callback): void
-    {
-        self::$uniquenessScopeResolver = $callback;
     }
 
     /**
@@ -71,6 +55,23 @@ final class CodeGenerator
             'section',
             $ignoreId
         );
+    }
+
+    /**
+     * Generate a unique code for a relationship definition, whose codes are unique per tenant
+     * rather than per entity type.
+     */
+    public static function generateUniqueRelationshipCode(string $baseCode): string
+    {
+        $code = $baseCode;
+        $counter = 1;
+
+        while (CustomFields::newRelationshipModel()->newQuery()->where('code', $code)->exists()) {
+            $code = sprintf('%s_%d', $baseCode, $counter);
+            $counter++;
+        }
+
+        return $code;
     }
 
     /**
@@ -108,8 +109,7 @@ final class CodeGenerator
             ? CustomFields::newCustomFieldModel()
             : CustomFields::newSectionModel();
 
-        $query = $model->newQuery()
-            ->withDeactivated()
+        $query = $model::withDeactivated()
             ->where('code', $code)
             ->where('entity_type', $entityType);
 
@@ -117,8 +117,10 @@ final class CodeGenerator
             $query->where($model->getKeyName(), '!=', $ignoreId);
         }
 
-        if (self::$uniquenessScopeResolver instanceof Closure) {
-            $scope = (self::$uniquenessScopeResolver)($entityType, $type, $sectionId);
+        $uniquenessScope = CustomFields::codeUniquenessScope();
+
+        if ($uniquenessScope instanceof Closure) {
+            $scope = $uniquenessScope($entityType, $type, $sectionId);
 
             if ($scope !== null) {
                 $query = $scope($query);

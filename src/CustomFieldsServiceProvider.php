@@ -17,15 +17,17 @@ use Relaticle\CustomFields\Console\Commands\CleanupOrphanedValuesCommand;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
 use Relaticle\CustomFields\Console\Commands\UpgradeCommand;
-use Relaticle\CustomFields\Contracts\CustomsFieldsMigrators;
-use Relaticle\CustomFields\Contracts\ValueResolvers;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
+use Relaticle\CustomFields\Contracts\ValueResolverInterface;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigrator;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelModelResourceResolver;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelTenant;
 use Relaticle\CustomFields\Livewire\ManageCustomField;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldSection;
 use Relaticle\CustomFields\Livewire\ManageCustomFieldWidth;
 use Relaticle\CustomFields\Livewire\ManageFieldsTable;
+use Relaticle\CustomFields\Migrations\CustomFieldsMigrator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Providers\EntityServiceProvider;
@@ -33,10 +35,13 @@ use Relaticle\CustomFields\Providers\FieldTypeServiceProvider;
 use Relaticle\CustomFields\Providers\ImportsServiceProvider;
 use Relaticle\CustomFields\Providers\ValidationServiceProvider;
 use Relaticle\CustomFields\Services\ModelAttributeDiscoveryService;
+use Relaticle\CustomFields\Services\Relationships\MissingRelationshipDefinitions;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Services\ValueResolver\LookupCache;
 use Relaticle\CustomFields\Services\ValueResolver\ValueResolver;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
+use Relaticle\CustomFields\Support\FieldFormConfiguration;
+use Relaticle\CustomFields\Support\ViewFlavor;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -54,11 +59,16 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         $this->app->register(ValidationServiceProvider::class);
         $this->app->register(EntityServiceProvider::class);
 
-        $this->app->singleton(CustomsFieldsMigrators::class, CustomFieldsMigrator::class);
-        $this->app->singleton(ValueResolvers::class, ValueResolver::class);
+        $this->app->singleton(CustomFieldsMigrator::class);
+        $this->app->singleton(ValueResolverInterface::class, ValueResolver::class);
         $this->app->scoped(LookupCache::class);
+        $this->app->scoped(MissingRelationshipDefinitions::class);
 
         $this->app->singleton(TenantContextService::class);
+        $this->app->singleton(ModelResourceResolverInterface::class, PanelModelResourceResolver::class);
+
+        // Registered here rather than in the plugin so a panel without the plugin keeps its tenant.
+        TenantContextService::setFallbackTenantResolver(PanelTenant::id(...));
         $this->app->singleton(BackendVisibilityService::class);
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
@@ -131,6 +141,9 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        ViewFlavor::validate();
+        FieldFormConfiguration::validate();
+
         // Asset Registration
         FilamentAsset::register(
             $this->getAssets(),
@@ -207,6 +220,10 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
         return [
             'create_custom_fields_table',
             'relax_custom_fields_unique_key',
+            'create_relationship_definitions_table',
+            'create_relationship_links_table',
+            'convert_record_fields_to_relationships',
+            'track_custom_field_values_provenance',
         ];
     }
 }

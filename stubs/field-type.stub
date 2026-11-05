@@ -8,6 +8,7 @@ use Closure;
 {{ formComponentImport }}
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Columns\TextColumn;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Models\CustomField;
@@ -23,13 +24,12 @@ class {{ class }} extends BaseFieldType
         return FieldSchema::{{ configurator }}
             ->key('{{ fieldKey }}')
             ->label('{{ fieldLabel }}')
-            ->icon('heroicon-o-pencil'){{ withoutUserOptions }}
+            ->icon('heroicon-o-pencil')
             ->formComponent($this->getFormComponent())
             ->tableColumn($this->getTableColumn())
             ->infolistEntry($this->getInfolistEntry())
             ->priority(100)
-            ->searchable()
-            ->sortable();
+            ->capabilities({{ capabilities }});
     }
 
     private function getFormComponent(): Closure

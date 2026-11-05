@@ -8,10 +8,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Services\TenantContextService;
+use Relaticle\CustomFields\Filament\Integration\Support\PanelTenant;
 use Symfony\Component\HttpFoundation\Response;
 
-class SetTenantContextMiddleware
+/**
+ * @internal
+ */
+final class SetTenantContextMiddleware
 {
     /**
      * Handle an incoming request.
@@ -19,7 +22,7 @@ class SetTenantContextMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-            TenantContextService::setFromFilamentTenant();
+            PanelTenant::rememberInContext();
         }
 
         return $next($request);

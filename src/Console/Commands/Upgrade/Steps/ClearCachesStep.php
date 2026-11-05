@@ -13,6 +13,8 @@ use Throwable;
 
 /**
  * Clears relevant caches after upgrade.
+ *
+ * @internal
  */
 final class ClearCachesStep implements UpgradeStep
 {

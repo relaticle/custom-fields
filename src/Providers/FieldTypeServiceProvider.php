@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\ServiceProvider;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 
+/**
+ * @internal
+ */
 final class FieldTypeServiceProvider extends ServiceProvider
 {
     public function boot(): void

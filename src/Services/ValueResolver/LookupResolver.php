@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
 use Illuminate\Support\Collection;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\FieldManager;
 use Relaticle\CustomFields\Models\CustomField;
 use Throwable;
 
+/**
+ * @internal
+ */
 final readonly class LookupResolver
 {
     public function __construct(
@@ -30,15 +34,17 @@ final readonly class LookupResolver
         $fieldTypeManager = app(FieldManager::class);
         $fieldTypeInstance = $fieldTypeManager->getFieldTypeInstance($customField->type);
 
-        if ($fieldTypeInstance && $fieldTypeInstance->getData()->acceptsArbitraryValues) {
+        if ($fieldTypeInstance && $fieldTypeInstance->getData()->supports(FieldCapability::AcceptsArbitraryValues)) {
             return collect($values);
         }
 
-        if ($customField->lookup_type === null) {
+        $lookupType = $customField->targetEntityType();
+
+        if ($lookupType === null) {
             return $customField->options->whereIn('id', $values)->pluck('name');
         }
 
-        return $this->resolveAgainstLookupModel($customField->lookup_type, $values);
+        return $this->resolveAgainstLookupModel($lookupType, $values);
     }
 
     /**

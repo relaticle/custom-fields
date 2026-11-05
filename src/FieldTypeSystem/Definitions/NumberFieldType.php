@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\NumberComponent;
@@ -28,7 +29,11 @@ class NumberFieldType extends BaseFieldType
             ->formComponent(NumberComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
-            ->supportsUniqueConstraint()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(20)
             ->withValidationCapabilities(
                 MinValueCapability::class,

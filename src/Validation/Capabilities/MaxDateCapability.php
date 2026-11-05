@@ -31,6 +31,10 @@ final readonly class MaxDateCapability extends AbstractDateCapability
 
     protected function applyConstraint(Field $component, DateConstraintValue $constraint): void
     {
-        $component->maxDate(self::resolveDate($constraint)); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'maxDate')) {
+            return;
+        }
+
+        $component->maxDate(self::resolveDate($constraint));
     }
 }

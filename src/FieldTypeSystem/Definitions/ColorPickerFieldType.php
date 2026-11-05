@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ColorPickerComponent;
@@ -25,6 +26,7 @@ class ColorPickerFieldType extends BaseFieldType
             ->formComponent(ColorPickerComponent::class)
             ->tableColumn(ColorColumn::class)
             ->infolistEntry(ColorEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(90)
             ->defaultValidationRules([
                 'regex:/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/',

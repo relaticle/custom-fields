@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportDataStorage;
 use Relaticle\CustomFields\Models\CustomField;
@@ -44,7 +45,8 @@ it('saves the custom field values the imported row carried', function (): void {
     $post->load('customFieldValues');
 
     expect($post->getCustomFieldValue($this->referralSource))->toBe('Continuum of Care')
-        ->and($post->getCustomFieldValue($this->caseworker))->toBe('Alex Rivera');
+        ->and($post->getCustomFieldValue($this->caseworker))->toBe('Alex Rivera')
+        ->and($post->customFieldValues->pluck('source')->unique()->all())->toBe([WriteSource::Import]);
 });
 
 it('leaves custom fields the row did not carry untouched', function (): void {

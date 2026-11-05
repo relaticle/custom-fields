@@ -11,6 +11,9 @@ use Illuminate\Support\Collection;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
+/**
+ * @extends Collection<array-key, EntityConfigurationData>
+ */
 final class EntityCollection extends Collection
 {
     /**
@@ -92,6 +95,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get entities with any of the specified features
+     *
+     * @param  array<int, string>  $features
      */
     public function withAnyFeature(array $features): static
     {
@@ -108,6 +113,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get entities with all of the specified features
+     *
+     * @param  array<int, string>  $features
      */
     public function withAllFeatures(array $features): static
     {
@@ -164,6 +171,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get as options array for selects (alias => label)
+     *
+     * @return array<string, string>
      */
     public function toOptions(bool $usePlural = true): array
     {
@@ -176,6 +185,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get as detailed options array with icons
+     *
+     * @return array<string, array<string, string>>
      */
     public function toDetailedOptions(): array
     {
@@ -210,6 +221,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get model classes
+     *
+     * @return array<int, string>
      */
     public function getModelClasses(): array
     {
@@ -220,6 +233,8 @@ final class EntityCollection extends Collection
 
     /**
      * Get aliases
+     *
+     * @return array<int, string>
      */
     public function getAliases(): array
     {

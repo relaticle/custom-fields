@@ -13,6 +13,8 @@ use Stringable;
  * first throw and cannot aggregate errors. Returning this instead lets the single
  * `validateData()` pass report every unresolvable column in the row at once, alongside
  * the ordinary column errors.
+ *
+ * @internal
  */
 final readonly class UnresolvedValue implements Stringable
 {

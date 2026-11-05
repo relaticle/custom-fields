@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Base;
 
 use Filament\Infolists\Components\Entry;
-use Relaticle\CustomFields\Contracts\InfolistComponentInterface;
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Filament\Integration\Contracts\InfolistComponentInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**
@@ -17,5 +18,5 @@ abstract class AbstractInfolistEntry implements InfolistComponentInterface
     /**
      * Create and configure an infolist entry.
      */
-    abstract public function make(CustomField $customField): Entry;
+    abstract public function make(CustomField $customField, ?Model $record = null): Entry;
 }

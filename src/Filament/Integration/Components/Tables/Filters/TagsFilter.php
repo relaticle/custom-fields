@@ -8,13 +8,14 @@ use Filament\Support\Colors\Color;
 use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter as FilamentSelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableFilter;
 use Relaticle\CustomFields\Models\CustomField;
 
 final class TagsFilter extends AbstractTableFilter
 {
-    public function make(CustomField $customField): FilamentSelectFilter
+    public function make(CustomField $customField, ?Model $record = null, ?string $through = null): FilamentSelectFilter
     {
         $filter = FilamentSelectFilter::make($customField->getFieldName())
             ->multiple()
@@ -26,13 +27,15 @@ final class TagsFilter extends AbstractTableFilter
         $filter->query(
             fn (array $data, Builder $query): Builder => $query->when(
                 ! empty($data['values']),
-                fn (Builder $query): Builder => $query->whereHas('customFieldValues', function (Builder $query) use ($customField, $data): void {
+                fn (Builder $query): Builder => $this->constrainThrough($query, $through, fn (Builder $query): Builder => $query->whereHas('customFieldValues', function (Builder $query) use ($customField, $data): void {
                     $query->where('custom_field_id', $customField->id);
 
-                    foreach ($data['values'] as $tag) {
-                        $query->whereJsonContains('json_value', $tag);
-                    }
-                }),
+                    $query->where(function (Builder $anyTag) use ($data): void {
+                        foreach ($data['values'] as $tag) {
+                            $anyTag->orWhereJsonContains('json_value', [$tag]);
+                        }
+                    });
+                })),
             )
         );
 

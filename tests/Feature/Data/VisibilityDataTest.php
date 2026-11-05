@@ -414,3 +414,39 @@ describe('VisibilityData hasModelAttributeConditions', function (): void {
         expect($visibility->hasModelAttributeConditions())->toBeFalse();
     });
 });
+
+describe('VisibilityData condition normalization', function (): void {
+    it('drops conditions the mode does not use', function (): void {
+        $visibility = VisibilityData::from([
+            'mode' => VisibilityMode::ALWAYS_VISIBLE,
+            'logic' => VisibilityLogic::ALL,
+            'conditions' => [
+                [
+                    'field_code' => 'status',
+                    'operator' => VisibilityOperator::EQUALS,
+                    'value' => 'active',
+                    'source' => ConditionSource::CustomField,
+                ],
+            ],
+        ]);
+
+        expect($visibility->conditions)->toBeNull()
+            ->and($visibility->requiresConditions())->toBeFalse();
+    });
+
+    it('keeps conditions under a conditional mode', function (): void {
+        $visibility = VisibilityData::from([
+            'mode' => VisibilityMode::HIDE_WHEN,
+            'conditions' => [
+                [
+                    'field_code' => 'status',
+                    'operator' => VisibilityOperator::EQUALS,
+                    'value' => 'active',
+                    'source' => ConditionSource::CustomField,
+                ],
+            ],
+        ]);
+
+        expect($visibility->conditions)->toHaveCount(1);
+    });
+});

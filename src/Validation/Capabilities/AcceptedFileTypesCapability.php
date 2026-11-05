@@ -7,9 +7,9 @@ namespace Relaticle\CustomFields\Validation\Capabilities;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Component;
-use Relaticle\CustomFields\Contracts\ValidationCapability;
+use Relaticle\CustomFields\Contracts\ValidationCapabilityInterface;
 
-final readonly class AcceptedFileTypesCapability implements ValidationCapability
+final readonly class AcceptedFileTypesCapability implements ValidationCapabilityInterface
 {
     public function key(): string
     {
@@ -39,7 +39,11 @@ final readonly class AcceptedFileTypesCapability implements ValidationCapability
             return;
         }
 
-        $component->acceptedFileTypes($types); // @phpstan-ignore method.notFound
+        if (! method_exists($component, 'acceptedFileTypes')) {
+            return;
+        }
+
+        $component->acceptedFileTypes($types);
     }
 
     /** @return array<int, string> */

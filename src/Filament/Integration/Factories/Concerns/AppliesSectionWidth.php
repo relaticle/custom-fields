@@ -11,6 +11,9 @@ use Relaticle\CustomFields\Enums\CustomFieldWidth;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 
+/**
+ * @internal
+ */
 trait AppliesSectionWidth
 {
     private function applyWidth(Section|Fieldset $component, CustomFieldSection $section): void

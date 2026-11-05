@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 use Carbon\Carbon;
 use Livewire\Features\SupportTesting\Testable;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
 use Relaticle\CustomFields\Tests\Fixtures\Models\User;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\Pages\CreatePost;
@@ -57,6 +61,23 @@ function createField(object $context, string $code, string $type, array $validat
         'validation_rules' => $validationRules,
         ...$attributes,
     ]);
+}
+
+function createRecordField(object $context, string $code, array $validationRules): CustomField
+{
+    registerPostLookupEntity();
+
+    $field = createField($context, $code, 'record', $validationRules);
+
+    app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: $code,
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::ManyToMany,
+        fromField: new FieldSlotData(name: $field->name, sectionId: $context->section->getKey(), fieldId: $field->getKey()),
+    ));
+
+    return $field;
 }
 
 function createMultiSelectField(object $context, string $code, array $optionNames, array $validationRules = []): array
@@ -314,9 +335,7 @@ it('accepts tags-input within min and max selections', function (): void {
 });
 
 it('renders a record field that limits its selections', function (): void {
-    registerPostLookupEntity();
-
-    createField($this, 'related_posts', 'record', ['min_selections' => 1, 'max_selections' => 2], ['lookup_type' => Post::class]);
+    createRecordField($this, 'related_posts', ['min_selections' => 1, 'max_selections' => 2]);
 
     livewire(CreatePost::class)
         ->assertSuccessful()
@@ -324,9 +343,7 @@ it('renders a record field that limits its selections', function (): void {
 });
 
 it('rejects a record field exceeding max_selections', function (): void {
-    registerPostLookupEntity();
-
-    createField($this, 'related_posts', 'record', ['max_selections' => 1], ['lookup_type' => Post::class]);
+    createRecordField($this, 'related_posts', ['max_selections' => 1]);
 
     $relatedPostIds = Post::factory()->count(2)->create()->modelKeys();
 

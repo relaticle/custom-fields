@@ -7,13 +7,16 @@ namespace Relaticle\CustomFields\Services\Visibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Services\Options\ComponentOptionsExtractor;
 use Throwable;
+use WeakMap;
 
 /**
  * Backend Visibility Service
@@ -23,6 +26,8 @@ use Throwable;
  * determine field visibility.
  *
  * This service provides PHP-based evaluation of visibility conditions.
+ *
+ * @internal
  */
 final class BackendVisibilityService
 {
@@ -33,10 +38,17 @@ final class BackendVisibilityService
      */
     private static array $fieldCache = [];
 
+    /**
+     * @var WeakMap<Collection<int, CustomFieldValue>, array<string, array<string, mixed>>>
+     */
+    private readonly WeakMap $extractedValues;
+
     public function __construct(
         private readonly CoreVisibilityLogicService $coreLogic,
         private readonly ComponentOptionsExtractor $optionsExtractor,
-    ) {}
+    ) {
+        $this->extractedValues = new WeakMap;
+    }
 
     /**
      * Get cached fields for an entity type (O(1) lookup by code).
@@ -84,6 +96,14 @@ final class BackendVisibilityService
             $record->load('customFieldValues.customField');
         }
 
+        $loadedValues = $record->getRelation('customFieldValues');
+        $signature = $fields->pluck('id')->implode(',');
+        $memoised = $this->extractedValues[$loadedValues] ?? [];
+
+        if (array_key_exists($signature, $memoised)) {
+            return $memoised[$signature];
+        }
+
         $fieldValues = [];
 
         foreach ($fields as $field) {
@@ -93,6 +113,9 @@ final class BackendVisibilityService
                 $field
             );
         }
+
+        $memoised[$signature] = $fieldValues;
+        $this->extractedValues[$loadedValues] = $memoised;
 
         return $fieldValues;
     }
@@ -236,7 +259,7 @@ final class BackendVisibilityService
             $value === null ||
             $value === '' ||
             ! $field->isChoiceField() ||
-            $field->typeData->withoutUserOptions
+            $field->typeData->supports(FieldCapability::WithoutUserOptions)
         ) {
             return $value;
         }
@@ -289,15 +312,16 @@ final class BackendVisibilityService
 
         // Priority 1: Check for component-provided options (dynamic extraction)
         $fieldTypeData = CustomFieldsType::getFieldType($field->type);
-        if ($fieldTypeData?->withoutUserOptions) {
+        if ($fieldTypeData?->supports(FieldCapability::WithoutUserOptions)) {
             $options = $this->optionsExtractor->extractOptionsFromFieldType($field->type, $field);
 
             return $this->normalizeOptionsForVisibility($options);
         }
 
-        // Priority 2: Handle lookup types (existing functionality)
-        if ($field->lookup_type) {
-            return $this->getLookupOptions($field->lookup_type);
+        $targetEntityType = $field->targetEntityType();
+
+        if ($targetEntityType !== null) {
+            return $this->getLookupOptions($targetEntityType);
         }
 
         // Priority 3: Fallback to database options (existing functionality)

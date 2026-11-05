@@ -15,21 +15,27 @@ use WeakMap;
  *
  * This class solves the problem of Filament trying to set custom_fields_* as model attributes,
  * which causes SQL errors. WeakMap ensures automatic cleanup when models are garbage collected.
+ *
+ * @internal
  */
 final class ImportDataStorage
 {
     /**
      * WeakMap storage for custom field data during import.
      * Automatically cleans up when model instances are garbage collected.
+     *
+     * @var ?WeakMap<Model, array<string, mixed>>
      */
     private static ?WeakMap $storage = null;
 
     /**
-     * Initialize the WeakMap storage if not already initialized.
+     * The WeakMap storage, created on first use.
+     *
+     * @return WeakMap<Model, array<string, mixed>>
      */
-    private static function init(): void
+    private static function storage(): WeakMap
     {
-        self::$storage ??= new WeakMap;
+        return self::$storage ??= new WeakMap;
     }
 
     /**
@@ -41,11 +47,11 @@ final class ImportDataStorage
      */
     public static function set(Model $record, string $fieldCode, mixed $value): void
     {
-        self::init();
+        $storage = self::storage();
 
-        $data = self::$storage[$record] ?? [];
+        $data = $storage[$record] ?? [];
         $data[$fieldCode] = $value;
-        self::$storage[$record] = $data;
+        $storage[$record] = $data;
     }
 
     /**
@@ -56,10 +62,10 @@ final class ImportDataStorage
      */
     public static function setMultiple(Model $record, array $values): void
     {
-        self::init();
+        $storage = self::storage();
 
-        $data = self::$storage[$record] ?? [];
-        self::$storage[$record] = array_merge($data, $values);
+        $data = $storage[$record] ?? [];
+        $storage[$record] = array_merge($data, $values);
     }
 
     /**
@@ -70,9 +76,7 @@ final class ImportDataStorage
      */
     public static function get(Model $record): array
     {
-        self::init();
-
-        return self::$storage[$record] ?? [];
+        return self::storage()[$record] ?? [];
     }
 
     /**
@@ -83,10 +87,10 @@ final class ImportDataStorage
      */
     public static function pull(Model $record): array
     {
-        self::init();
+        $storage = self::storage();
 
-        $data = self::$storage[$record] ?? [];
-        unset(self::$storage[$record]);
+        $data = $storage[$record] ?? [];
+        unset($storage[$record]);
 
         return $data;
     }
@@ -98,9 +102,7 @@ final class ImportDataStorage
      */
     public static function has(Model $record): bool
     {
-        self::init();
-
-        return isset(self::$storage[$record]);
+        return isset(self::storage()[$record]);
     }
 
     /**

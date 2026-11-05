@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Services\ValidationService;
 /**
  * ABOUTME: Trait providing validation configuration for form fields.
  * ABOUTME: Standardizes how validation rules are applied to custom fields.
+ *
+ * @internal
  */
 trait ConfiguresValidation
 {

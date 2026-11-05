@@ -8,6 +8,9 @@ use Illuminate\Support\Str;
 use NumberFormatter;
 use ResourceBundle;
 
+/**
+ * @internal
+ */
 final class CurrencyProvider
 {
     /**

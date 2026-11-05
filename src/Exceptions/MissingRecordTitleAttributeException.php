@@ -6,4 +6,4 @@ namespace Relaticle\CustomFields\Exceptions;
 
 use Exception;
 
-class MissingRecordTitleAttributeException extends Exception {}
+final class MissingRecordTitleAttributeException extends Exception {}

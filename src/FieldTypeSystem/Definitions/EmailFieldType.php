@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\EmailComponent;
@@ -25,13 +26,15 @@ class EmailFieldType extends BaseFieldType
             ->formComponent(EmailComponent::class)
             ->tableColumn(EmailColumn::class)
             ->infolistEntry(EmailEntry::class)
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::AcceptsArbitraryValues,
+                FieldCapability::SupportsMultiValue,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(15)
-            ->searchable()
-            ->sortable()
-            ->supportsMultiValue()
-            ->supportsUniqueConstraint()
-            ->withArbitraryValues()
-            ->withoutUserOptions()
             ->defaultItemValidationRules(['email', 'max:254']);
     }
 }

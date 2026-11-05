@@ -19,6 +19,8 @@ final class EntityModel
 {
     /**
      * Create entity configuration array from model class
+     *
+     * @return array<string, mixed>
      */
     public static function for(string $modelClass): array
     {
@@ -30,8 +32,12 @@ final class EntityModel
     /**
      * Configure entity with custom settings
      *
+     * @param  array<int, string>  $searchAttributes
+     * @param  array<int, EntityFeature|string>  $features
+     * @param  array<string, mixed>  $metadata
      * @param  array<string, string>  $conditionRelations  path => label allowlist of relation paths usable as
      *                                                     cross-record visibility-condition sources for this entity.
+     * @return array<string, mixed>
      */
     public static function configure(
         string $modelClass,
@@ -101,6 +107,8 @@ final class EntityModel
     /**
      * Set smart defaults based on the model class
      * Icon is resolved lazily in EntityConfigurationData::getIcon() at runtime
+     *
+     * @return array<string, mixed>
      */
     private static function setSmartDefaults(string $modelClass): array
     {
@@ -148,6 +156,8 @@ final class EntityModel
 
     /**
      * Guess the best search attributes for this model
+     *
+     * @return array<int, string>
      */
     private static function guessSearchAttributes(string $primaryAttribute): array
     {

@@ -1,6 +1,8 @@
 <?php
 
-use Relaticle\CustomFields\Filament\Integration\Migrations\CustomFieldsMigration;
+declare(strict_types=1);
+
+use Relaticle\CustomFields\Migrations\CustomFieldsMigration;
 
 return new class extends CustomFieldsMigration
 {

@@ -18,6 +18,7 @@ it('widens the section modal to screen-lg when conditional visibility is enabled
 it('keeps the narrower 2xl section modal when conditional visibility is disabled', function (): void {
     config()->set('custom-fields.features', FeatureConfigurator::configure()
         ->enable(CustomFieldsFeature::SYSTEM_SECTIONS)
+        ->disable(CustomFieldsFeature::SECTION_CONDITIONAL_VISIBILITY)
     );
 
     expect(CustomFieldsPlugin::make()->getSectionModalWidth())->toBe(Width::TwoExtraLarge);

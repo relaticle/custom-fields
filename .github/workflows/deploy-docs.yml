@@ -2,17 +2,23 @@ name: Deploy Docs
 
 on:
   push:
-    branches: ["3.x", "2.x", "1.x"]
+    branches: ["4.x", "3.x", "2.x", "1.x"]
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
+  # A merge performed with GITHUB_TOKEN does not trigger `on: push`, so every
+  # auto-merged docs bump lands without deploying. This reconciles the site with
+  # whatever is on the branch, whoever merged it.
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version branch to deploy (e.g., 3.x, 2.x, 1.x)'
+        description: 'Version branch to deploy (e.g., 4.x, 3.x, 2.x)'
         required: true
         type: choice
         options:
+          - '4.x'
           - '3.x'
           - '2.x'
           - '1.x'
@@ -31,22 +37,32 @@ jobs:
     steps:
       - name: Determine version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "branch=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          # On a schedule GITHUB_REF is the default branch, which is the one to reconcile.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "branch=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
           else
-            echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+            echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set version config
         id: config
+        env:
+          BRANCH: ${{ steps.version.outputs.branch }}
         run: |
-          BRANCH="${{ steps.version.outputs.branch }}"
           case $BRANCH in
-            3.x)
+            4.x)
               echo "dest_folder=." >> $GITHUB_OUTPUT
               echo "base_url=/custom-fields/" >> $GITHUB_OUTPUT
               echo "is_latest=true" >> $GITHUB_OUTPUT
+              ;;
+            3.x)
+              echo "dest_folder=v3" >> $GITHUB_OUTPUT
+              echo "base_url=/custom-fields/v3/" >> $GITHUB_OUTPUT
+              echo "is_latest=false" >> $GITHUB_OUTPUT
               ;;
             2.x)
               echo "dest_folder=v2" >> $GITHUB_OUTPUT
@@ -68,15 +84,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.version.outputs.branch }}
+          persist-credentials: false
 
       - name: Checkout gh-pages
+        # zizmor: ignore[artipacked] the deploy commit below pushes with this credential
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: gh-pages
           path: gh-pages
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           cache: 'npm'
@@ -96,15 +114,15 @@ jobs:
           NUXT_PUBLIC_FATHOM_SITE_ID: ${{ secrets.FATHOM_SITE_ID }}
 
       - name: Deploy to gh-pages
+        env:
+          DEST: ${{ steps.config.outputs.dest_folder }}
+          IS_LATEST: ${{ steps.config.outputs.is_latest }}
         run: |
-          DEST="${{ steps.config.outputs.dest_folder }}"
-          IS_LATEST="${{ steps.config.outputs.is_latest }}"
-
           if [ "$IS_LATEST" == "true" ]; then
             echo "Deploying latest version to root..."
             cd gh-pages
             # List of items to preserve
-            PRESERVE="v1 v2 versions.json .nojekyll README.md .git"
+            PRESERVE="v1 v2 v3 versions.json .nojekyll README.md .git"
             # Remove everything except preserved items
             for item in *; do
               if [ -e "$item" ]; then
@@ -137,6 +155,8 @@ jobs:
 
       - name: Commit and push
         working-directory: ./gh-pages
+        env:
+          BRANCH: ${{ steps.version.outputs.branch }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -144,6 +164,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to deploy"
           else
-            git commit -m "Deploy ${{ steps.version.outputs.branch }} docs"
+            git commit -m "Deploy $BRANCH docs"
             git push
           fi

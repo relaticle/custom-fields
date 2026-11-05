@@ -9,6 +9,9 @@ use Filament\Infolists\Components\Entry;
 use InvalidArgumentException;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 final class FieldInfolistsFactory
 {
     public function create(CustomField $customField): Entry

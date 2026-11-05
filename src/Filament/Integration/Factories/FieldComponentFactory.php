@@ -9,13 +9,15 @@ use Filament\Forms\Components\Field;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ClosureFormAdapter;
+use Relaticle\CustomFields\Filament\Integration\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * @extends AbstractComponentFactory<FormComponentInterface, Field>
+ *
+ * @internal
  */
 final class FieldComponentFactory extends AbstractComponentFactory
 {
@@ -41,13 +43,6 @@ final class FieldComponentFactory extends AbstractComponentFactory
             $component = $this->createComponent($customField, 'form_component', FormComponentInterface::class);
         }
 
-        // Only AbstractFormComponent consumes the optional $record (server-side relation-attribute
-        // visibility). Third-party FormComponentInterface implementers keep the original 3-arg contract,
-        // so the package stays backward compatible for that public extension point.
-        if ($component instanceof AbstractFormComponent) {
-            return $component->make($customField, $dependentFieldCodes, $allFields, $record);
-        }
-
-        return $component->make($customField, $dependentFieldCodes, $allFields);
+        return $component->make($customField, $dependentFieldCodes, $allFields, $record);
     }
 }

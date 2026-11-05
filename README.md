@@ -3,8 +3,8 @@
 ![Custom Fields](art/preview.png)
 
    <a href="https://packagist.org/packages/relaticle/custom-fields"><img src="https://img.shields.io/packagist/dt/relaticle/custom-fields.svg?style=for-the-badge" alt="Downloads"></a>
-  <a href="https://laravel.com/docs/12.x"><img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 12"></a>
-  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php" alt="PHP 8.3"></a>
+  <a href="https://laravel.com/docs/13.x"><img src="https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 13"></a>
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php" alt="PHP 8.4"></a>
   <a href="https://github.com/Relaticle/custom-fields/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg?style=for-the-badge" alt="License"></a>
   <a href="https://github.com/relaticle/custom-fields/actions"><img src="https://img.shields.io/github/actions/workflow/status/relaticle/custom-fields/tests.yml?branch=3.x&style=for-the-badge&label=tests" alt="License"></a>
 
@@ -13,6 +13,8 @@ A powerful Laravel/Filament plugin for adding dynamic custom fields to any Eloqu
 ## Features
 
 - **20+ Field Types** - Text, date, select, file upload, rich editor, and more
+- **Record Links** - Link records to records, one-way or paired, stored in an edge ledger
+- **Workflow States** - Status fields whose options carry a machine-readable category
 - **Conditional Visibility** - Show/hide fields based on other field values
 - **Multi-tenancy** - Complete tenant isolation and context management
 - **Filament Integration** - Forms, tables, infolists, and admin interface
@@ -22,7 +24,8 @@ A powerful Laravel/Filament plugin for adding dynamic custom fields to any Eloqu
 
 ## Requirements
 
-- PHP 8.3+
+- PHP 8.4+
+- Laravel 13+
 - Filament 5.0+
 
 ## Getting Started

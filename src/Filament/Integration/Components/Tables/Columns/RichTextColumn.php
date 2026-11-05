@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns;
 
 use Filament\Tables\Columns\TextColumn as BaseTextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractTableColumn;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Tables\ConfiguresColumnLabel;
@@ -25,7 +26,7 @@ final class RichTextColumn extends AbstractTableColumn
 
     private const int DEFAULT_TOOLTIP_LIMIT = 500;
 
-    public function make(CustomField $customField): BaseTextColumn
+    public function make(CustomField $customField, ?Model $record = null): BaseTextColumn
     {
         $column = BaseTextColumn::make($customField->getFieldName());
 

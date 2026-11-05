@@ -12,6 +12,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing sortable configuration for table columns.
  * ABOUTME: Extracts common sortable query logic used across multiple column types.
+ *
+ * @internal
  */
 trait ConfiguresSortable
 {
@@ -34,7 +36,7 @@ trait ConfiguresSortable
                         ->whereColumn('custom_field_values.entity_id', sprintf('%s.%s', $table, $key))
                         ->limit(1)
                         ->getQuery(),
-                    $direction
+                    $direction === 'desc' ? 'desc' : 'asc'
                 );
             }
         );

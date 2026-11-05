@@ -18,6 +18,8 @@ use Relaticle\CustomFields\Models\CustomField;
  * - Radio/CheckboxList: Use descriptions with color indicators
  * - ToggleButtons: Use native colors() method
  * - Select: Use HTML with colored spans
+ *
+ * @internal
  */
 trait ConfiguresColorOptions
 {

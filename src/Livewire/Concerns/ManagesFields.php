@@ -8,12 +8,18 @@ use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Models\CustomField;
 
 /**
  * Shared logic for managing custom fields in Livewire components.
+ *
+ * @internal
  */
 trait ManagesFields
 {
+    /**
+     * @return Collection<int, CustomField>
+     */
     #[Computed]
     public function fields(): Collection
     {

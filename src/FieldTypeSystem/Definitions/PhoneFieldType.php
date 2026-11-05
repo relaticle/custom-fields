@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
 use Relaticle\CustomFields\Filament\Integration\Components\Infolists\PhoneEntry;
 use Relaticle\CustomFields\Filament\Integration\Components\Tables\Columns\PhoneColumn;
+use Relaticle\CustomFields\Services\Phone\CountryPhoneService;
 
 /**
  * ABOUTME: Field type definition for phone number input fields
@@ -26,14 +28,21 @@ class PhoneFieldType extends BaseFieldType
             ->formComponent(PhoneComponent::class)
             ->tableColumn(PhoneColumn::class)
             ->infolistEntry(PhoneEntry::class)
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Encryptable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::AcceptsArbitraryValues,
+                FieldCapability::SupportsMultiValue,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(16)
-            ->encryptable()
-            ->searchable()
-            ->sortable()
-            ->supportsMultiValue()
-            ->supportsUniqueConstraint()
-            ->withArbitraryValues()
-            ->withoutUserOptions()
             ->defaultItemValidationRules(['phone:AUTO']);
+    }
+
+    public function setValue(string $value): string
+    {
+        return resolve(CountryPhoneService::class)->normalize($value);
     }
 }

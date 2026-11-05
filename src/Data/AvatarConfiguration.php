@@ -26,6 +26,8 @@ final class AvatarConfiguration extends Data
 
     /**
      * Recreate object from var_export() for Laravel config:cache
+     *
+     * @param  array<string, mixed>  $properties
      */
     public static function __set_state(array $properties): self
     {

@@ -5,18 +5,13 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\Console\Commands;
 
 use Illuminate\Console\Command;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\CleanMultiValueValidationRulesStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ClearCachesStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateEmailFormatStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateLookupFieldsStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigratePhoneFormatStep;
-use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\MigrateValidationRulesFormatStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\Steps\ValidateSchemaStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 
 /**
- * Main upgrade command for custom-fields 2.x → 3.x migration.
+ * @internal
  */
 final class UpgradeCommand extends Command
 {
@@ -24,18 +19,13 @@ final class UpgradeCommand extends Command
     protected $signature = 'custom-fields:upgrade
                             {--dry-run : Show what would be migrated without making changes}
                             {--force : Run without confirmation prompts}
-                            {--skip= : Skip specific steps (comma-separated: lookup-fields,email-format,phone-format,validate-schema,clear-caches)}';
+                            {--skip= : Skip specific steps (comma-separated: validate-schema,clear-caches)}';
 
     /** @var string */
-    protected $description = 'Upgrade custom-fields data from 2.x to 3.x';
+    protected $description = 'Run the registered custom-fields upgrade steps';
 
     /** @var array<string, class-string<UpgradeStep>> */
     private const STEPS = [
-        'lookup-fields' => MigrateLookupFieldsStep::class,
-        'email-format' => MigrateEmailFormatStep::class,
-        'phone-format' => MigratePhoneFormatStep::class,
-        'migrate-validation-format' => MigrateValidationRulesFormatStep::class,
-        'clean-multivalue-rules' => CleanMultiValueValidationRulesStep::class,
         'validate-schema' => ValidateSchemaStep::class,
         'clear-caches' => ClearCachesStep::class,
     ];
@@ -48,6 +38,15 @@ final class UpgradeCommand extends Command
         $isForced = (bool) $this->option('force');
         $stepsToSkip = $this->getSkippedSteps();
 
+        $unknownSteps = array_diff($stepsToSkip, array_keys(self::STEPS));
+
+        if ($unknownSteps !== []) {
+            $this->line(sprintf('<error>Unknown --skip value(s): %s.</error>', implode(', ', $unknownSteps)));
+            $this->line(sprintf('Valid steps: %s.', implode(', ', array_keys(self::STEPS))));
+
+            return self::FAILURE;
+        }
+
         if ($isDryRun) {
             $this->warn('Running in DRY RUN mode - no changes will be made');
             $this->newLine();
@@ -59,7 +58,7 @@ final class UpgradeCommand extends Command
             return self::SUCCESS;
         }
 
-        $results = $this->runSteps($isDryRun, $stepsToSkip);
+        $results = $this->runSteps($isDryRun);
         $this->displaySummary($results, $isDryRun);
 
         return $this->hasErrors($results) ? self::FAILURE : self::SUCCESS;
@@ -68,9 +67,14 @@ final class UpgradeCommand extends Command
     private function displayHeader(): void
     {
         $this->newLine();
-        $this->line('<fg=cyan>Custom Fields Upgrade: 2.x → 3.x</>');
+        $this->line('<fg=cyan>Custom Fields Upgrade</>');
         $this->line(str_repeat('=', 40));
         $this->newLine();
+    }
+
+    private function willRun(string $step): bool
+    {
+        return ! in_array($step, $this->getSkippedSteps(), true);
     }
 
     /**
@@ -84,21 +88,25 @@ final class UpgradeCommand extends Command
             return [];
         }
 
-        return array_map('trim', explode(',', $skipOption));
+        $values = array_map('trim', explode(',', $skipOption));
+
+        // Only empty elements are dropped: a bare array_filter() also swallows "0", which
+        // would then reach no step and no unknown-value error either.
+        return array_values(array_unique(array_filter($values, fn (string $value): bool => $value !== '')));
     }
 
     /**
-     * @param  list<string>  $stepsToSkip
      * @return array<string, UpgradeStepResult>
      */
-    private function runSteps(bool $isDryRun, array $stepsToSkip): array
+    private function runSteps(bool $isDryRun): array
     {
         $results = [];
         $stepNumber = 1;
-        $totalSteps = count(self::STEPS) - count($stepsToSkip);
+        $steps = array_filter(self::STEPS, fn (string $stepClass, string $key): bool => $this->willRun($key), ARRAY_FILTER_USE_BOTH);
+        $totalSteps = count($steps);
 
         foreach (self::STEPS as $key => $stepClass) {
-            if (in_array($key, $stepsToSkip, true)) {
+            if (! array_key_exists($key, $steps)) {
                 $this->line(sprintf('<comment>Skipping: %s</comment>', $key));
                 $this->newLine();
 
@@ -115,6 +123,13 @@ final class UpgradeCommand extends Command
 
             $this->displayStepResult($result);
             $this->newLine();
+
+            if (! $result->success) {
+                $this->line(sprintf('<error>Stopping: %s failed.</error>', $key));
+                $this->newLine();
+
+                break;
+            }
 
             $stepNumber++;
         }
@@ -173,7 +188,6 @@ final class UpgradeCommand extends Command
 
         $this->line(str_repeat('═', 50));
 
-        // Summary stats
         $totalProcessed = 0;
         $totalFailed = 0;
         foreach ($results as $result) {
@@ -187,10 +201,7 @@ final class UpgradeCommand extends Command
             $this->line(sprintf('  <error>Total items failed: %d</error>', $totalFailed));
         }
 
-        // Manual action reminder
         $this->newLine();
-        $this->warn('Manual Action Required:');
-        $this->line('  Update config/custom-fields.php to use the new format if needed.');
         $this->line('  See: https://relaticle.github.io/custom-fields/getting-started/upgrade-guide');
     }
 

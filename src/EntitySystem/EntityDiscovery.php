@@ -19,10 +19,18 @@ use Relaticle\CustomFields\Enums\EntityFeature;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * @internal
+ */
 final class EntityDiscovery
 {
+    /** @var array<int, EntityConfigurationData> */
     private array $discoveredCache = [];
 
+    /**
+     * @param  array<int, string>  $paths
+     * @param  array<int, string>  $namespaces
+     */
     public function __construct(
         private array $paths = [],
         private array $namespaces = []
@@ -40,6 +48,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from multiple sources
+     *
+     * @return array<int, EntityConfigurationData>
      */
     public function discover(): array
     {
@@ -80,6 +90,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from Filament Resources
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromFilamentResources(): array
     {
@@ -115,6 +127,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from configured paths
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromPaths(): array
     {
@@ -147,6 +161,8 @@ final class EntityDiscovery
 
     /**
      * Discover entities from namespaces
+     *
+     * @return array<int, EntityConfigurationData>
      */
     private function discoverFromNamespaces(): array
     {
@@ -172,6 +188,8 @@ final class EntityDiscovery
 
     /**
      * Check if a model should be discovered
+     *
+     * @phpstan-assert-if-true class-string<Model> $modelClass
      */
     private function shouldDiscoverModel(string $modelClass): bool
     {
@@ -204,6 +222,8 @@ final class EntityDiscovery
 
     /**
      * Create entity configuration from a model class
+     *
+     * @param  class-string<Model>  $modelClass
      */
     private function createEntityFromModel(string $modelClass): EntityConfigurationData
     {
@@ -259,6 +279,8 @@ final class EntityDiscovery
 
     /**
      * Get model primary attribute
+     *
+     * @param  class-string<Model>  $modelClass
      */
     private function getModelPrimaryAttribute(string $modelClass): string
     {
@@ -285,6 +307,9 @@ final class EntityDiscovery
 
     /**
      * Get model search attributes
+     *
+     * @param  class-string<Model>  $modelClass
+     * @return array<int, string>
      */
     private function getModelSearchAttributes(string $modelClass): array
     {
@@ -326,6 +351,8 @@ final class EntityDiscovery
 
     /**
      * Get classes in a namespace (using declared classes)
+     *
+     * @return array<int, class-string>
      */
     private function getClassesInNamespace(string $namespace): array
     {

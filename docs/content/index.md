@@ -77,6 +77,17 @@ Why choose Custom Fields?
 
   :::u-page-feature
   ---
+  icon: i-lucide-git-branch
+  ---
+  #title
+  Record Relationships
+
+  #description
+  Link records to records, one-way or paired, on a ledger that sorts, searches, and keeps history.
+  :::
+
+  :::u-page-feature
+  ---
   icon: i-lucide-shield-check
   ---
   #title

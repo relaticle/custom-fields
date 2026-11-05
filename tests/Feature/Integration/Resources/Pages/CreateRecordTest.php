@@ -61,10 +61,11 @@ describe('Record Creation', function (): void {
         $this->assertDatabaseHas(Post::class, [
             'author_id' => $newData->author->getKey(),
             'content' => $newData->content,
-            'tags' => json_encode($newData->tags),
             'title' => $newData->title,
             'rating' => $newData->rating,
         ]);
+
+        expect(Post::query()->where('title', $newData->title)->value('tags'))->toBe($newData->tags);
 
         $this->assertDatabaseCount('posts', 1);
     });
@@ -113,18 +114,20 @@ describe('Record Creation', function (): void {
         $this->assertDatabaseHas(Post::class, [
             'author_id' => $newData->author->getKey(),
             'content' => $newData->content,
-            'tags' => json_encode($newData->tags),
             'title' => $newData->title,
             'rating' => $newData->rating,
         ]);
 
+        expect(Post::query()->where('title', $newData->title)->value('tags'))->toBe($newData->tags);
+
         $this->assertDatabaseHas(Post::class, [
             'author_id' => $newData2->author->getKey(),
             'content' => $newData2->content,
-            'tags' => json_encode($newData2->tags),
             'title' => $newData2->title,
             'rating' => $newData2->rating,
         ]);
+
+        expect(Post::query()->where('title', $newData2->title)->value('tags'))->toBe($newData2->tags);
 
         $this->assertDatabaseCount('posts', 2);
     });
@@ -209,12 +212,13 @@ describe('Custom Fields Integration', function (): void {
         $this->assertDatabaseHas(Post::class, [
             'author_id' => $newData->author->getKey(),
             'content' => $newData->content,
-            'tags' => json_encode($newData->tags),
             'title' => $newData->title,
             'rating' => $newData->rating,
         ]);
 
         $post = Post::query()->firstWhere('title', $newData->title);
+        expect($post->tags)->toBe($newData->tags);
+
         $customFieldValues = $post->customFieldValues->keyBy('customField.code');
 
         expect($customFieldValues)->toHaveCount(2)

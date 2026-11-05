@@ -10,12 +10,12 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Relaticle\CustomFields\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
+use Relaticle\CustomFields\Filament\Integration\Contracts\FormComponentInterface;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Services\ValidationService;
 use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
@@ -26,11 +26,9 @@ use Spatie\LaravelData\DataCollection;
 /**
  * Abstract base class for form field components.
  *
- * Eliminates duplication across 18+ component classes by providing
- * common structure and delegating to FieldConfigurator for shared logic.
- *
- * Each concrete component only needs to implement createField() to specify
- * the Filament component type and its basic configuration.
+ * make() applies everything shared (name, label, description, hydration, dehydration,
+ * validation, width, visibility). A subclass implements create() and may override
+ * transformHydratedValue(); every other member is internal and may change in a minor release.
  */
 abstract readonly class AbstractFormComponent implements FormComponentInterface
 {
@@ -53,9 +51,9 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     ];
 
     public function __construct(
-        protected ValidationService $validationService,
-        protected CoreVisibilityLogicService $coreVisibilityLogic,
-        protected FrontendVisibilityService $frontendVisibilityService
+        private ValidationService $validationService,
+        private CoreVisibilityLogicService $coreVisibilityLogic,
+        private FrontendVisibilityService $frontendVisibilityService
     ) {}
 
     /**
@@ -64,7 +62,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * @param  array<string>  $dependentFieldCodes
      * @param  Collection<int, CustomField>|null  $allFields
      */
-    public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
+    final public function make(CustomField $customField, array $dependentFieldCodes = [], ?Collection $allFields = null, ?Model $record = null): Field
     {
         $field = $this->create($customField);
         $allFields ??= collect();
@@ -72,7 +70,11 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return $this->configure($field, $customField, $allFields, $dependentFieldCodes, $record);
     }
 
-    protected function configure(
+    /**
+     * @param  Collection<int, CustomField>  $allFields
+     * @param  array<int, string>  $dependentFieldCodes
+     */
+    private function configure(
         Field $field,
         CustomField $customField,
         Collection $allFields,
@@ -105,10 +107,13 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                     )
                 )
             )
+            // Empty is a value: a field the user cleared has to reach the writer, or a
+            // relationship could never lose its last record. A clear is destructive, so it
+            // travels only on a field the server can prove the form showed.
             ->dehydrated(
-                fn (mixed $state): bool => ! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY) ||
-                    $this->coreVisibilityLogic->shouldAlwaysSave($customField) ||
-                    filled($state)
+                fn (Get $get, mixed $state): bool => $this->coreVisibilityLogic->shouldAlwaysSave($customField) ||
+                    filled($state) ||
+                    $this->isProvablyVisible($customField, $allFields, $get)
             )
             ->when(
                 $this->validationService->isRequired($customField) && $customField->typeData->dataType->isBoolean(),
@@ -119,7 +124,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
                 ),
             )
             ->rules(fn (Get $get, Field $component): array => $this->isVisibleForValidation($customField, $allFields, $get)
-                ? $this->getFieldValidationRules($customField, $component->getRecord()?->getKey())
+                ? $this->getFieldValidationRules($customField, ($componentRecord = $component->getRecord()) instanceof Model ? $componentRecord->getKey() : null)
                 : [])
             ->columnSpan(
                 FeatureManager::isEnabled(CustomFieldsFeature::UI_FIELD_WIDTH_CONTROL)
@@ -159,7 +164,6 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
 
         foreach ($fieldTypeData->validationCapabilities as $capabilityClass) {
             $capability = app($capabilityClass);
-            /** @phpstan-ignore nullsafe.neverNull */
             $value = $validationRules?->get($capability->key());
 
             if ($value !== null) {
@@ -229,6 +233,36 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         Collection $allFields,
         Get $get
     ): bool {
+        return $this->reproducedVisibility($customField, $allFields, $get) ?? true;
+    }
+
+    /**
+     * Whether the server can PROVE the form is showing the field. Dehydration resolves an
+     * unreproducible expression the other way from validation: a redundant validation costs a
+     * user one more click, while dehydrating a state the form never showed writes an empty
+     * value over a stored one.
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function isProvablyVisible(
+        CustomField $customField,
+        Collection $allFields,
+        Get $get
+    ): bool {
+        return $this->reproducedVisibility($customField, $allFields, $get) === true;
+    }
+
+    /**
+     * The field's own conditions evaluated against live form state, or null when the server
+     * cannot reproduce the expression the client renders (see canReproduceClientVisibility).
+     *
+     * @param  Collection<int, CustomField>  $allFields
+     */
+    private function reproducedVisibility(
+        CustomField $customField,
+        Collection $allFields,
+        Get $get
+    ): ?bool {
         if (! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)) {
             return true;
         }
@@ -240,7 +274,7 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         $visibility = $this->coreVisibilityLogic->getVisibilityData($customField);
 
         if (! $this->canReproduceClientVisibility($visibility, $allFields)) {
-            return true;
+            return null;
         }
 
         $rawValues = $get('custom_fields');
@@ -306,6 +340,9 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
         return true;
     }
 
+    /**
+     * @param  Collection<int, CustomField>  $allFields
+     */
     private function applyVisibility(
         Field $field,
         CustomField $customField,
@@ -337,13 +374,17 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      *
      * @return array<int, mixed>
      */
-    protected function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
+    private function getFieldValidationRules(CustomField $customField, string|int|null $ignoreEntityId = null): array
     {
         return $this->validationService->getValueValidationRules($customField, $ignoreEntityId);
     }
 
     /**
      * Apply settings dynamically to any Filament component
+     *
+     * @internal
+     *
+     * @param  array<string, mixed>  $settings
      */
     protected function applySettingsToComponent(Field $component, array $settings): Field
     {
@@ -370,6 +411,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
     /**
      * Get options from custom field's configured options.
      *
+     * @internal
+     *
      * @return array<int|string, string>
      */
     protected function getCustomFieldOptions(CustomField $customField): array
@@ -383,6 +426,8 @@ abstract readonly class AbstractFormComponent implements FormComponentInterface
      * Filtering for static options happens client-side, so this is a readability
      * choice rather than a performance one. A threshold of 0 always shows the box,
      * which is the pre-3.8 behavior.
+     *
+     * @internal
      *
      * @param  array<int|string, string>  $options
      */

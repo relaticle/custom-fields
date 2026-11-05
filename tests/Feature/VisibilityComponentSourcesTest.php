@@ -10,6 +10,7 @@ use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
+use Relaticle\CustomFields\Filament\Management\Forms\Components\Visibility\ConditionOptions;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityComponent;
 use Relaticle\CustomFields\Support\RelationConditionConfig;
 use Relaticle\CustomFields\Tests\Fixtures\Models\Comment;
@@ -72,13 +73,6 @@ describe('RelationConditionConfig source availability', function (): void {
 
 describe('custom-field fallback operator set excludes relation-only operators', function (): void {
     it('does not include IS_IN or IS_NOT_IN when no field type data is available (custom-field source with blank field_code)', function (): void {
-        // VisibilityComponent::getCompatibleOperators() is private; we reach it via reflection
-        // to verify the fallback branch (no $fieldData) excludes relation-only operators.
-        $component = new VisibilityComponent;
-
-        $method = new ReflectionMethod($component, 'getCompatibleOperators');
-        $method->setAccessible(true);
-
         // Build a minimal Get stub that returns null/blank for all keys (simulates blank field_code,
         // CustomField source), forcing $fieldData to be null so the fallback branch executes.
         $get = new class extends Get
@@ -94,7 +88,7 @@ describe('custom-field fallback operator set excludes relation-only operators', 
             }
         };
 
-        $operators = $method->invoke($component, $get);
+        $operators = (new ConditionOptions)->getCompatibleOperators($get);
 
         expect(array_keys($operators))
             ->not->toContain(VisibilityOperator::IS_IN->value, 'IS_IN must be excluded from the custom-field fallback operator list')
@@ -116,8 +110,8 @@ describe('source picker visibility is resolved per-render (regression: build-tim
         // Comment is registered with conditionRelations in the test harness (post.tagModels => ...).
         $component = VisibilityComponent::makeForSection(Comment::class);
 
-        $method = new ReflectionMethod($component, 'getAvailableSourceOptions');
-        $method->setAccessible(true);
+        $property = new ReflectionProperty($component, 'conditionOptions');
+        $property->setAccessible(true);
 
         $get = new class extends Get
         {
@@ -132,7 +126,7 @@ describe('source picker visibility is resolved per-render (regression: build-tim
             }
         };
 
-        $options = $method->invoke($component, $get);
+        $options = $property->getValue($component)->getAvailableSourceOptions($get);
 
         expect(array_keys($options))
             ->toContain(ConditionSource::RelationAttribute->value)

@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Filament\Integration\Concerns\Shared;
 
+use Filament\Infolists\Components\TextEntry;
 use Filament\Support\Colors\Color;
+use Filament\Tables\Columns\TextColumn;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 trait ConfiguresBadgeColors
 {
-    protected function applyBadgeColorsIfEnabled($component, CustomField $customField)
+    /**
+     * @template TComponent of TextEntry|TextColumn
+     *
+     * @param  TComponent  $component
+     * @return TComponent
+     */
+    protected function applyBadgeColorsIfEnabled(TextEntry|TextColumn $component, CustomField $customField): TextEntry|TextColumn
     {
-        if ($customField->typeData->acceptsArbitraryValues) {
+        if ($customField->typeData->supports(FieldCapability::AcceptsArbitraryValues)) {
             return $this->applyTagsBadgeColors($component, $customField);
         }
 
@@ -22,7 +34,7 @@ trait ConfiguresBadgeColors
         }
 
         return $component->badge()
-            ->color(function ($state) use ($customField): array {
+            ->color(function (mixed $state) use ($customField): array {
                 $color = $customField->options->where('name', $state)->first()?->settings->color;
 
                 return Color::hex($color ?? '#000000');
@@ -32,11 +44,16 @@ trait ConfiguresBadgeColors
     /**
      * Apply badge styling for tags (fields with arbitrary values).
      * Always displays as badges with predefined option colors or gray fallback.
+     *
+     * @template TComponent of TextEntry|TextColumn
+     *
+     * @param  TComponent  $component
+     * @return TComponent
      */
-    private function applyTagsBadgeColors($component, CustomField $customField)
+    private function applyTagsBadgeColors(TextEntry|TextColumn $component, CustomField $customField): TextEntry|TextColumn
     {
         return $component->badge()
-            ->color(function ($state) use ($customField): array|string {
+            ->color(function (mixed $state) use ($customField): array|string {
                 if ($this->shouldApplyBadgeColors($customField)) {
                     $option = $customField->options->where('name', $state)->first();
 
@@ -53,6 +70,6 @@ trait ConfiguresBadgeColors
     {
         return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
             && $customField->settings->enable_option_colors
-            && ! $customField->lookup_type;
+            && ! $customField->typeData->supports(FieldCapability::RequiresRelationship);
     }
 }

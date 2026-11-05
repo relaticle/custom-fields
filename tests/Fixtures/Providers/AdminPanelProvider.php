@@ -18,6 +18,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Tests\Fixtures\Pages\Settings;
+use Relaticle\CustomFields\Tests\Fixtures\Resources\Comments\CommentResource;
 use Relaticle\CustomFields\Tests\Fixtures\Resources\Posts\PostResource;
 
 class AdminPanelProvider extends PanelProvider
@@ -32,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->resources([
+                CommentResource::class,
                 PostResource::class,
             ])
             ->pages([

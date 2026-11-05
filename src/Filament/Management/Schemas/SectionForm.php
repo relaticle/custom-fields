@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
@@ -23,7 +24,10 @@ use Relaticle\CustomFields\Filament\Management\Forms\Components\VisibilityCompon
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Services\TenantContextService;
 
-class SectionForm implements FormInterface, SectionFormInterface
+/**
+ * @internal
+ */
+final class SectionForm
 {
     private static string $entityType;
 
@@ -35,9 +39,6 @@ class SectionForm implements FormInterface, SectionFormInterface
      * scoped to the section's parent form. Null (e.g. on section create) applies no scope.
      */
     private static ?CustomFieldSection $visibilityScopeSection = null;
-
-    /** @var array<int, Closure(array<int, Component>, string): array<int, Component>> */
-    private static array $schemaExtensions = [];
 
     public static function entityType(string $entityType): self
     {
@@ -60,27 +61,6 @@ class SectionForm implements FormInterface, SectionFormInterface
         self::$visibilityScopeSection = $section;
 
         return $this;
-    }
-
-    /**
-     * Register a callback that can append to or modify the section form schema.
-     * Applies to both the create and edit section modals. The callback receives
-     * the current schema and the section's entity type. Register once (e.g. from
-     * a service provider); extensions persist until flushed.
-     *
-     * @param  Closure(array<int, Component>, string): array<int, Component>  $callback
-     */
-    public static function extendSchemaUsing(Closure $callback): void
-    {
-        self::$schemaExtensions[] = $callback;
-    }
-
-    /**
-     * Clear all registered schema extensions. Primarily for testing.
-     */
-    public static function flushSchemaExtensions(): void
-    {
-        self::$schemaExtensions = [];
     }
 
     private static function buildUniqueRule(Unique $rule, Get $get): Unique
@@ -209,7 +189,7 @@ class SectionForm implements FormInterface, SectionFormInterface
             ]),
         ];
 
-        foreach (self::$schemaExtensions as $extension) {
+        foreach (CustomFieldsPlugin::current()?->getSectionSchemaExtensions() ?? [] as $extension) {
             $schema = $extension($schema, self::$entityType);
         }
 

@@ -12,6 +12,8 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Relaticle\CustomFields\CustomFields as CustomFieldsManager;
+use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Facades\CustomFields;
 use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
@@ -39,10 +41,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    VisibilityComponent::resolveAvailableFieldsScopeUsing(null);
-    FieldForm::resolveUniqueRuleModifierUsing(null);
-    FieldForm::resolveUniqueCodeRuleModifierUsing(null);
-    CodeGenerator::resolveUniquenessScopeUsing(null);
+    CustomFieldsManager::scopeCodeUniquenessUsing(fn (string $entityType, string $type, int|string|null $sectionId): null => null);
 });
 
 function nullGet(): Get
@@ -60,10 +59,10 @@ function nullGet(): Get
 
 function availableFields(VisibilityComponent $component): array
 {
-    $method = new ReflectionMethod($component, 'getAvailableFields');
-    $method->setAccessible(true);
+    $property = new ReflectionProperty($component, 'conditionOptions');
+    $property->setAccessible(true);
 
-    return $method->invoke($component, nullGet());
+    return $property->getValue($component)->getAvailableFields(nullGet());
 }
 
 /**
@@ -101,7 +100,7 @@ describe('VisibilityComponent available-fields scope resolver', function (): voi
         CustomField::factory()->create(['custom_field_section_id' => $sectionA->id, 'entity_type' => Post::class, 'name' => 'Alpha', 'code' => 'alpha', 'type' => 'text']);
         CustomField::factory()->create(['custom_field_section_id' => $sectionB->id, 'entity_type' => Post::class, 'name' => 'Beta', 'code' => 'beta', 'type' => 'text']);
 
-        VisibilityComponent::resolveAvailableFieldsScopeUsing(
+        CustomFieldsPlugin::get()->visibilityFields(
             fn (string $entityType, ?CustomFieldSection $section): ?Closure => $section instanceof CustomFieldSection
                 ? fn ($query) => $query->where('custom_field_section_id', $section->id)
                 : null
@@ -116,7 +115,7 @@ describe('VisibilityComponent available-fields scope resolver', function (): voi
         $sectionA = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'A', 'code' => 'a']);
         CustomField::factory()->create(['custom_field_section_id' => $sectionA->id, 'entity_type' => Post::class, 'name' => 'Alpha', 'code' => 'alpha', 'type' => 'text']);
 
-        VisibilityComponent::resolveAvailableFieldsScopeUsing(fn (string $entityType, ?CustomFieldSection $section): null => null);
+        CustomFieldsPlugin::get()->visibilityFields(fn (string $entityType, ?CustomFieldSection $section): null => null);
 
         $options = availableFields(VisibilityComponent::makeForSection(Post::class, $sectionA));
 
@@ -134,7 +133,7 @@ describe('FieldForm unique-name modifier resolver', function (): void {
     it('accepts an optional section without altering the schema shape', function (): void {
         $section = CustomFieldSection::factory()->create(['entity_type' => Post::class, 'name' => 'A', 'code' => 'a']);
 
-        FieldForm::resolveUniqueRuleModifierUsing(
+        CustomFieldsPlugin::get()->uniqueFieldNameRule(
             fn (?CustomFieldSection $s): ?Closure => $s instanceof CustomFieldSection
                 ? fn ($rule) => $rule->where('custom_field_section_id', $s->id)
                 : null
@@ -205,7 +204,7 @@ describe('FieldForm unique-code modifier resolver', function (): void {
          * related sections" (e.g. a version lineage) rather than "just this one section" --
          * the shape CRITICAL-1 in the whole-branch review required.
          */
-        FieldForm::resolveUniqueCodeRuleModifierUsing(
+        CustomFieldsPlugin::get()->uniqueFieldCodeRule(
             fn (?CustomFieldSection $s): ?Closure => $s instanceof CustomFieldSection
                 ? fn ($rule) => $rule->whereNotIn('custom_field_section_id', [$sectionA->id, $sectionB->id])
                 : null
@@ -241,7 +240,7 @@ describe('FieldForm unique-code modifier resolver', function (): void {
             'type' => 'text',
         ]);
 
-        FieldForm::resolveUniqueCodeRuleModifierUsing(
+        CustomFieldsPlugin::get()->uniqueFieldCodeRule(
             fn (?CustomFieldSection $s): ?Closure => $s instanceof CustomFieldSection
                 ? fn ($rule) => $rule->whereNotIn('custom_field_section_id', [$sectionA->id, $sectionB->id])
                 : null
@@ -285,7 +284,7 @@ describe('CodeGenerator uniqueness scope resolver', function (): void {
             'type' => 'text',
         ]);
 
-        CodeGenerator::resolveUniquenessScopeUsing(
+        CustomFieldsManager::scopeCodeUniquenessUsing(
             fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
                 ? fn (Builder $query): Builder => $query->where('custom_field_section_id', $sectionId)
                 : null
@@ -306,7 +305,7 @@ describe('CodeGenerator uniqueness scope resolver', function (): void {
             'type' => 'text',
         ]);
 
-        CodeGenerator::resolveUniquenessScopeUsing(
+        CustomFieldsManager::scopeCodeUniquenessUsing(
             fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
                 ? fn (Builder $query): Builder => $query->where('custom_field_section_id', $sectionId)
                 : null
@@ -334,7 +333,7 @@ describe('CodeGenerator uniqueness scope resolver', function (): void {
          * what actually discriminates: it hands back a distinct instance, so only code that
          * reassigns $query to the closure's return value picks the narrowed clone up.
          */
-        CodeGenerator::resolveUniquenessScopeUsing(
+        CustomFieldsManager::scopeCodeUniquenessUsing(
             fn (string $entityType, string $type, int|string|null $sectionId): ?Closure => $type === 'field' && $sectionId !== null
                 ? fn (Builder $query): Builder => $query->clone()->where('custom_field_section_id', $sectionId)
                 : null
@@ -357,7 +356,7 @@ describe('CodeGenerator uniqueness scope resolver', function (): void {
 
         $receivedSectionId = 'not-called';
 
-        CodeGenerator::resolveUniquenessScopeUsing(
+        CustomFieldsManager::scopeCodeUniquenessUsing(
             function (string $entityType, string $type, int|string|null $sectionId) use (&$receivedSectionId): ?Closure {
                 $receivedSectionId = $sectionId;
 
@@ -465,11 +464,12 @@ describe('BaseBuilder onlySections() scope on a sections-disabled install', func
     beforeEach(function (): void {
         config()->set('custom-fields.features', FeatureConfigurator::configure()
             ->enable(CustomFieldsFeature::FIELD_CONDITIONAL_VISIBILITY)
+            ->disable(CustomFieldsFeature::SYSTEM_SECTIONS)
         );
 
         collect(Schema::getIndexes('custom_fields'))
             ->filter(fn (array $index): bool => in_array('custom_field_section_id', $index['columns'], true))
-            ->each(fn (array $index) => DB::statement("DROP INDEX \"{$index['name']}\""));
+            ->each(fn (array $index) => Schema::table('custom_fields', fn (Blueprint $table) => $table->dropUnique($index['name'])));
 
         Schema::table('custom_fields', fn (Blueprint $table) => $table->dropColumn('custom_field_section_id'));
     });

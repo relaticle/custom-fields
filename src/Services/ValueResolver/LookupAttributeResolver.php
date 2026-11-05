@@ -4,30 +4,39 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Services\ValueResolver;
 
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Relaticle\CustomFields\Contracts\ModelResourceResolverInterface;
 use Relaticle\CustomFields\Exceptions\MissingRecordTitleAttributeException;
 use RuntimeException;
 
 /**
- * Resolves the (lookup model instance, title attribute) pair for a given
- * lookup_type, by consulting Filament's registered resource for the model.
+ * Resolves the (lookup model instance, title attribute) pair for a given target entity
+ * type, by consulting Filament's registered resource for the model.
  *
  * Centralized here so LookupResolver and LookupPreloader share exactly one
  * source of truth — previously each class had its own copy of this logic.
+ *
+ * @internal
  */
 final readonly class LookupAttributeResolver
 {
+    public function __construct(private ModelResourceResolverInterface $resources) {}
+
     /**
      * @return array{0: Model, 1: string}
      */
     public function resolve(string $lookupType): array
     {
         $lookupModelPath = Relation::getMorphedModel($lookupType) ?? $lookupType;
+
+        if (! is_subclass_of($lookupModelPath, Model::class)) {
+            throw new RuntimeException(sprintf('The lookup type `%s` does not resolve to an Eloquent model.', $lookupType));
+        }
+
         $lookupInstance = app($lookupModelPath);
 
-        $resourcePath = Filament::getModelResource($lookupModelPath);
+        $resourcePath = $this->resources->resourceFor($lookupModelPath);
 
         if ($resourcePath === null) {
             throw new RuntimeException(sprintf(

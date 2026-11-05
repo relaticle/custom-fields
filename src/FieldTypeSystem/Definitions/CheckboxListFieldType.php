@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CheckboxListComponent;
@@ -29,11 +30,15 @@ class CheckboxListFieldType extends BaseFieldType
             ->tableColumn(MultiChoiceColumn::class)
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(MultiChoiceEntry::class)
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+            )
             ->priority(55)
             ->withValidationCapabilities(
                 MinSelectionsCapability::class,
                 MaxSelectionsCapability::class,
-            )
-            ->filterable();
+            );
     }
 }

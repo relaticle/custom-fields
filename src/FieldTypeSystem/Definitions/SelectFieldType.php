@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\SelectComponent;
@@ -23,8 +24,12 @@ class SelectFieldType extends BaseFieldType
             ->tableColumn(SingleChoiceColumn::class)
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(SingleChoiceEntry::class)
-            ->encryptable()
-            ->priority(50)
-            ->filterable();
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+                FieldCapability::Encryptable,
+            )
+            ->priority(50);
     }
 }

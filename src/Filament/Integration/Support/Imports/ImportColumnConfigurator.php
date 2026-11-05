@@ -10,7 +10,11 @@ namespace Relaticle\CustomFields\Filament\Integration\Support\Imports;
 use Carbon\CarbonImmutable;
 use Closure;
 use Filament\Actions\Imports\ImportColumn;
+use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\EntityConfigurationData;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
@@ -24,6 +28,8 @@ use Throwable;
 /**
  * Unified configurator for import columns based on custom field types.
  * Simplifies the previous multi-class approach into a single, data-driven configurator.
+ *
+ * @internal
  */
 final class ImportColumnConfigurator
 {
@@ -87,7 +93,7 @@ final class ImportColumnConfigurator
     private function configureSingleChoice(ImportColumn $column, CustomField $customField): void
     {
         // Lookup fields (Record type) handle entity references
-        if ($customField->typeData->requiresLookupType) {
+        if ($customField->typeData->supports(FieldCapability::RequiresRelationship)) {
             $this->configureLookup($column, $customField, false);
         } else {
             $this->configureChoices($column, $customField, false);
@@ -102,7 +108,7 @@ final class ImportColumnConfigurator
         $column->array(',');
 
         // If field accepts arbitrary values (like tags-input), don't validate against options
-        if ($customField->typeData->acceptsArbitraryValues) {
+        if ($customField->typeData->supports(FieldCapability::AcceptsArbitraryValues)) {
             $column->castStateUsing(function (mixed $state): array {
                 if (blank($state)) {
                     return [];
@@ -118,7 +124,7 @@ final class ImportColumnConfigurator
 
             $column->example('tag1, tag2, tag3');
             $column->helperText(__('custom-fields::custom-fields.import.multi_value_helper'));
-        } elseif ($customField->typeData->requiresLookupType) {
+        } elseif ($customField->typeData->supports(FieldCapability::RequiresRelationship)) {
             // Lookup fields (Record type) handle entity references
             $this->configureLookup($column, $customField, true);
         } else {
@@ -154,7 +160,7 @@ final class ImportColumnConfigurator
     private function resolveLookupValue(CustomField $customField, mixed $value): int|UnresolvedValue
     {
         try {
-            $entity = Entities::getEntity($customField->lookup_type);
+            $entity = $this->targetEntity($customField);
             $modelInstance = $entity->createModelInstance();
             $primaryAttribute = $entity->getPrimaryAttribute();
 
@@ -189,6 +195,9 @@ final class ImportColumnConfigurator
 
     /**
      * Resolve multiple lookup values.
+     *
+     * @param  array<int, mixed>  $values
+     * @return array<int, mixed>|UnresolvedValue
      */
     private function resolveLookupValues(CustomField $customField, array $values): array|UnresolvedValue
     {
@@ -221,9 +230,23 @@ final class ImportColumnConfigurator
 
     private function lookupRecordLabel(CustomField $customField): string
     {
-        return filled($customField->lookup_type)
-            ? $customField->lookup_type.' record'
-            : 'record';
+        $entityType = $customField->targetEntityType();
+
+        return $entityType === null
+            ? 'record'
+            : $entityType.' record';
+    }
+
+    /**
+     * The entity a record field points at. Both callers translate the failure into an
+     * unresolved value or a generic example, so an unusable field never aborts the import.
+     */
+    private function targetEntity(CustomField $customField): EntityConfigurationData
+    {
+        $entityType = $customField->targetEntityType();
+        $entity = $entityType === null ? null : Entities::getEntity($entityType);
+
+        return $entity ?? throw new InvalidArgumentException(sprintf('Record field [%s] points at no entity.', $customField->code));
     }
 
     /**
@@ -282,6 +305,10 @@ final class ImportColumnConfigurator
         return CustomFields::optionModelUsesStringKeys() ? (string) $key : $key;
     }
 
+    /**
+     * @param  array<int, mixed>  $values
+     * @return array<int, mixed>|UnresolvedValue
+     */
     private function resolveChoiceValues(CustomField $customField, array $values): array|UnresolvedValue
     {
         $foundIds = [];
@@ -453,7 +480,7 @@ final class ImportColumnConfigurator
     private function setLookupExamples(ImportColumn $column, CustomField $customField, bool $multiple): void
     {
         try {
-            $entity = Entities::getEntity($customField->lookup_type);
+            $entity = $this->targetEntity($customField);
             $modelInstance = $entity->createModelInstance();
             $primaryAttribute = $entity->getPrimaryAttribute();
 
@@ -510,10 +537,13 @@ final class ImportColumnConfigurator
      */
     private function finalize(ImportColumn $column, CustomField $customField): ImportColumn
     {
-        $column->rules([
+        // The row's record is resolved before its data is validated, so a rule that has to
+        // know which record is being updated (a unique value, a taken relationship end) is
+        // told, instead of reading every existing value as a stranger's.
+        $column->rules(fn (?Model $record): array => [
             'bail',
             new RejectsUnresolvedValue,
-            ...app(ValidationService::class)->getValidationRules($customField),
+            ...app(ValidationService::class)->getValidationRules($customField, $record?->getKey()),
         ]);
 
         $column->fillRecordUsing(function (mixed $state, mixed $record) use ($customField): void {

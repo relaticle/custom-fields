@@ -9,6 +9,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing encryption handling for components.
  * ABOUTME: Standardizes how components check and handle encrypted fields.
+ *
+ * @internal
  */
 trait ConfiguresEncryption
 {

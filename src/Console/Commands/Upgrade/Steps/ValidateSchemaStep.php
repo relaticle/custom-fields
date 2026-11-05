@@ -10,23 +10,33 @@ use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStep;
 use Relaticle\CustomFields\Console\Commands\Upgrade\UpgradeStepResult;
 
 /**
- * Validates database schema compatibility for v3.
+ * @internal
  */
 final class ValidateSchemaStep implements UpgradeStep
 {
     /** @var array<string, list<string>> */
-    private const REQUIRED_COLUMNS = [
+    private const array REQUIRED_COLUMNS = [
         'custom_fields' => [
             'id', 'entity_type', 'name', 'code', 'type',
-            'lookup_type', 'settings', 'sort_order',
+            'settings', 'sort_order',
         ],
         'custom_field_values' => [
             'id', 'entity_type', 'entity_id', 'custom_field_id',
             'string_value', 'text_value', 'integer_value', 'float_value',
             'json_value', 'boolean_value', 'date_value', 'datetime_value',
+            'source', 'updated_at',
         ],
         'custom_field_options' => [
             'id', 'custom_field_id', 'name', 'settings', 'sort_order',
+        ],
+        'custom_field_relationships' => [
+            'id', 'code', 'from_entity_type', 'to_entity_type', 'cardinality',
+            'from_field_id', 'to_field_id', 'is_symmetric',
+        ],
+        'custom_field_links' => [
+            'id', 'relationship_id', 'from_entity_type', 'from_entity_id',
+            'to_entity_type', 'to_entity_id', 'sort_order', 'active_from',
+            'active_until', 'source',
         ],
     ];
 
@@ -37,7 +47,7 @@ final class ValidateSchemaStep implements UpgradeStep
 
     public function description(): string
     {
-        return 'Verify database schema compatibility for v3';
+        return 'Verify the database schema before running upgrade steps';
     }
 
     public function execute(bool $dryRun, Command $command): UpgradeStepResult

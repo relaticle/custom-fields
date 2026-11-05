@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing state retrieval configuration for infolist entries.
  * ABOUTME: Standardizes how entries retrieve custom field values from records.
+ *
+ * @internal
  */
 trait ConfiguresInfolistState
 {

@@ -6,6 +6,8 @@ namespace Relaticle\CustomFields\Console\Commands\Upgrade;
 
 /**
  * Result of an upgrade step execution.
+ *
+ * @internal
  */
 final readonly class UpgradeStepResult
 {

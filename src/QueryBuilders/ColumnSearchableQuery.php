@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Models\CustomField;
 
+/**
+ * @internal
+ */
 final readonly class ColumnSearchableQuery
 {
     /**

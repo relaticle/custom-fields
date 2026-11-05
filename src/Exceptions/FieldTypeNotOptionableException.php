@@ -6,7 +6,7 @@ namespace Relaticle\CustomFields\Exceptions;
 
 use Exception;
 
-class FieldTypeNotOptionableException extends Exception
+final class FieldTypeNotOptionableException extends Exception
 {
     public function __construct()
     {

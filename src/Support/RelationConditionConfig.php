@@ -6,6 +6,9 @@ namespace Relaticle\CustomFields\Support;
 
 use Relaticle\CustomFields\EntitySystem\EntityManager;
 
+/**
+ * @internal
+ */
 final class RelationConditionConfig
 {
     /**

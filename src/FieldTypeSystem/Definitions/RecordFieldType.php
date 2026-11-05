@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectComponent;
@@ -15,22 +16,28 @@ use Relaticle\CustomFields\Validation\Capabilities\MinSelectionsCapability;
 
 class RecordFieldType extends BaseFieldType
 {
+    /**
+     * The key every caller that has to single out a record field compares against.
+     */
+    public const string KEY = 'record';
+
     public function configure(): FieldSchema
     {
         return FieldSchema::multiChoice()
-            ->key('record')
+            ->key(self::KEY)
             ->label(__('custom-fields::custom-fields.field_types.record'))
             ->icon('heroicon-o-link')
             ->formComponent(RecordSelectComponent::class)
             ->tableColumn(RecordColumn::class)
             ->tableFilter(RecordFilter::class)
             ->infolistEntry(RecordEntry::class)
-            ->withoutUserOptions()
-            ->requiresLookupType()
-            ->supportsMultiValue()
-            ->sortable(false)
-            ->searchable(false)
-            ->filterable()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::RequiresRelationship,
+            )
             ->priority(45)
             ->withValidationCapabilities(
                 MinSelectionsCapability::class,

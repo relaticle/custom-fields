@@ -19,6 +19,8 @@ use Relaticle\CustomFields\Models\CustomField;
  * - No more dependency injection of multiple configurators
  * - Single unified configurator handles all field types
  * - Clean, simple API
+ *
+ * @internal
  */
 final class ImportColumnFactory
 {

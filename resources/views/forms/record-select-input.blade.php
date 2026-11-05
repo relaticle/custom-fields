@@ -7,16 +7,41 @@
     $maxVisiblePills = $getMaxVisiblePills();
     $addLabel = $getAddLabel();
     $emptyStateLabel = $getEmptyStateLabel();
-    $placeholder = $getPlaceholder() ?? __('Search records...');
+    $placeholder = $getPlaceholder() ?? __('custom-fields::custom-fields.record.search_placeholder');
     $key = $getKey();
     $minSearchLength = $getMinSearchLength();
-    $shortSearchMessage = __('Type at least :count characters to search', ['count' => $minSearchLength]);
-
-    // Get initial records data for selected values
+    $shortSearchMessage = __('custom-fields::custom-fields.record.short_search', ['count' => $minSearchLength]);
     $state = $getState() ?? [];
-    $selectedIds = is_array($state) ? array_filter($state) : [];
+    $selectedIds = array_filter(is_array($state) ? ($state['ids'] ?? $state) : []);
+    // A pluralized key cannot be read by __(), so both forms are chosen server-side and the
+    // client picks between them by count.
+    $overflowLabels = [
+        'one' => trans_choice('custom-fields::custom-fields.record.more_records', 1, ['count' => ':count']),
+        'many' => trans_choice('custom-fields::custom-fields.record.more_records', 2, ['count' => ':count']),
+    ];
+    $countLabels = [
+        'one' => trans_choice('custom-fields::custom-fields.record.announce_count', 1, ['count' => ':count']),
+        'many' => trans_choice('custom-fields::custom-fields.record.announce_count', 2, ['count' => ':count']),
+    ];
     $initialRecords = $getRecordsByIds($selectedIds);
     $initialOptions = $getInitialOptions();
+    $pickerState = view('custom-fields::forms.partials.record-select-state', [
+        'applyStateBindingModifiers' => $applyStateBindingModifiers,
+        'statePath' => $statePath,
+        'key' => $key,
+        'allowMultiple' => $allowMultiple,
+        'maxValues' => $maxValues,
+        'isDisabled' => $isDisabled,
+        'initialRecords' => $initialRecords,
+        'initialOptions' => $initialOptions,
+        'maxVisiblePills' => $maxVisiblePills,
+        'minSearchLength' => $minSearchLength,
+        'shortSearchMessage' => $shortSearchMessage,
+        'checksHolderConflicts' => false,
+        'confirmedStealIds' => [],
+        'overflowLabels' => $overflowLabels,
+        'countLabels' => $countLabels,
+    ])->render();
 @endphp
 
 <x-dynamic-component
@@ -28,400 +53,7 @@
         wire:key="{{ $key }}-{{ $isDisabled ? 'disabled' : 'enabled' }}"
         wire:ignore.self
         x-cloak
-        x-data="{
-            state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
-            open: false,
-            search: '',
-            isSearching: false,
-            searchResults: [],
-            componentKey: @js($key),
-            allowMultiple: @js($allowMultiple),
-            maxValues: @js($maxValues),
-            isDisabled: @js($isDisabled),
-            recordsCache: @js($initialRecords),
-            initialOptions: @js(array_values($initialOptions)),
-            maxVisibleValues: @js($maxVisiblePills),
-            minSearchLength: @js($minSearchLength),
-            selectedSnapshot: [],
-            activeIndex: -1,
-            documentClickListener: null,
-
-            init() {
-                if (!Array.isArray(this.state)) {
-                    this.state = this.state ? [this.state] : [];
-                }
-                this.state = this.state.filter(v => v && v !== '');
-
-                this.$watch('search', (value) => {
-                    if (value.trim().length >= this.minSearchLength) {
-                        this.performSearch();
-                    } else {
-                        this.searchResults = [];
-                    }
-                    this.activeIndex = this.sortedOptions.length > 0 ? 0 : -1;
-                });
-
-                this.$watch('open', (isOpen) => {
-                    if (isOpen) {
-                        this.selectedSnapshot = [...this.state];
-                        this.search = '';
-                        this.searchResults = [];
-                        this.activeIndex = this.getInitialActiveIndex();
-                        this.$nextTick(() => {
-                            this.$refs.searchInput?.focus();
-                            this.scrollActiveIntoView();
-                        });
-                    } else {
-                        // When closing in multi-select, reorder state to match visual order
-                        if (this.allowMultiple) {
-                            const snapshotSelected = this.selectedSnapshot.filter(id => this.state.includes(id));
-                            const newlySelected = this.state.filter(id => !this.selectedSnapshot.includes(id));
-                            this.state = [...snapshotSelected, ...newlySelected];
-                        }
-                        this.search = '';
-                        this.searchResults = [];
-                        this.activeIndex = -1;
-                    }
-                });
-
-                this.documentClickListener = (event) => {
-                    if (this.open && !this.$el.contains(event.target)) {
-                        this.close();
-                    }
-                };
-                document.addEventListener('click', this.documentClickListener);
-            },
-
-            destroy() {
-                if (this.documentClickListener) {
-                    document.removeEventListener('click', this.documentClickListener);
-                }
-            },
-
-            get activeDescendant() {
-                if (!this.open || this.activeIndex < 0 || this.activeIndex >= this.sortedOptions.length) {
-                    return null;
-                }
-                return this.$id('option-' + this.activeIndex);
-            },
-
-            getInitialActiveIndex() {
-                if (!this.hasValues) return 0;
-                // Find index of first selected item
-                const firstSelectedIndex = this.sortedOptions.findIndex(opt => this.state.includes(opt.id));
-                return firstSelectedIndex >= 0 ? firstSelectedIndex : 0;
-            },
-
-            get canAddMore() {
-                if (!this.allowMultiple) {
-                    return this.state.length === 0;
-                }
-                return this.state.length < this.maxValues;
-            },
-
-            get hasValues() {
-                return this.state.length > 0;
-            },
-
-            get selectedRecords() {
-                // When dropdown is open in multi-select, use selectedSnapshot order for consistency
-                // Items from snapshot that are still selected come first, then any newly selected items
-                if (this.open && this.allowMultiple) {
-                    const snapshotSelected = this.selectedSnapshot.filter(id => this.state.includes(id));
-                    const newlySelected = this.state.filter(id => !this.selectedSnapshot.includes(id));
-                    const orderedIds = [...snapshotSelected, ...newlySelected];
-                    return orderedIds.map(id => this.recordsCache[id] || { id, label: id, avatar: null }).filter(Boolean);
-                }
-                return this.state.map(id => this.recordsCache[id] || { id, label: id, avatar: null }).filter(Boolean);
-            },
-
-            get visibleRecords() {
-                return this.selectedRecords.slice(0, this.maxVisibleValues);
-            },
-
-            get hiddenCount() {
-                return Math.max(0, this.selectedRecords.length - this.maxVisibleValues);
-            },
-
-            get sortedOptions() {
-                const searchLower = this.search.toLowerCase().trim();
-
-                // If searching (at or above the minimum) and have server results, use those
-                if (searchLower.length >= this.minSearchLength && this.searchResults.length > 0) {
-                    return this.sortBySelected([...this.searchResults]);
-                }
-
-                // Otherwise filter initial options client-side
-                let options = [...this.initialOptions];
-                if (searchLower) {
-                    options = options.filter(opt => opt.label.toLowerCase().includes(searchLower));
-                }
-
-                return this.sortBySelected(options);
-            },
-
-            sortBySelected(options) {
-                // In multi-select mode, use the snapshot to prevent reordering while dropdown is open
-                const selectedIds = this.allowMultiple ? this.selectedSnapshot : this.state;
-                return options.sort((a, b) => {
-                    const aSelected = selectedIds.includes(a.id);
-                    const bSelected = selectedIds.includes(b.id);
-                    if (aSelected && !bSelected) return -1;
-                    if (!aSelected && bSelected) return 1;
-                    // Both selected: preserve selection order
-                    if (aSelected && bSelected) {
-                        return selectedIds.indexOf(a.id) - selectedIds.indexOf(b.id);
-                    }
-                    return 0;
-                });
-            },
-
-            isSelected(recordId) {
-                return this.state.includes(recordId);
-            },
-
-            get emptyStateMessage() {
-                const searchLength = this.search.trim().length;
-                if (searchLength >= this.minSearchLength) {
-                    return '{{ __('No records found') }}';
-                }
-                if (searchLength > 0) {
-                    return @js($shortSearchMessage);
-                }
-                if (this.initialOptions.length === 0) {
-                    return '{{ __('No records available') }}';
-                }
-                return '';
-            },
-
-            async performSearch() {
-                const query = this.search.trim();
-
-                if (query.length < this.minSearchLength) {
-                    this.searchResults = [];
-                    return;
-                }
-
-                this.isSearching = true;
-
-                try {
-                    const results = await $wire.callSchemaComponentMethod(
-                        this.componentKey,
-                        'getSearchResultsForJs',
-                        { search: query }
-                    );
-                    this.searchResults = Array.isArray(results) ? results : Object.values(results || {});
-                } catch {
-                    this.searchResults = [];
-                } finally {
-                    this.isSearching = false;
-                }
-            },
-
-            toggle() {
-                if (this.isDisabled) return;
-                this.open ? this.close() : this.openPanel();
-            },
-
-            openPanel() {
-                if (this.isDisabled || this.open) return;
-                this.$refs.panel?.open(this.$refs.trigger);
-                this.open = true;
-            },
-
-            close() {
-                if (!this.open) return;
-                this.$refs.panel?.close();
-                this.open = false;
-                this.$refs.trigger?.focus();
-            },
-
-            closePanel() {
-                this.close();
-            },
-
-            onKeydown(event) {
-                if (this.isDisabled) return;
-
-                switch (event.key) {
-                    case 'ArrowDown':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (this.open) {
-                            this.focusNext();
-                        } else {
-                            this.openPanel();
-                        }
-                        break;
-                    case 'ArrowUp':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (this.open) {
-                            this.focusPrevious();
-                        } else {
-                            this.openPanel();
-                        }
-                        break;
-                    case 'Home':
-                        if (this.open) {
-                            event.preventDefault();
-                            this.focusFirst();
-                        }
-                        break;
-                    case 'End':
-                        if (this.open) {
-                            event.preventDefault();
-                            this.focusLast();
-                        }
-                        break;
-                    case 'Enter':
-                        event.preventDefault();
-                        if (this.open && this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
-                            const record = this.sortedOptions[this.activeIndex];
-                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
-                        } else if (!this.open) {
-                            this.openPanel();
-                        }
-                        break;
-                    case ' ':
-                        if (document.activeElement === this.$refs.searchInput) {
-                            return;
-                        }
-                        if (!this.open) {
-                            event.preventDefault();
-                            this.openPanel();
-                        }
-                        break;
-                    case 'Tab':
-                        if (this.open) {
-                            this.close();
-                        }
-                        break;
-                }
-            },
-
-            onSearchKeydown(event) {
-                switch (event.key) {
-                    case 'ArrowDown':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.focusNext();
-                        break;
-                    case 'ArrowUp':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.focusPrevious();
-                        break;
-                    case 'Home':
-                        event.preventDefault();
-                        this.focusFirst();
-                        break;
-                    case 'End':
-                        event.preventDefault();
-                        this.focusLast();
-                        break;
-                    case 'Enter':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (this.activeIndex >= 0 && this.activeIndex < this.sortedOptions.length) {
-                            const record = this.sortedOptions[this.activeIndex];
-                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
-                        } else if (this.sortedOptions.length > 0) {
-                            const record = this.sortedOptions[0];
-                            this.allowMultiple ? this.toggleRecord(record) : this.selectRecord(record);
-                        }
-                        break;
-                    case 'Escape':
-                        event.preventDefault();
-                        event.stopPropagation();
-                        this.closePanel();
-                        break;
-                }
-            },
-
-            focusNext() {
-                const max = this.sortedOptions.length - 1;
-                if (max < 0) return;
-                this.activeIndex = this.activeIndex >= max ? 0 : this.activeIndex + 1;
-                this.scrollActiveIntoView();
-            },
-
-            focusPrevious() {
-                const max = this.sortedOptions.length - 1;
-                if (max < 0) return;
-                this.activeIndex = this.activeIndex <= 0 ? max : this.activeIndex - 1;
-                this.scrollActiveIntoView();
-            },
-
-            focusFirst() {
-                if (this.sortedOptions.length === 0) return;
-                this.activeIndex = 0;
-                this.scrollActiveIntoView();
-            },
-
-            focusLast() {
-                if (this.sortedOptions.length === 0) return;
-                this.activeIndex = this.sortedOptions.length - 1;
-                this.scrollActiveIntoView();
-            },
-
-            scrollActiveIntoView() {
-                this.$nextTick(() => {
-                    const activeOption = this.$refs.optionsList?.querySelector('[data-highlighted]');
-                    if (activeOption) {
-                        activeOption.scrollIntoView({ block: 'nearest' });
-                    }
-                });
-            },
-
-            announceSelection(record, wasSelected) {
-                if (this.$refs.announcer) {
-                    const action = wasSelected ? 'deselected' : 'selected';
-                    let message = record.label + ' ' + action;
-                    if (this.allowMultiple) {
-                        message += `. ${this.state.length} item${this.state.length !== 1 ? 's' : ''} total`;
-                    }
-                    this.$refs.announcer.textContent = message;
-                }
-            },
-
-            toggleRecord(record) {
-                const wasSelected = this.isSelected(record.id);
-                if (wasSelected) {
-                    this.removeRecord(record.id);
-                } else {
-                    this.selectRecord(record);
-                }
-                this.announceSelection(record, wasSelected);
-            },
-
-            selectRecord(record) {
-                // In multi-select mode, check if we can add more
-                if (this.allowMultiple && !this.canAddMore) return;
-
-                if (this.state.includes(record.id)) return;
-
-                this.recordsCache[record.id] = {
-                    id: record.id,
-                    label: record.label,
-                    avatar: record.avatar,
-                    avatarShape: record.avatarShape
-                };
-
-                if (this.allowMultiple) {
-                    // Use spread for proper reactivity
-                    this.state = [...this.state, record.id];
-                } else {
-                    // Single-select: replace the current value
-                    this.state = [record.id];
-                    this.closePanel();
-                }
-            },
-
-            removeRecord(recordId) {
-                this.state = this.state.filter(id => id !== recordId);
-            }
-        }"
+        x-data="{!! $pickerState !!}"
         x-on:click.outside="close()"
         x-on:keydown.esc="open && (close(), $event.stopPropagation())"
         x-on:keydown="onKeydown($event)"
@@ -480,7 +112,7 @@
                         <button
                             type="button"
                             x-on:click.stop="state = []"
-                            aria-label="Clear selection"
+                            aria-label="{{ __('custom-fields::custom-fields.record.clear') }}"
                             class="shrink-0 rounded p-0.5 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                             <x-filament::icon icon="heroicon-m-x-mark" class="size-4" />
@@ -522,7 +154,7 @@
                             </template>
 
                             {{-- Visible Records as Pills --}}
-                            <template x-for="record in visibleRecords" :key="'pill-' + record.id">
+                            <template x-for="(record, index) in visibleRecords" :key="'pill-' + record.id">
                                 <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                                     <template x-if="record.avatar">
                                         <img
@@ -533,10 +165,13 @@
                                         />
                                     </template>
                                     <span x-text="record.label" class="truncate max-w-[100px]"></span>
+
+                                    @include('custom-fields::forms.partials.record-move-buttons')
+
                                     <button
                                         type="button"
                                         x-on:click.stop="removeRecord(record.id)"
-                                        :aria-label="'Remove ' + record.label"
+                                        :aria-label="@js(__('custom-fields::custom-fields.record.remove', ['record' => ':record'])).replace(':record', record.label)"
                                         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                         :disabled="isDisabled"
                                     >
@@ -545,11 +180,12 @@
                                 </span>
                             </template>
 
-                            {{-- "+N more" indicator --}}
+                            {{-- Overflow indicator --}}
                             <template x-if="hiddenCount > 0">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    +<span x-text="hiddenCount"></span> more
-                                </span>
+                                <span
+                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                    x-text="countLabel(overflowLabels, hiddenCount)"
+                                ></span>
                             </template>
                         </div>
 
@@ -573,7 +209,7 @@
             :id="$id('panel')"
             role="listbox"
             :aria-multiselectable="allowMultiple ? 'true' : 'false'"
-            aria-label="Select records"
+            aria-label="{{ __('custom-fields::custom-fields.record.select_label') }}"
             class="absolute z-50 w-full overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10"
         >
             {{-- Search Input --}}
@@ -589,7 +225,7 @@
                     x-model.debounce.300ms="search"
                     x-ref="searchInput"
                     x-on:keydown="onSearchKeydown($event)"
-                    aria-label="Search records"
+                    aria-label="{{ __('custom-fields::custom-fields.record.search_label') }}"
                     :aria-controls="$id('panel')"
                     :aria-activedescendant="activeDescendant"
                     class="flex-1 bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 focus:outline-none"
@@ -661,6 +297,7 @@
                     </button>
                 </template>
             </div>
+
         </div>
     </div>
 </x-dynamic-component>

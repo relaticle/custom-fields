@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * ABOUTME: Handles database field constraints and converts them to validation rules
  * ABOUTME: Ensures user input respects database column limitations across different database drivers
+ *
+ * @internal
  */
 final class DatabaseFieldConstraints
 {
@@ -190,6 +192,10 @@ final class DatabaseFieldConstraints
 
     /**
      * Merge a single rule with existing rules.
+     *
+     * @param  array<int, string>  $rules
+     * @param  array<string, mixed>  $dbConstraints
+     * @return array<int, string>
      */
     private static function mergeRule(
         array $rules,
@@ -240,6 +246,10 @@ final class DatabaseFieldConstraints
 
     /**
      * Apply the stricter constraint between user and database rules.
+     *
+     * @param  array<int, string>  $rules
+     * @param  array<string, mixed>  $dbConstraints
+     * @return array<int, string>
      */
     private static function applyStricterConstraint(
         array $rules,

@@ -11,6 +11,8 @@ use Relaticle\CustomFields\Models\CustomField;
 /**
  * ABOUTME: Trait providing state retrieval configuration for table columns.
  * ABOUTME: Standardizes how columns retrieve custom field values from records.
+ *
+ * @internal
  */
 trait ConfiguresColumnState
 {

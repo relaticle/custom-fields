@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Data\WriteContext;
 use Relaticle\CustomFields\Enums\ImportDateFormat;
 use Relaticle\CustomFields\Enums\ImportNumberFormat;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Models\CustomFieldLink;
 use Relaticle\CustomFields\Models\CustomFieldOption;
+use Relaticle\CustomFields\Models\CustomFieldRelationship;
 use Relaticle\CustomFields\Models\CustomFieldSection;
 use Relaticle\CustomFields\Models\CustomFieldValue;
 use Relaticle\CustomFields\Services\TenantContextService;
@@ -17,23 +23,45 @@ final class CustomFields
 {
     /**
      * The custom field model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomField>
      */
     public static string $customFieldModel = CustomField::class;
 
     /**
      * The custom field value model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldValue>
      */
     public static string $valueModel = CustomFieldValue::class;
 
     /**
      * The custom field option model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldOption>
      */
     public static string $optionModel = CustomFieldOption::class;
 
     /**
      * The custom field section model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldSection>
      */
     public static string $sectionModel = CustomFieldSection::class;
+
+    /**
+     * The relationship definition model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldRelationship>
+     */
+    public static string $relationshipModel = CustomFieldRelationship::class;
+
+    /**
+     * The relationship link model that should be used by Custom Fields.
+     *
+     * @var class-string<CustomFieldLink>
+     */
+    public static string $linkModel = CustomFieldLink::class;
 
     /**
      * The display format for date fields (e.g., 'm/d/Y', 'Y-m-d', 'd.m.Y').
@@ -49,6 +77,11 @@ final class CustomFields
      */
     public static ?string $dateTimeDisplayFormat = null;
 
+    private static ?WriteContext $writeContext = null;
+
+    /** @var (Closure(string, string, int|string|null): ((Closure(Builder<covariant Model>): Builder<Model>)|null))|null */
+    private static ?Closure $codeUniquenessScope = null;
+
     /**
      * Get the name of the custom field model used by the application.
      *
@@ -62,7 +95,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field model.
      */
-    public static function newCustomFieldModel(): mixed
+    public static function newCustomFieldModel(): CustomField
     {
         $model = self::customFieldModel();
 
@@ -71,6 +104,8 @@ final class CustomFields
 
     /**
      * Specify the custom field model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomField>  $model
      */
     public static function useCustomFieldModel(string $model): static
     {
@@ -92,7 +127,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field value model.
      */
-    public static function newValueModel(): mixed
+    public static function newValueModel(): CustomFieldValue
     {
         $model = self::valueModel();
 
@@ -101,6 +136,8 @@ final class CustomFields
 
     /**
      * Specify the custom field value model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldValue>  $model
      */
     public static function useValueModel(string $model): static
     {
@@ -122,7 +159,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field option model.
      */
-    public static function newOptionModel(): mixed
+    public static function newOptionModel(): CustomFieldOption
     {
         $model = self::optionModel();
 
@@ -138,6 +175,8 @@ final class CustomFields
 
     /**
      * Specify the custom field option model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldOption>  $model
      */
     public static function useOptionModel(string $model): static
     {
@@ -159,7 +198,7 @@ final class CustomFields
     /**
      * Get a new instance of the custom field section model.
      */
-    public static function newSectionModel(): mixed
+    public static function newSectionModel(): CustomFieldSection
     {
         $model = self::sectionModel();
 
@@ -168,10 +207,76 @@ final class CustomFields
 
     /**
      * Specify the custom field section model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldSection>  $model
      */
     public static function useSectionModel(string $model): static
     {
         self::$sectionModel = $model;
+
+        return new self;
+    }
+
+    /**
+     * Get the name of the relationship definition model used by the application.
+     *
+     * @return class-string<CustomFieldRelationship>
+     */
+    public static function relationshipModel(): string
+    {
+        return self::$relationshipModel;
+    }
+
+    /**
+     * Get a new instance of the relationship definition model.
+     */
+    public static function newRelationshipModel(): CustomFieldRelationship
+    {
+        $model = self::relationshipModel();
+
+        return new $model;
+    }
+
+    /**
+     * Specify the relationship definition model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldRelationship>  $model
+     */
+    public static function useRelationshipModel(string $model): static
+    {
+        self::$relationshipModel = $model;
+
+        return new self;
+    }
+
+    /**
+     * Get the name of the relationship link model used by the application.
+     *
+     * @return class-string<CustomFieldLink>
+     */
+    public static function linkModel(): string
+    {
+        return self::$linkModel;
+    }
+
+    /**
+     * Get a new instance of the relationship link model.
+     */
+    public static function newLinkModel(): CustomFieldLink
+    {
+        $model = self::linkModel();
+
+        return new $model;
+    }
+
+    /**
+     * Specify the relationship link model that should be used by Custom Fields.
+     *
+     * @param  class-string<CustomFieldLink>  $model
+     */
+    public static function useLinkModel(string $model): static
+    {
+        self::$linkModel = $model;
 
         return new self;
     }
@@ -267,5 +372,64 @@ final class CustomFields
     public static function resolveTenantUsing(Closure $callback): void
     {
         TenantContextService::setTenantResolver($callback);
+    }
+
+    /**
+     * Narrow the generated-code uniqueness check to a subset of rows.
+     *
+     * The callback receives the entity type, either 'field' or 'section', and the section
+     * the code is being generated within (null when there is none). It returns a query
+     * scope closure, or null to leave the check global.
+     *
+     * Example:
+     * ```
+     * CustomFields::scopeCodeUniquenessUsing(fn (string $entityType, string $type, int|string|null $sectionId) => null);
+     * ```
+     *
+     * @param  Closure(string $entityType, string $type, int|string|null $sectionId): ((Closure(Builder<covariant Model>): Builder<Model>)|null)  $scope
+     */
+    public static function scopeCodeUniquenessUsing(Closure $scope): void
+    {
+        self::$codeUniquenessScope = $scope;
+    }
+
+    /**
+     * @return (Closure(string, string, int|string|null): ((Closure(Builder<covariant Model>): Builder<Model>)|null))|null
+     */
+    public static function codeUniquenessScope(): ?Closure
+    {
+        return self::$codeUniquenessScope;
+    }
+
+    /**
+     * Stamp every write made inside the callback with where it came from.
+     *
+     * @template TReturn
+     *
+     * @param  Closure(): TReturn  $callback
+     * @return TReturn
+     */
+    public static function writing(WriteSource $source, Closure $callback, ?Model $actor = null, ?float $confidence = null): mixed
+    {
+        $previous = self::$writeContext;
+        self::$writeContext = new WriteContext($source, $actor ?? self::authenticatedActor(), $confidence);
+
+        try {
+            return $callback();
+        } finally {
+            self::$writeContext = $previous;
+        }
+    }
+
+    public static function writeContext(): WriteContext
+    {
+        return self::$writeContext ?? new WriteContext(WriteSource::User, self::authenticatedActor());
+    }
+
+    private static function authenticatedActor(): ?Model
+    {
+        $user = auth()->user();
+
+        return $user instanceof Model ? $user : null;
     }
 }

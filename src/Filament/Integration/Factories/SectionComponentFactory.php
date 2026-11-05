@@ -19,6 +19,9 @@ use Relaticle\CustomFields\Services\Visibility\BackendVisibilityService;
 use Relaticle\CustomFields\Services\Visibility\CoreVisibilityLogicService;
 use Relaticle\CustomFields\Services\Visibility\FrontendVisibilityService;
 
+/**
+ * @internal
+ */
 final readonly class SectionComponentFactory
 {
     use AppliesSectionWidth;

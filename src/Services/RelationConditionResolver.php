@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Throwable;
 
+/**
+ * @internal
+ */
 final class RelationConditionResolver
 {
     /**

@@ -12,11 +12,14 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldValueFactory;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Support\SafeValueConverter;
+use RuntimeException;
 
 /**
  * @property int $id
@@ -31,6 +34,8 @@ use Relaticle\CustomFields\Support\SafeValueConverter;
  * @property ?bool $boolean_value
  * @property ?Carbon $date_value
  * @property ?Carbon $datetime_value
+ * @property ?WriteSource $source
+ * @property ?Carbon $updated_at
  * @property CustomField $customField
  * @property Model $entity
  */
@@ -74,13 +79,23 @@ class CustomFieldValue extends Model
             'boolean_value' => 'boolean',
             'date_value' => 'date',
             'datetime_value' => 'datetime',
+            'source' => WriteSource::class,
+            'updated_at' => 'datetime',
         ];
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public static function getValueColumn(string $fieldType): string
     {
-        $fieldType = CustomFieldsType::getFieldType($fieldType);
-        $dataType = $fieldType->dataType;
+        $resolvedFieldType = CustomFieldsType::getFieldType($fieldType);
+
+        if (! $resolvedFieldType instanceof FieldTypeData) {
+            throw new RuntimeException("Unable to resolve the value column for unregistered field type [{$fieldType}].");
+        }
+
+        $dataType = $resolvedFieldType->dataType;
 
         return match ($dataType) {
             FieldDataType::STRING, FieldDataType::FILE => 'string_value',
@@ -114,21 +129,40 @@ class CustomFieldValue extends Model
 
     public function getValue(): mixed
     {
+        // A deactivated field resolves to null here, and a disabled type has no column.
+        if (! $this->hasResolvableFieldType()) {
+            return null;
+        }
+
         $column = static::getValueColumn($this->customField->type);
 
         return $this->$column;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function setValue(mixed $value): void
     {
+        if (! $this->customField instanceof CustomField) {
+            throw new RuntimeException("Unable to set a value for custom field [{$this->custom_field_id}]: the field is inactive or outside the current scope.");
+        }
+
         $column = static::getValueColumn($this->customField->type);
 
         // Convert the value to a database-safe format based on the field type
         $safeValue = SafeValueConverter::toDbSafe(
             $value,
-            $this->customField->type
+            $this->customField->type,
+            $this->customField,
         );
 
         $this->$column = $safeValue;
+    }
+
+    private function hasResolvableFieldType(): bool
+    {
+        return $this->customField instanceof CustomField
+            && CustomFieldsType::getFieldType($this->customField->type) instanceof FieldTypeData;
     }
 }
