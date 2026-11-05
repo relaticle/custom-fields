@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Tests\Fixtures\FieldTypes;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\ToggleComponent;
@@ -27,7 +28,11 @@ final class TernaryToggleFieldType extends BaseFieldType
             ->tableColumn(IconColumn::class)
             ->tableFilter(TernaryFilter::class)
             ->infolistEntry(BooleanEntry::class)
-            ->filterable()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+            )
             ->priority(900);
     }
 }

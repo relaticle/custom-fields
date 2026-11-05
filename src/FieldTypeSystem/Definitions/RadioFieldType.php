@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RadioComponent;
@@ -27,7 +28,11 @@ class RadioFieldType extends BaseFieldType
             ->tableColumn(SingleChoiceColumn::class)
             ->tableFilter(SelectFilter::class)
             ->infolistEntry(SingleChoiceEntry::class)
-            ->priority(45)
-            ->filterable();
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+            )
+            ->priority(45);
     }
 }

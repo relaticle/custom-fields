@@ -9,6 +9,7 @@ use Filament\Infolists\Components\TextEntry as BaseTextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Model;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractInfolistEntry;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Shared\ConfiguresBadgeColors;
@@ -27,7 +28,7 @@ final class MultiChoiceEntry extends AbstractInfolistEntry
 
     public function make(CustomField $customField, ?Model $record = null): Entry
     {
-        if ($customField->typeData->acceptsArbitraryValues) {
+        if ($customField->typeData->supports(FieldCapability::AcceptsArbitraryValues)) {
             return $this->makeTagsEntry($customField);
         }
 
@@ -59,7 +60,7 @@ final class MultiChoiceEntry extends AbstractInfolistEntry
     {
         if (! FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
             || ! $customField->settings->enable_option_colors
-            || $customField->typeData->requiresRelationship) {
+            || $customField->typeData->supports(FieldCapability::RequiresRelationship)) {
             return [];
         }
 

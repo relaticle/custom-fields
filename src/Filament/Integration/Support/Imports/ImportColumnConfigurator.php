@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
@@ -92,7 +93,7 @@ final class ImportColumnConfigurator
     private function configureSingleChoice(ImportColumn $column, CustomField $customField): void
     {
         // Lookup fields (Record type) handle entity references
-        if ($customField->typeData->requiresRelationship) {
+        if ($customField->typeData->supports(FieldCapability::RequiresRelationship)) {
             $this->configureLookup($column, $customField, false);
         } else {
             $this->configureChoices($column, $customField, false);
@@ -107,7 +108,7 @@ final class ImportColumnConfigurator
         $column->array(',');
 
         // If field accepts arbitrary values (like tags-input), don't validate against options
-        if ($customField->typeData->acceptsArbitraryValues) {
+        if ($customField->typeData->supports(FieldCapability::AcceptsArbitraryValues)) {
             $column->castStateUsing(function (mixed $state): array {
                 if (blank($state)) {
                     return [];
@@ -123,7 +124,7 @@ final class ImportColumnConfigurator
 
             $column->example('tag1, tag2, tag3');
             $column->helperText(__('custom-fields::custom-fields.import.multi_value_helper'));
-        } elseif ($customField->typeData->requiresRelationship) {
+        } elseif ($customField->typeData->supports(FieldCapability::RequiresRelationship)) {
             // Lookup fields (Record type) handle entity references
             $this->configureLookup($column, $customField, true);
         } else {

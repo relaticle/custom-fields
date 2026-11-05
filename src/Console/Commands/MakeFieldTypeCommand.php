@@ -98,7 +98,7 @@ final class MakeFieldTypeCommand extends GeneratorCommand
             '{{ dataType }}' => $dataType->value,
             '{{ formComponentImport }}' => $this->getFormComponentImport($dataType),
             '{{ formComponent }}' => $this->getFormComponent($dataType),
-            '{{ withoutUserOptions }}' => $this->shouldUseWithoutUserOptions($dataType) ? "\n            ->withoutUserOptions()" : '',
+            '{{ capabilities }}' => $this->getCapabilities($dataType),
             '{{ choiceFieldComment }}' => $this->getChoiceFieldComment($dataType),
         ];
 
@@ -252,11 +252,17 @@ final class MakeFieldTypeCommand extends GeneratorCommand
     }
 
     /**
-     * Check if the field type should use withoutUserOptions().
+     * Get the capabilities the generated field type declares.
      */
-    private function shouldUseWithoutUserOptions(FieldDataType $dataType): bool
+    private function getCapabilities(FieldDataType $dataType): string
     {
-        return $dataType === FieldDataType::SINGLE_CHOICE;
+        $capabilities = ['FieldCapability::Searchable', 'FieldCapability::Sortable'];
+
+        if ($dataType === FieldDataType::SINGLE_CHOICE) {
+            $capabilities[] = 'FieldCapability::WithoutUserOptions';
+        }
+
+        return implode(', ', $capabilities);
     }
 
     /**
@@ -265,8 +271,8 @@ final class MakeFieldTypeCommand extends GeneratorCommand
     private function getChoiceFieldComment(FieldDataType $dataType): string
     {
         return match ($dataType) {
-            FieldDataType::SINGLE_CHOICE => '// withoutUserOptions() showcases built-in options - can be used with both single and multi choice',
-            FieldDataType::MULTI_CHOICE => '// No withoutUserOptions() showcases user-defined options - withoutUserOptions() can be used here too',
+            FieldDataType::SINGLE_CHOICE => '// FieldCapability::WithoutUserOptions showcases built-in options - can be used with both single and multi choice',
+            FieldDataType::MULTI_CHOICE => '// No FieldCapability::WithoutUserOptions showcases user-defined options - it can be used here too',
             default => '',
         };
     }

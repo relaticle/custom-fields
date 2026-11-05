@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\Enums\ConditionSource;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\VisibilityLogic;
 use Relaticle\CustomFields\Enums\VisibilityMode;
 use Relaticle\CustomFields\Enums\VisibilityOperator;
@@ -513,10 +514,7 @@ class TestRepeaterFieldType extends BaseFieldType
             ->key('test-repeater')
             ->label('Test Repeater')
             ->icon('heroicon-o-squares-plus')
-            ->searchable(false)
-            ->sortable(false)
-            ->filterable(false)
-            ->withoutUserOptions()
+            ->capabilities(FieldCapability::WithoutUserOptions)
             ->visibilityOperators([
                 VisibilityOperator::IS_EMPTY,
                 VisibilityOperator::IS_NOT_EMPTY,

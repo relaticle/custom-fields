@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\DateComponent;
@@ -27,6 +28,7 @@ class DateFieldType extends BaseFieldType
             ->formComponent(DateComponent::class)
             ->tableColumn(DateTimeColumn::class)
             ->infolistEntry(DateTimeEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(30)
             ->withValidationCapabilities(
                 MinDateCapability::class,

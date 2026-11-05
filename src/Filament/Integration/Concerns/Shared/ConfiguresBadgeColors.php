@@ -8,6 +8,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
 
@@ -24,7 +25,7 @@ trait ConfiguresBadgeColors
      */
     protected function applyBadgeColorsIfEnabled(TextEntry|TextColumn $component, CustomField $customField): TextEntry|TextColumn
     {
-        if ($customField->typeData->acceptsArbitraryValues) {
+        if ($customField->typeData->supports(FieldCapability::AcceptsArbitraryValues)) {
             return $this->applyTagsBadgeColors($component, $customField);
         }
 
@@ -69,6 +70,6 @@ trait ConfiguresBadgeColors
     {
         return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_OPTION_COLORS)
             && $customField->settings->enable_option_colors
-            && ! $customField->typeData->requiresRelationship;
+            && ! $customField->typeData->supports(FieldCapability::RequiresRelationship);
     }
 }

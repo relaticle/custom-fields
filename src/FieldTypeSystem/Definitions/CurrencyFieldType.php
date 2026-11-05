@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use NumberFormatter;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\CurrencyComponent;
@@ -32,6 +33,7 @@ class CurrencyFieldType extends BaseFieldType
             ->formComponent(CurrencyComponent::class)
             ->tableColumn(CurrencyColumn::class)
             ->infolistEntry(CurrencyEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(25)
             ->withValidationCapabilities(
                 MinValueCapability::class,

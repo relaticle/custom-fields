@@ -15,6 +15,7 @@ use Relaticle\CustomFields\Data\CustomFieldSectionData;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Exceptions\CustomFieldAlreadyExistsException;
 use Relaticle\CustomFields\Exceptions\CustomFieldDoesNotExistException;
@@ -395,7 +396,7 @@ final class CustomFieldsMigrator
             return;
         }
 
-        if (CustomFieldsType::getFieldType($this->customFieldData->type)?->carriesOptionCategories !== true) {
+        if (CustomFieldsType::getFieldType($this->customFieldData->type)?->supports(FieldCapability::CarriesOptionCategories) !== true) {
             throw new InvalidArgumentException(
                 sprintf('Option [%s] carries a category, but the options of [%s] are not workflow states.', $option['name'], $code)
             );

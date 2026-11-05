@@ -223,6 +223,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
             'create_relationship_definitions_table',
             'create_relationship_links_table',
             'convert_record_fields_to_relationships',
+            'track_custom_field_values_provenance',
         ];
     }
 }

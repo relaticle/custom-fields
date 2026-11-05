@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TagsInputComponent;
@@ -28,15 +29,17 @@ final class TagsInputFieldType extends BaseFieldType
             ->formComponent(TagsInputComponent::class)
             ->tableColumn(MultiChoiceColumn::class)
             ->tableFilter(TagsFilter::class)
-            ->filterable()
-            ->searchable(false)
             ->infolistEntry(MultiChoiceEntry::class)
+            ->capabilities(
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+                FieldCapability::AcceptsArbitraryValues,
+            )
             ->priority(70)
             ->withValidationCapabilities(
                 MinSelectionsCapability::class,
                 MaxSelectionsCapability::class,
             )
-            ->withArbitraryValues()
             ->importExample('tag1, tag2, tag3');
     }
 }

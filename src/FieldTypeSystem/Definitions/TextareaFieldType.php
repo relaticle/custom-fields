@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextareaFormComponent;
@@ -27,7 +28,11 @@ final class TextareaFieldType extends BaseFieldType
             ->formComponent(TextareaFormComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
-            ->supportsUniqueConstraint()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(15)
             ->withValidationCapabilities(
                 MinLengthCapability::class,

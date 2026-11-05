@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\MarkdownEditorComponent;
@@ -27,6 +28,7 @@ final class MarkdownEditorFieldType extends BaseFieldType
             ->formComponent(MarkdownEditorComponent::class)
             ->tableColumn(RichTextColumn::class)
             ->infolistEntry(HtmlEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(85)
             ->withValidationCapabilities(
                 MinLengthCapability::class,

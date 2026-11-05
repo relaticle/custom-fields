@@ -143,22 +143,11 @@ final class FieldSchema
             tableFilter: $this->tableFilter,
             formComponent: $this->formComponent,
             infolistEntry: $this->infolistEntry,
-            searchable: $this->searchable,
-            sortable: $this->sortable,
-            filterable: $this->filterable,
-            encryptable: $this->encryptable,
-            withoutUserOptions: $this->withoutUserOptions,
-            requiresRelationship: $this->requiresRelationship,
-            supportsPairing: $this->supportsPairing,
-            carriesOptionCategories: $this->carriesOptionCategories,
-            acceptsArbitraryValues: $this->acceptsArbitraryValues,
-            supportsMultiValue: $this->supportsMultiValue,
-            supportsUniqueConstraint: $this->supportsUniqueConstraint,
+            capabilities: $this->capabilities,
             validationCapabilities: $this->validationCapabilities,
             settingsDataClass: $this->settingsDataClass,
             settingsSchema: $this->settingsSchema,
             visibilityOperators: $this->visibilityOperators,
-            systemOnly: $this->systemOnly
         );
     }
 }

@@ -11,8 +11,8 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
- * Key columns for the tables added in 4.0, shaped by config('custom-fields.database.key_type').
- * The tables that predate it keep the publish-and-hand-edit path a ULID host uses today.
+ * Key columns for every package table a migration creates, shaped by
+ * config('custom-fields.database.key_type'). Tables that already exist keep their keys.
  */
 final class KeyType
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\LinkComponent;
@@ -22,11 +23,15 @@ class LinkFieldType extends BaseFieldType
             ->formComponent(LinkComponent::class)
             ->tableColumn(LinkColumn::class)
             ->infolistEntry(LinkEntry::class)
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::AcceptsArbitraryValues,
+                FieldCapability::SupportsMultiValue,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(60)
-            ->supportsMultiValue()
-            ->supportsUniqueConstraint()
-            ->withArbitraryValues()
-            ->withoutUserOptions()
             ->defaultItemValidationRules(['max:2048', 'regex:/^(https?:\/\/)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/']);
     }
 

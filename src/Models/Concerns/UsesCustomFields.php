@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Crypt;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\RecordLinkPayload;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Exceptions\UniqueCustomFieldValueTakenException;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
@@ -309,6 +310,8 @@ trait UsesCustomFields
         }
 
         $customFieldValue->setValue($value);
+        $customFieldValue->source = CustomFields::writeContext()->source;
+        $customFieldValue->updated_at = now();
         $customFieldValue->save();
     }
 
@@ -317,7 +320,7 @@ trait UsesCustomFields
      */
     protected function writesLinksFor(CustomField $customField): bool
     {
-        return $customField->typeData?->requiresRelationship === true;
+        return $customField->typeData?->supports(FieldCapability::RequiresRelationship) === true;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\TextInputComponent;
@@ -27,8 +28,12 @@ class TextFieldType extends BaseFieldType
             ->formComponent(TextInputComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
-            ->encryptable()
-            ->supportsUniqueConstraint()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Encryptable,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(10)
             ->withValidationCapabilities(
                 MinLengthCapability::class,

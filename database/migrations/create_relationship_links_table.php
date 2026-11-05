@@ -42,6 +42,7 @@ return new class extends Migration
 
             $table->string('source', 32)->default('user');
             $table->float('confidence')->nullable();
+            $table->json('metadata')->nullable();
 
             $table->index(['relationship_id', 'from_entity_id', 'active_until'], 'cf_links_from_idx');
             $table->index(['relationship_id', 'to_entity_id', 'active_until'], 'cf_links_to_idx');

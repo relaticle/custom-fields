@@ -5,10 +5,9 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
-use Relaticle\CustomFields\Models\CustomField;
+use Relaticle\CustomFields\Support\KeyType;
 
 return new class extends Migration
 {
@@ -23,10 +22,10 @@ return new class extends Migration
             Schema::create(config('custom-fields.database.table_names.custom_field_sections'), function (Blueprint $table): void {
                 $uniqueColumns = ['entity_type', 'code'];
 
-                $table->id();
+                KeyType::primary($table);
 
                 if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                    $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
+                    KeyType::foreign($table, config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
                     $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
                 }
 
@@ -63,15 +62,15 @@ return new class extends Migration
         Schema::create(config('custom-fields.database.table_names.custom_fields'), function (Blueprint $table) use ($sectionsEnabled): void {
             $uniqueColumns = ['code', 'entity_type'];
 
-            $table->id();
+            KeyType::primary($table);
 
             if ($sectionsEnabled) {
-                $table->unsignedBigInteger('custom_field_section_id')->nullable();
+                KeyType::foreign($table, 'custom_field_section_id')->nullable();
             }
             $table->string('width')->nullable();
 
             if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
+                KeyType::foreign($table, config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
                 $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
             }
 
@@ -104,15 +103,15 @@ return new class extends Migration
         Schema::create(config('custom-fields.database.table_names.custom_field_options'), function (Blueprint $table): void {
             $uniqueColumns = ['custom_field_id', 'name'];
 
-            $table->id();
+            KeyType::primary($table);
 
             if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
+                KeyType::foreign($table, config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
                 $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
             }
 
-            $table->foreignIdFor(CustomFields::customFieldModel())
-                ->constrained()
+            KeyType::foreign($table, 'custom_field_id')
+                ->constrained(config('custom-fields.database.table_names.custom_fields'))
                 ->cascadeOnDelete();
 
             $table->string('name')->nullable();
@@ -130,16 +129,16 @@ return new class extends Migration
         Schema::create(config('custom-fields.database.table_names.custom_field_values'), function (Blueprint $table): void {
             $uniqueColumns = ['entity_type', 'entity_id', 'custom_field_id'];
 
-            $table->id();
+            KeyType::primary($table);
 
             if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-                $table->foreignId(config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
+                KeyType::foreign($table, config('custom-fields.database.column_names.tenant_foreign_key'))->nullable()->index();
                 $uniqueColumns[] = config('custom-fields.database.column_names.tenant_foreign_key');
             }
 
-            $table->morphs('entity');
-            $table->foreignIdFor(CustomField::class)
-                ->constrained()
+            KeyType::morphs($table, 'entity');
+            KeyType::foreign($table, 'custom_field_id')
+                ->constrained(config('custom-fields.database.table_names.custom_fields'))
                 ->cascadeOnDelete();
 
             $table->text('string_value')->nullable();
@@ -150,6 +149,9 @@ return new class extends Migration
             $table->date('date_value')->nullable();
             $table->dateTime('datetime_value')->nullable();
             $table->json('json_value')->nullable();
+
+            $table->string('source', 32)->nullable();
+            $table->timestamp('updated_at')->nullable();
 
             $table->unique($uniqueColumns, 'custom_field_values_entity_type_unique');
 

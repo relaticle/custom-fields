@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
 use JsonException;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RichEditorComponent;
@@ -29,6 +30,7 @@ final class RichEditorFieldType extends BaseFieldType
             ->formComponent(RichEditorComponent::class)
             ->tableColumn(RichTextColumn::class)
             ->infolistEntry(HtmlEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(80)
             ->withValidationCapabilities(
                 MinLengthCapability::class,

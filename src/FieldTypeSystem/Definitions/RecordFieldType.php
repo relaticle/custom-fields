@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectComponent;
@@ -30,11 +31,13 @@ class RecordFieldType extends BaseFieldType
             ->tableColumn(RecordColumn::class)
             ->tableFilter(RecordFilter::class)
             ->infolistEntry(RecordEntry::class)
-            ->withoutUserOptions()
-            ->requiresRelationship()
-            ->sortable()
-            ->searchable()
-            ->filterable()
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Filterable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::RequiresRelationship,
+            )
             ->priority(45)
             ->withValidationCapabilities(
                 MinSelectionsCapability::class,

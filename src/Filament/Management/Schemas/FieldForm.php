@@ -37,6 +37,7 @@ use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Data\CustomFieldOptionSettingsData;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\DescriptionPosition;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\LinkSide;
 use Relaticle\CustomFields\Enums\OptionCategory;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
@@ -440,7 +441,7 @@ final class FieldForm
             return false;
         }
 
-        return CustomFieldsType::getFieldType($type)?->requiresRelationship === true;
+        return CustomFieldsType::getFieldType($type)?->supports(FieldCapability::RequiresRelationship) === true;
     }
 
     /**
@@ -458,7 +459,7 @@ final class FieldForm
             return false;
         }
 
-        return CustomFieldsType::getFieldType($type)?->supportsPairing === true;
+        return CustomFieldsType::getFieldType($type)?->supports(FieldCapability::SupportsPairing) === true;
     }
 
     /**
@@ -550,7 +551,7 @@ final class FieldForm
             return false;
         }
 
-        return CustomFieldsType::getFieldType($type)?->carriesOptionCategories === true;
+        return CustomFieldsType::getFieldType($type)?->supports(FieldCapability::CarriesOptionCategories) === true;
     }
 
     /**
@@ -691,8 +692,8 @@ final class FieldForm
             ->visible(
                 fn (Get $get): bool => $get('type') !== null
                     && CustomFieldsType::getFieldType($get('type'))->dataType->isChoiceField()
-                    && ! CustomFieldsType::getFieldType($get('type'))->withoutUserOptions
-                    && ! CustomFieldsType::getFieldType($get('type'))->requiresRelationship
+                    && ! CustomFieldsType::getFieldType($get('type'))->supports(FieldCapability::WithoutUserOptions)
+                    && ! CustomFieldsType::getFieldType($get('type'))->supports(FieldCapability::RequiresRelationship)
             )
             ->mutateRelationshipDataBeforeCreateUsing(function (
                 array $data
@@ -1008,7 +1009,7 @@ final class FieldForm
                     ->visible(
                         fn (
                             Get $get
-                        ): bool => CustomFieldsType::getFieldType($get('type'))->searchable ?? false
+                        ): bool => CustomFieldsType::getFieldType($get('type'))?->supports(FieldCapability::Searchable) === true
                     )
                     ->disabled(
                         fn (Get $get): bool => $get(
@@ -1048,7 +1049,7 @@ final class FieldForm
                         fn (
                             Get $get
                         ): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_ENCRYPTION) &&
-                            CustomFieldsType::getFieldType($get('type'))->encryptable
+                            CustomFieldsType::getFieldType($get('type'))->supports(FieldCapability::Encryptable)
                     )
                     ->default(false),
             ],
@@ -1072,7 +1073,7 @@ final class FieldForm
                     ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.allow_multiple_help'))
                     ->visible(
                         fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                            CustomFieldsType::getFieldType($get('type'))?->supportsMultiValue === true
+                            CustomFieldsType::getFieldType($get('type'))?->supports(FieldCapability::SupportsMultiValue) === true
                     )
                     ->afterStateUpdated(function (Set $set, bool $state): void {
                         if ($state) {
@@ -1095,8 +1096,8 @@ final class FieldForm
                         $fieldType = CustomFieldsType::getFieldType($get('type'));
 
                         return FeatureManager::isEnabled(CustomFieldsFeature::FIELD_MULTI_VALUE) &&
-                            $fieldType?->supportsMultiValue === true &&
-                            $fieldType->requiresRelationship !== true &&
+                            $fieldType?->supports(FieldCapability::SupportsMultiValue) === true &&
+                            ! $fieldType->supports(FieldCapability::RequiresRelationship) &&
                             $get('settings.allow_multiple') === true;
                     }),
             ],
@@ -1111,7 +1112,7 @@ final class FieldForm
                     ->hintIcon(Heroicon::OutlinedQuestionMarkCircle, tooltip: __('custom-fields::custom-fields.field.form.unique_per_entity_type_help'))
                     ->visible(
                         fn (Get $get): bool => FeatureManager::isEnabled(CustomFieldsFeature::FIELD_UNIQUE_VALUE) &&
-                            CustomFieldsType::getFieldType($get('type'))?->supportsUniqueConstraint === true
+                            CustomFieldsType::getFieldType($get('type'))?->supports(FieldCapability::SupportsUniqueConstraint) === true
                     )
                     ->disabled(self::disabledForSystemFields())
                     ->default(false),

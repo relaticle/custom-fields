@@ -256,8 +256,8 @@ return [
     'database' => [
         'migrations_path' => database_path('custom-fields'),
 
-        // Key type of the tables added in 4.0: 'bigint', 'ulid', or 'uuid'. A ULID or UUID host
-        // sets it here instead of hand-editing them; the older tables keep the hand-edit path.
+        // Key type of every package table a migration creates: 'bigint', 'ulid', or 'uuid'.
+        // Set it before migrating; tables that already exist keep their keys.
         'key_type' => 'bigint',
 
         'table_names' => [

@@ -46,13 +46,11 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.4]
-        laravel: [12.*, 13.*]
+        laravel: [13.*]
         stability: [prefer-stable]
         db: [sqlite, pgsql, mysql]
         flavor: [polished]
         include:
-          - laravel: 12.*
-            testbench: 10.*
           - laravel: 13.*
             testbench: 11.*
           # The forked UI surfaces render twice, so one leg reads them in the other flavor.

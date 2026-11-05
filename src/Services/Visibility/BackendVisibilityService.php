@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Services\Visibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
@@ -258,7 +259,7 @@ final class BackendVisibilityService
             $value === null ||
             $value === '' ||
             ! $field->isChoiceField() ||
-            $field->typeData->withoutUserOptions
+            $field->typeData->supports(FieldCapability::WithoutUserOptions)
         ) {
             return $value;
         }
@@ -311,7 +312,7 @@ final class BackendVisibilityService
 
         // Priority 1: Check for component-provided options (dynamic extraction)
         $fieldTypeData = CustomFieldsType::getFieldType($field->type);
-        if ($fieldTypeData?->withoutUserOptions) {
+        if ($fieldTypeData?->supports(FieldCapability::WithoutUserOptions)) {
             $options = $this->optionsExtractor->extractOptionsFromFieldType($field->type, $field);
 
             return $this->normalizeOptionsForVisibility($options);

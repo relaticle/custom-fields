@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\View as ViewFactory;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Livewire\Concerns\ManagesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
@@ -69,7 +70,7 @@ final class ManageCustomField extends Component implements HasActions, HasForms
             ->requiresConfirmation()
             ->model(CustomFields::customFieldModel())
             ->record($this->field)
-            ->visible(fn (CustomField $record): bool => ! $record->isSystemDefined() && ! $record->typeData?->systemOnly)
+            ->visible(fn (CustomField $record): bool => ! $record->isSystemDefined() && ! $record->typeData?->supports(FieldCapability::SystemOnly))
             ->action(function (): void {
                 $code = $this->generateUniqueCode(
                     Str::slug($this->field->code).'-copy',

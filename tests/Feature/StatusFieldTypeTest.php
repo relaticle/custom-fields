@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Schemas\Schema;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\FieldDataType;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\StatusFieldType;
@@ -44,13 +45,13 @@ it('registers status as a single-choice type that carries option categories', fu
     $select = CustomFieldsType::getFieldType('select');
 
     expect($status?->dataType)->toBe(FieldDataType::SINGLE_CHOICE)
-        ->and($status?->carriesOptionCategories)->toBeTrue()
-        ->and($select?->carriesOptionCategories)->toBeFalse()
-        ->and($status?->encryptable)->toBeFalse()
-        ->and($select?->encryptable)->toBeTrue()
-        ->and($status?->searchable)->toBe($select?->searchable)
-        ->and($status?->sortable)->toBe($select?->sortable)
-        ->and($status?->filterable)->toBe($select?->filterable)
+        ->and($status?->supports(FieldCapability::CarriesOptionCategories))->toBeTrue()
+        ->and($select?->supports(FieldCapability::CarriesOptionCategories))->toBeFalse()
+        ->and($status?->supports(FieldCapability::Encryptable))->toBeFalse()
+        ->and($select?->supports(FieldCapability::Encryptable))->toBeTrue()
+        ->and($status?->supports(FieldCapability::Searchable))->toBe($select?->supports(FieldCapability::Searchable))
+        ->and($status?->supports(FieldCapability::Sortable))->toBe($select?->supports(FieldCapability::Sortable))
+        ->and($status?->supports(FieldCapability::Filterable))->toBe($select?->supports(FieldCapability::Filterable))
         ->and($status?->tableColumn)->toBe($select?->tableColumn)
         ->and($status?->tableFilter)->toBe($select?->tableFilter)
         ->and($status?->formComponent)->toBe($select?->formComponent)

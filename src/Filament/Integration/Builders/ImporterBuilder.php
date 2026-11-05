@@ -7,6 +7,8 @@ namespace Relaticle\CustomFields\Filament\Integration\Builders;
 use Filament\Actions\Imports\ImportColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportColumnConfigurator;
 use Relaticle\CustomFields\Filament\Integration\Support\Imports\ImportDataStorage;
 use Relaticle\CustomFields\Models\CustomField;
@@ -124,11 +126,13 @@ final class ImporterBuilder extends BaseBuilder
             return;
         }
 
-        $this->getAllFields()
+        $context = CustomFields::writeContext();
+
+        CustomFields::writing(WriteSource::Import, fn (): Collection => $this->getAllFields()
             ->filter(fn (CustomField $field): bool => array_key_exists($field->code, $customFieldsData))
             ->each(function (CustomField $field) use ($customFieldsData, $tenant): void {
                 $this->model->saveCustomFieldValue($field, $customFieldsData[$field->code], $tenant);
-            });
+            }), $context->actor, $context->confidence);
     }
 
     /**

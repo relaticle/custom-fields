@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Relaticle\CustomFields\CustomFields;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Models\Concerns\UsesCustomFields;
 use Relaticle\CustomFields\Models\Contracts\HasCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
@@ -192,5 +194,51 @@ describe('Encrypted Custom Field Values', function (): void {
 
         expect(Crypt::decryptString($storedValue))->toBe('changed secret')
             ->and($post->refresh()->getCustomFieldValue($customField))->toBe('changed secret');
+    });
+});
+
+describe('Value Provenance', function (): void {
+    beforeEach(function (): void {
+        $this->post = Post::factory()->create();
+        $this->customField = CustomField::factory()->ofType('text')->create([
+            'custom_field_section_id' => CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true])->getKey(),
+            'entity_type' => Post::class,
+        ]);
+        $this->storedValue = fn (): CustomFieldValue => CustomFieldValue::withoutGlobalScopes()
+            ->where('custom_field_id', $this->customField->getKey())
+            ->sole();
+    });
+
+    it('stamps the write context source and the write time on every value write', function (): void {
+        $this->travelTo('2026-03-01 09:00:00');
+
+        CustomFields::writing(WriteSource::Import, fn () => $this->post->saveCustomFieldValue($this->customField, 'imported'));
+
+        expect(($this->storedValue)())
+            ->source->toBe(WriteSource::Import)
+            ->updated_at->toDateTimeString()->toBe('2026-03-01 09:00:00');
+
+        $this->travelTo('2026-03-02 10:30:00');
+
+        $this->post->saveCustomFieldValue($this->customField, 'typed');
+
+        expect(($this->storedValue)())
+            ->source->toBe(WriteSource::User)
+            ->updated_at->toDateTimeString()->toBe('2026-03-02 10:30:00');
+    });
+
+    it('stamps the clearing write on the row it keeps', function (): void {
+        $this->travelTo('2026-03-01 09:00:00');
+
+        $this->post->saveCustomFieldValue($this->customField, 'typed');
+
+        $this->travelTo('2026-03-02 10:30:00');
+
+        CustomFields::writing(WriteSource::Ai, fn () => $this->post->saveCustomFieldValue($this->customField, null));
+
+        expect(($this->storedValue)())
+            ->text_value->toBeNull()
+            ->source->toBe(WriteSource::Ai)
+            ->updated_at->toDateTimeString()->toBe('2026-03-02 10:30:00');
     });
 });

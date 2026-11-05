@@ -7,6 +7,7 @@ namespace Relaticle\CustomFields\Filament\Integration\Components\Forms;
 use Closure;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Filament\Integration\Base\AbstractFormComponent;
 use Relaticle\CustomFields\Filament\Integration\Concerns\Forms\ConfiguresColorOptions;
 use Relaticle\CustomFields\Models\CustomField;
@@ -45,7 +46,7 @@ final readonly class ClosureFormAdapter extends AbstractFormComponent
         $field = ($this->closure)($customField);
 
         // Apply built-in features automatically for choice fields
-        if ($customField->isChoiceField() && ! $customField->typeData->withoutUserOptions) {
+        if ($customField->isChoiceField() && ! $customField->typeData->supports(FieldCapability::WithoutUserOptions)) {
             $field = $this->applyUserDefinedOptions($field, $customField);
         }
 

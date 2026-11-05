@@ -13,6 +13,7 @@ use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Enums\CustomFieldSectionType;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Models\CustomField;
@@ -99,7 +100,7 @@ final readonly class CreateRelationshipDefinition
             return;
         }
 
-        if (CustomFieldsType::getFieldType($slot->type)?->requiresRelationship === true) {
+        if (CustomFieldsType::getFieldType($slot->type)?->supports(FieldCapability::RequiresRelationship) === true) {
             return;
         }
 
@@ -154,7 +155,7 @@ final readonly class CreateRelationshipDefinition
             throw new InvalidArgumentException(sprintf('Field [%s] cannot be a relationship slot: it does not exist.', $fieldId));
         }
 
-        if ($field->typeData?->requiresRelationship !== true) {
+        if ($field->typeData?->supports(FieldCapability::RequiresRelationship) !== true) {
             throw new InvalidArgumentException(sprintf('Field [%s] cannot be a relationship slot: it is a [%s] field.', $field->code, $field->type));
         }
 

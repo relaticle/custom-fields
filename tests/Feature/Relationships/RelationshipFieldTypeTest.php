@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Schemas\Schema;
 use Relaticle\CustomFields\Data\FieldSlotData;
 use Relaticle\CustomFields\Data\RelationshipDefinitionData;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\FieldTypeSystem\Definitions\RecordFieldType;
@@ -60,10 +61,10 @@ it('registers both linking types with the pairing capability telling them apart'
     $record = CustomFieldsType::getFieldType(RecordFieldType::KEY);
     $relationship = CustomFieldsType::getFieldType(RelationshipFieldType::KEY);
 
-    expect($record?->requiresRelationship)->toBeTrue()
-        ->and($record?->supportsPairing)->toBeFalse()
-        ->and($relationship?->requiresRelationship)->toBeTrue()
-        ->and($relationship?->supportsPairing)->toBeTrue();
+    expect($record?->supports(FieldCapability::RequiresRelationship))->toBeTrue()
+        ->and($record?->supports(FieldCapability::SupportsPairing))->toBeFalse()
+        ->and($relationship?->supports(FieldCapability::RequiresRelationship))->toBeTrue()
+        ->and($relationship?->supports(FieldCapability::SupportsPairing))->toBeTrue();
 });
 
 it('lists both linking types in the type picker, each with its own description', function (): void {

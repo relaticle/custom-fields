@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\Models\Concerns;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\FieldDataType;
 
 trait HasFieldType
@@ -30,6 +31,6 @@ trait HasFieldType
 
     public function isFilterable(): bool
     {
-        return $this->typeData?->filterable === true;
+        return $this->typeData?->supports(FieldCapability::Filterable) === true;
     }
 }

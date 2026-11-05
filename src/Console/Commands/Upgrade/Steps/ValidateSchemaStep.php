@@ -24,6 +24,7 @@ final class ValidateSchemaStep implements UpgradeStep
             'id', 'entity_type', 'entity_id', 'custom_field_id',
             'string_value', 'text_value', 'integer_value', 'float_value',
             'json_value', 'boolean_value', 'date_value', 'datetime_value',
+            'source', 'updated_at',
         ],
         'custom_field_options' => [
             'id', 'custom_field_id', 'name', 'settings', 'sort_order',

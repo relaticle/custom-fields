@@ -30,6 +30,7 @@ use Relaticle\CustomFields\Models\Scopes\TenantScope;
  * @property int|string|null $created_by_id
  * @property WriteSource $source
  * @property ?float $confidence
+ * @property ?array<string, mixed> $metadata
  * @property CustomFieldRelationship $relationship
  */
 #[ScopedBy([TenantScope::class])]
@@ -73,6 +74,7 @@ class CustomFieldLink extends Model
             'active_until' => 'datetime',
             'confidence' => 'float',
             'source' => WriteSource::class,
+            'metadata' => 'array',
         ];
     }
 

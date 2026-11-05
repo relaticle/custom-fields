@@ -15,6 +15,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Data\FieldTypeData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldValueFactory;
 use Relaticle\CustomFields\Enums\FieldDataType;
+use Relaticle\CustomFields\Enums\WriteSource;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
 use Relaticle\CustomFields\Models\Scopes\TenantScope;
 use Relaticle\CustomFields\Support\SafeValueConverter;
@@ -33,6 +34,8 @@ use RuntimeException;
  * @property ?bool $boolean_value
  * @property ?Carbon $date_value
  * @property ?Carbon $datetime_value
+ * @property ?WriteSource $source
+ * @property ?Carbon $updated_at
  * @property CustomField $customField
  * @property Model $entity
  */
@@ -76,6 +79,8 @@ class CustomFieldValue extends Model
             'boolean_value' => 'boolean',
             'date_value' => 'date',
             'datetime_value' => 'datetime',
+            'source' => WriteSource::class,
+            'updated_at' => 'datetime',
         ];
     }
 

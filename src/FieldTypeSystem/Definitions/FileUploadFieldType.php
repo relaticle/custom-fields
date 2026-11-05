@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\FileUploadComponent;
@@ -27,8 +28,8 @@ class FileUploadFieldType extends BaseFieldType
             ->formComponent(FileUploadComponent::class)
             ->tableColumn(TextColumn::class)
             ->infolistEntry(TextEntry::class)
+            ->capabilities(FieldCapability::Searchable, FieldCapability::Sortable)
             ->priority(17)
-            ->searchable()
             ->defaultValidationRules(['file'])
             ->withValidationCapabilities(
                 AcceptedFileTypesCapability::class,

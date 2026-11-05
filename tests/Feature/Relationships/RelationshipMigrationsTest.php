@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
@@ -75,4 +76,49 @@ it('keys the slot columns off the custom field model, not the package key type',
     expect($definitions->get('from_field_id')['type_name'])->toBe($customFieldKey['type_name'])
         ->and($definitions->get('to_field_id')['type_name'])->toBe($customFieldKey['type_name'])
         ->and($definitions->get('id')['type_name'])->not->toBe($customFieldKey['type_name']);
+});
+
+it('keys the four tables that predate 4.0 off the package key type on a fresh install', function (): void {
+    config()->set('custom-fields.database.key_type', 'ulid');
+    config()->set('custom-fields.features', FeatureConfigurator::configure()->enable(
+        CustomFieldsFeature::SYSTEM_SECTIONS,
+        CustomFieldsFeature::SYSTEM_MULTI_TENANCY,
+    ));
+
+    $tables = config('custom-fields.database.table_names');
+
+    foreach (['custom_field_links', 'custom_field_relationships', 'custom_field_values', 'custom_field_options', 'custom_fields', 'custom_field_sections'] as $key) {
+        Schema::drop($tables[$key]);
+    }
+
+    (require dirname(__DIR__, 3).'/database/migrations/create_custom_fields_table.php')->up();
+
+    $keyColumns = [
+        'custom_field_sections' => ['id', 'tenant_id'],
+        'custom_fields' => ['id', 'tenant_id', 'custom_field_section_id'],
+        'custom_field_options' => ['id', 'tenant_id', 'custom_field_id'],
+        'custom_field_values' => ['id', 'tenant_id', 'custom_field_id', 'entity_id'],
+    ];
+
+    foreach ($keyColumns as $key => $names) {
+        $columns = collect(Schema::getColumns($tables[$key]))->keyBy('name');
+
+        foreach ($names as $name) {
+            expect($columns->get($name)['type_name'])->toBeIn(['varchar', 'char', 'bpchar'], sprintf('%s.%s is not a ULID column', $key, $name));
+        }
+    }
+});
+
+it('adds the provenance columns to a 3.x values table and leaves them alone once present', function (): void {
+    $values = config('custom-fields.database.table_names.custom_field_values');
+    $migration = require dirname(__DIR__, 3).'/database/migrations/track_custom_field_values_provenance.php';
+
+    Schema::table($values, function (Blueprint $table): void {
+        $table->dropColumn(['source', 'updated_at']);
+    });
+
+    $migration->up();
+    $migration->up();
+
+    expect(Schema::hasColumns($values, ['source', 'updated_at']))->toBeTrue();
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Relaticle\CustomFields\FieldTypeSystem\Definitions;
 
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\FieldTypeSystem\BaseFieldType;
 use Relaticle\CustomFields\FieldTypeSystem\FieldSchema;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\PhoneComponent;
@@ -27,14 +28,16 @@ class PhoneFieldType extends BaseFieldType
             ->formComponent(PhoneComponent::class)
             ->tableColumn(PhoneColumn::class)
             ->infolistEntry(PhoneEntry::class)
+            ->capabilities(
+                FieldCapability::Searchable,
+                FieldCapability::Sortable,
+                FieldCapability::Encryptable,
+                FieldCapability::WithoutUserOptions,
+                FieldCapability::AcceptsArbitraryValues,
+                FieldCapability::SupportsMultiValue,
+                FieldCapability::SupportsUniqueConstraint,
+            )
             ->priority(16)
-            ->encryptable()
-            ->searchable()
-            ->sortable()
-            ->supportsMultiValue()
-            ->supportsUniqueConstraint()
-            ->withArbitraryValues()
-            ->withoutUserOptions()
             ->defaultItemValidationRules(['phone:AUTO']);
     }
 

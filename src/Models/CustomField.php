@@ -24,6 +24,7 @@ use Relaticle\CustomFields\Data\Settings\CurrencyFieldSettingsData;
 use Relaticle\CustomFields\Database\Factories\CustomFieldFactory;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Enums\OptionCategory;
 use Relaticle\CustomFields\Exceptions\RelationshipDefinitionDoesNotExistException;
 use Relaticle\CustomFields\Facades\CustomFieldsType;
@@ -189,7 +190,7 @@ class CustomField extends Model
 
         // Only a field type that points at records is ever a slot, and every save asks each
         // field in turn, so the rest never pay for a definition lookup.
-        if ($this->typeData?->requiresRelationship !== true) {
+        if ($this->typeData?->supports(FieldCapability::RequiresRelationship) !== true) {
             return null;
         }
 
@@ -218,7 +219,7 @@ class CustomField extends Model
      */
     public function supportsPairing(): bool
     {
-        return $this->typeData?->supportsPairing === true;
+        return $this->typeData?->supports(FieldCapability::SupportsPairing) === true;
     }
 
     /**
