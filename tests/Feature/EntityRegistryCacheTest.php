@@ -63,3 +63,15 @@ it('stores the registry for the configured ttl', function (): void {
     $this->travel(2)->seconds();
     expect(Cache::has('custom_fields_entities:admin'))->toBeFalse();
 });
+
+it('clears the cached registry of every panel', function (): void {
+    entitiesSeenInPanel('admin')->getEntities();
+    entitiesSeenInPanel('portal')->getEntities();
+
+    $this->artisan('custom-fields:clear-cache')
+        ->expectsOutputToContain('Custom fields entity cache cleared.')
+        ->assertSuccessful();
+
+    expect(Cache::has('custom_fields_entities:admin'))->toBeFalse()
+        ->and(Cache::has('custom_fields_entities:portal'))->toBeFalse();
+});
