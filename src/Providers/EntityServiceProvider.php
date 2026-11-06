@@ -24,7 +24,8 @@ class EntityServiceProvider extends ServiceProvider
             $config = $this->getEntityConfig();
 
             return new EntityManager(
-                cacheEnabled: $config['cache_entities'] ?? true
+                cacheEnabled: $config['cache_entities'] ?? true,
+                cacheTtl: $config['cache_ttl'] ?? 3600,
             );
         });
 
