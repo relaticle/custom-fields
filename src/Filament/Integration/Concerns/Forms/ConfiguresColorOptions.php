@@ -114,7 +114,7 @@ trait ConfiguresColorOptions
                     ];
                 }
 
-                return [$option->id => $text];
+                return [$option->id => e($text)];
             })
             ->all();
     }
