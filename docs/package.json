@@ -23,8 +23,11 @@
     "overrides": {
         "@tiptap/core": "^3.30.5",
         "esbuild": "^0.28.1",
+        "glob": "^14.0.4",
         "js-yaml": "^4.3.2",
         "mdast-util-to-markdown": "2.1.2",
-        "sharp": "^0.35.4"
+        "minimatch": "^11.0.5",
+        "sharp": "^0.35.4",
+        "zod": "$zod"
     }
 }
