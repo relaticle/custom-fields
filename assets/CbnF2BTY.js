@@ -1,0 +1,1 @@
+import{r as e}from"./C91z_NtZ.js";import{Et as t,d as n}from"./ngEIBCiz.js";function r(r){let i=e({dir:t(`ltr`)});return n(()=>r?.value||i.dir?.value||`ltr`)}export{r as t};
