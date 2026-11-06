@@ -20,7 +20,7 @@
         <div class="overflow-x-auto">
             <div class="min-w-[600px]">
                 {{-- Table Header --}}
-                <div class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                <div class="grid grid-cols-[40px_minmax(10rem,1fr)_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
                     <div></div>
                     <div class="flex items-center gap-2 px-3 py-3 text-sm font-semibold text-gray-950 dark:text-white">
                         <x-filament::icon icon="heroicon-o-tag" class="h-4 w-4 text-gray-400 shrink-0"/>
@@ -53,7 +53,7 @@
                         <div
                                 x-sortable-item="{{ $field->getKey() }}"
                                 wire:key="field-{{ $field->getKey() }}"
-                                class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
+                                class="grid grid-cols-[40px_minmax(10rem,1fr)_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
                         >
                             {{-- Drag Handle --}}
                             <div class="flex items-center justify-center py-3">
@@ -155,7 +155,7 @@
                             @foreach($this->inactiveFields as $field)
                                 <div
                                         wire:key="inactive-field-{{ $field->getKey() }}"
-                                        class="grid grid-cols-[40px_1fr_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
+                                        class="grid grid-cols-[40px_minmax(10rem,1fr)_minmax(120px,160px)_minmax(100px,140px)_minmax(80px,120px)_50px] items-center min-h-[50px] hover:bg-gray-50 dark:hover:bg-white/5 transition duration-75"
                                 >
                                     {{-- Empty (no drag handle) --}}
                                     <div></div>
