@@ -2,6 +2,19 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.0 - 2026-11-06
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.0 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(fields): stack the entity tabs above the fields and floor the name column on phones by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/290
+* fix: cache the entity registry per filament panel by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/289
+* chore: update dependencies by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/291
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.17.0...v3.18.0
+
 ## v3.17.0 - 2026-11-06
 
 <!-- Release notes generated using configuration in .github/release.yml at 3.x -->
@@ -303,6 +316,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
