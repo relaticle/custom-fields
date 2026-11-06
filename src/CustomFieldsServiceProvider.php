@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Livewire;
 use Relaticle\CustomFields\Console\Commands\CleanupOrphanedValuesCommand;
+use Relaticle\CustomFields\Console\Commands\ClearCacheCommand;
 use Relaticle\CustomFields\Console\Commands\MakeCustomFieldsMigrationCommand;
 use Relaticle\CustomFields\Console\Commands\MakeFieldTypeCommand;
 use Relaticle\CustomFields\Console\Commands\UpgradeCommand;
@@ -177,6 +178,7 @@ final class CustomFieldsServiceProvider extends PackageServiceProvider
     {
         return [
             CleanupOrphanedValuesCommand::class,
+            ClearCacheCommand::class,
             MakeCustomFieldsMigrationCommand::class,
             MakeFieldTypeCommand::class,
             UpgradeCommand::class,
