@@ -27,7 +27,8 @@ final class EntityManager implements EntityManagerInterface
 
     private array $entities = [];
 
-    private ?array $cachedEntities = null;
+    /** @var array<string, array<string, EntityConfigurationData>> */
+    private array $cachedEntities = [];
 
     private ?EntityDiscovery $discovery = null;
 
@@ -56,13 +57,13 @@ final class EntityManager implements EntityManagerInterface
      */
     public function getEntities(): EntityCollection
     {
-        if ($this->cachedEntities === null) {
-            $this->cachedEntities = $this->cacheEnabled
-                ? Cache::remember($this->cacheKey($this->currentPanelId()), $this->cacheTtl, fn (): array => $this->buildEntityCache())
-                : $this->buildEntityCache();
-        }
+        $panelId = $this->currentPanelId();
 
-        return new EntityCollection($this->cachedEntities);
+        $this->cachedEntities[$panelId] ??= $this->cacheEnabled
+            ? Cache::remember($this->cacheKey($panelId), $this->cacheTtl, fn (): array => $this->buildEntityCache())
+            : $this->buildEntityCache();
+
+        return new EntityCollection($this->cachedEntities[$panelId]);
     }
 
     /**
@@ -110,7 +111,7 @@ final class EntityManager implements EntityManagerInterface
      */
     private function invalidateCache(): void
     {
-        $this->cachedEntities = null;
+        $this->cachedEntities = [];
     }
 
     /**
@@ -119,6 +120,10 @@ final class EntityManager implements EntityManagerInterface
     public function clearCache(): static
     {
         $this->invalidateCache();
+
+        if (! $this->cacheEnabled) {
+            return $this;
+        }
 
         foreach ([...array_keys(Filament::getPanels()), self::NO_PANEL] as $panelId) {
             Cache::forget($this->cacheKey($panelId));
