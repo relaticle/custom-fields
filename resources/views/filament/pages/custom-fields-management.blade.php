@@ -1,26 +1,30 @@
 <x-filament-panels::page>
     @if($this->isSectionsDisabled)
-        {{-- Flat layout mode: vertical tabs left, fields right --}}
-        <div class="flex gap-6">
-            {{-- Left side: Vertical entity tabs --}}
-            <div class="shrink-0 min-w-48 [&_.fi-badge]:ml-auto">
-                <x-filament::tabs label="Entity tabs" vertical>
-                    @foreach ($this->entityTypes as $key => $label)
-                        @php
-                            $entity = \Relaticle\CustomFields\Facades\Entities::getEntity($key);
-                            $fieldCount = $this->entityFieldCounts[$key] ?? 0;
-                        @endphp
-                        <x-filament::tabs.item
-                            :icon="$entity?->getIcon() ?? 'heroicon-o-document'"
-                            :active="$key === $this->currentEntityType"
-                            :badge="$fieldCount"
-                            wire:click="setCurrentEntityType('{{ addslashes($key) }}')"
-                        >
-                            {{ $label }}
-                        </x-filament::tabs.item>
-                    @endforeach
-                </x-filament::tabs>
-            </div>
+        {{-- Flat layout mode: entity tabs above the fields on phones, beside them from md --}}
+        <div class="flex flex-col gap-6 md:flex-row">
+            @foreach ([false, true] as $isVertical)
+                <div @class([
+                    'min-w-0 md:hidden' => ! $isVertical,
+                    'hidden shrink-0 min-w-48 md:block [&_.fi-badge]:ml-auto' => $isVertical,
+                ])>
+                    <x-filament::tabs label="Entity tabs" :vertical="$isVertical">
+                        @foreach ($this->entityTypes as $key => $label)
+                            @php
+                                $entity = \Relaticle\CustomFields\Facades\Entities::getEntity($key);
+                                $fieldCount = $this->entityFieldCounts[$key] ?? 0;
+                            @endphp
+                            <x-filament::tabs.item
+                                :icon="$entity?->getIcon() ?? 'heroicon-o-document'"
+                                :active="$key === $this->currentEntityType"
+                                :badge="$fieldCount"
+                                wire:click="setCurrentEntityType('{{ addslashes($key) }}')"
+                            >
+                                {{ $label }}
+                            </x-filament::tabs.item>
+                        @endforeach
+                    </x-filament::tabs>
+                </div>
+            @endforeach
 
             {{-- Right side: Fields (no sections needed) --}}
             <div class="flex-1 min-w-0">
