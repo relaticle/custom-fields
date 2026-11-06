@@ -2,6 +2,18 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.17.0 - 2026-11-06
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* fix: escape option labels without a colour in coloured selects by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/286
+* fix: clear the open security alerts and update dependencies by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/288
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.2...v3.17.0
+
 ## v3.16.2 - 2026-11-05
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.16.2 -->
@@ -291,6 +303,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
