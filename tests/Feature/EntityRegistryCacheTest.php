@@ -52,6 +52,23 @@ it('serves each panel the registry built from its own resources', function (): v
     expect(entitiesSeenInPanel('portal')->hasEntity(Post::class))->toBeFalse();
 });
 
+it('keeps panels apart within one long-lived manager', function (): void {
+    $manager = entitiesSeenInPanel('admin');
+    $postAlias = $manager->getEntity(Post::class)?->getAlias();
+
+    expect($postAlias)->not->toBeNull();
+
+    $manager->clearCache();
+    Filament::setCurrentPanel('portal');
+
+    expect($manager->hasEntity(Post::class))->toBeFalse()
+        ->and(Cache::get('custom_fields_entities:portal'))->not->toHaveKey($postAlias);
+
+    Filament::setCurrentPanel('admin');
+
+    expect($manager->getEntity(Post::class)?->getResourceClass())->toBe(PostResource::class);
+});
+
 it('stores the registry for the configured ttl', function (): void {
     useCachedResourceDiscovery(ttl: 120);
 
@@ -67,6 +84,9 @@ it('stores the registry for the configured ttl', function (): void {
 it('clears the cached registry of every panel', function (): void {
     entitiesSeenInPanel('admin')->getEntities();
     entitiesSeenInPanel('portal')->getEntities();
+
+    expect(Cache::has('custom_fields_entities:admin'))->toBeTrue()
+        ->and(Cache::has('custom_fields_entities:portal'))->toBeTrue();
 
     $this->artisan('custom-fields:clear-cache')
         ->expectsOutputToContain('Custom fields entity cache cleared.')
