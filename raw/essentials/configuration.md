@@ -695,10 +695,16 @@ Optimize for production:
 ```php
 'entity_configuration' => EntityConfigurator::configure()
     ->discover(app_path('Models'))
-    ->cache(env('CUSTOM_FIELDS_CACHE', true)),  // Enable caching
+    ->cache(env('CUSTOM_FIELDS_CACHE', true), ttl: 3600),  // Cache the entity registry for an hour
 
 'field_type_configuration' => FieldTypeConfigurator::configure()
     ->cache(enabled: true, ttl: 3600),          // Cache field types
+```
+
+The entity registry is cached once per Filament panel, because discovery reads each panel's own resources. Clear it on every deploy so a changed `entity_configuration` takes effect at once. The command clears the entity registry only:
+
+```bash
+php artisan custom-fields:clear-cache
 ```
 
 ### Multi-Tenancy Setup
