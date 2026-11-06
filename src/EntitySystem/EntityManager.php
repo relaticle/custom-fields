@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\EntitySystem;
 
 use Closure;
+use Filament\Exceptions\NoDefaultPanelSetException;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Traits\Macroable;
@@ -21,7 +23,7 @@ final class EntityManager implements EntityManagerInterface
 
     private const string CACHE_KEY = 'custom_fields_entities';
 
-    private const int CACHE_TTL = 3600; // 1 hour
+    private const string NO_PANEL = 'no-panel';
 
     private array $entities = [];
 
@@ -34,7 +36,8 @@ final class EntityManager implements EntityManagerInterface
     private array $resolvingCallbacks = [];
 
     public function __construct(
-        private readonly bool $cacheEnabled = true
+        private readonly bool $cacheEnabled = true,
+        private readonly int $cacheTtl = 3600,
     ) {}
 
     /**
@@ -55,7 +58,7 @@ final class EntityManager implements EntityManagerInterface
     {
         if ($this->cachedEntities === null) {
             $this->cachedEntities = $this->cacheEnabled
-                ? Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn (): array => $this->buildEntityCache())
+                ? Cache::remember($this->cacheKey($this->currentPanelId()), $this->cacheTtl, fn (): array => $this->buildEntityCache())
                 : $this->buildEntityCache();
         }
 
@@ -117,11 +120,26 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->invalidateCache();
 
-        if ($this->cacheEnabled) {
-            Cache::forget(self::CACHE_KEY);
+        foreach ([...array_keys(Filament::getPanels()), self::NO_PANEL] as $panelId) {
+            Cache::forget($this->cacheKey($panelId));
         }
 
         return $this;
+    }
+
+    // Discovery reads the current panel's resources, so each panel caches its own registry.
+    private function cacheKey(string $panelId): string
+    {
+        return self::CACHE_KEY.':'.$panelId;
+    }
+
+    private function currentPanelId(): string
+    {
+        try {
+            return Filament::getCurrentOrDefaultPanel()?->getId() ?? self::NO_PANEL;
+        } catch (NoDefaultPanelSetException) {
+            return self::NO_PANEL;
+        }
     }
 
     /**
