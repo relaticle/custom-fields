@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.1 - 2026-11-07
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: pad the record column and show the entity icon for a record without an image by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/292
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.0...v3.18.1
+
 ## v3.18.0 - 2026-11-06
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.18.0 -->
@@ -316,6 +327,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
