@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.2 - 2026-11-07
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.2 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: show the entity icon for a linked record without an image on view pages by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/293
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.1...v3.18.2
+
 ## v3.18.1 - 2026-11-07
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.18.1 -->
@@ -327,6 +338,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
