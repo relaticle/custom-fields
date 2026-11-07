@@ -109,6 +109,7 @@ final class RecordColumnView extends Column
             'name' => $name,
             'avatarUrl' => $avatarUrl,
             'avatarShape' => $shapeClass,
+            'icon' => blank($avatarUrl) && $this->avatarConfig?->hasAttribute() ? $this->entity?->getIcon() : null,
             'url' => $url,
         ];
     }

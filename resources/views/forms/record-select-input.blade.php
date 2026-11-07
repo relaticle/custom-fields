@@ -17,6 +17,7 @@
     $selectedIds = is_array($state) ? array_filter($state) : [];
     $initialRecords = $getRecordsByIds($selectedIds);
     $initialOptions = $getInitialOptions();
+    $fallbackIcon = $getFallbackIcon();
 @endphp
 
 <x-dynamic-component
@@ -466,6 +467,17 @@
                                     alt=""
                                 />
                             </template>
+                            @if ($fallbackIcon)
+                                <template x-if="! selectedRecords[0].avatar">
+                                    <span
+                                        data-record-icon
+                                        :class="selectedRecords[0].avatarShape || 'rounded-full'"
+                                        class="flex h-5 w-5 shrink-0 items-center justify-center bg-gray-100 text-gray-600 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10"
+                                    >
+                                        <x-filament::icon :icon="$fallbackIcon" class="h-3 w-3" />
+                                    </span>
+                                </template>
+                            @endif
                             <span class="text-sm text-gray-950 dark:text-white truncate" x-text="selectedRecords[0].label"></span>
                         </div>
                     </template>
@@ -532,6 +544,17 @@
                                             alt=""
                                         />
                                     </template>
+                                    @if ($fallbackIcon)
+                                        <template x-if="! record.avatar">
+                                            <span
+                                                data-record-icon
+                                                :class="record.avatarShape || 'rounded-full'"
+                                                class="flex h-5 w-5 shrink-0 items-center justify-center bg-gray-100 text-gray-600 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10"
+                                            >
+                                                <x-filament::icon :icon="$fallbackIcon" class="h-3 w-3" />
+                                            </span>
+                                        </template>
+                                    @endif
                                     <span x-text="record.label" class="truncate max-w-[100px]"></span>
                                     <button
                                         type="button"
@@ -629,6 +652,17 @@
                                 alt=""
                             />
                         </template>
+                        @if ($fallbackIcon)
+                            <template x-if="! record.avatar">
+                                <span
+                                    data-record-icon
+                                    :class="record.avatarShape || 'rounded-full'"
+                                    class="flex h-5 w-5 shrink-0 items-center justify-center bg-gray-100 text-gray-600 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10"
+                                >
+                                    <x-filament::icon :icon="$fallbackIcon" class="h-3 w-3" />
+                                </span>
+                            </template>
+                        @endif
 
                         {{-- Label --}}
                         <span

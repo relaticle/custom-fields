@@ -176,6 +176,17 @@ class RecordSelectInputComponent extends Field implements HasNestedRecursiveVali
         return Entities::getEntity($lookupType);
     }
 
+    public function getFallbackIcon(): ?string
+    {
+        $entity = $this->getEntityConfiguration();
+
+        if (! $entity?->getAvatarConfiguration()?->hasAttribute()) {
+            return null;
+        }
+
+        return $entity->getIcon();
+    }
+
     /**
      * Prepare entity query with common attributes.
      *

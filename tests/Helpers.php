@@ -16,7 +16,7 @@ use Relaticle\CustomFields\Tests\Fixtures\Models\Post;
  *
  * @param  array<int, string>  $searchAttributes
  */
-function registerLookupEntity(string $modelClass, string $primaryAttribute, array $searchAttributes = []): void
+function registerLookupEntity(string $modelClass, string $primaryAttribute, array $searchAttributes = [], ?string $avatarAttribute = null, string $icon = 'heroicon-o-document'): void
 {
     config()->set('custom-fields.entity_configuration',
         EntityConfigurator::configure()
@@ -25,9 +25,11 @@ function registerLookupEntity(string $modelClass, string $primaryAttribute, arra
             ->models([
                 EntityModel::configure(
                     modelClass: $modelClass,
+                    icon: $icon,
                     primaryAttribute: $primaryAttribute,
                     searchAttributes: $searchAttributes,
                     features: [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE],
+                    avatarConfiguration: $avatarAttribute === null ? null : EntityModel::avatar(attribute: $avatarAttribute),
                 ),
             ])
     );
