@@ -57,4 +57,26 @@ describe('RecordSelectInputComponent search', function (): void {
             ->assertSee('minSearchLength: 3', escape: false)
             ->assertSee('Type at least 3 characters to search', escape: false);
     });
+
+    it('offers the entity icon in place of a missing image when the entity has one', function (bool $hasImageSetting): void {
+        registerLookupEntity(Post::class, primaryAttribute: 'title', avatarAttribute: $hasImageSetting ? 'cover_url' : null, icon: 'heroicon-o-newspaper');
+
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create();
+
+        CustomField::factory()->create([
+            'code' => 'related_post',
+            'name' => 'Related Post',
+            'type' => 'record',
+            'entity_type' => Post::class,
+            'lookup_type' => Post::class,
+            'custom_field_section_id' => $section->getKey(),
+        ]);
+
+        $html = livewire(EditPost::class, ['record' => makeLookupRecord('Acme Industries')->getRouteKey()])->html();
+
+        expect(str_contains($html, 'data-record-icon'))->toBe($hasImageSetting);
+    })->with([
+        'with an image setting' => [true],
+        'without an image setting' => [false],
+    ]);
 });

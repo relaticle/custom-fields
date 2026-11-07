@@ -505,3 +505,40 @@ describe('Custom field table filters', function (): void {
             ->assertCanNotSeeTableRecords([$archived]);
     });
 });
+
+describe('Record column avatars', function (): void {
+    beforeEach(function (): void {
+        $this->field = CustomField::factory()->create([
+            'custom_field_section_id' => CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true])->getKey(),
+            'name' => 'Related Post',
+            'code' => 'related_post',
+            'type' => 'record',
+            'entity_type' => Post::class,
+            'lookup_type' => Post::class,
+            'settings' => new CustomFieldSettingsData(visible_in_list: true, list_toggleable_hidden: false),
+        ]);
+    });
+
+    it('shows the entity icon for a linked record without an image and the image for one with it', function (): void {
+        registerLookupEntity(Post::class, primaryAttribute: 'title', avatarAttribute: 'cover_url', icon: 'heroicon-o-newspaper');
+
+        $pictured = Post::factory()->create(['cover_url' => 'https://example.test/cover.png']);
+        $unpictured = Post::factory()->create(['cover_url' => null]);
+        Post::factory()->create()->saveCustomFieldValue($this->field, $pictured->getKey());
+        Post::factory()->create()->saveCustomFieldValue($this->field, $unpictured->getKey());
+
+        $html = livewire(ListPosts::class)->html();
+
+        expect(substr_count($html, 'src="https://example.test/cover.png"'))->toBe(1)
+            ->and(substr_count($html, 'data-record-icon'))->toBe(1);
+    });
+
+    it('shows no icon for a linked record whose entity has no image', function (): void {
+        registerLookupEntity(Post::class, primaryAttribute: 'title');
+
+        $linked = Post::factory()->create();
+        Post::factory()->create()->saveCustomFieldValue($this->field, $linked->getKey());
+
+        expect(livewire(ListPosts::class)->html())->not->toContain('data-record-icon');
+    });
+});
