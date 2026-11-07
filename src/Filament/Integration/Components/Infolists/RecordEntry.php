@@ -74,6 +74,7 @@ final class RecordEntry extends AbstractInfolistEntry
             'name' => $name,
             'avatarUrl' => $avatarUrl,
             'avatarShape' => $shapeClass,
+            'icon' => blank($avatarUrl) && $avatarConfig?->hasAttribute() ? $entity->getIcon() : null,
             'url' => $url,
         ];
     }
