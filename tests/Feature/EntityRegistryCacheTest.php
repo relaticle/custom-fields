@@ -18,12 +18,12 @@ beforeEach(function (): void {
     useCachedResourceDiscovery(ttl: 600);
 });
 
-function useCachedResourceDiscovery(int $ttl): void
+function useCachedResourceDiscovery(int $ttl, ?string $version = null): void
 {
     config()->set('custom-fields.entity_configuration',
         EntityConfigurator::configure()
             ->discover([])
-            ->cache(true, $ttl)
+            ->cache(true, $ttl, $version)
     );
 
     rebuildEntityManager();
@@ -94,4 +94,51 @@ it('clears the cached registry of every panel', function (): void {
 
     expect(Cache::has('custom_fields_entities:admin'))->toBeFalse()
         ->and(Cache::has('custom_fields_entities:portal'))->toBeFalse();
+});
+
+it('stores the registry under the configured cache version', function (): void {
+    useCachedResourceDiscovery(ttl: 600, version: 'deploy-2');
+
+    entitiesSeenInPanel('admin')->getEntities();
+
+    expect(Cache::has('custom_fields_entities:deploy-2:admin'))->toBeTrue()
+        ->and(Cache::has('custom_fields_entities:admin'))->toBeFalse();
+});
+
+it('ignores a registry cached under another version', function (): void {
+    Cache::put('custom_fields_entities:deploy-1:admin', [], 600);
+
+    useCachedResourceDiscovery(ttl: 600, version: 'deploy-1');
+    expect(entitiesSeenInPanel('admin')->hasEntity(Post::class))->toBeFalse();
+
+    useCachedResourceDiscovery(ttl: 600, version: 'deploy-2');
+    expect(entitiesSeenInPanel('admin')->hasEntity(Post::class))->toBeTrue();
+});
+
+it('treats an empty cache version as no version', function (): void {
+    useCachedResourceDiscovery(ttl: 600, version: '');
+
+    entitiesSeenInPanel('admin')->getEntities();
+
+    expect(Cache::has('custom_fields_entities:admin'))->toBeTrue();
+});
+
+it('clears the registry cached under the current version', function (): void {
+    useCachedResourceDiscovery(ttl: 600, version: 'deploy-2');
+
+    entitiesSeenInPanel('admin')->getEntities();
+
+    expect(Cache::has('custom_fields_entities:deploy-2:admin'))->toBeTrue();
+
+    $this->artisan('custom-fields:clear-cache')->assertSuccessful();
+
+    expect(Cache::has('custom_fields_entities:deploy-2:admin'))->toBeFalse();
+});
+
+it('keeps the cache version through config caching', function (): void {
+    $configurator = EntityConfigurator::configure()->cache(true, 600, 'deploy-2');
+
+    $restored = eval('return '.var_export($configurator, true).';');
+
+    expect($restored->getCacheVersion())->toBe('deploy-2');
 });

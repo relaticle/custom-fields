@@ -39,6 +39,7 @@ final class EntityManager implements EntityManagerInterface
     public function __construct(
         private readonly bool $cacheEnabled = true,
         private readonly int $cacheTtl = 3600,
+        private readonly ?string $cacheVersion = null,
     ) {}
 
     /**
@@ -135,7 +136,7 @@ final class EntityManager implements EntityManagerInterface
     // Discovery reads the current panel's resources, so each panel caches its own registry.
     private function cacheKey(string $panelId): string
     {
-        return self::CACHE_KEY.':'.$panelId;
+        return implode(':', array_filter([self::CACHE_KEY, $this->cacheVersion, $panelId]));
     }
 
     private function currentPanelId(): string

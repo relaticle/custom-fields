@@ -26,6 +26,8 @@ final class EntityConfigurator implements EntityConfigurationInterface
 
     private int $cacheTtl = 3600;
 
+    private ?string $cacheVersion = null;
+
     private array $entityModels = [];
 
     private function __construct()
@@ -107,10 +109,11 @@ final class EntityConfigurator implements EntityConfigurationInterface
     /**
      * Configure caching for entity discovery
      */
-    public function cache(bool $enabled = true, int $ttl = 3600): self
+    public function cache(bool $enabled = true, int $ttl = 3600, ?string $version = null): self
     {
         $this->cacheEnabled = $enabled;
         $this->cacheTtl = max(60, $ttl); // Minimum 1 minute cache
+        $this->cacheVersion = $version === '' ? null : $version;
 
         return $this;
     }
@@ -209,6 +212,11 @@ final class EntityConfigurator implements EntityConfigurationInterface
     public function getCacheTtl(): int
     {
         return $this->cacheTtl;
+    }
+
+    public function getCacheVersion(): ?string
+    {
+        return $this->cacheVersion;
     }
 
     /**

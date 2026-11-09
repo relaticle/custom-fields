@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Relaticle\CustomFields\Contracts\EntityConfigurationInterface;
 use Relaticle\CustomFields\Contracts\EntityManagerInterface;
 use Relaticle\CustomFields\Data\EntityConfigurationData;
+use Relaticle\CustomFields\EntitySystem\EntityConfigurator;
 use Relaticle\CustomFields\EntitySystem\EntityManager;
 use Relaticle\CustomFields\Enums\EntityFeature;
 
@@ -26,6 +27,7 @@ class EntityServiceProvider extends ServiceProvider
             return new EntityManager(
                 cacheEnabled: $config['cache_entities'] ?? true,
                 cacheTtl: $config['cache_ttl'] ?? 3600,
+                cacheVersion: $config['cache_version'] ?? null,
             );
         });
 
@@ -140,6 +142,7 @@ class EntityServiceProvider extends ServiceProvider
                 'excluded_models' => $entityConfiguration->getExcludedModels(),
                 'cache_entities' => $entityConfiguration->getCacheEnabled(),
                 'cache_ttl' => $entityConfiguration->getCacheTtl(),
+                'cache_version' => $entityConfiguration instanceof EntityConfigurator ? $entityConfiguration->getCacheVersion() : null,
                 'entities' => $entityConfiguration->getEntities(),
             ];
         }
