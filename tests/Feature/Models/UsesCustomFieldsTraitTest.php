@@ -293,7 +293,7 @@ describe('Updated Timestamp', function (): void {
         $this->travelTo('2026-01-02 09:00:00');
         $updates = 0;
         DB::listen(function (QueryExecuted $query) use (&$updates): void {
-            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+            $updates += (int) str_starts_with($query->sql, 'update '.$query->connection->getQueryGrammar()->wrapTable('posts'));
         });
 
         $this->post->update(['title' => 'Renamed', 'custom_fields' => [$this->field->code => 'changed']]);
@@ -307,7 +307,7 @@ describe('Updated Timestamp', function (): void {
         CustomFieldValue::saving(fn () => $this->travel(1)->seconds());
         $updates = 0;
         DB::listen(function (QueryExecuted $query) use (&$updates): void {
-            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+            $updates += (int) str_starts_with($query->sql, 'update '.$query->connection->getQueryGrammar()->wrapTable('posts'));
         });
 
         $this->post->update(['title' => 'Renamed', 'custom_fields' => [$this->field->code => 'changed']]);
@@ -329,7 +329,7 @@ describe('Updated Timestamp', function (): void {
     it('does not update a record it has just created with custom field values', function (): void {
         $updates = 0;
         DB::listen(function (QueryExecuted $query) use (&$updates): void {
-            $updates += (int) str_starts_with($query->sql, 'update "posts"');
+            $updates += (int) str_starts_with($query->sql, 'update '.$query->connection->getQueryGrammar()->wrapTable('posts'));
         });
 
         Post::factory()->create(['custom_fields' => [$this->field->code => 'first']]);
