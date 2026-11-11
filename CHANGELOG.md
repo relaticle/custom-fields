@@ -2,6 +2,22 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v4.0.0-beta.4 - 2026-11-11
+
+<!-- Release notes generated using configuration in .github/release.yml at v4.0.0-beta.4 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(ci): carry the 3.x dependency cleanup into 4.0 by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/222
+* feat: system-only field types and remove link_variant [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/257
+* fix: encrypt a custom field value on its first save under Laravel 13.35 [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/259
+* fix: stop tags-input and record fields crashing forms when selections are limited [4.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/263
+* chore: merge 3.x into feat/4.0 by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/298
+* test: count record updates in the connection's own quoting by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/299
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.3...v4.0.0-beta.4
+
 ## v4.0.0-beta.3 - 2026-11-11
 
 <!-- Release notes generated using configuration in .github/release.yml at v4.0.0-beta.3 -->
@@ -112,6 +128,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
