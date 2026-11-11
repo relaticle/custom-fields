@@ -33,8 +33,8 @@
 
         {{
             $this->editAction()->icon(false)
-                            ->label(new HtmlString('<span class="truncate flex">'.$field->name.'</span>'))
-                            ->extraAttributes(['class' => 'truncate', 'x-tooltip.raw' => $field->name])
+                            ->label(new HtmlString('<span class="truncate flex">'.e($field->name).'</span>'))
+                            ->extraAttributes(['class' => 'truncate', 'x-tooltip.raw' => e($field->name)])
                             ->link()
         }}
 
