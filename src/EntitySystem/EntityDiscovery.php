@@ -24,9 +24,6 @@ use Symfony\Component\Finder\Finder;
  */
 final class EntityDiscovery
 {
-    /** @var array<int, EntityConfigurationData> */
-    private array $discoveredCache = [];
-
     /**
      * @param  array<int, string>  $paths
      * @param  array<int, string>  $namespaces
@@ -53,10 +50,6 @@ final class EntityDiscovery
      */
     public function discover(): array
     {
-        if ($this->discoveredCache !== []) {
-            return $this->discoveredCache;
-        }
-
         $entities = [];
 
         // 1. Discover from Filament Resources (highest priority)
@@ -83,9 +76,7 @@ final class EntityDiscovery
             }
         }
 
-        $this->discoveredCache = array_values($entities);
-
-        return $this->discoveredCache;
+        return array_values($entities);
     }
 
     /**

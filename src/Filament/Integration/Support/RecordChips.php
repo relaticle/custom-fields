@@ -30,7 +30,7 @@ final readonly class RecordChips
     /**
      * @param  array<int, int|string>  $recordIds  the order the chips are drawn in
      * @param  array<string, string>  $provenance  chip id => the sentence read on hover
-     * @return array<int, array{id: string, name: string, avatarUrl: ?string, avatarShape: string, url: ?string, provenance: ?string}>
+     * @return array<int, array{id: string, name: string, avatarUrl: ?string, avatarShape: string, icon: ?string, url: ?string, provenance: ?string}>
      */
     public function build(?EntityConfigurationData $entity, array $recordIds, array $provenance = []): array
     {
@@ -50,12 +50,14 @@ final readonly class RecordChips
             ->map(function (Model $record) use ($entity, $avatarConfiguration, $titleAttribute, $provenance): array {
                 $id = (string) $record->getKey();
                 $name = $record->getAttribute($titleAttribute);
+                $avatarUrl = $this->avatarUrl($record, $avatarConfiguration);
 
                 return [
                     'id' => $id,
                     'name' => is_scalar($name) ? (string) $name : '',
-                    'avatarUrl' => $this->avatarUrl($record, $avatarConfiguration),
+                    'avatarUrl' => $avatarUrl,
                     'avatarShape' => $avatarConfiguration?->getCssClass() ?? 'rounded-full',
+                    'icon' => blank($avatarUrl) && $avatarConfiguration?->hasAttribute() ? $entity->getIcon() : null,
                     'url' => $this->recordUrl($record, $entity),
                     'provenance' => $provenance[$id] ?? null,
                 ];

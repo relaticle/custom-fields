@@ -10,12 +10,15 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Features\SupportTesting\Testable;
 use Relaticle\CustomFields\Data\CustomFieldSettingsData;
+use Relaticle\CustomFields\Data\FieldSlotData;
+use Relaticle\CustomFields\Data\RelationshipDefinitionData;
 use Relaticle\CustomFields\Data\VisibilityData;
 use Relaticle\CustomFields\EntitySystem\EntityConfigurator;
 use Relaticle\CustomFields\EntitySystem\EntityManager;
 use Relaticle\CustomFields\EntitySystem\EntityModel;
 use Relaticle\CustomFields\Enums\CustomFieldsFeature;
 use Relaticle\CustomFields\Enums\EntityFeature;
+use Relaticle\CustomFields\Enums\RelationshipCardinality;
 use Relaticle\CustomFields\Enums\UiFlavor;
 use Relaticle\CustomFields\Enums\UiSurface;
 use Relaticle\CustomFields\Facades\CustomFields;
@@ -24,6 +27,7 @@ use Relaticle\CustomFields\FeatureSystem\FeatureManager;
 use Relaticle\CustomFields\Filament\Integration\Components\Forms\RecordSelectInput\RecordSelectInputComponent;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldSection;
+use Relaticle\CustomFields\Services\Relationships\CreateRelationshipDefinition;
 use Relaticle\CustomFields\Services\TenantContextService;
 use Relaticle\CustomFields\Support\ViewFlavor;
 use Relaticle\CustomFields\Tests\Fixtures\Livewire\ThroughTable;
@@ -43,7 +47,7 @@ function rendersPolished(UiSurface $surface): bool
  *
  * @param  array<int, string>  $searchAttributes
  */
-function registerLookupEntity(string $modelClass, string $primaryAttribute, array $searchAttributes = []): void
+function registerLookupEntity(string $modelClass, string $primaryAttribute, array $searchAttributes = [], ?string $avatarAttribute = null, string $icon = 'heroicon-o-document'): void
 {
     config()->set('custom-fields.entity_configuration',
         EntityConfigurator::configure()
@@ -52,9 +56,11 @@ function registerLookupEntity(string $modelClass, string $primaryAttribute, arra
             ->models([
                 EntityModel::configure(
                     modelClass: $modelClass,
+                    icon: $icon,
                     primaryAttribute: $primaryAttribute,
                     searchAttributes: $searchAttributes,
                     features: [EntityFeature::CUSTOM_FIELDS, EntityFeature::LOOKUP_SOURCE],
+                    avatarConfiguration: $avatarAttribute === null ? null : EntityModel::avatar(attribute: $avatarAttribute),
                 ),
             ])
     );
@@ -125,6 +131,23 @@ function sectionForEntity(string $entityType): CustomFieldSection
     }
 
     return CustomFieldSection::factory()->create($attributes);
+}
+
+function postRecordField(?CustomFieldSettingsData $settings = null): CustomField
+{
+    $field = app(CreateRelationshipDefinition::class)->execute(new RelationshipDefinitionData(
+        code: 'related_post',
+        fromEntityType: (new Post)->getMorphClass(),
+        toEntityType: (new Post)->getMorphClass(),
+        cardinality: RelationshipCardinality::ManyToMany,
+        fromField: new FieldSlotData(name: 'Related Post', sectionId: sectionForEntity((new Post)->getMorphClass())->getKey()),
+    ))->fromField;
+
+    if ($settings instanceof CustomFieldSettingsData) {
+        $field->update(['settings' => $settings]);
+    }
+
+    return $field;
 }
 
 /**

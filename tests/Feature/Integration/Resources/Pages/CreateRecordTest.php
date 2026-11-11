@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Filament\Forms\Components\Select;
+use Relaticle\CustomFields\Enums\CustomFieldsFeature;
+use Relaticle\CustomFields\FeatureSystem\FeatureConfigurator;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\CustomFieldOption;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -294,6 +297,56 @@ describe('Custom Fields Integration', function (): void {
         'text field min length' => ['text', 'a', ['min_length' => 3]],
         'number field must be numeric' => ['number', 'not-a-number', []],
     ]);
+});
+
+describe('Coloured Choice Options', function (): void {
+    it('escapes every option label of a select with option colours on', function (string $fieldType): void {
+        config()->set('custom-fields.features', FeatureConfigurator::configure()
+            ->enable(
+                CustomFieldsFeature::FIELD_OPTION_COLORS,
+                CustomFieldsFeature::SYSTEM_SECTIONS,
+            ));
+
+        $section = CustomFieldSection::factory()->create([
+            'entity_type' => Post::class,
+            'active' => true,
+        ]);
+
+        $field = CustomField::factory()->withOptions([])->create([
+            'custom_field_section_id' => $section->id,
+            'code' => 'stage',
+            'type' => $fieldType,
+            'entity_type' => Post::class,
+        ]);
+
+        $uncolouredPayload = '<img src=x onerror=alert(1)>';
+        $colouredPayload = '<img src=x onerror=alert(2)>';
+
+        $uncoloured = CustomFieldOption::factory()->create([
+            'custom_field_id' => $field->id,
+            'name' => $uncolouredPayload,
+            'sort_order' => 1,
+        ]);
+
+        $coloured = CustomFieldOption::factory()->create([
+            'custom_field_id' => $field->id,
+            'name' => $colouredPayload,
+            'sort_order' => 2,
+            'settings' => ['color' => '#22c55e'],
+        ]);
+
+        livewire(CreatePost::class)
+            ->assertFormFieldExists('custom_fields.stage', function (Select $select) use ($uncoloured, $coloured, $uncolouredPayload, $colouredPayload): bool {
+                $options = $select->getOptions();
+
+                expect($select->isHtmlAllowed())->toBeTrue()
+                    ->and($options[$uncoloured->id])->toBe(e($uncolouredPayload))
+                    ->and($options[$coloured->id])->toContain(e($colouredPayload))
+                    ->and($options[$coloured->id])->not->toContain($colouredPayload);
+
+                return true;
+            });
+    })->with(['select', 'multi-select']);
 });
 
 describe('Form Field Visibility and State', function (): void {

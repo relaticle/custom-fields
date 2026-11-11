@@ -47,12 +47,12 @@ final readonly class LinkWriter
      *
      * @throws ValidationException
      */
-    public function apply(Model $record, CustomField $field, array $targetIds, array $confirmed = []): void
+    public function apply(Model $record, CustomField $field, array $targetIds, array $confirmed = []): bool
     {
         $definition = $field->relationshipDefinitionOrFail();
 
         try {
-            DB::transaction(function () use ($record, $definition, $field, $targetIds, $confirmed): void {
+            return DB::transaction(function () use ($record, $definition, $field, $targetIds, $confirmed): bool {
                 $events = $this->diff($record, $definition, $field, $targetIds, $confirmed);
 
                 // A rolled back write never happened, so its listeners must never hear about it.
@@ -61,6 +61,8 @@ final readonly class LinkWriter
                         event($event);
                     }
                 });
+
+                return $events !== [];
             });
         } catch (UniqueConstraintViolationException $uniqueConstraintViolationException) {
             if (! $this->isDuplicateActiveEdge($uniqueConstraintViolationException)) {
