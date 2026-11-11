@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\EntitySystem;
 
 use Closure;
+use Filament\Exceptions\NoDefaultPanelSetException;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Traits\Macroable;
@@ -20,13 +22,13 @@ final class EntityManager
 
     private const string CACHE_KEY = 'custom_fields_entities';
 
-    private const int CACHE_TTL = 3600; // 1 hour
+    private const string NO_PANEL = 'no-panel';
 
     /** @var array<int, array<mixed>|Closure> */
     private array $entities = [];
 
-    /** @var ?array<string, EntityConfigurationData> */
-    private ?array $cachedEntities = null;
+    /** @var array<string, array<string, EntityConfigurationData>> */
+    private array $cachedEntities = [];
 
     private ?EntityDiscovery $discovery = null;
 
@@ -36,7 +38,8 @@ final class EntityManager
     private array $resolvingCallbacks = [];
 
     public function __construct(
-        private readonly bool $cacheEnabled = true
+        private readonly bool $cacheEnabled = true,
+        private readonly int $cacheTtl = 3600,
     ) {}
 
     /**
@@ -57,13 +60,13 @@ final class EntityManager
      */
     public function getEntities(): EntityCollection
     {
-        if ($this->cachedEntities === null) {
-            $this->cachedEntities = $this->cacheEnabled
-                ? Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn (): array => $this->buildEntityCache())
-                : $this->buildEntityCache();
-        }
+        $panelId = $this->currentPanelId();
 
-        return new EntityCollection($this->cachedEntities);
+        $this->cachedEntities[$panelId] ??= $this->cacheEnabled
+            ? Cache::remember($this->cacheKey($panelId), $this->cacheTtl, fn (): array => $this->buildEntityCache())
+            : $this->buildEntityCache();
+
+        return new EntityCollection($this->cachedEntities[$panelId]);
     }
 
     /**
@@ -113,7 +116,7 @@ final class EntityManager
      */
     private function invalidateCache(): void
     {
-        $this->cachedEntities = null;
+        $this->cachedEntities = [];
     }
 
     /**
@@ -123,11 +126,30 @@ final class EntityManager
     {
         $this->invalidateCache();
 
-        if ($this->cacheEnabled) {
-            Cache::forget(self::CACHE_KEY);
+        if (! $this->cacheEnabled) {
+            return $this;
+        }
+
+        foreach ([...array_keys(Filament::getPanels()), self::NO_PANEL] as $panelId) {
+            Cache::forget($this->cacheKey($panelId));
         }
 
         return $this;
+    }
+
+    // Discovery reads the current panel's resources, so each panel caches its own registry.
+    private function cacheKey(string $panelId): string
+    {
+        return self::CACHE_KEY.':'.$panelId;
+    }
+
+    private function currentPanelId(): string
+    {
+        try {
+            return Filament::getCurrentOrDefaultPanel()?->getId() ?? self::NO_PANEL;
+        } catch (NoDefaultPanelSetException) {
+            return self::NO_PANEL;
+        }
     }
 
     /**

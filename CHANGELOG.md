@@ -2,6 +2,90 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.3 - 2026-11-11
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.3 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: escape the field name in the field row by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/296
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.2...v3.18.3
+
+## v3.18.2 - 2026-11-07
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.2 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: show the entity icon for a linked record without an image on view pages by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/293
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.1...v3.18.2
+
+## v3.18.1 - 2026-11-07
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.1 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: pad the record column and show the entity icon for a record without an image by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/292
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.0...v3.18.1
+
+## v3.18.0 - 2026-11-06
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.0 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(fields): stack the entity tabs above the fields and floor the name column on phones by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/290
+* fix: cache the entity registry per filament panel by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/289
+* chore: update dependencies by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/291
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.17.0...v3.18.0
+
+## v3.17.0 - 2026-11-06
+
+<!-- Release notes generated using configuration in .github/release.yml at 3.x -->
+### What's Changed
+
+#### Other Changes
+
+* fix: escape option labels without a colour in coloured selects by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/286
+* fix: clear the open security alerts and update dependencies by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/288
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.2...v3.17.0
+
+## v3.16.2 - 2026-11-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.16.2 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump the npm-security group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/282
+* fix: stamp updated_at without re-saving the record [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/285
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.1...v3.16.2
+
+## v3.16.1 - 2026-11-05
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.16.1 -->
+### What's Changed
+
+#### Other Changes
+
+* chore(deps): bump the npm-security group across 1 directory with 7 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/281
+* chore(deps): bump the github-actions group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/277
+* chore(deps-dev): bump postcss from 8.5.30 to 8.5.32 in the npm group across 1 directory by @dependabot[bot] in https://github.com/relaticle/custom-fields/pull/276
+* fix: touch the record when a save changes only custom field values [3.x] by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/284
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.16.0...v3.16.1
+
 ## v3.15.2 - 2026-10-20
 
 <!-- Release notes generated using configuration in .github/release.yml at 8cca6d80e60da131084f9c73197e78e220bffb44 -->
@@ -265,6 +349,13 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
+
+
+
+
+
+
 
 
 

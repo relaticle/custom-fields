@@ -4,7 +4,7 @@
         <div class="flex flex-col gap-6 md:flex-row">
             {{-- A rail 200px wide would leave the table unreadable on a phone, so below md the
                  same entities scroll horizontally above it. --}}
-            <div class="md:hidden">
+            <div class="min-w-0 md:hidden">
                 <x-filament::tabs :label="__('custom-fields::custom-fields.common.entity_tabs')">
                     @include('custom-fields::filament.pages.partials.entity-tabs')
                 </x-filament::tabs>

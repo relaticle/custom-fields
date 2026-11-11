@@ -74,6 +74,16 @@ trait UsesCustomFields
      */
     protected static array $tempCustomFields = [];
 
+    /**
+     * @var array<int, true>
+     */
+    protected static array $changedCustomFieldValues = [];
+
+    /**
+     * @var array<int, true>
+     */
+    protected static array $customFieldsSavedWithRecordWrite = [];
+
     protected static function bootUsesCustomFields(): void
     {
         static::saving(function (Model $model): void {
@@ -163,8 +173,13 @@ trait UsesCustomFields
     protected function handleCustomFields(): void
     {
         if (isset($this->custom_fields) && is_array($this->custom_fields)) {
-            self::$tempCustomFields[spl_object_id($this)] = $this->custom_fields;
+            $objectId = spl_object_id($this);
+            self::$tempCustomFields[$objectId] = $this->custom_fields;
             unset($this->custom_fields);
+
+            if (! $this->exists || $this->isDirty()) {
+                self::$customFieldsSavedWithRecordWrite[$objectId] = true;
+            }
         }
     }
 
@@ -184,7 +199,7 @@ trait UsesCustomFields
         try {
             $this->saveCustomFields(self::$tempCustomFields[$objectId]);
         } finally {
-            unset(self::$tempCustomFields[$objectId]);
+            unset(self::$tempCustomFields[$objectId], self::$customFieldsSavedWithRecordWrite[$objectId]);
         }
     }
 
@@ -303,7 +318,9 @@ trait UsesCustomFields
         if ($this->writesLinksFor($customField)) {
             $payload = RecordLinkPayload::fromValue($value);
 
-            app(LinkWriter::class)->apply($this, $customField, $payload->ids, confirmed: $payload->confirmed);
+            if (app(LinkWriter::class)->apply($this, $customField, $payload->ids, confirmed: $payload->confirmed)) {
+                self::$changedCustomFieldValues[spl_object_id($this)] = true;
+            }
 
             return;
         }
@@ -324,6 +341,13 @@ trait UsesCustomFields
         $customFieldValue->source = CustomFields::writeContext()->source;
         $customFieldValue->updated_at = now();
         $customFieldValue->save();
+
+        // Provenance columns change on every write, so they never count as the value changing.
+        $changed = array_diff_key($customFieldValue->getChanges(), array_flip([$customFieldValue->getUpdatedAtColumn(), 'source']));
+
+        if ($changed !== [] || ($customFieldValue->wasRecentlyCreated && filled($value))) {
+            self::$changedCustomFieldValues[spl_object_id($this)] = true;
+        }
     }
 
     /**
@@ -361,6 +385,9 @@ trait UsesCustomFields
      */
     public function saveCustomFields(array $customFields, ?Model $tenant = null): void
     {
+        $objectId = spl_object_id($this);
+        unset(self::$changedCustomFieldValues[$objectId]);
+
         $this->customFields()->each(function (CustomField $customField) use ($customFields, $tenant): void {
             // A relationship has no row to overwrite with null: an absent key means the
             // payload said nothing about those edges, so they stay as they are.
@@ -371,5 +398,34 @@ trait UsesCustomFields
             $value = $customFields[$customField->code] ?? null;
             $this->saveCustomFieldValue($customField, $value, $tenant);
         });
+
+        if (! isset(self::$changedCustomFieldValues[$objectId])) {
+            return;
+        }
+
+        unset(self::$changedCustomFieldValues[$objectId]);
+
+        if (isset(self::$customFieldsSavedWithRecordWrite[$objectId])) {
+            return;
+        }
+
+        $this->stampUpdatedAtForCustomFields();
+    }
+
+    protected function stampUpdatedAtForCustomFields(): void
+    {
+        $column = $this->getUpdatedAtColumn();
+
+        if (! $this->exists || ! $this->usesTimestamps() || $column === null) {
+            return;
+        }
+
+        $timestamp = $this->freshTimestamp();
+
+        // A query, not touch(): touch() saves every dirty attribute, and inside the saved hook the record is still dirty.
+        $this->setKeysForSaveQuery($this->newModelQuery())->toBase()->update([$column => $this->fromDateTime($timestamp)]);
+
+        $this->setAttribute($column, $timestamp);
+        $this->syncOriginalAttribute($column);
     }
 }

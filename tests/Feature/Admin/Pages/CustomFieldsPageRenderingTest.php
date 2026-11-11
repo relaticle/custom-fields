@@ -42,7 +42,7 @@ describe('CustomFieldsPage - Essential User Interactions', function (): void {
         livewire(CustomFieldsPage::class)
             ->assertSuccessful()
             ->assertSeeHtml('flex flex-col gap-6 md:flex-row')
-            ->assertSeeHtml('class="md:hidden"')
+            ->assertSeeHtml('class="min-w-0 md:hidden"')
             ->assertSeeHtml('hidden shrink-0 md:block md:min-w-48')
             ->assertSeeHtml('fi-tabs fi-vertical')
             ->assertSee('Posts');

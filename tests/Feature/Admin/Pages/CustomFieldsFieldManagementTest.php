@@ -251,6 +251,17 @@ describe('ManageCustomField - Field Actions', function (): void {
             ]);
     });
 
+    it('renders the field name as text in the field row', function (): void {
+        $this->field->update(['name' => '"><img src=x onerror=alert(1)>']);
+
+        livewire(ManageCustomField::class, [
+            'field' => $this->field,
+        ])
+            ->assertDontSeeHtml('<img src=x onerror=alert(1)>')
+            ->assertSeeHtml('<span class="truncate flex">&quot;&gt;&lt;img src=x onerror=alert(1)&gt;</span>')
+            ->assertSeeHtml('x-tooltip.raw="&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
+    });
+
     it('can activate an inactive field', function (): void {
         // Arrange
         $inactiveField = CustomField::factory()

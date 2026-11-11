@@ -47,4 +47,15 @@ final class RecordSelectInputComponent extends Field implements HasNestedRecursi
     {
         return false;
     }
+
+    public function getFallbackIcon(): ?string
+    {
+        $entity = $this->getEntityConfiguration();
+
+        if (! $entity?->getAvatarConfiguration()?->hasAttribute()) {
+            return null;
+        }
+
+        return $entity->getIcon();
+    }
 }

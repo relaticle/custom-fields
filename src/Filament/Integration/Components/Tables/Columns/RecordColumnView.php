@@ -88,7 +88,7 @@ final class RecordColumnView extends Column
     }
 
     /**
-     * @return array<int, array{id: string, name: string, avatarUrl: ?string, avatarShape: string, url: ?string, provenance: ?string}>
+     * @return array<int, array{id: string, name: string, avatarUrl: ?string, avatarShape: string, icon: ?string, url: ?string, provenance: ?string}>
      */
     public function getRecords(Model $record): array
     {
