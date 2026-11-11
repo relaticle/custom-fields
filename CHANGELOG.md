@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v4.0.0-beta.5 - 2026-11-11
+
+<!-- Release notes generated using configuration in .github/release.yml at v4.0.0-beta.5 -->
+### What's Changed
+
+#### Other Changes
+
+* perf: load relationship definitions only for fields that point at records by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/300
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v4.0.0-beta.4...v4.0.0-beta.5
+
 ## v4.0.0-beta.4 - 2026-11-11
 
 <!-- Release notes generated using configuration in .github/release.yml at v4.0.0-beta.4 -->
@@ -128,6 +139,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
