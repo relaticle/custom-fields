@@ -134,3 +134,25 @@ it('answers relationshipDefinition for an eager-loaded list of link fields in a 
         ->and($queriesForEight)->toBe($queriesForTwo)
         ->and($queriesForTwo)->toBe(3);
 });
+
+it('reads no definitions for a list of fields that cannot point at records', function (): void {
+    $section = CustomFieldSection::factory()->create();
+    CustomField::factory()->create(['type' => 'text', 'entity_type' => 'post', 'custom_field_section_id' => $section->id]);
+    CustomField::factory()->create(['type' => 'select', 'entity_type' => 'post', 'custom_field_section_id' => $section->id]);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $definitions = CustomField::query()
+        ->withRelationshipDefinition()
+        ->get()
+        ->map(fn (CustomField $field): ?CustomFieldRelationship => $field->relationshipDefinition())
+        ->filter()
+        ->all();
+
+    $queries = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    expect($definitions)->toBe([])
+        ->and($queries)->toBe(1);
+});

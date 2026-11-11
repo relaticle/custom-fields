@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Relaticle\CustomFields\QueryBuilders;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Relaticle\CustomFields\Enums\FieldCapability;
 use Relaticle\CustomFields\Facades\Entities;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Models\Scopes\CustomFieldsActivableScope;
@@ -102,7 +105,15 @@ class CustomFieldQueryBuilder extends Builder
      */
     public function withRelationshipDefinition(): self
     {
-        return $this->with(['fromEndDefinition', 'toEndDefinition']);
+        return $this->afterQuery(function (mixed $fields): void {
+            if (! $fields instanceof Collection) {
+                return;
+            }
+
+            $fields
+                ->filter(fn (Model $field): bool => $field instanceof CustomField && $field->typeData?->supports(FieldCapability::RequiresRelationship) === true)
+                ->load(['fromEndDefinition', 'toEndDefinition']);
+        });
     }
 
     /** @return CustomFieldQueryBuilder<TModelClass> */
