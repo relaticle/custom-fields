@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.4 - 2026-11-13
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.4 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: re-check field management permission on every component request by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/301
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.3...v3.18.4
+
 ## v3.18.3 - 2026-11-11
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.18.3 -->
@@ -349,6 +360,7 @@ This is a taste change, not a bug fix. It carries no performance benefit: filter
         'min_search_length' => 2,
     ],
 ],
+
 
 
 
