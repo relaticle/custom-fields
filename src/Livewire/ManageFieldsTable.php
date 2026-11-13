@@ -19,6 +19,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
+use Relaticle\CustomFields\Livewire\Concerns\AuthorizesFieldManagement;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
 use Relaticle\CustomFields\Models\CustomField;
 use Relaticle\CustomFields\Support\SettingsMerger;
@@ -31,6 +32,7 @@ use Relaticle\CustomFields\Support\SettingsMerger;
  */
 final class ManageFieldsTable extends Component implements HasActions, HasForms
 {
+    use AuthorizesFieldManagement;
     use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;

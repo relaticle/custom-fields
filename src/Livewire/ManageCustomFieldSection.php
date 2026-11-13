@@ -21,6 +21,7 @@ use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\CustomFieldsPlugin;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
 use Relaticle\CustomFields\Filament\Management\Schemas\SectionForm;
+use Relaticle\CustomFields\Livewire\Concerns\AuthorizesFieldManagement;
 use Relaticle\CustomFields\Livewire\Concerns\CreatesCustomFields;
 use Relaticle\CustomFields\Livewire\Concerns\ManagesFields;
 use Relaticle\CustomFields\Models\CustomFieldSection;
@@ -28,6 +29,7 @@ use Relaticle\CustomFields\Support\SettingsMerger;
 
 final class ManageCustomFieldSection extends Component implements HasActions, HasForms
 {
+    use AuthorizesFieldManagement;
     use CreatesCustomFields;
     use InteractsWithActions;
     use InteractsWithForms;
