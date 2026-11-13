@@ -18,10 +18,12 @@ use Livewire\Component;
 use Relaticle\CustomFields\CustomFields;
 use Relaticle\CustomFields\Filament\Management\Forms\Components\DateConstraintField;
 use Relaticle\CustomFields\Filament\Management\Schemas\FieldForm;
+use Relaticle\CustomFields\Livewire\Concerns\AuthorizesFieldManagement;
 use Relaticle\CustomFields\Models\CustomField;
 
 final class ManageCustomField extends Component implements HasActions, HasForms
 {
+    use AuthorizesFieldManagement;
     use InteractsWithActions;
     use InteractsWithForms;
     use InteractsWithRecord;

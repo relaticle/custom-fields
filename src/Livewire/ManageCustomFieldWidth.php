@@ -7,9 +7,12 @@ namespace Relaticle\CustomFields\Livewire;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Relaticle\CustomFields\Enums\CustomFieldWidth;
+use Relaticle\CustomFields\Livewire\Concerns\AuthorizesFieldManagement;
 
 class ManageCustomFieldWidth extends Component
 {
+    use AuthorizesFieldManagement;
+
     /**
      * @var int
      */
