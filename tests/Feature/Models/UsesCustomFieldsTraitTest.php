@@ -289,3 +289,54 @@ describe('Updated Timestamp', function (): void {
         expect($updates)->toBe(0);
     });
 });
+
+describe('Query Count', function (): void {
+    function readQueriesWhileSaving(int $fieldCount): int
+    {
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true]);
+        $codes = [];
+
+        for ($i = 0; $i < $fieldCount; $i++) {
+            $codes[] = CustomField::factory()->ofType('text')->create([
+                'custom_field_section_id' => $section->getKey(),
+                'entity_type' => Post::class,
+            ])->code;
+        }
+
+        $post = Post::factory()->create();
+        $post->saveCustomFields(array_fill_keys($codes, 'first'));
+        $post = $post->fresh();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $post->update(['custom_fields' => array_fill_keys($codes, 'second')]);
+        $queries = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_starts_with($query['query'], 'select'))->count();
+        DB::disableQueryLog();
+
+        return $queries;
+    }
+
+    it('reads the same number of rows whether a save touches 4 fields or 10', function (): void {
+        $four = readQueriesWhileSaving(4);
+        CustomField::query()->forceDelete();
+        $ten = readQueriesWhileSaving(10);
+
+        expect($ten)->toBe($four);
+    });
+
+    it('still clears every value when null is saved', function (): void {
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true]);
+        $fields = CustomField::factory()->ofType('text')->count(3)->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => Post::class,
+        ]);
+        $post = Post::factory()->create();
+        $post->saveCustomFields($fields->pluck('code')->mapWithKeys(fn (string $code): array => [$code => 'filled'])->all());
+
+        $post->saveCustomFields($fields->pluck('code')->mapWithKeys(fn (string $code): array => [$code => null])->all());
+
+        $post = $post->fresh();
+        expect($fields->map(fn (CustomField $field): mixed => $post->getCustomFieldValue($field))->filter()->all())->toBe([])
+            ->and(CustomFieldValue::query()->count())->toBe(3);
+    });
+});

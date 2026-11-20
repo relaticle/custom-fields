@@ -214,14 +214,27 @@ trait UsesCustomFields
 
     public function saveCustomFieldValue(CustomField $customField, mixed $value, ?Model $tenant = null): void
     {
-        $data = ['custom_field_id' => $customField->getKey()];
+        $customFieldValue = $this->customFieldValues()->firstOrNew($this->customFieldValueKey($customField, $tenant));
+
+        $this->writeCustomFieldValue($customFieldValue, $customField, $value);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function customFieldValueKey(CustomField $customField, ?Model $tenant): array
+    {
+        $key = ['custom_field_id' => $customField->getKey()];
 
         if (FeatureManager::isEnabled(CustomFieldsFeature::SYSTEM_MULTI_TENANCY)) {
-            $data[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->resolveTenantId($tenant, $customField);
+            $key[config('custom-fields.database.column_names.tenant_foreign_key')] = $this->resolveTenantId($tenant, $customField);
         }
 
-        $customFieldValue = $this->customFieldValues()->firstOrNew($data);
+        return $key;
+    }
 
+    protected function writeCustomFieldValue(CustomFieldValue $customFieldValue, CustomField $customField, mixed $value): void
+    {
         if ($customField->settings?->encrypted) {
             $customFieldValue->mergeCasts([$customField->getValueColumn() => 'encrypted']);
         }
@@ -264,10 +277,18 @@ trait UsesCustomFields
         $objectId = spl_object_id($this);
         unset(self::$changedCustomFieldValues[$objectId]);
 
-        $this->customFields()->each(function (CustomField $customField) use ($customFields, $tenant): void {
-            $value = $customFields[$customField->code] ?? null;
-            $this->saveCustomFieldValue($customField, $value, $tenant);
-        });
+        $fields = $this->customFields()->get();
+        $existing = $this->customFieldValues()->whereIn('custom_field_id', $fields->modelKeys())->get()->groupBy('custom_field_id');
+
+        foreach ($fields as $customField) {
+            $key = $this->customFieldValueKey($customField, $tenant);
+            $customFieldValue = $existing->get($customField->getKey(), collect())
+                ->first(fn (CustomFieldValue $row): bool => collect($key)->every(fn (mixed $expected, string $column): bool => $row->getAttribute($column) == $expected))
+                ?? $this->customFieldValues()->make($key);
+
+            $customFieldValue->setRelation('customField', $customField);
+            $this->writeCustomFieldValue($customFieldValue, $customField, $customFields[$customField->code] ?? null);
+        }
 
         if (! isset(self::$changedCustomFieldValues[$objectId])) {
             return;
