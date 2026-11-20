@@ -2,6 +2,17 @@
 
 All notable changes to `custom-fields` will be documented in this file.
 
+## v3.18.5 - 2026-11-20
+
+<!-- Release notes generated using configuration in .github/release.yml at v3.18.5 -->
+### What's Changed
+
+#### Other Changes
+
+* fix(values): save custom field values without per-field queries by @ManukMinasyan in https://github.com/relaticle/custom-fields/pull/304
+
+**Full Changelog**: https://github.com/relaticle/custom-fields/compare/v3.18.4...v3.18.5
+
 ## v3.18.4 - 2026-11-13
 
 <!-- Release notes generated using configuration in .github/release.yml at v3.18.4 -->
