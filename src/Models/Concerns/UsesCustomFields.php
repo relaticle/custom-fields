@@ -277,7 +277,7 @@ trait UsesCustomFields
         $objectId = spl_object_id($this);
         unset(self::$changedCustomFieldValues[$objectId]);
 
-        $fields = $this->customFields()->get();
+        $fields = $this->customFields()->with('options')->get();
         $existing = $this->customFieldValues()->whereIn('custom_field_id', $fields->modelKeys())->get()->groupBy('custom_field_id');
 
         foreach ($fields as $customField) {

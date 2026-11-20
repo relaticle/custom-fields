@@ -339,4 +339,27 @@ describe('Query Count', function (): void {
         expect($fields->map(fn (CustomField $field): mixed => $post->getCustomFieldValue($field))->filter()->all())->toBe([])
             ->and(CustomFieldValue::query()->count())->toBe(3);
     });
+
+    it('hands a saved value its field with options loaded when lazy loading is prevented', function (): void {
+        $section = CustomFieldSection::factory()->forEntityType(Post::class)->create(['active' => true]);
+        $fields = CustomField::factory()->ofType('text')->count(2)->create([
+            'custom_field_section_id' => $section->getKey(),
+            'entity_type' => Post::class,
+        ]);
+        $post = Post::factory()->create();
+        $optionCounts = [];
+        CustomFieldValue::saved(function (CustomFieldValue $value) use (&$optionCounts): void {
+            $optionCounts[] = $value->customField->options->count();
+        });
+
+        Model::preventLazyLoading();
+
+        try {
+            $post->saveCustomFields($fields->pluck('code')->mapWithKeys(fn (string $code): array => [$code => 'filled'])->all());
+        } finally {
+            Model::preventLazyLoading(false);
+        }
+
+        expect($optionCounts)->toBe([0, 0]);
+    });
 });
