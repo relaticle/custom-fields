@@ -9,7 +9,7 @@
     "dependencies": {
         "@nuxt/image": "^2.2.0",
         "@nuxt/scripts": "^1.3.9",
-        "@nuxt/ui": "^4.12.0",
+        "@nuxt/ui": "^4.13.0",
         "@unhead/vue": "^3.4.1",
         "docus": "^5.15.0",
         "nuxt": "^4.6.3",
